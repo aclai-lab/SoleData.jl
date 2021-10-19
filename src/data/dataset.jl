@@ -2,47 +2,105 @@
 # -------------------------------------------------------------
 # Abstract types
 
+"""
+Abstract supertype for all Datasets.
+"""
 abstract type AbstractDataset end
 
 # -------------------------------------------------------------
 # MultiFrameDataset
 
 """
-"""
-struct MultiFrameDataset <: AbstractDataset
-    descriptor :: AbstractVector{AbstractVector{Integer}}
-    data       :: AbstractDataFrame
-end
+    MultiFrameDataset(frames_descriptor, df)
 
-MultiFrameDataset(df::AbstractDataFrame) = MultiFrameDataset(AbstractVector{Integer}[], df)
+Create a MultiFrameDataset from a DataFrame `df` initializing frames accordingly to
+`frames_descriptor` parameter.
 
-"""
-    multiframedataset(df; group = :all)
+`frames_descriptor` is an AbstractVector of frame descriptor which are AbstractVectors of
+Integers representing the index of the attributes selected for that frame.
 
-Create a [`MultiFrameDataset`](@ref) from a dataset `df` automatically selecting frames.
-
-Selection of frames can be controlled by the parameter `group` which can be:
-
-- `:all` (default): all attributes will be grouped by their [`dimension`](@ref)
-- a list of dimensions which will be grouped.
-
-Note: `:all` is the only Symbol accepted by `group`.
+The order matters for both the frames indices and the attributes in them.
 
 # Examples
 ```jldoctest
 julia> df = DataFrame(
-    :age => [30, 9],
-    :name => ["Python", "Julia"],
-    :stat => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
-)
-2×3 DataFrame
- Row │ age    name    stat
+           :age => [30, 9],
+           :name => ["Python", "Julia"],
+           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]],
+           :stat2 => [[cos(i) for i in 1:50000], [sin(i) for i in 1:50000]]
+       )
+2×4 DataFrame
+ Row │ age    name    stat1
      │ Int64  String  Array…
-─────┼──────────────────────────────────────────────────
+─────┼─────────────────────────────────────────────────────
    1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
    2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
+                                           1 column omitted
 
-julia> multiframedataset(df)
+julia> mfd = MultiFrameDataset([[2]], df)
+● MultiFrameDataset
+   └─ dimensions: (1,)
+- Frame 1 / 1
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+- Spare attributes
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name
+     │ String
+─────┼────────
+   1 │ Python
+   2 │ Julia
+```
+
+    MultiFrameDataset(df; group = :none)
+
+Create a MultiFrameDataset from a DataFrame `df` automatically selecting frames.
+
+Selection of frames can be controlled by the parameter `group` which can be:
+
+- `:none` (default): no frame will be created
+- `:all`: all attributes will be grouped by their [`dimension`](@ref)
+- a list of dimensions which will be grouped.
+
+Note: `:all` and `:none` are the only Symbols accepted by `group`.
+
+# Examples
+```jldoctest
+julia> df = DataFrame(
+           :age => [30, 9],
+           :name => ["Python", "Julia"],
+           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]],
+           :stat2 => [[cos(i) for i in 1:50000], [sin(i) for i in 1:50000]]
+       )
+2×4 DataFrame
+ Row │ age    name    stat1
+     │ Int64  String  Array…
+─────┼─────────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
+                                           1 column omitted
+
+julia> mfd = MultiFrameDataset(df)
+● MultiFrameDataset
+   └─ dimensions: ()
+- Spare attributes
+   └─ dimension: mixed
+2×4 SubDataFrame
+ Row │ age    name    stat1
+     │ Int64  String  Array…
+─────┼─────────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
+                                           1 column omitted
+
+
+julia> mfd = MultiFrameDataset(df; group = :all)
 ● MultiFrameDataset
    └─ dimensions: (0, 1)
 - Frame 1 / 2
@@ -55,70 +113,83 @@ julia> multiframedataset(df)
    2 │     9  Julia
 - Frame 2 / 2
    └─ dimension: 1
-2×1 SubDataFrame
- Row │ stat
+2×2 SubDataFrame
+ Row │ stat1
      │ Array…
-─────┼───────────────────────────────────
+─────┼──────────────────────────────────────
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
-```
+                            1 column omitted
 
-but setting `group = [1]` will cause only the attibute of dimension `1` to grouped:
 
-```jldoctest
-julia> multiframedataset(df; group = [1])
+julia> mfd = MultiFrameDataset(df; group = [0])
 ● MultiFrameDataset
-   └─ dimensions: (1, 0, 0)
+   └─ dimensions: (0, 1, 1)
 - Frame 1 / 3
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ age    name
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+- Frame 2 / 3
    └─ dimension: 1
 2×1 SubDataFrame
- Row │ stat
+ Row │ stat1
      │ Array…
 ─────┼───────────────────────────────────
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
-- Frame 2 / 3
-   └─ dimension: 0
-2×1 SubDataFrame
- Row │ age
-     │ Int64
-─────┼───────
-   1 │    30
-   2 │     9
 - Frame 3 / 3
-   └─ dimension: 0
+   └─ dimension: 1
 2×1 SubDataFrame
- Row │ name
-     │ String
-─────┼────────
-   1 │ Python
-   2 │ Julia
+ Row │ stat2
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.540302, -0.416147, -0.989992,…
+   2 │ [0.841471, 0.909297, 0.14112, -0…
 ```
 """
-function multiframedataset(
-    df::AbstractDataFrame;
-    group::Union{Symbol,AbstractVector{<:Integer}} = :all
-)
-    @assert isa(group, AbstractVector) || group == :all "group can be `:all` or an " *
-        "AbstractVector of dimensions"
+struct MultiFrameDataset <: AbstractDataset
+    descriptor :: AbstractVector{AbstractVector{Integer}}
+    data       :: AbstractDataFrame
 
-    dimdict = Dict{Integer, AbstractVector{<:Integer}}()
-    spare = AbstractVector{Integer}[]
-
-    for (i, c) in enumerate(eachcol(df))
-        dim = dimension(DataFrame(:curr => c))
-        if isa(group, AbstractVector) && !(dim in group)
-            push!(spare, [i])
-        elseif haskey(dimdict, dim)
-            push!(dimdict[dim], i)
-        else
-            dimdict[dim] = Integer[i]
-        end
+    function MultiFrameDataset(
+        frames_descriptor::AbstractVector{<:AbstractVector{<:Integer}}, df::AbstractDataFrame
+    )
+        return new(frames_descriptor, df)
     end
 
-    desc = sort(collect(zip(keys(dimdict), values(dimdict))), by = x -> x[1])
+    function MultiFrameDataset(
+        df::AbstractDataFrame;
+        group::Union{Symbol,AbstractVector{<:Integer}} = :none
+        )
+        @assert isa(group, AbstractVector) || group in [:all, :none] "group can be `:all`, " *
+        "`:none` or an AbstractVector of dimensions"
 
-    MultiFrameDataset(append!(map(x -> x[2], desc), spare), df)
+        if group == :none
+            return new([], df)
+        end
+
+        dimdict = Dict{Integer,AbstractVector{<:Integer}}()
+        spare = AbstractVector{Integer}[]
+
+        for (i, c) in enumerate(eachcol(df))
+            dim = dimension(DataFrame(:curr => c))
+            if isa(group, AbstractVector) && !(dim in group)
+                push!(spare, [i])
+            elseif haskey(dimdict, dim)
+                push!(dimdict[dim], i)
+            else
+                dimdict[dim] = Integer[i]
+            end
+        end
+
+        desc = sort(collect(zip(keys(dimdict), values(dimdict))), by = x -> x[1])
+
+        return new(append!(map(x -> x[2], desc), spare), df)
+    end
 end
 
 getindex(mfd::MultiFrameDataset, i::Integer) = frame(mfd, i)
@@ -130,9 +201,6 @@ isempty(mfd::MultiFrameDataset) = length(mfd) == 0
 firstindex(mfd::MultiFrameDataset) = 1
 lastindex(mfd::MultiFrameDataset) = length(mfd)
 eltype(::Type{MultiFrameDataset}) = SubDataFrame
-
-# TODO: consider to kill this function
-map(f, mfd::MultiFrameDataset) = Any[f(frame(mfd, i)) for i in 1:length(mfd)]
 
 Base.@propagate_inbounds function iterate(mfd::MultiFrameDataset, i::Integer = 1)
     (i ≤ 0 || i > length(mfd)) && return nothing
@@ -159,9 +227,6 @@ function ≊(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
     return mfd1 ≈ mfd2 && Set(Set.(mfd1.descriptor)) == Set(Set.(mfd2.descriptor))
 end
 
-
-"""
-"""
 function show(io::IO, mfd::MultiFrameDataset)
     println(io, "● MultiFrameDataset")
     println(io, "   └─ dimensions: $(dimension(mfd))")
@@ -169,6 +234,13 @@ function show(io::IO, mfd::MultiFrameDataset)
         println(io, "- Frame $(i) / $(nframes(mfd))")
         println(io, "   └─ dimension: $(dimension(frame))")
         println(io, frame)
+    end
+    spare = spareattributes(mfd)
+    if length(spare) > 0
+        spare_df = @view mfd.data[:,spare]
+        println(io, "- Spare attributes")
+        println(io, "   └─ dimension: $(dimension(spare_df))")
+        println(io, spare_df)
     end
 end
 
@@ -384,10 +456,12 @@ function attributes(mfd::MultiFrameDataset, i::Integer)
 end
 function attributes(mfd::MultiFrameDataset)
     d = Dict{Integer,AbstractVector{Symbol}}()
+
     for i in 1:nframes(mfd)
         d[i] = attributes(mfd, i)
     end
-    d
+
+    return d
 end
 
 # -------------------------------------------------------------
@@ -427,11 +501,11 @@ julia> mfd = MultiFrameDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M
 
 julia> frame2 = frame(mfd, 2)
 2×1 SubDataFrame
-Row │ sex
-    │ Char
+ Row │ sex
+     │ Char
 ─────┼──────
-  1 │ M
-  2 │ F
+   1 │ M
+   2 │ F
 
 julia> ninstances(mfd) == ninstances(mfd, 2) == ninstances(frame2) == 2
 true
@@ -444,7 +518,7 @@ ninstances(mfd::MultiFrameDataset, i::Integer) = nrow(frame(mfd, i))
 """
     addinstance!(mfd, instance)
 
-Add `instance` to `mfd` multiframe dataset.
+Add `instance` to `mfd` multiframe dataset and return `mfd`.
 
 The instance can be a `DataFrameRow` or an `AbstractVector` but in both cases the number and
 type of attributes should match the dataset ones.
@@ -454,18 +528,22 @@ function addinstance!(mfd::MultiFrameDataset, instance::DataFrameRow)
         "between dataset ($(nattributes(mfd))) and instance ($(length(instance)))"
 
     push!(mfd.data, instance)
+
+    return mfd
 end
 function addinstance!(mfd::MultiFrameDataset, instance::AbstractVector)
     @assert length(instance) == nattributes(mfd) "Mismatching number of attributes " *
         "between dataset ($(nattributes(mfd))) and instance ($(length(instance)))"
 
     push!(mfd.data, instance)
+
+    return mfd
 end
 
 """
     removeinstances!(mfd, indices)
 
-Remove the instances at `indices` in `mfd` multiframe dataset.
+Remove the instances at `indices` in `mfd` multiframe dataset and return `mfd`.
 
 The `MultiFrameDataset` is returned.
 """
@@ -521,12 +599,66 @@ end
 """
     addframe!(mfd, indices)
 
-Create a new frame in `mfd` multiframe dataset using attributes at `indices`.
+Create a new frame in `mfd` multiframe dataset using attributes at `indices` and return
+`mfd`.
 
 Note: to add a new frame with new attributes see [`newframe!`](@ref).
 
 # Examples
-TODO: examples
+```jldoctest
+julia> df = DataFrame(
+           :age => [30, 9],
+           :name => ["Python", "Julia"],
+           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
+       )
+2×3 DataFrame
+ Row │ age    name    stat1
+     │ Int64  String  Array…
+─────┼──────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
+
+julia> mfd = MultiFrameDataset([[1,2]], df)
+● MultiFrameDataset
+   └─ dimensions: (0,)
+- Frame 1 / 1
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ age    name
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+- Spare attributes
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+
+
+julia> addframe!(mfd, [3])
+● MultiFrameDataset
+   └─ dimensions: (0, 1)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ age    name
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+- Frame 2 / 2
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+```
 """
 function addframe!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
     @assert length(indices) > 0 "Can't add an empty frame to dataset"
@@ -537,31 +669,88 @@ function addframe!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
     end
 
     push!(mfd.descriptor, indices)
+
+    return mfd
 end
 
 """
     removeframe!(mfd, i)
 
-Remove `i`-th frame from `mfd` multiframe dataset
+Remove `i`-th frame from `mfd` multiframe dataset and return `mfd`.
 
 Note: to completely remove a frame and all attributes in it use [`dropframe!`](@ref)
 instead.
 
 # Examples
-TODO: examples
+```jldoctest
+julia> df = DataFrame(
+           :age => [30, 9],
+           :name => ["Python", "Julia"],
+           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
+       )
+2×3 DataFrame
+ Row │ age    name    stat1
+     │ Int64  String  Array…
+─────┼──────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
+
+julia> mfd = MultiFrameDataset([[1,2], [3]], df)
+● MultiFrameDataset
+   └─ dimensions: (0, 1)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ age    name
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+- Frame 2 / 2
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+
+
+julia> removeframe!(mfd, 2)
+● MultiFrameDataset
+   └─ dimensions: (0,)
+- Frame 1 / 1
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ age    name
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+- Spare attributes
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+```
 """
 function removeframe!(mfd::MultiFrameDataset, i::Integer)
     @assert 1 <= i <= nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
     deleteat!(mfd.descriptor, i)
+
+    return mfd
 end
 
 """
     addattribute_toframe!(mfd, farme_index, attr_index)
 
 Add attribute at index `attr_index` to the frame at index `frame_index` in `mfd` multiframe
-dataset.
+dataset and return `mfd`.
 """
 function addattribute_toframe!(
     mfd::MultiFrameDataset, frame_index::Integer, attr_index::Integer
@@ -576,13 +765,15 @@ function addattribute_toframe!(
     else
         push!(mfd.descriptor[frame_index], attr_index)
     end
+
+    return mfd
 end
 
 """
     removeattribute_fromframe!(mfd, farme_index, attr_index)
 
 Remove attribute at index `attr_index` from the frame at index `frame_index` in `mfd`
-multiframe dataset.
+multiframe dataset and return `mfd`.
 """
 function removeattribute_fromframe!(
     mfd::MultiFrameDataset, frame_index::Integer, attr_index::Integer
@@ -603,12 +794,14 @@ function removeattribute_fromframe!(
             mfd.descriptor[frame_index], indexin(attr_index, mfd.descriptor[frame_index])[1]
         )
     end
+
+    return mfd
 end
 
 """
     newframe!(mfd, new_frame)
 
-Add `new_frame` as new frame to `mfd` multiframe dataset.
+Add `new_frame` as new frame to `mfd` multiframe dataset and return `mfd`.
 
 `new_frame` has to be an `AbstractDataFrame`.
 
@@ -616,6 +809,125 @@ Existing attributes can be added to the new frame while adding it to the dataset
 the corresponding inidices by `existing_attributes`.
 
 TODO: To be reviewed.
+
+# Examples
+```jldoctest
+julia> df = DataFrame(
+           :name => ["Python", "Julia"],
+           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
+       )
+2×2 DataFrame
+ Row │ name    stat1
+     │ String  Array…
+─────┼───────────────────────────────────────────
+   1 │ Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │ Julia   [0.540302, -0.416147, -0.989992,…
+
+julia> mfd = MultiFrameDataset(df; group = :all)
+● MultiFrameDataset
+   └─ dimensions: (0, 1)
+- Frame 1 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name
+     │ String
+─────┼────────
+   1 │ Python
+   2 │ Julia
+- Frame 2 / 2
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+
+
+julia> newframe!(mfd, DataFrame(:age => [30, 9]))
+● MultiFrameDataset
+   └─ dimensions: (0, 1, 0)
+- Frame 1 / 3
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name
+     │ String
+─────┼────────
+   1 │ Python
+   2 │ Julia
+- Frame 2 / 3
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+- Frame 3 / 3
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ age
+     │ Int64
+─────┼───────
+   1 │    30
+   2 │     9
+```
+
+or, adding an existing attribute:
+
+```jldoctest
+julia> df = DataFrame(
+           :name => ["Python", "Julia"],
+           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
+       )
+2×2 DataFrame
+ Row │ name    stat1
+     │ String  Array…
+─────┼───────────────────────────────────────────
+   1 │ Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │ Julia   [0.540302, -0.416147, -0.989992,…
+
+julia> mfd = MultiFrameDataset([[2]], df)
+● MultiFrameDataset
+   └─ dimensions: (1,)
+- Frame 1 / 1
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+- Spare attributes
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name
+     │ String
+─────┼────────
+   1 │ Python
+   2 │ Julia
+
+
+julia> newframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
+● MultiFrameDataset
+  └─ dimensions: (1, 0)
+- Frame 1 / 2
+  └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+- Frame 2 / 2
+  └─ dimension: 0
+2×2 SubDataFrame
+ Row │ age    name
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+```
 """
 function newframe!(
     mfd::MultiFrameDataset, new_frame::AbstractDataFrame;
@@ -633,12 +945,15 @@ function newframe!(
     for i in existing_attributes
         addattribute_toframe!(mfd, nframes(mfd), i)
     end
+
+    return mfd
 end
 
 """
     dropattribute!(mfd, i)
 
-Drop the `i`-th attribute from `mfd` multiframe dataset.
+Drop the `i`-th attribute from `mfd` multiframe dataset and return a DataFrame composed by
+the dopped column.
 
 TODO: To be reviewed.
 """
@@ -656,6 +971,8 @@ function dropattribute!(mfd::MultiFrameDataset, i::Integer)
         end
     end
 
+    result = DataFrame(Symbol(names(mfd.data)[i]) => mfd.data[:,i])
+
     select!(mfd.data, setdiff(collect(1:nattributes(mfd)), i))
 
     for (i_frame, desc) in enumerate(mfd.descriptor)
@@ -665,12 +982,15 @@ function dropattribute!(mfd::MultiFrameDataset, i::Integer)
             end
         end
     end
+
+    return result
 end
 
 """
     dropframe!(mfd, i)
 
-Remove `i`-th frame from `mfd` multiframe dataset while dropping all attributes in it.
+Remove `i`-th frame from `mfd` multiframe dataset while dropping all attributes in it and
+return a DatFrame composed by all removed attributes columns.
 
 Note: if the dropped attributes are present in other frames they will also be removed from
 them. This can lead to the removal of additional frames other than the `i`-th.
@@ -679,27 +999,118 @@ If the intection is to remove a frame without releasing the attributes use
 [`removeframe!`](@ref) instead.
 
 # Examples
-TODO: examples
+```jldoctest
+julia> df = DataFrame(
+           :age => [30, 9],
+           :name => ["Python", "Julia"],
+           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
+       )
+2×3 DataFrame
+ Row │ age    name    stat1
+     │ Int64  String  Array…
+─────┼──────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
+
+julia> mfd = MultiFrameDataset([[1,2], [3]], df)
+● MultiFrameDataset
+  └─ dimensions: (0, 1)
+- Frame 1 / 2
+  └─ dimension: 0
+2×2 SubDataFrame
+ Row │ age    name
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+- Frame 2 / 2
+  └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+
+
+julia> dropframe!(mfd, 1)
+[ Info: Attribute 1 was last attribute of frame 1: removing frame
+2×2 DataFrame
+ Row │ name    age
+     │ String  Int64
+─────┼───────────────
+   1 │ Python     30
+   2 │ Julia       9
+
+julia> mfd
+● MultiFrameDataset
+  └─ dimensions: (1,)
+- Frame 1 / 1
+  └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat1
+     │ Array…
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+```
 """
 function dropframe!(mfd::MultiFrameDataset, i::Integer)
     @assert 1 <= i <= nframes(mfd) "Index $(i) does not correspond to a frame " *
-    "(1:$(nframes(mfd)))"
+        "(1:$(nframes(mfd)))"
+
+    attr_names = Symbol.(names(mfd.data))
+    result = DataFrame([(attr_names[j] => mfd.data[:,j])
+        for j in reverse(mfd.descriptor[i])]...)
 
     for i_attr in sort!(deepcopy(mfd.descriptor[i]), rev = true)
         dropattribute!(mfd, i_attr)
     end
-    # TODO: consider returning a dataframe composed by exactly the removed attributes
+
+    return result
 end
 
 """
     dropspareattributes!(mfd)
 
 Drop all attributes that are not present in any of the frames in `mfd` multiframe dataset.
+
+# Examples
+```jldoctest
+julia> mfd = MultiFrameDataset([[1]], DataFrame(:age => [30, 9], :name => ["Python", "Julia"]))
+● MultiFrameDataset
+   └─ dimensions: (0,)
+- Frame 1 / 1
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ age
+     │ Int64
+─────┼───────
+   1 │    30
+   2 │     9
+- Spare attributes
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name
+     │ String
+─────┼────────
+   1 │ Python
+   2 │ Julia
+
+
+julia> dropspareattributes!(mfd)
+2×1 DataFrame
+ Row │ name
+     │ String
+─────┼────────
+   1 │ Python
+   2 │ Julia
+```
 """
 function dropspareattributes!(mfd::MultiFrameDataset)
     spare = sort!(spareattributes(mfd), rev = true)
 
-    attr_names = attributes(mfd)
+    attr_names = Symbol.(names(mfd.data))
     result = DataFrame([(attr_names[i] => mfd.data[:,i]) for i in reverse(spare)]...)
 
     for i_attr in spare
@@ -754,28 +1165,28 @@ dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwarg
 # -------------------------------------------------------------
 # schema
 
-function ST.schema(mfd::MultiFrameDataset; kw...)
+function ST.schema(mfd::MultiFrameDataset; kwargs...)
     results = ST.Schema[]
     for frame in mfd
-        push!(results, ST.schema(frame))
+        push!(results, ST.schema(frame, kwargs...))
     end
 
     return results
 end
-function ST.schema(mfd::MultiFrameDataset, i::Integer; kw...)
-    ST.schema(frame(mfd, i))
+function ST.schema(mfd::MultiFrameDataset, i::Integer; kwargs...)
+    ST.schema(frame(mfd, i); kwargs...)
 end
 
 # -------------------------------------------------------------
 # describe
 
-function DF.describe(mfd::MultiFrameDataset)
+function DF.describe(mfd::MultiFrameDataset; kwargs...)
     results = DataFrame[]
     for frame in mfd
-        push!(results, DF.describe(frame))
+        push!(results, DF.describe(frame; kwargs...))
     end
     return results
 end
-function DF.describe(mfd::MultiFrameDataset, i::Integer; kw...)
-    DF.describe(frame(mfd, i))
+function DF.describe(mfd::MultiFrameDataset, i::Integer; kwargs...)
+    DF.describe(frame(mfd, i), kwargs...)
 end

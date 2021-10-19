@@ -21,7 +21,7 @@ const ages = DataFrame(:age => [35, 38, 37])
 @testset "SoleBase.jl" begin
 
     @testset "dataset" begin
-        mfd = MultiFrameDataset([[1],[2]], df)
+        mfd = MultiFrameDataset([[1],[2]], deepcopy(df))
         original_mfd = deepcopy(mfd)
 
         @test isa(mfd, MultiFrameDataset)
@@ -44,15 +44,19 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test dimension(mfd, 2) == 1
 
         # test auto selection of frames
-        auto_mfd = multiframedataset(df)
-        @test auto_mfd == mfd
-        @test !(:mixed in dimension(auto_mfd))
+        auto_mfd = MultiFrameDataset(deepcopy(df))
+        @test nframes(auto_mfd) == 0
+        @test length(spareattributes(auto_mfd)) == nattributes(auto_mfd)
 
-        lang_mfd1 = multiframedataset(df_langs)
+        auto_mfd_all = MultiFrameDataset(deepcopy(df); group = :all)
+        @test auto_mfd_all == mfd
+        @test !(:mixed in dimension(auto_mfd_all))
+
+        lang_mfd1 = MultiFrameDataset(df_langs; group = :all)
         @test nframes(lang_mfd1) == 2
         @test !(:mixed in dimension(lang_mfd1))
 
-        lang_mfd2 = multiframedataset(df_langs; group = [1])
+        lang_mfd2 = MultiFrameDataset(df_langs; group = [1])
         @test nframes(lang_mfd2) == 3
         dims_mfd2 = dimension(lang_mfd2)
         @test length(filter(x -> isequal(x, 0), dims_mfd2)) == 2
@@ -60,7 +64,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test !(:mixed in dimension(lang_mfd2))
 
         # addframe!
-        addframe!(mfd, [1, 2])
+        @test addframe!(mfd, [1, 2]) == mfd # test return
         @test nframes(mfd) == 3
         @test nattributes(mfd) == 2
         @test nattributes(mfd, 3) == 2
@@ -71,7 +75,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test dimension(mfd, 3; force = :max) == 1
 
         # removeframe!
-        removeframe!(mfd, 3)
+        @test removeframe!(mfd, 3) == mfd # test return
         @test nframes(mfd) == 2
         @test nattributes(mfd) == 2
         @test_throws Exception nattributes(mfd, 3) == 2
@@ -85,13 +89,13 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         # addinstance!
         new_inst = DataFrame(:sex => ["F"], :h => [deepcopy(ts_cos)])[1,:]
-        addinstance!(mfd, new_inst)
+        @test addinstance!(mfd, new_inst) == mfd # test return
         @test ninstances(mfd) == 4
         addinstance!(mfd, ["M", deepcopy(ts_cos)])
         @test ninstances(mfd) == 5
 
         # removeinstance!
-        removeinstance!(mfd, ninstances(mfd))
+        @test removeinstance!(mfd, ninstances(mfd)) == mfd # test return
         @test ninstances(mfd) == 4
         removeinstance!(mfd, ninstances(mfd))
         @test ninstances(mfd) == 3
@@ -100,27 +104,27 @@ const ages = DataFrame(:age => [35, 38, 37])
         addinstance!(mfd, ["F", deepcopy(ts_cos)])
         addinstance!(mfd, ["F", deepcopy(ts_cos)])
         addinstance!(mfd, ["F", deepcopy(ts_cos)])
-        keeponlyinstances!(mfd, [1, 2, 3])
+        @test keeponlyinstances!(mfd, [1, 2, 3]) == mfd # test return
         @test ninstances(mfd) == 3
         for i in 1:ninstances(mfd)
             @test instance(mfd, i) == instance(original_mfd, i)
         end
 
         # frame manipulation
-        addattribute_toframe!(mfd, 1, 2)
+        @test addattribute_toframe!(mfd, 1, 2) === mfd # test return
         @test nattributes(mfd, 1) == 2
         @test dimension(mfd, 1) == :mixed
 
-        removeattribute_fromframe!(mfd, 1, 2)
+        @test removeattribute_fromframe!(mfd, 1, 2) === mfd # test return
         @test nattributes(mfd, 1) == 1
         @test dimension(mfd, 1) == 0
 
         # attributes manipulation
-        newframe!(mfd, deepcopy(ages))
+        @test newframe!(mfd, deepcopy(ages)) == mfd # test return
         @test nframes(mfd) == 3
         @test nattributes(mfd, 3) == 1
 
-        dropframe!(mfd, 3)
+        @test dropframe!(mfd, 3) == DataFrame(deepcopy(ages)) # test return
         @test nframes(mfd) == 2
 
         newframe!(mfd, deepcopy(ages); existing_attributes = [1])
@@ -146,5 +150,12 @@ const ages = DataFrame(:age => [35, 38, 37])
         dropframe!(mfd, 2)
         @test nframes(mfd) == 1
         @test nattributes(mfd) == 1
+
+        # RESET
+        mfd = deepcopy(original_mfd)
+
+        # dropspareattributes!
+        removeframe!(mfd, 2)
+        @test dropspareattributes!(mfd) == DataFrame(names(df)[2] => df[:,2])
     end
 end

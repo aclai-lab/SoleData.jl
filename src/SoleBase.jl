@@ -14,9 +14,6 @@ import Base: ==, ≈
 # export types
 export MultiFrameDataset
 
-# constructors
-export multiframedataset
-
 # information gathering
 export instance, ninstances, frame, nframes, attributes, nattributes, dimension, spareattributes
 
@@ -25,7 +22,7 @@ export addinstance!, removeinstance!, keeponlyinstances!
 
 # frame manipulation
 export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
-export newframe!, dropattributes!, dropframe!
+export newframe!, dropattributes!, dropframe!, dropspareattributes!
 
 # re-export from DataFrames
 export describe
