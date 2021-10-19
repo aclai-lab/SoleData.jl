@@ -3,6 +3,10 @@ uuid = "142d03a6-36c4-4bac-9273-c7ed2abbbb4d"
 authors = ["Eduard I. STAN", "Giovanni PAGLIARINI"]
 version = "0.1.0"
 
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
+
 [compat]
 julia = "1"
 
