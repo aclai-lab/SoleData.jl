@@ -7,3 +7,26 @@
 [![Build Status](https://api.cirrus-ci.com/github/aclai-lab/SoleBase.jl.svg)](https://cirrus-ci.com/github/aclai-lab/SoleBase.jl)
 [![Coverage](https://codecov.io/gh/aclai-lab/SoleBase.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/aclai-lab/SoleBase.jl)
 [![Coverage](https://coveralls.io/repos/github/aclai-lab/SoleBase.jl/badge.svg?branch=master)](https://coveralls.io/github/aclai-lab/SoleBase.jl?branch=master)
+
+
+# PkgTemplates
+
+```julia
+t = Template(;
+	user="aclai-lab",
+	authors=["Eduard I. STAN", "Giovanni PAGLIARINI"],
+	plugins=[
+		 TravisCI(),
+		 Codecov(),
+		 Coveralls(),
+		 AppVeyor(),
+		 GitHubPages(),
+		 CirrusCI(),
+		 License(; name="MIT"),
+	],
+)
+
+t("<PACKAGENAME>")
+```
+then push to the repo
+
