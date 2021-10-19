@@ -987,6 +987,37 @@ function dropattribute!(mfd::MultiFrameDataset, i::Integer)
 end
 
 """
+"""
+function dropattributes!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
+    for i in indices
+        @assert 1 <= i <= nattributes(mfd) "Index $(i) does not correspond to an " *
+            "attribute (1:$(nattributes(mfd)))"
+    end
+
+    attr_names = Symbol.(names(mfd.data))
+    result = DataFrame([(attr_names[i] => mfd.data[:,i]) for i in indices]...)
+
+    for i_attr in sort!(deepcopy(indices), rev = true)
+        dropattribute!(mfd, i_attr)
+    end
+
+    return result
+end
+
+"""
+    keeponlyattributes!(mfd, indices)
+
+Drop all attributes that do not correspond to the indices present in `indices` from `mfd`
+multiframe dataset.
+
+Note: if the dropped attributes are present in frames they will also be removed from
+them. This can lead to the removal of frames as side effect.
+"""
+function keeponlyattributes!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
+    dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), indices))
+end
+
+"""
     dropframe!(mfd, i)
 
 Remove `i`-th frame from `mfd` multiframe dataset while dropping all attributes in it and
@@ -1059,15 +1090,7 @@ function dropframe!(mfd::MultiFrameDataset, i::Integer)
     @assert 1 <= i <= nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
-    attr_names = Symbol.(names(mfd.data))
-    result = DataFrame([(attr_names[j] => mfd.data[:,j])
-        for j in reverse(mfd.descriptor[i])]...)
-
-    for i_attr in sort!(deepcopy(mfd.descriptor[i]), rev = true)
-        dropattribute!(mfd, i_attr)
-    end
-
-    return result
+    dropattributes!(mfd, mfd.descriptor[i])
 end
 
 """

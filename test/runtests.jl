@@ -157,5 +157,27 @@ const ages = DataFrame(:age => [35, 38, 37])
         # dropspareattributes!
         removeframe!(mfd, 2)
         @test dropspareattributes!(mfd) == DataFrame(names(df)[2] => df[:,2])
+
+        # keeponlyattributes!
+        mfd_attr_manipulation = MultiFrameDataset([[1], [2], [3, 4]],
+            DataFrame(
+                :age => [30, 9],
+                :name => ["Python", "Julia"],
+                :stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)],
+                :stat2 => [deepcopy(ts_cos), deepcopy(ts_sin)]
+            )
+        )
+        mfd_attr_manipulation_original = deepcopy(mfd_attr_manipulation)
+
+        @test keeponlyattributes!(mfd_attr_manipulation, [1, 3]) == DataFrame(
+                :name => ["Python", "Julia"],
+                :stat2 => [deepcopy(ts_cos), deepcopy(ts_sin)]
+            ) # test return
+        @test mfd_attr_manipulation == MultiFrameDataset([[1], [2]],
+            DataFrame(
+                :age => [30, 9],
+                :stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]
+            )
+        )
     end
 end

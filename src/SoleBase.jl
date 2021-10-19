@@ -20,9 +20,12 @@ export instance, ninstances, frame, nframes, attributes, nattributes, dimension,
 # instance manipulation
 export addinstance!, removeinstance!, keeponlyinstances!
 
+# attribute manipulation
+export dropattribute!, dropattributes!, dropspareattributes!, keeponlyattributes!
+
 # frame manipulation
 export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
-export newframe!, dropattributes!, dropframe!, dropspareattributes!
+export newframe!, dropframe!
 
 # re-export from DataFrames
 export describe
