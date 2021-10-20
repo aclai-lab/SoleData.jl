@@ -6,7 +6,10 @@ using ScientificTypes
 import ScientificTypes: show
 import Base: eltype, isempty, iterate, map, getindex, length
 import Base: firstindex, lastindex, ndims, size, show
+import Base: isequal, isapprox
 import Base: ==, ≈
+import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersect!
+import Base: ∈, ⊆, ∪, ∩
 
 # -------------------------------------------------------------
 # exports
@@ -15,13 +18,18 @@ import Base: ==, ≈
 export MultiFrameDataset
 
 # information gathering
-export instance, ninstances, frame, nframes, attributes, nattributes, dimension, spareattributes
+export instance, ninstances
+export frame, nframes
+export attributes, nattributes, dimension, spareattributes, hasattribute, hasattributes
+export attributeindex
+export isapproxeq, ≊
 
 # instance manipulation
 export addinstance!, removeinstance!, keeponlyinstances!
 
 # attribute manipulation
-export dropattribute!, dropattributes!, dropspareattributes!, keeponlyattributes!
+export insertattribute!, dropattribute!, dropattributes!, keeponlyattributes!
+export dropspareattributes!
 
 # frame manipulation
 export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
@@ -41,6 +49,5 @@ const DF = DataFrames
 
 # include("data/types.jl")
 include("data/dataset.jl")
-# include("data/testing.jl")
 
 end # module

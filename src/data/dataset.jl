@@ -164,9 +164,9 @@ struct MultiFrameDataset <: AbstractDataset
     function MultiFrameDataset(
         df::AbstractDataFrame;
         group::Union{Symbol,AbstractVector{<:Integer}} = :none
-        )
+    )
         @assert isa(group, AbstractVector) || group in [:all, :none] "group can be `:all`, " *
-        "`:none` or an AbstractVector of dimensions"
+            "`:none` or an AbstractVector of dimensions"
 
         if group == :none
             return new([], df)
@@ -192,6 +192,9 @@ struct MultiFrameDataset <: AbstractDataset
     end
 end
 
+# -------------------------------------------------------------
+# MultiFrameDataset - iterable interface
+
 getindex(mfd::MultiFrameDataset, i::Integer) = frame(mfd, i)
 getindex(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer}) = [frame(mfd, i) for i in indices]
 
@@ -207,25 +210,269 @@ Base.@propagate_inbounds function iterate(mfd::MultiFrameDataset, i::Integer = 1
     (@inbounds frame(mfd, i), i+1)
 end
 
+# -------------------------------------------------------------
+# MultiFrameDataset - comparison
+
+"""
+    _empty(mfd)
+
+Get a copy of `mfd` multiframe dataset with no instances.
+
+Note: since the returned MultiFrameDataset will be empty its columns types will be `Any`.
+"""
+function _empty(mfd::MultiFrameDataset)
+    return MultiFrameDataset(
+        deepcopy(mfd.descriptor),
+        df = DataFrame([attr_name => [] for attr_name in Symbol.(names(mfd.data))])
+    )
+end
+"""
+    _empty!(mfd)
+
+Remove all instances from `mfd` multiframe dataset.
+
+Note: since the MultiFrameDataset will be empty its columns types will become `Any`.
+"""
+function _empty!(mfd::MultiFrameDataset)
+    return removeinstances!(mfd, 1:nisnstances(mfd))
+end
+
+"""
+    _same_attributes(mfd1, mfd2)
+
+Determine whether two MultiFrameDatasets have the same attributes.
+"""
+function _same_attributes(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    return Set(Symbol.(names(mfd1.data))) == Set(Symbol.(names(mfd1.data)))
+end
+
+"""
+    _same_dataframe(mfd1, mfd2)
+
+Determine whether two MultiFrameDatasets have the same inner DataFrame regardless of the
+positioning of their columns.
+
+Note: the check will performed against the instances too; if the intent is to just check
+the presence of the same attributes use [`_same_attributes`](@ref) instead.
+"""
+function _same_dataframe(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
+        return false
+    end
+
+    mfd1_attrs = Symbol.(names(mfd1.data))
+    mfd2_attrs = Symbol.(names(mfd2.data))
+    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
+
+    mfd1.data == mfd2.data[:,unmixed_indices]
+end
+
+"""
+    _same_descriptor(mfd1, mfd2)
+
+Determine whether two MultiFrameDatasets have the same frames regardless of the positioning
+of their columns.
+
+Note: the check will performed against the instances too; if the intent is to just check
+the presence of the same attributes use [`_same_attributes`](@ref) instead.
+"""
+function _same_descriptor(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    if !_same_attributes(mfd1, mfd2)
+        return false
+    end
+
+    if nframes(mfd1) != nframes(mfd2) ||
+            [nattributes(f) for f in mfd1] != [nattributes(f) for f in mfd2]
+        return false
+    end
+
+    mfd1_attrs = Symbol.(names(mfd1.data))
+    mfd2_attrs = Symbol.(names(mfd2.data))
+    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
+
+    for i in 1:nframes(mfd1)
+        if mfd1.descriptor[i] != Integer[unmixed_indices[j] for j in mfd2.descriptor[i]]
+            return false
+        end
+    end
+
+    return true
+end
+
+"""
+    _same_instances(mfd1, mfd2)
+
+Determine whether two MultiFrameDatasets have the same instances regardless of their order.
+"""
+function _same_instances(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
+        return false
+    end
+
+    mfd1_attrs = Symbol.(names(mfd1.data))
+    mfd2_attrs = Symbol.(names(mfd2.data))
+    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
+
+    return mfd1 ⊆ mfd2 && mfd2 ⊆ mfd1
+end
+
+"""
+    _same_multiframedataset(mfd1, mfd2)
+
+Determine whether two MultiFrameDatasets have the same inner DataFrame and frames regardless
+of the positioning of their columns.
+
+Note: the check will performed against the instances too; if the intent is to just check
+the presence of the same attributes use [`_same_attributes`](@ref) instead.
+"""
+function _same_multiframedataset(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
+        return false
+    end
+
+    if nframes(mfd1) != nframes(mfd2) ||
+            [nattributes(f) for f in mfd1] != [nattributes(f) for f in mfd2]
+        return false
+    end
+
+    mfd1_attrs = Symbol.(names(mfd1.data))
+    mfd2_attrs = Symbol.(names(mfd2.data))
+    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
+
+    if mfd1.data != mfd2.data[:,unmixed_indices]
+        return false
+    end
+
+    for i in 1:nframes(mfd1)
+        if mfd1.descriptor[i] != Integer[unmixed_indices[j] for j in mfd2.descriptor[i]]
+            return false
+        end
+    end
+
+    return true
+end
+
+"""
+    ==(mfd1, mfd2)
+    isequal(mfd1, mfd2)
+
+Determine whether two MultiFrameDatasets are equal.
+
+Note: the check is also performed on the instances. This means that if the two datasets are
+the same but they differ by instance oreder this will return `false`.
+
+If the intent is to check if two MultiFrameDatasets have same instances regardless of the
+order use [`≊`](@ref) instead.
+If the intent is to check if two MultiFrameDatasets have same frame descriptors and
+attributes use [`isapprox`](@ref) instead.
+"""
+function isequal(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    return (mfd1.data == mfd2.data && mfd1.descriptor == mfd2.descriptor) ||
+        _same_multiframedataset(mfd1, mfd2)
+end
 function ==(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
-    return mfd1.data == mfd2.data && mfd1.descriptor == mfd2.descriptor
+    isequal(mfd1, mfd2)
 end
 
 """
-TODO: doc
-Discuss
-"""
-function ≈(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
-    return mfd1.data == mfd2.data
-end
+    ≊(mfd1, mfd2)
+    isapproxeq(mfd1, mfd2)
 
+Determine whether two MultiFrameDatasets are equivalent.
+
+Two MultiFrameDatasets are considered equivalent if they have same frame descriptors,
+attributes and instances.
+
+Note: this means that the order of the instance in the datasets does not matter.
+
+If the intent is to check if two MultiFrameDatasets have same instances in the same order
+use [`isequal`](@ref) instead.
+If the intent is to check if two MultiFrameDatasets have same frame descriptors and
+attributes use [`isapprox`](@ref) instead.
 """
-TODO: doc
-Discuss
-"""
+function isapproxeq(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    return isequal(mfd1, mfd2) && _same_instances(mfd1, mfd2)
+end
 function ≊(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
-    return mfd1 ≈ mfd2 && Set(Set.(mfd1.descriptor)) == Set(Set.(mfd2.descriptor))
+    isapproxeq(mfd1, mfd2)
 end
+
+"""
+    ≈(mfd1, mfd2)
+    isapprox(mfd1, mfd2)
+
+Determine whether two MultiFrameDatasets are similar.
+
+Two MultiFrameDatasets are considered similar if they have same frame descriptors and
+attributes. Note that this means no check over instances is performed.
+
+If the intent is to check if two MultiFrameDatasets have same instances in the same order
+use [`isequal`](@ref) instead.
+If the intent is to check if two MultiFrameDatasets have same instances regardless of the
+order use [`≊`](@ref) instead.
+"""
+function isapprox(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    # note: _same_descriptor already includes attributes checking
+    return _same_descriptor(mfd1, mfd2)
+end
+
+# -------------------------------------------------------------
+# Set operations
+
+function in(instance::DataFrameRow, mfd::MultiFrameDataset)
+    return instance in eachrow(mfd.data)
+end
+function in(instance::AbstractVector, mfd::MultiFrameDataset)
+    if nattributes(mfd) != length(instance)
+        return false
+    end
+
+    dfr = eachrow(DataFrame([attr_name => instance[i]
+        for (i, attr_name) in Symbol.(names(mfd.data))]))[1]
+
+    return dfr ∈ eachrow(mfd.data)
+end
+
+function issubset(instances::AbstractDataFrame, mfd::MultiFrameDataset)
+    for dfr in eachrow(instances)
+        if !(dfr ∈ mfd)
+            return false
+        end
+    end
+
+    return true
+end
+function issubset(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    return mfd1 ≈ mfd2 && mfd1.data ⊆ mfd2
+end
+
+function setdiff(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    # TODO: implement setdiff!
+    throw(Exception("Not implemented"))
+end
+function setdiff!(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    # TODO: implement setdiff!
+    throw(Exception("Not implemented"))
+end
+function intersect(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    # TODO: implement intersect
+    throw(Exception("Not implemented"))
+end
+function intersect!(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    # TODO: implement intersect!
+    throw(Exception("Not implemented"))
+end
+function union(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    # TODO: implement union
+    throw(Exception("Not implemented"))
+end
+function union!(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
+    # TODO: implement union!
+    throw(Exception("Not implemented"))
+end
+
+# -------------------------------------------------------------
+# MultiFrameDataset - informations
 
 function show(io::IO, mfd::MultiFrameDataset)
     println(io, "● MultiFrameDataset")
@@ -245,9 +492,66 @@ function show(io::IO, mfd::MultiFrameDataset)
 end
 
 """
-    frame(mfd, index)
+    dimension(df)
 
-Get the `index`-th frame of `mfd` multiframe dataset.
+Get the dimension of a dataframe `df`.
+
+If the dataframe has attributes of various dimensions `:mixed` is returned.
+
+If the dataframe is empty (no instances) `:empty` is returned.
+This behavior can be changed by setting the keyword argument `force`:
+
+- `:no` (default): return `:mixed` in case of mixed dimension
+- `:max`: return the greatest dimension
+- `:min`: return the lowest dimension
+"""
+function dimension(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbol,Integer}
+    @assert force in [:no, :max, :min] "`force` can be either :no, :max or :min"
+
+    if nrow(df) == 0
+        return :empty
+    end
+
+    dims = [maximum(x -> isa(x, AbstractVector) ? ndims(x) : 0, [inst for inst in c])
+        for c in eachcol(df)]
+
+    if all(y -> y == dims[1], dims)
+        return dims[1]
+    elseif force == :max
+        return max(dims...)
+    elseif force == :min
+        return min(dims...)
+    else
+        return :mixed
+    end
+end
+function dimension(mfd::MultiFrameDataset, i::Integer; kwargs...)
+    dimension(frame(mfd, i); kwargs...)
+end
+function dimension(mfd::MultiFrameDataset; kwargs...)
+    Tuple([dimension(frame; kwargs...) for frame in mfd])
+end
+dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
+
+"""
+"""
+function _name2index(df::AbstractDataFrame, attribute_name::Symbol)
+    columnindex(df, attribute_name)
+end
+function _name2index(mfd::MultiFrameDataset, attribute_name::Symbol)
+    columnindex(mfd.data, attribute_name)
+end
+function _name2index(df::AbstractDataFrame, attribute_names::AbstractVector{Symbol})
+    [_name2index(df, attr_name) for attr_name in attribute_names]
+end
+function _name2index(mfd::MultiFrameDataset, attribute_names::AbstractVector{Symbol})
+    [_name2index(mfd, attr_name) for attr_name in attribute_names]
+end
+
+"""
+    frame(mfd, i)
+
+Get the `i`-th frame of `mfd` multiframe dataset.
 """
 function frame(mfd::MultiFrameDataset, i::Integer)
     """
@@ -333,29 +637,27 @@ function nattributes(mfd::MultiFrameDataset, i::Integer)
 end
 
 """
-    addattribute!(mfd, [col, ]attr_id, values)
-    addattribute!(mfd, [col, ]attr_id, value)
+    insertattribute!(mfd, [col, ]attr_id, values)
+    insertattribute!(mfd, [col, ]attr_id, value)
 
-Add an attibute to the dataset `mfd` with id `attr_id`.
+Insert an attibute in the dataset `mfd` with id `attr_id`.
 
 The length of `values` should match `ninstances(mfd)` or an exception is thrown.
 
 If a single `value` is passed as last parameter this will be copied and used for each
 instance in the dataset.
 
-Note: duplicated attribute names will result be renamed to avoid conflicts: see `makeunique`
-parameter of [`insertcols!`](@ref).
+Note: duplicated attribute names will be renamed to avoid conflicts: see `makeunique`
+parameter of [`insertcols!`](@ref) in DataFrames documentation.
 
 # Examples
 TODO: examples
 """
-function addattribute!(
+function insertattribute!(
     mfd::MultiFrameDataset, col::Integer, attr_id::Symbol, values::AbstractVector
 )
     if col != nattributes(mfd)+1
-        """
-        TODO: implement `col` parameter
-        """
+        # TODO: implement `col` parameter
         throw(Exception("Still not implemented with `col` != nattributes + 1"))
     end
 
@@ -364,14 +666,57 @@ function addattribute!(
 
     insertcols!(mfd.data, col, attr_id => values, makeunique = true)
 end
-function addattribute!(mfd::MultiFrameDataset, attr_id::Symbol, values::AbstractVector)
-    addattribute!(mfd, nattributes(mfd)+1, attr_id, values)
+function insertattribute!(mfd::MultiFrameDataset, attr_id::Symbol, values::AbstractVector)
+    insertattribute!(mfd, nattributes(mfd)+1, attr_id, values)
 end
-function addattribute!(mfd::MultiFrameDataset, col::Integer, attr_id::Symbol, value)
-    addattribute!(mfd, col, attr_id, [deepcopy(value) for i in 1:ninstances(mfd)])
+function insertattribute!(mfd::MultiFrameDataset, col::Integer, attr_id::Symbol, value)
+    insertattribute!(mfd, col, attr_id, [deepcopy(value) for i in 1:ninstances(mfd)])
 end
-function addattribute!(mfd::MultiFrameDataset, attr_id::Symbol, value)
-    addattribute!(mfd, nattributes(mfd)+1, attr_id, value)
+function insertattribute!(mfd::MultiFrameDataset, attr_id::Symbol, value)
+    insertattribute!(mfd, nattributes(mfd)+1, attr_id, value)
+end
+
+"""
+TODO: docs
+"""
+function hasattribute(df::AbstractDataFrame, attribute_name::Symbol)
+    _name2index(df, attribute_name) > 0
+end
+function hasattribute(mfd::MultiFrameDataset, frame_index::Integer, attribute_name::Symbol)
+    _name2index(frame(mfd, frame_index), attribute_name) > 0
+end
+function hasattribute(mfd::MultiFrameDataset, attribute_name::Symbol)
+    _name2index(mfd, attribute_name) > 0
+end
+
+"""
+TODO: docs
+"""
+function hasattributes(df::AbstractDataFrame, attribute_names::AbstractVector{Symbol})
+    !(0 in _name2index(df, attribute_names))
+end
+function hasattributes(
+    mfd::MultiFrameDataset,
+    frame_index::Integer,
+    attribute_names::AbstractVector{Symbol}
+)
+    !(0 in _name2index(frame(mfd, frame_index), attribute_names))
+end
+function hasattributes(mfd::MultiFrameDataset, attribute_names::AbstractVector{Symbol})
+    !(0 in _name2index(mfd, attribute_names))
+end
+
+"""
+TODO: docs
+"""
+function attributeindex(df::AbstractDataFrame, attribute_name::Symbol)
+    _name2index(df, attribute_name)
+end
+function attributeindex(mfd::MultiFrameDataset, frame_index::Integer, attribute_name::Symbol)
+    _name2index(frame(mfd, frame_index), attribute_name)
+end
+function attributeindex(mfd::MultiFrameDataset, attribute_name::Symbol)
+    _name2index(mfd, attribute_name)
 end
 
 """
@@ -381,7 +726,7 @@ Get the indices of all the attributes currently not present in any of the frames
 multiframe dataset.
 """
 function spareattributes(mfd::MultiFrameDataset)::AbstractVector{<:Integer}
-    filter(x -> !(x in unique(cat(mfd.descriptor..., dims = 1))), 1:nattributes(mfd))
+    setdiff(1:nattributes(mfd), unique(cat(mfd.descriptor..., dims = 1)))
 end
 
 """
@@ -549,7 +894,7 @@ The `MultiFrameDataset` is returned.
 """
 function removeinstances!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
     for i in indices
-        @assert 1 <= i <= ninstances(mfd) "Index $(i) no in range 1:ninstances " *
+        @assert 1 ≤ i ≤ ninstances(mfd) "Index $(i) no in range 1:ninstances " *
             "(1:$(ninstances(mfd)))"
     end
 
@@ -581,7 +926,18 @@ end
     instance(mfd, i)
 
 Get `i`-th instance in `mfd` multiframe dataset.
+TODO: add new dispatch docs
 """
+function instance(df::AbstractDataFrame, i::Integer)
+    """
+    TODO: find a unique template to return, for example, AssertionError messages.
+    The following has been added, but it does not follow the current template.
+    """
+    @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
+        "(1:$(ninstances(mfd))"
+
+    @view df[i,:]
+end
 function instance(mfd::MultiFrameDataset, i::Integer)
     """
     TODO: find a unique template to return, for example, AssertionError messages.
@@ -590,7 +946,68 @@ function instance(mfd::MultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ ninstances(mfd) "Index ($i) must be a valid instance number " *
         "(1:$(ninstances(mfd))"
 
-    @view mfd.data[i,:]
+    instance(mfd.data, i)
+end
+function instance(mfd::MultiFrameDataset, i_frame::Integer, i_instance::Integer)
+    """
+    TODO: find a unique template to return, for example, AssertionError messages.
+    The following has been added, but it does not follow the current template.
+    """
+    @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
+        "frame number (1:$(nframes(mfd))"
+    @assert 1 ≤ i_instance ≤ ninstances(mfd) "Index ($i_instance) must be a valid " *
+        "instance number (1:$(ninstances(mfd))"
+
+    instance(frame(mfd, i_frame), i_instance)
+end
+
+"""
+    instances(mfd, indices)
+
+Get instances at `indices` in `mfd` multiframe dataset.
+TODO: add new dispatch docs
+"""
+function instances(df::AbstractDataFrame, indices::AbstractVector{<:Integer})
+    """
+    TODO: find a unique template to return, for example, AssertionError messages.
+    The following has been added, but it does not follow the current template.
+    """
+    for i in indices
+        @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
+            "(1:$(ninstances(mfd))"
+    end
+
+    @view df[indices,:]
+end
+function instances(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
+    """
+    TODO: find a unique template to return, for example, AssertionError messages.
+    The following has been added, but it does not follow the current template.
+    """
+    for i in indices
+        @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
+            "(1:$(ninstances(mfd))"
+    end
+
+    instances(mfd.data, indices)
+end
+function instances(
+    mfd::MultiFrameDataset,
+    i_frame::Integer,
+    inst_indices::AbstractVector{<:Integer}
+)
+    """
+    TODO: find a unique template to return, for example, AssertionError messages.
+    The following has been added, but it does not follow the current template.
+    """
+    @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
+        "frame number (1:$(nframes(mfd))"
+    for i in inst_indices
+        @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
+            "(1:$(ninstances(mfd))"
+    end
+
+    instances(frame(mfd, i_frame), inst_indices)
 end
 
 # -------------------------------------------------------------
@@ -598,9 +1015,12 @@ end
 
 """
     addframe!(mfd, indices)
+    addframe!(mfd, attribute_names)
 
 Create a new frame in `mfd` multiframe dataset using attributes at `indices` and return
 `mfd`.
+
+Alternatively to the `indices` the attribute names can be used.
 
 Note: to add a new frame with new attributes see [`newframe!`](@ref).
 
@@ -672,6 +1092,14 @@ function addframe!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
 
     return mfd
 end
+function addframe!(mfd::MultiFrameDataset, attribute_names::AbstractVector{Symbol})
+    for attr_name in attribute_names
+        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+            "attribute $(attr_name)"
+    end
+
+    addframe!(mfd, _name2index(mfd, attribute_names))
+end
 
 """
     removeframe!(mfd, i)
@@ -738,7 +1166,7 @@ julia> removeframe!(mfd, 2)
 ```
 """
 function removeframe!(mfd::MultiFrameDataset, i::Integer)
-    @assert 1 <= i <= nframes(mfd) "Index $(i) does not correspond to a frame " *
+    @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
     deleteat!(mfd.descriptor, i)
@@ -748,16 +1176,19 @@ end
 
 """
     addattribute_toframe!(mfd, farme_index, attr_index)
+    addattribute_toframe!(mfd, farme_index, attr_name)
 
 Add attribute at index `attr_index` to the frame at index `frame_index` in `mfd` multiframe
 dataset and return `mfd`.
+
+Alternatively to `attr_index` the attribute name can be used.
 """
 function addattribute_toframe!(
     mfd::MultiFrameDataset, frame_index::Integer, attr_index::Integer
 )
-    @assert 1 <= frame_index <= nframes(mfd) "Index $(frame_index) does not correspond to " *
+    @assert 1 ≤ frame_index ≤ nframes(mfd) "Index $(frame_index) does not correspond to " *
         "a frame (1:$(nframes(mfd)))"
-    @assert 1 <= attr_index <= nattributes(mfd) "Index $(attr_index) does not correspond to " *
+    @assert 1 ≤ attr_index ≤ nattributes(mfd) "Index $(attr_index) does not correspond to " *
         "an attribute (1:$(nattributes(mfd)))"
 
     if attr_index in mfd.descriptor[frame_index]
@@ -768,19 +1199,30 @@ function addattribute_toframe!(
 
     return mfd
 end
+function addattribute_toframe!(
+    mfd::MultiFrameDataset, frame_index::Integer, attr_name::Symbol
+)
+    @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
+        "$(attr_name)"
+
+    addattribute_toframe!(mfd, frame_index, _name2index(mfd, attr_name))
+end
 
 """
     removeattribute_fromframe!(mfd, farme_index, attr_index)
+    removeattribute_fromframe!(mfd, farme_index, attr_name)
 
 Remove attribute at index `attr_index` from the frame at index `frame_index` in `mfd`
 multiframe dataset and return `mfd`.
+
+Alternatively to `attr_index` the attribute name can be used.
 """
 function removeattribute_fromframe!(
     mfd::MultiFrameDataset, frame_index::Integer, attr_index::Integer
 )
-    @assert 1 <= frame_index <= nframes(mfd) "Index $(frame_index) does not correspond to " *
+    @assert 1 ≤ frame_index ≤ nframes(mfd) "Index $(frame_index) does not correspond to " *
         "a frame (1:$(nframes(mfd)))"
-    @assert 1 <= attr_index <= nattributes(mfd) "Index $(attr_index) does not correspond to " *
+    @assert 1 ≤ attr_index ≤ nattributes(mfd) "Index $(attr_index) does not correspond to " *
         "an attribute (1:$(nattributes(mfd)))"
 
     if !(attr_index in mfd.descriptor[frame_index])
@@ -797,16 +1239,26 @@ function removeattribute_fromframe!(
 
     return mfd
 end
+function removeattribute_fromframe!(
+    mfd::MultiFrameDataset, frame_index::Integer, attr_name::Symbol
+)
+    @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
+        "$(attr_name)"
+
+    removeattribute_fromframe!(mfd, frame_index, _name2index(mfd, attr_name))
+end
 
 """
-    newframe!(mfd, new_frame)
+    newframe!(mfd[, col], new_frame)
 
-Add `new_frame` as new frame to `mfd` multiframe dataset and return `mfd`.
+Insert `new_frame` as new frame to `mfd` multiframe dataset and return `mfd`.
 
 `new_frame` has to be an `AbstractDataFrame`.
 
 Existing attributes can be added to the new frame while adding it to the dataset passing
 the corresponding inidices by `existing_attributes`.
+
+If `col` is specified then the the attributes will be inserted starting at index `col`.
 
 TODO: To be reviewed.
 
@@ -930,15 +1382,21 @@ julia> newframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
 ```
 """
 function newframe!(
-    mfd::MultiFrameDataset, new_frame::AbstractDataFrame;
+    mfd::MultiFrameDataset,
+    col::Integer,
+    new_frame::AbstractDataFrame,
     existing_attributes::AbstractVector{<:Integer} = Integer[]
 )
-    # TODO: consider adding the possibility to specify the position as col index
+    if col != nattributes(mfd)+1
+        # TODO: implement `col` parameter
+        throw(Exception("Still not implemented with `col` != nattributes + 1"))
+    end
+
     # TODO: consider adding the possibility to pass names instead of indices to `existing_attributes`
     new_indices = (nattributes(mfd)+1):(nattributes(mfd)+ncol(new_frame))
 
     for (k, c) in collect(zip(keys(eachcol(new_frame)), collect(eachcol(new_frame))))
-        addattribute!(mfd, k, c)
+        insertattribute!(mfd, k, c)
     end
     addframe!(mfd, new_indices)
 
@@ -947,6 +1405,41 @@ function newframe!(
     end
 
     return mfd
+end
+function newframe!(
+    mfd::MultiFrameDataset,
+    col::Integer,
+    new_frame::AbstractDataFrame,
+    existing_attributes::AbstractVector{Symbol}
+)
+    for attr_name in existing_attributes
+        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+            "attribute $(attr_name)"
+    end
+
+    newframe!(mfd, col, new_frame, _name2index(mfd, existing_attributes))
+end
+function newframe!(
+    mfd::MultiFrameDataset,
+    new_frame::AbstractDataFrame,
+    existing_attributes::AbstractVector{<:Integer} = Integer[]
+)
+    newframe!(mfd, nattributes(mfd)+1, new_frame, existing_attributes)
+end
+function newframe!(
+    mfd::MultiFrameDataset,
+    new_frame::AbstractDataFrame,
+    existing_attributes::AbstractVector{Symbol}
+)
+    for attr_name in existing_attributes
+        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+            "attribute $(attr_name)"
+    end
+
+    println(existing_attributes)
+    println(_name2index(mfd, existing_attributes))
+
+    newframe!(mfd, nattributes(mfd)+1, new_frame, _name2index(mfd, existing_attributes))
 end
 
 """
@@ -958,11 +1451,11 @@ the dopped column.
 TODO: To be reviewed.
 """
 function dropattribute!(mfd::MultiFrameDataset, i::Integer)
-    @assert 1 <= i <= nattributes(mfd) "Attribute $(i) is not a valid attibute index " *
-    "(1:$(nattributes(mfd)))"
+    @assert 1 ≤ i ≤ nattributes(mfd) "Attribute $(i) is not a valid attibute index " *
+        "(1:$(nattributes(mfd)))"
 
     j = 1
-    while j <= nframes(mfd)
+    while j ≤ nframes(mfd)
         desc = mfd.descriptor[j]
         if i in desc
             removeattribute_fromframe!(mfd, j, i)
@@ -985,12 +1478,18 @@ function dropattribute!(mfd::MultiFrameDataset, i::Integer)
 
     return result
 end
+function dropattribute!(mfd::MultiFrameDataset, attribute_name::Symbol)
+    @assert hasattribute(mfd, attribute_name) "MultiFrameDataset does not contain " *
+        "attribute $(attribute_name)"
+
+    dropattribute!(mfd, _name2index(mfd, attribute_name))
+end
 
 """
 """
 function dropattributes!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
     for i in indices
-        @assert 1 <= i <= nattributes(mfd) "Index $(i) does not correspond to an " *
+        @assert 1 ≤ i ≤ nattributes(mfd) "Index $(i) does not correspond to an " *
             "attribute (1:$(nattributes(mfd)))"
     end
 
@@ -1003,6 +1502,14 @@ function dropattributes!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integ
 
     return result
 end
+function dropattributes!(mfd::MultiFrameDataset, attribute_names::AbstractVector{Symbol})
+    for attr_name in attribute_names
+        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+            "attribute $(attr_name)"
+    end
+
+    dropattributes!(mfd, _name2index(mfd, attribute_names))
+end
 
 """
     keeponlyattributes!(mfd, indices)
@@ -1010,11 +1517,30 @@ end
 Drop all attributes that do not correspond to the indices present in `indices` from `mfd`
 multiframe dataset.
 
-Note: if the dropped attributes are present in frames they will also be removed from
+Note: if the dropped attributes are present in some frame they will also be removed from
 them. This can lead to the removal of frames as side effect.
 """
 function keeponlyattributes!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
     dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), indices))
+end
+function keeponlyattributes!(mfd::MultiFrameDataset, attribute_names::AbstractVector{Symbol})
+    for attr_name in attribute_names
+        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+            "attribute $(attr_name)"
+    end
+
+    dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
+end
+function keeponlyattributes!(
+    mfd::MultiFrameDataset,
+    attribute_names::AbstractVector{<:AbstractVector}
+)
+    for attr_name in attribute_names
+        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+            "attribute $(attr_name)"
+    end
+
+    dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
 end
 
 """
@@ -1087,7 +1613,7 @@ julia> mfd
 ```
 """
 function dropframe!(mfd::MultiFrameDataset, i::Integer)
-    @assert 1 <= i <= nframes(mfd) "Index $(i) does not correspond to a frame " *
+    @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
     dropattributes!(mfd, mfd.descriptor[i])
@@ -1142,48 +1668,6 @@ function dropspareattributes!(mfd::MultiFrameDataset)
 
     return result
 end
-
-"""
-    dimension(df)
-
-Get the dimension of a dataframe `df`.
-
-If the dataframe has attributes of various dimensions `:mixed` is returned.
-
-If the dataframe is empty (no instances) `:empty` is returned.
-This behavior can be changed by setting the keyword argument `force`:
-
-- `:no` (default): return `:mixed` in case of mixed dimension
-- `:max`: return the greatest dimension
-- `:min`: return the lowest dimension
-"""
-function dimension(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbol,Integer}
-    @assert force in [:no, :max, :min] "`force` can be either :no, :max or :min"
-
-    if nrow(df) == 0
-        return :empty
-    end
-
-    dims = [maximum(x -> isa(x, AbstractVector) ? ndims(x) : 0, [inst for inst in c])
-        for c in eachcol(df)]
-
-    if all(y -> y == dims[1], dims)
-        return dims[1]
-    elseif force == :max
-        return max(dims...)
-    elseif force == :min
-        return min(dims...)
-    else
-        return :mixed
-    end
-end
-function dimension(mfd::MultiFrameDataset, i::Integer; kwargs...)
-    dimension(frame(mfd, i); kwargs...)
-end
-function dimension(mfd::MultiFrameDataset; kwargs...)
-    Tuple([dimension(frame; kwargs...) for frame in mfd])
-end
-dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
 
 # -------------------------------------------------------------
 # schema

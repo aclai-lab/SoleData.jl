@@ -63,6 +63,12 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test length(filter(x -> isequal(x, 1), dims_mfd2)) == 1
         @test !(:mixed in dimension(lang_mfd2))
 
+        # test equality between mixed-columns datasets
+        mfd1_sim = MultiFrameDataset([[1,2]], DataFrame(:b => [3,4], :a => [1,2]))
+        mfd2_sim = MultiFrameDataset([[2,1]], DataFrame(:a => [1,2], :b => [3,4]))
+        @test mfd1_sim ≈ mfd2_sim
+        @test mfd1_sim == mfd2_sim
+
         # addframe!
         @test addframe!(mfd, [1, 2]) == mfd # test return
         @test nframes(mfd) == 3
@@ -127,7 +133,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test dropframe!(mfd, 3) == DataFrame(deepcopy(ages)) # test return
         @test nframes(mfd) == 2
 
-        newframe!(mfd, deepcopy(ages); existing_attributes = [1])
+        newframe!(mfd, deepcopy(ages), [1])
         @test nframes(mfd) == 3
         @test nattributes(mfd, 3) == 2
         @test dimension(mfd, 3) == 0
@@ -179,5 +185,83 @@ const ages = DataFrame(:age => [35, 38, 37])
                 :stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]
             )
         )
+
+        # addressing attributes by name
+        mfd1 = MultiFrameDataset([[1],[2]],
+            DataFrame(
+                :age => [30, 9],
+                :name => ["Python", "Julia"],
+            )
+        )
+        mfd_attr_names_original = deepcopy(mfd1)
+        mfd2 = deepcopy(mfd1)
+
+        @test hasattribute(mfd1, :age) == true
+        @test hasattribute(mfd1, :name) == true
+        @test hasattribute(mfd1, :missing_attribute) == false
+        @test hasattributes(mfd1, [:age, :name]) == true
+        @test hasattributes(mfd1, [:age, :missing_attribute]) == false
+
+        @test hasattribute(mfd1, 1, :age) == true
+        @test hasattribute(mfd1, 1, :name) == false
+        @test hasattributes(mfd1, 1, [:age, :name]) == false
+
+        @test hasattribute(mfd1, 2, :name) == true
+        @test hasattributes(mfd1, 2, [:name]) == true
+
+        @test attributeindex(mfd1, :age) == 1
+        @test attributeindex(mfd1, :missing_attribute) == 0
+        @test attributeindex(mfd1, 1, :age) == 1
+        @test attributeindex(mfd1, 2, :age) == 0
+        @test attributeindex(mfd1, 2, :name) == 1
+
+        # addressing attributes by name - newframe!
+        mfd1 = deepcopy(mfd_attr_names_original)
+        mfd2 = deepcopy(mfd_attr_names_original)
+        @test addframe!(mfd1, [1]) == addframe!(mfd2, [:age])
+
+        # addressing attributes by name - addattribute_toframe!
+        mfd1 = deepcopy(mfd_attr_names_original)
+        mfd2 = deepcopy(mfd_attr_names_original)
+        @test addattribute_toframe!(mfd1, 2, 1) == addattribute_toframe!(mfd2, 2, :age)
+
+        # addressing attributes by name - removeattribute_fromframe!
+        @test removeattribute_fromframe!(mfd1, 2, 1) ==
+            removeattribute_fromframe!(mfd2, 2, :age)
+
+        # addressing attributes by name - dropattribute!
+        mfd1 = deepcopy(mfd_attr_names_original)
+        mfd2 = deepcopy(mfd_attr_names_original)
+        @test dropattribute!(mfd1, 1) ==
+            dropattribute!(mfd2, :age)
+        @test mfd1 == mfd2
+
+        # addressing attributes by name - newframe!
+        mfd1 = deepcopy(mfd_attr_names_original)
+        mfd2 = deepcopy(mfd_attr_names_original)
+        @test newframe!(
+            mfd1,
+            DataFrame(:stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]),
+            [1]
+        ) == newframe!(
+            mfd2,
+            DataFrame(:stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]),
+            [:age]
+        )
+
+        # addressing attributes by name - dropattributes!
+        @test dropattributes!(mfd1, [1, 2]) ==
+            dropattributes!(mfd2, [:age, :name])
+        @test mfd1 == mfd2
+
+        @test nframes(mfd1) == nframes(mfd2) == 1
+        @test nattributes(mfd1) == nattributes(mfd2) == 1
+        @test nattributes(mfd1, 1) == nattributes(mfd2, 1) == 1
+
+        # addressing attributes by name - keeponlyattributes!
+        mfd1 = deepcopy(mfd_attr_names_original)
+        mfd2 = deepcopy(mfd_attr_names_original)
+        @test keeponlyattributes!(mfd1, [1]) == keeponlyattributes!(mfd2, [:age])
+        @test mfd1 == mfd2
     end
 end
