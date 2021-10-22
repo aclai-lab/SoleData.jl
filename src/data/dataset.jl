@@ -1,3 +1,11 @@
+"""
+GENERAL TODOs:
+* find a unique template to return, for example, AssertionError messages.
+* control that `add`/`remove` and `insert`/`drop` are coherent.
+* use `return` at the end of the functions
+* consider to add names to frames
+* add Logger; in particular, it should be nice to have a module SoleLogger(s)
+"""
 
 # -------------------------------------------------------------
 # Abstract types
@@ -21,6 +29,7 @@ Integers representing the index of the attributes selected for that frame.
 
 The order matters for both the frames indices and the attributes in them.
 
+# TODO check this
 # Examples
 ```jldoctest
 julia> df = DataFrame(
@@ -70,6 +79,7 @@ Selection of frames can be controlled by the parameter `group` which can be:
 
 Note: `:all` and `:none` are the only Symbols accepted by `group`.
 
+# TODO group should be [0] by default?
 # Examples
 ```jldoctest
 julia> df = DataFrame(
@@ -241,9 +251,10 @@ end
     _same_attributes(mfd1, mfd2)
 
 Determine whether two MultiFrameDatasets have the same attributes.
+# TODO this probably should also check the types of the attributes.
 """
 function _same_attributes(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
-    return Set(Symbol.(names(mfd1.data))) == Set(Symbol.(names(mfd1.data)))
+    return Set(Symbol.(names(mfd1.data))) == Set(Symbol.(names(mfd2.data)))
 end
 
 """
@@ -309,10 +320,6 @@ function _same_instances(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
         return false
     end
 
-    mfd1_attrs = Symbol.(names(mfd1.data))
-    mfd2_attrs = Symbol.(names(mfd2.data))
-    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
-
     return mfd1 ⊆ mfd2 && mfd2 ⊆ mfd1
 end
 
@@ -324,6 +331,8 @@ of the positioning of their columns.
 
 Note: the check will performed against the instances too; if the intent is to just check
 the presence of the same attributes use [`_same_attributes`](@ref) instead.
+
+TODO perhaps could be done better? E.g. using the aforedefined functions.
 """
 function _same_multiframedataset(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
     if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
@@ -365,6 +374,8 @@ If the intent is to check if two MultiFrameDatasets have same instances regardle
 order use [`≊`](@ref) instead.
 If the intent is to check if two MultiFrameDatasets have same frame descriptors and
 attributes use [`isapprox`](@ref) instead.
+
+TODO change documentation
 """
 function isequal(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
     return (mfd1.data == mfd2.data && mfd1.descriptor == mfd2.descriptor) ||
@@ -378,10 +389,10 @@ end
     ≊(mfd1, mfd2)
     isapproxeq(mfd1, mfd2)
 
-Determine whether two MultiFrameDatasets are equivalent.
+Determine whether two MultiFrameDatasets are "approximately" equivalent.
 
-Two MultiFrameDatasets are considered equivalent if they have same frame descriptors,
-attributes and instances.
+Two MultiFrameDatasets are considered "approximately" equivalent if they have same frame
+descriptors, attributes and instances.
 
 Note: this means that the order of the instance in the datasets does not matter.
 
@@ -389,6 +400,8 @@ If the intent is to check if two MultiFrameDatasets have same instances in the s
 use [`isequal`](@ref) instead.
 If the intent is to check if two MultiFrameDatasets have same frame descriptors and
 attributes use [`isapprox`](@ref) instead.
+
+TODO review
 """
 function isapproxeq(mfd1::MultiFrameDataset, mfd2::MultiFrameDataset)
     return isequal(mfd1, mfd2) && _same_instances(mfd1, mfd2)
@@ -430,12 +443,12 @@ function in(instance::AbstractVector, mfd::MultiFrameDataset)
     dfr = eachrow(DataFrame([attr_name => instance[i]
         for (i, attr_name) in Symbol.(names(mfd.data))]))[1]
 
-    return dfr ∈ eachrow(mfd.data)
+    return dfr in eachrow(mfd.data)
 end
 
 function issubset(instances::AbstractDataFrame, mfd::MultiFrameDataset)
     for dfr in eachrow(instances)
-        if !(dfr ∈ mfd)
+        if !(dfr in mfd)
             return false
         end
     end
@@ -482,9 +495,9 @@ function show(io::IO, mfd::MultiFrameDataset)
         println(io, "   └─ dimension: $(dimension(frame))")
         println(io, frame)
     end
-    spare = spareattributes(mfd)
+    spare_attrs = spareattributes(mfd)
     if length(spare) > 0
-        spare_df = @view mfd.data[:,spare]
+        spare_df = @view mfd.data[:,spare_attrs]
         println(io, "- Spare attributes")
         println(io, "   └─ dimension: $(dimension(spare_df))")
         println(io, spare_df)
@@ -534,6 +547,7 @@ end
 dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
 
 """
+TODO documentation
 """
 function _name2index(df::AbstractDataFrame, attribute_name::Symbol)
     columnindex(df, attribute_name)
@@ -554,10 +568,6 @@ end
 Get the `i`-th frame of `mfd` multiframe dataset.
 """
 function frame(mfd::MultiFrameDataset, i::Integer)
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     @assert 1 ≤ i ≤ nframes(mfd) "Index ($i) must be a valid frame number (1:$(nframes(mfd)))"
 
     @view mfd.data[:,mfd.descriptor[i]]
@@ -627,10 +637,6 @@ julia> nattributes(frame2)
 nattributes(df::AbstractDataFrame) = ncol(df)
 nattributes(mfd::MultiFrameDataset) = nattributes(mfd.data)
 function nattributes(mfd::MultiFrameDataset, i::Integer)
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     @assert 1 ≤ i ≤ nframes(mfd) "Index ($i) must be a valid frame number (1:$(nframes(mfd)))"
 
     return nattributes(frame(mfd, i))
@@ -791,10 +797,6 @@ julia> attributes(frame2)
 """
 attributes(df::AbstractDataFrame) = Symbol.(names(df))
 function attributes(mfd::MultiFrameDataset, i::Integer)
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     @assert 1 ≤ i ≤ nframes(mfd) "Index ($i) must be a valid frame number (1:$(nframes(mfd)))"
 
     attributes(frame(mfd, i))
@@ -867,6 +869,8 @@ Add `instance` to `mfd` multiframe dataset and return `mfd`.
 
 The instance can be a `DataFrameRow` or an `AbstractVector` but in both cases the number and
 type of attributes should match the dataset ones.
+
+# TODO perhaps insertinstance! ?
 """
 function addinstance!(mfd::MultiFrameDataset, instance::DataFrameRow)
     @assert length(instance) == nattributes(mfd) "Mismatching number of attributes " *
@@ -891,6 +895,8 @@ end
 Remove the instances at `indices` in `mfd` multiframe dataset and return `mfd`.
 
 The `MultiFrameDataset` is returned.
+
+# TODO rename from `remove` to `delete` and from `add` to `push`.
 """
 function removeinstances!(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
     for i in indices
@@ -929,34 +935,20 @@ Get `i`-th instance in `mfd` multiframe dataset.
 TODO: add new dispatch docs
 """
 function instance(df::AbstractDataFrame, i::Integer)
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
         "(1:$(ninstances(mfd))"
 
     @view df[i,:]
 end
 function instance(mfd::MultiFrameDataset, i::Integer)
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     @assert 1 ≤ i ≤ ninstances(mfd) "Index ($i) must be a valid instance number " *
         "(1:$(ninstances(mfd))"
 
     instance(mfd.data, i)
 end
 function instance(mfd::MultiFrameDataset, i_frame::Integer, i_instance::Integer)
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
         "frame number (1:$(nframes(mfd))"
-    @assert 1 ≤ i_instance ≤ ninstances(mfd) "Index ($i_instance) must be a valid " *
-        "instance number (1:$(ninstances(mfd))"
 
     instance(frame(mfd, i_frame), i_instance)
 end
@@ -968,10 +960,6 @@ Get instances at `indices` in `mfd` multiframe dataset.
 TODO: add new dispatch docs
 """
 function instances(df::AbstractDataFrame, indices::AbstractVector{<:Integer})
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     for i in indices
         @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
             "(1:$(ninstances(mfd))"
@@ -980,15 +968,6 @@ function instances(df::AbstractDataFrame, indices::AbstractVector{<:Integer})
     @view df[indices,:]
 end
 function instances(mfd::MultiFrameDataset, indices::AbstractVector{<:Integer})
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
-    for i in indices
-        @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
-            "(1:$(ninstances(mfd))"
-    end
-
     instances(mfd.data, indices)
 end
 function instances(
@@ -996,16 +975,8 @@ function instances(
     i_frame::Integer,
     inst_indices::AbstractVector{<:Integer}
 )
-    """
-    TODO: find a unique template to return, for example, AssertionError messages.
-    The following has been added, but it does not follow the current template.
-    """
     @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
         "frame number (1:$(nframes(mfd))"
-    for i in inst_indices
-        @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
-            "(1:$(ninstances(mfd))"
-    end
 
     instances(frame(mfd, i_frame), inst_indices)
 end
@@ -1380,6 +1351,8 @@ julia> newframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
    1 │    30  Python
    2 │     9  Julia
 ```
+
+TODO change name
 """
 function newframe!(
     mfd::MultiFrameDataset,
@@ -1531,9 +1504,10 @@ function keeponlyattributes!(mfd::MultiFrameDataset, attribute_names::AbstractVe
 
     dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
 end
+# TODO check parameters
 function keeponlyattributes!(
     mfd::MultiFrameDataset,
-    attribute_names::AbstractVector{<:AbstractVector}
+    attribute_names::AbstractVector{<:AbstractVector{Symbol}}
 )
     for attr_name in attribute_names
         @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
