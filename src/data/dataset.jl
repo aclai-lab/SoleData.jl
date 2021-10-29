@@ -496,7 +496,7 @@ function show(io::IO, mfd::MultiFrameDataset)
         println(io, frame)
     end
     spare_attrs = spareattributes(mfd)
-    if length(spare) > 0
+    if length(spare_attrs) > 0
         spare_df = @view mfd.data[:,spare_attrs]
         println(io, "- Spare attributes")
         println(io, "   └─ dimension: $(dimension(spare_df))")
