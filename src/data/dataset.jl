@@ -33,31 +33,22 @@ The order matters for both the frames indices and the attributes in them.
 # Examples
 ```jldoctest
 julia> df = DataFrame(
-           :age => [30, 9],
-           :name => ["Python", "Julia"],
-           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]],
-           :stat2 => [[cos(i) for i in 1:50000], [sin(i) for i in 1:50000]]
-       )
+                  :age => [30, 9],
+                  :name => ["Python", "Julia"],
+                  :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]],
+                  :stat2 => [[cos(i) for i in 1:50000], [sin(i) for i in 1:50000]]
+              )
 2×4 DataFrame
- Row │ age    name    stat1
-     │ Int64  String  Array…
-─────┼─────────────────────────────────────────────────────
-   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
-   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
-                                           1 column omitted
+ Row │ age    name    stat1                              stat2                             ⋯
+     │ Int64  String  Array…                             Array…                            ⋯
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…  [0.540302, -0.416147, -0.989992,… ⋯
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
 julia> mfd = MultiFrameDataset([[2]], df)
 ● MultiFrameDataset
-   └─ dimensions: (1,)
+   └─ dimensions: (0,)
 - Frame 1 / 1
-   └─ dimension: 1
-2×1 SubDataFrame
- Row │ stat1
-     │ Array…
-─────┼───────────────────────────────────
-   1 │ [0.841471, 0.909297, 0.14112, -0…
-   2 │ [0.540302, -0.416147, -0.989992,…
-- Spare attributes
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -65,6 +56,14 @@ julia> mfd = MultiFrameDataset([[2]], df)
 ─────┼────────
    1 │ Python
    2 │ Julia
+- Spare attributes
+   └─ dimension: mixed
+2×3 SubDataFrame
+ Row │ age    stat1                              stat2
+     │ Int64  Array…                             Array…
+─────┼─────────────────────────────────────────────────────────────────────────────
+   1 │    30  [0.841471, 0.909297, 0.14112, -0…  [0.540302, -0.416147, -0.989992,…
+   2 │     9  [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 ```
 
     MultiFrameDataset(df; group = :none)
@@ -83,18 +82,17 @@ Note: `:all` and `:none` are the only Symbols accepted by `group`.
 # Examples
 ```jldoctest
 julia> df = DataFrame(
-           :age => [30, 9],
-           :name => ["Python", "Julia"],
-           :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]],
-           :stat2 => [[cos(i) for i in 1:50000], [sin(i) for i in 1:50000]]
-       )
+                  :age => [30, 9],
+                  :name => ["Python", "Julia"],
+                  :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]],
+                  :stat2 => [[cos(i) for i in 1:50000], [sin(i) for i in 1:50000]]
+              )
 2×4 DataFrame
- Row │ age    name    stat1
-     │ Int64  String  Array…
-─────┼─────────────────────────────────────────────────────
-   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
-   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
-                                           1 column omitted
+ Row │ age    name    stat1                              stat2                             ⋯
+     │ Int64  String  Array…                             Array…                            ⋯
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…  [0.540302, -0.416147, -0.989992,… ⋯
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
 julia> mfd = MultiFrameDataset(df)
 ● MultiFrameDataset
@@ -102,12 +100,11 @@ julia> mfd = MultiFrameDataset(df)
 - Spare attributes
    └─ dimension: mixed
 2×4 SubDataFrame
- Row │ age    name    stat1
-     │ Int64  String  Array…
-─────┼─────────────────────────────────────────────────────
-   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…
-   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…
-                                           1 column omitted
+ Row │ age    name    stat1                              stat2                             ⋯
+     │ Int64  String  Array…                             Array…                            ⋯
+─────┼──────────────────────────────────────────────────────────────────────────────────────
+   1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…  [0.540302, -0.416147, -0.989992,… ⋯
+   2 │     9  Julia   [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
 
 julia> mfd = MultiFrameDataset(df; group = :all)
@@ -124,12 +121,11 @@ julia> mfd = MultiFrameDataset(df; group = :all)
 - Frame 2 / 2
    └─ dimension: 1
 2×2 SubDataFrame
- Row │ stat1
-     │ Array…
-─────┼──────────────────────────────────────
-   1 │ [0.841471, 0.909297, 0.14112, -0…
-   2 │ [0.540302, -0.416147, -0.989992,…
-                            1 column omitted
+ Row │ stat1                              stat2
+     │ Array…                             Array…
+─────┼──────────────────────────────────────────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…  [0.540302, -0.416147, -0.989992,…
+   2 │ [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
 
 julia> mfd = MultiFrameDataset(df; group = [0])
