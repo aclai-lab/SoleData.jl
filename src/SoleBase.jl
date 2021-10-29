@@ -2,6 +2,7 @@ module SoleBase
 
 using DataFrames
 using ScientificTypes
+using CSV
 
 import ScientificTypes: show
 import Base: eltype, isempty, iterate, map, getindex, length
@@ -40,6 +41,9 @@ export describe
 # re-export from ScientificTypes
 export schema
 
+# loading dataset
+export loaddataset
+
 # -------------------------------------------------------------
 # Abbreviations
 # Such abbreviations break things? That is, are exported outside or work only locally within
@@ -49,5 +53,7 @@ const DF = DataFrames
 
 # include("data/types.jl")
 include("data/dataset.jl")
+
+include("data/load-dataset.jl")
 
 end # module
