@@ -17,6 +17,8 @@ import Base: ∈, ⊆, ∪, ∩
 # export types
 export AbstractDataset, AbstractMultiFrameDataset
 export MultiFrameDataset
+export AbstractClassificationMultiFrameDataset, AbstractRegressionMultiFrameDataset
+export ClassificationMultiFrameDataset
 
 # information gathering
 export instance, ninstances
@@ -35,6 +37,12 @@ export dropspareattributes!
 # frame manipulation
 export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
 export insertframe!, dropframe!
+
+# classes manipulation
+export class, classes, nclasses, classdomain, addclass!, removeclass!
+
+# regressors manipulation
+export nregressors
 
 # re-export from DataFrames
 export describe
@@ -70,10 +78,19 @@ abstract type AbstractDataset end
 """
 Abstract supertype for all multiframe datasets.
 
-A concrete MultiFrameDatset should always provides accessors [`descriptor`](@ref), to
+A concrete MultiFrameDataset should always provides accessors [`descriptor`](@ref), to
 access the frame descriptor, and [`data`](@ref), to access the inner data.
 """
 abstract type AbstractMultiFrameDataset <: AbstractDataset end
+
+"""
+TODO: docs
+"""
+abstract type AbstractClassificationMultiFrameDataset <: AbstractMultiFrameDataset end
+"""
+TODO: docs
+"""
+abstract type AbstractRegressionMultiFrameDataset <: AbstractMultiFrameDataset end
 
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - accessors
@@ -88,6 +105,23 @@ frame_descriptor(amfd::AbstractMultiFrameDataset) = descriptor(amfd)
 function data(amfd::AbstractMultiFrameDataset)
     error("`data` accessor not implemented for type " * string(typeof(amfd)))
 end
+
+# -------------------------------------------------------------
+# AbstractClassificationMultiFrameDataset - accessors
+
+function classes_descriptor(cmfd::AbstractClassificationMultiFrameDataset)
+    error("`classes_descriptor` accessor not implemented for type " * string(typeof(cmfd)))
+end
+
+# -------------------------------------------------------------
+# AbstractRegressionMultiFrameDataset - accessors
+
+function regressors_descriptor(rmfd::AbstractRegressionMultiFrameDataset)
+    error("`regressors_descriptor` accessor not implemented for type " * string(typeof(rmfd)))
+end
+
+# -------------------------------------------------------------
+# AbstractMultiFrameDataset - infos
 
 """
     dimension(df)
@@ -131,7 +165,6 @@ function dimension(mfd::AbstractMultiFrameDataset; kwargs...)
 end
 dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
 
-
 include("iterable.jl")
 include("utils.jl")
 include("comparison.jl")
@@ -140,6 +173,10 @@ include("attributes.jl")
 include("instances.jl")
 include("frames.jl")
 include("MultiFrameDataset.jl")
+
+include("ClassificationMultiFrameDataset.jl")
+include("classification-utils.jl")
+include("regression-utils.jl")
 
 # -------------------------------------------------------------
 # schema
