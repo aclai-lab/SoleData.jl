@@ -1,5 +1,4 @@
 using SoleBase
-using DataFrames
 using Test
 
 const ts_sin = [sin(i) for i in 1:50000]
@@ -93,23 +92,23 @@ const ages = DataFrame(:age => [35, 38, 37])
         addframe!(mfd, [2])
         @test length(spareattributes(mfd)) == 0
 
-        # addinstance!
+        # pushinstance!
         new_inst = DataFrame(:sex => ["F"], :h => [deepcopy(ts_cos)])[1,:]
-        @test addinstance!(mfd, new_inst) == mfd # test return
+        @test pushinstance!(mfd, new_inst) == mfd # test return
         @test ninstances(mfd) == 4
-        addinstance!(mfd, ["M", deepcopy(ts_cos)])
+        pushinstance!(mfd, ["M", deepcopy(ts_cos)])
         @test ninstances(mfd) == 5
 
-        # removeinstance!
-        @test removeinstance!(mfd, ninstances(mfd)) == mfd # test return
+        # deleteinstance!
+        @test deleteinstance!(mfd, ninstances(mfd)) == mfd # test return
         @test ninstances(mfd) == 4
-        removeinstance!(mfd, ninstances(mfd))
+        deleteinstance!(mfd, ninstances(mfd))
         @test ninstances(mfd) == 3
 
         # keeponlyinstances!
-        addinstance!(mfd, ["F", deepcopy(ts_cos)])
-        addinstance!(mfd, ["F", deepcopy(ts_cos)])
-        addinstance!(mfd, ["F", deepcopy(ts_cos)])
+        pushinstance!(mfd, ["F", deepcopy(ts_cos)])
+        pushinstance!(mfd, ["F", deepcopy(ts_cos)])
+        pushinstance!(mfd, ["F", deepcopy(ts_cos)])
         @test keeponlyinstances!(mfd, [1, 2, 3]) == mfd # test return
         @test ninstances(mfd) == 3
         for i in 1:ninstances(mfd)
@@ -126,20 +125,20 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test dimension(mfd, 1) == 0
 
         # attributes manipulation
-        @test newframe!(mfd, deepcopy(ages)) == mfd # test return
+        @test insertframe!(mfd, deepcopy(ages)) == mfd # test return
         @test nframes(mfd) == 3
         @test nattributes(mfd, 3) == 1
 
         @test dropframe!(mfd, 3) == DataFrame(deepcopy(ages)) # test return
         @test nframes(mfd) == 2
 
-        newframe!(mfd, deepcopy(ages), [1])
+        insertframe!(mfd, deepcopy(ages), [1])
         @test nframes(mfd) == 3
         @test nattributes(mfd, 3) == 2
         @test dimension(mfd, 3) == 0
 
         # drop "inner" frame and multiple frames in one operation
-        newframe!(mfd, DataFrame(:t2 => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]))
+        insertframe!(mfd, DataFrame(:t2 => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]))
         @test nframes(mfd) == 4
         @test nattributes(mfd) == 4
         @test nattributes(mfd, nframes(mfd)) == 1
@@ -215,7 +214,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test attributeindex(mfd1, 2, :age) == 0
         @test attributeindex(mfd1, 2, :name) == 1
 
-        # addressing attributes by name - newframe!
+        # addressing attributes by name - insertframe!
         mfd1 = deepcopy(mfd_attr_names_original)
         mfd2 = deepcopy(mfd_attr_names_original)
         @test addframe!(mfd1, [1]) == addframe!(mfd2, [:age])
@@ -236,14 +235,14 @@ const ages = DataFrame(:age => [35, 38, 37])
             dropattribute!(mfd2, :age)
         @test mfd1 == mfd2
 
-        # addressing attributes by name - newframe!
+        # addressing attributes by name - insertframe!
         mfd1 = deepcopy(mfd_attr_names_original)
         mfd2 = deepcopy(mfd_attr_names_original)
-        @test newframe!(
+        @test insertframe!(
             mfd1,
             DataFrame(:stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]),
             [1]
-        ) == newframe!(
+        ) == insertframe!(
             mfd2,
             DataFrame(:stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]),
             [:age]
