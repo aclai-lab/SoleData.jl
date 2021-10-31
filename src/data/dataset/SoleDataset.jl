@@ -51,8 +51,6 @@ export schema
 
 # -------------------------------------------------------------
 # Abbreviations
-# Such abbreviations break things? That is, are exported outside or work only locally within
-# the framework?
 const ST = ScientificTypes
 const DF = DataFrames
 
@@ -63,7 +61,8 @@ GENERAL TODOs:
 * use `return` at the end of the functions
 * consider to add names to frames
 * add Logger; in particular, it should be nice to have a module SoleLogger(s)
-* consider making this a `SoleDataset` module to Reexport form `SoleBase`
+* consider making enforcing class type check (ex: classes should not be of scitype Continuous)
+* enforce class (and regressor) attributes not be part any frame
 """
 
 # -------------------------------------------------------------
@@ -78,7 +77,7 @@ abstract type AbstractDataset end
 """
 Abstract supertype for all multiframe datasets.
 
-A concrete MultiFrameDataset should always provides accessors [`descriptor`](@ref), to
+A concrete MultiFrameDataset should always provide accessors [`descriptor`](@ref), to
 access the frame descriptor, and [`data`](@ref), to access the inner data.
 """
 abstract type AbstractMultiFrameDataset <: AbstractDataset end
@@ -112,12 +111,18 @@ end
 function classes_descriptor(cmfd::AbstractClassificationMultiFrameDataset)
     error("`classes_descriptor` accessor not implemented for type " * string(typeof(cmfd)))
 end
+function dataset(cmfd::AbstractClassificationMultiFrameDataset)
+    error("`dataset` accessor not implemented for type " * string(typeof(cmfd)))
+end
 
 # -------------------------------------------------------------
 # AbstractRegressionMultiFrameDataset - accessors
 
 function regressors_descriptor(rmfd::AbstractRegressionMultiFrameDataset)
     error("`regressors_descriptor` accessor not implemented for type " * string(typeof(rmfd)))
+end
+function dataset(rmfd::AbstractRegressionMultiFrameDataset)
+    error("`dataset` accessor not implemented for type " * string(typeof(rmfd)))
 end
 
 # -------------------------------------------------------------

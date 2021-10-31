@@ -13,6 +13,14 @@ struct ClassificationMultiFrameDataset <: AbstractClassificationMultiFrameDatase
         classes_descriptor::AbstractVector{<:Integer},
         mfd::AbstractMultiFrameDataset
     )
+        for i in classes_descriptor
+            if _is_attribute_in_frames(mfd, i)
+                # TODO: consider enforcing this instead of just warning
+                @warn "Setting as class an attribute used in a frame: this is discouraged " *
+                    "and probably will not allowed in future versions"
+            end
+        end
+
         return new(classes_descriptor, mfd)
     end
 end
@@ -24,6 +32,7 @@ descriptor(cmfd::ClassificationMultiFrameDataset) = descriptor(cmfd.mfd)
 frame_descriptor(cmfd::ClassificationMultiFrameDataset) = descriptor(cmfd)
 data(cmfd::ClassificationMultiFrameDataset) = data(cmfd.mfd)
 classes_descriptor(cmfd::ClassificationMultiFrameDataset) = cmfd.class_descriptor
+dataset(cmfd::ClassificationMultiFrameDataset) = cmfd.mfd
 
 # -------------------------------------------------------------
 # ClassificationMultiFrameDataset - informations
@@ -34,9 +43,10 @@ function show(io::IO, cmfd::ClassificationMultiFrameDataset)
 
     if nclasses(cmfd) > 0
         for i in 1:(nclasses(cmfd)-1)
-            println(io, "   │   ├─ $(class(cmfd, i)): $(classdomain(cmfd, i))")
+            println(io, "   │   ├─ $(class(cmfd, i)): $(_print_class_domain(classdomain(cmfd, i)))")
         end
-        println(io, "   │   └─ $(class(cmfd, nclasses(cmfd))): $(classdomain(cmfd, nclasses(cmfd)))")
+        println(io, "   │   └─ $(class(cmfd, nclasses(cmfd))): " *
+            "$(_print_class_domain(classdomain(cmfd, nclasses(cmfd))))")
     else
         println(io, "   │   └─ no class selected")
     end
@@ -60,14 +70,6 @@ end
 # -------------------------------------------------------------
 # ClassificationMultiFrameDataset - utils
 
-"""
-    _empty(cmfd)
-
-Get a copy of `cmfd` multiframe dataset with no instances.
-
-Note: since the returned ClassificationMultiFrameDataset will be empty its columns types
-will be `Any`.
-"""
 function _empty(cmfd::ClassificationMultiFrameDataset)
     return ClassificationMultiFrameDataset(
         deepcopy(descriptor(cmfd)),

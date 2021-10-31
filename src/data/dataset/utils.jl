@@ -1,4 +1,13 @@
 
+const __note_about_utils = "
+!!! note
+
+    It is important to consider that this function is intended for internal use only so.
+
+    It assumes that any check is performed prior its call (ex: check if the index of an
+    attribute is valid or not).
+"
+
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - utils
 
@@ -9,6 +18,8 @@ Get a copy of `mfd` multiframe dataset with no instances.
 
 Note: since the returned AbstractMultiFrameDataset will be empty its columns types will be
 `Any`.
+
+$(__note_about_utils)
 """
 function _empty(mfd::AbstractMultiFrameDataset)
     warn("This function is extremly not efficent expecally for large datasets: " *
@@ -22,6 +33,8 @@ Remove all instances from `mfd` multiframe dataset.
 
 Note: since the AbstractMultiFrameDataset will be empty its columns types will become of
 type `Any`.
+
+$(__note_about_utils)
 """
 function _empty!(mfd::AbstractMultiFrameDataset)
     return removeinstances!(mfd, 1:nisnstances(mfd))
@@ -31,6 +44,8 @@ end
     _same_attributes(mfd1, mfd2)
 
 Determine whether two AbstractMultiFrameDatasets have the same attributes.
+
+$(__note_about_utils)
 """
 function _same_attributes(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     return isequal(
@@ -47,6 +62,8 @@ the positioning of their columns.
 
 Note: the check will performed against the instances too; if the intent is to just check
 the presence of the same attributes use [`_same_attributes`](@ref) instead.
+
+$(__note_about_utils)
 """
 function _same_dataframe(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
@@ -68,6 +85,8 @@ positioning of their columns.
 
 Note: the check will performed against the instances too; if the intent is to just check
 the presence of the same attributes use [`_same_attributes`](@ref) instead.
+
+$(__note_about_utils)
 """
 function _same_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     if !_same_attributes(mfd1, mfd2)
@@ -97,6 +116,8 @@ end
 
 Determine whether two AbstractMultiFrameDatasets have the same instances regardless of their
 order.
+
+$(__note_about_utils)
 """
 function _same_instances(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
@@ -116,6 +137,8 @@ Note: the check will performed against the instances too; if the intent is to ju
 the presence of the same attributes use [`_same_attributes`](@ref) instead.
 
 TODO perhaps could be done better? E.g. using the aforedefined functions.
+
+$(__note_about_utils)
 """
 function _same_multiframedataset(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
@@ -157,6 +180,8 @@ If the attribute does not exist `0` will be returned.
 Get the indices of the attributes named `attribute_names`.
 
 If an attribute does not exist the returned Vector will contain `0`(-es).
+
+$(__note_about_utils)
 """
 function _name2index(df::AbstractDataFrame, attribute_name::Symbol)
     columnindex(df, attribute_name)
@@ -169,4 +194,20 @@ function _name2index(df::AbstractDataFrame, attribute_names::AbstractVector{Symb
 end
 function _name2index(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVector{Symbol})
     [_name2index(mfd, attr_name) for attr_name in attribute_names]
+end
+
+"""
+    _is_attribute_in_frames(mfd, i)
+
+Check if `i`-th attribute is used in any frame or not.
+
+Alternatively to the index the `attribute_name` can be passed as second argument.
+
+$(__note_about_utils)
+"""
+function _is_attribute_in_frames(mfd::AbstractMultiFrameDataset, i::Integer)
+    return i in cat(frame_descriptor(mfd)...; dims = 1)
+end
+function _is_attribute_in_frames(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
+    return _is_attribute_in_frames(mfd, _name2index(mfd, attribute_name))
 end
