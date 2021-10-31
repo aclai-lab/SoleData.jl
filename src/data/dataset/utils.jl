@@ -2,7 +2,7 @@
 const __note_about_utils = "
 !!! note
 
-    It is important to consider that this function is intended for internal use only so.
+    It is important to consider that this function is intended for internal use only.
 
     It assumes that any check is performed prior its call (ex: check if the index of an
     attribute is valid or not).
@@ -22,7 +22,7 @@ Note: since the returned AbstractMultiFrameDataset will be empty its columns typ
 $(__note_about_utils)
 """
 function _empty(mfd::AbstractMultiFrameDataset)
-    warn("This function is extremly not efficent expecally for large datasets: " *
+    warn("This function is extremely not efficent especially for large datasets: " *
         "consider creating a dispatch for type " * string(typeof(mfd)))
     return _empty!(deepcopy(mfd))
 end
