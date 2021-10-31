@@ -19,6 +19,7 @@ export AbstractDataset, AbstractMultiFrameDataset
 export MultiFrameDataset
 export AbstractClassificationMultiFrameDataset, AbstractRegressionMultiFrameDataset
 export ClassificationMultiFrameDataset
+export RegressionMultiFrameDataset
 
 # information gathering
 export instance, ninstances
@@ -42,7 +43,7 @@ export insertframe!, dropframe!
 export class, classes, nclasses, classdomain, addclass!, removeclass!
 
 # regressors manipulation
-export nregressors
+export regressor, regressors, nregressors, regressordomain, addregressor!, removeregressor!
 
 # re-export from DataFrames
 export describe
@@ -181,6 +182,7 @@ include("MultiFrameDataset.jl")
 
 include("ClassificationMultiFrameDataset.jl")
 include("classification-utils.jl")
+include("RegressionMultiFrameDataset.jl")
 include("regression-utils.jl")
 
 # -------------------------------------------------------------
