@@ -4,7 +4,7 @@
 
 getindex(mfd::AbstractMultiFrameDataset, i::Integer) = frame(mfd, i)
 function getindex(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
-    [frame(mfd, i) for i in indices]
+    return [frame(mfd, i) for i in indices]
 end
 
 length(mfd::AbstractMultiFrameDataset) = length(descriptor(mfd))
@@ -16,5 +16,5 @@ eltype(::Type{AbstractMultiFrameDataset}) = SubDataFrame
 
 Base.@propagate_inbounds function iterate(mfd::AbstractMultiFrameDataset, i::Integer = 1)
     (i ≤ 0 || i > length(mfd)) && return nothing
-    (@inbounds frame(mfd, i), i+1)
+    return (@inbounds frame(mfd, i), i+1)
 end

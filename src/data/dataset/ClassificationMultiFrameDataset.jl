@@ -52,6 +52,7 @@ function show(io::IO, cmfd::ClassificationMultiFrameDataset)
     end
     println(io, "   └─ dimensions: $(dimension(cmfd))")
 
+    # TODO: perhaps show(dataset(cmfd))?
     for (i, frame) in enumerate(cmfd)
         println(io, "- Frame $(i) / $(nframes(cmfd))")
         println(io, "   └─ dimension: $(dimension(frame))")

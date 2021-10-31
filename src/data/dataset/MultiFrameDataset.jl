@@ -5,11 +5,11 @@
 """
     MultiFrameDataset(frames_descriptor, df)
 
-Create a MultiFrameDataset from a DataFrame `df` initializing frames accordingly to
+Create a `MultiFrameDataset` from a `DataFrame`, `df`, initializing frames accordingly to
 `frames_descriptor` parameter.
 
-`frames_descriptor` is an AbstractVector of frame descriptor which are AbstractVectors of
-Integers representing the index of the attributes selected for that frame.
+`frames_descriptor` is an `AbstractVector` of frame descriptor which are `AbstractVector`s
+of `Integer`s representing the index of the attributes selected for that frame.
 
 The order matters for both the frames indices and the attributes in them.
 
@@ -50,7 +50,7 @@ julia> mfd = MultiFrameDataset([[2]], df)
 
     MultiFrameDataset(df; group = :none)
 
-Create a MultiFrameDataset from a DataFrame `df` automatically selecting frames.
+Create a `MultiFrameDataset` from a `DataFrame`, `df`, automatically selecting frames.
 
 Selection of frames can be controlled by the parameter `group` which can be:
 
@@ -58,7 +58,7 @@ Selection of frames can be controlled by the parameter `group` which can be:
 - `:all`: all attributes will be grouped by their [`dimension`](@ref)
 - a list of dimensions which will be grouped.
 
-Note: `:all` and `:none` are the only Symbols accepted by `group`.
+Note: `:all` and `:none` are the only `Symbol`s accepted by `group`.
 
 # TODO group should be [0] by default?
 # Examples
@@ -144,7 +144,8 @@ struct MultiFrameDataset <: AbstractMultiFrameDataset
     data::AbstractDataFrame
 
     function MultiFrameDataset(
-        frames_descriptor::AbstractVector{<:AbstractVector{<:Integer}}, df::AbstractDataFrame
+        frames_descriptor::AbstractVector{<:AbstractVector{<:Integer}},
+        df::AbstractDataFrame
     )
         return new(frames_descriptor, df)
     end
@@ -153,8 +154,8 @@ struct MultiFrameDataset <: AbstractMultiFrameDataset
         df::AbstractDataFrame;
         group::Union{Symbol,AbstractVector{<:Integer}} = :none
     )
-        @assert isa(group, AbstractVector) || group in [:all, :none] "group can be `:all`, " *
-            "`:none` or an AbstractVector of dimensions"
+        @assert isa(group, AbstractVector) || group in [:all, :none] "group can be " *
+            "`:all`, `:none` or an AbstractVector of dimensions"
 
         if group == :none
             return new([], df)
