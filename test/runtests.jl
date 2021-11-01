@@ -28,6 +28,8 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test isa(frame(mfd, 1), SubDataFrame)
         @test isa(frame(mfd, 2), SubDataFrame)
 
+        @test frame(mfd, [1,2]) == [frame(mfd, 1), frame(mfd, 2)]
+
         @test nframes(mfd) == 2
 
         @test nattributes(mfd) == 2
@@ -198,15 +200,15 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test hasattribute(mfd1, :age) == true
         @test hasattribute(mfd1, :name) == true
         @test hasattribute(mfd1, :missing_attribute) == false
-        @test hasattributes(mfd1, [:age, :name]) == true
-        @test hasattributes(mfd1, [:age, :missing_attribute]) == false
+        @test hasattribute(mfd1, [:age, :name]) == true
+        @test hasattribute(mfd1, [:age, :missing_attribute]) == false
 
         @test hasattribute(mfd1, 1, :age) == true
         @test hasattribute(mfd1, 1, :name) == false
-        @test hasattributes(mfd1, 1, [:age, :name]) == false
+        @test hasattribute(mfd1, 1, [:age, :name]) == false
 
         @test hasattribute(mfd1, 2, :name) == true
-        @test hasattributes(mfd1, 2, [:name]) == true
+        @test hasattribute(mfd1, 2, [:name]) == true
 
         @test attributeindex(mfd1, :age) == 1
         @test attributeindex(mfd1, :missing_attribute) == 0
@@ -248,9 +250,9 @@ const ages = DataFrame(:age => [35, 38, 37])
             [:age]
         )
 
-        # addressing attributes by name - dropattributes!
-        @test dropattributes!(mfd1, [1, 2]) ==
-            dropattributes!(mfd2, [:age, :name])
+        # addressing attributes by name - dropattribute!
+        @test dropattribute!(mfd1, [1, 2]) ==
+            dropattribute!(mfd2, [:age, :name])
         @test mfd1 == mfd2
 
         @test nframes(mfd1) == nframes(mfd2) == 1

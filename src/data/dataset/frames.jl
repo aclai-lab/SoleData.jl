@@ -7,12 +7,17 @@
 
 Get the `i`-th frame of `mfd` multiframe dataset.
 
-TODO: remove it and add frames! defined on indices?
+    frame(mfd, indices)
+
+Get a Vector of frames at `indices` of `mfd` multiframe dataset.
 """
 function frame(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index ($i) must be a valid frame number (1:$(nframes(mfd)))"
 
     @view data(mfd)[:,descriptor(mfd)[i]]
+end
+function frame(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
+    [frame(mfd, i) for i in indices]
 end
 
 """
@@ -88,8 +93,6 @@ julia> addframe!(mfd, [3])
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 ```
-
-TODO: change to addframes!
 """
 function addframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
     @assert length(indices) > 0 "Can't add an empty frame to dataset"
@@ -175,8 +178,6 @@ julia> removeframe!(mfd, 2)
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 ```
-
-TODO: change to removeframes!
 """
 function removeframe!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
@@ -530,5 +531,5 @@ function dropframe!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
-    return dropattributes!(mfd, descriptor(mfd)[i])
+    return dropattribute!(mfd, descriptor(mfd)[i])
 end

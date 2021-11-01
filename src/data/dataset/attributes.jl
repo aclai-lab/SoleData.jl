@@ -124,17 +124,17 @@ end
 """
 TODO: docs
 """
-function hasattributes(df::AbstractDataFrame, attribute_names::AbstractVector{Symbol})
+function hasattribute(df::AbstractDataFrame, attribute_names::AbstractVector{Symbol})
     return !(0 in _name2index(df, attribute_names))
 end
-function hasattributes(
+function hasattribute(
     mfd::AbstractMultiFrameDataset,
     frame_index::Integer,
     attribute_names::AbstractVector{Symbol}
 )
     return !(0 in _name2index(frame(mfd, frame_index), attribute_names))
 end
-function hasattributes(
+function hasattribute(
     mfd::AbstractMultiFrameDataset,
     attribute_names::AbstractVector{Symbol}
 )
@@ -289,10 +289,7 @@ function dropattribute!(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
 
     dropattribute!(mfd, _name2index(mfd, attribute_name))
 end
-
-"""
-"""
-function dropattributes!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
+function dropattribute!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
     for i in indices
         @assert 1 ≤ i ≤ nattributes(mfd) "Index $(i) does not correspond to an " *
             "attribute (1:$(nattributes(mfd)))"
@@ -307,13 +304,13 @@ function dropattributes!(mfd::AbstractMultiFrameDataset, indices::AbstractVector
 
     return result
 end
-function dropattributes!(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVector{Symbol})
+function dropattribute!(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVector{Symbol})
     for attr_name in attribute_names
         @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
             "attribute $(attr_name)"
     end
 
-    dropattributes!(mfd, _name2index(mfd, attribute_names))
+    dropattribute!(mfd, _name2index(mfd, attribute_names))
 end
 
 """
@@ -331,7 +328,7 @@ function keeponlyattributes!(
     mfd::AbstractMultiFrameDataset,
     indices::AbstractVector{<:Integer}
 )
-    return dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), indices))
+    return dropattribute!(mfd, setdiff(collect(1:nattributes(mfd)), indices))
 end
 function keeponlyattributes!(
     mfd::AbstractMultiFrameDataset,
@@ -342,7 +339,7 @@ function keeponlyattributes!(
             "attribute $(attr_name)"
     end
 
-    dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
+    dropattribute!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
 end
 function keeponlyattributes!(
     mfd::AbstractMultiFrameDataset,
@@ -353,7 +350,7 @@ function keeponlyattributes!(
             "attribute $(attr_name)"
     end
 
-    dropattributes!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
+    dropattribute!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
 end
 
 """

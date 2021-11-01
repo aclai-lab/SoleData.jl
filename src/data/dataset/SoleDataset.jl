@@ -29,19 +29,10 @@ export attributeindex
 export isapproxeq, ≊
 
 # instance manipulation
-# TODO
-# Add also deleteinstances! But from this it follows that we should also have
-# pushinstances! and keeponlyinstance! which seems to be quite cumbersome...
-# MAJOR CHANGE: we should have only pushinstances! deleteinstances! keeponlyinstance! with
-# the plural. That is, we should, in general, use the plural form with more indices, and
-# we can specify in the documentation that to push, e.g., only one instance one should use
-# something like pushinstaces!(mfd,[instance]). Therefore, dropattributes! should be instead
-# of dropattribute! etc.
 export pushinstance!, deleteinstance!, keeponlyinstances!
 
 # attribute manipulation
-export insertattribute!, dropattribute!, dropattributes!, keeponlyattributes!
-export dropspareattributes!
+export insertattribute!, dropattribute!, keeponlyattributes!, dropspareattributes!
 
 # frame manipulation
 export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!

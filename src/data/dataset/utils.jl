@@ -130,14 +130,13 @@ end
 """
     _same_multiframedataset(mfd1, mfd2)
 
-Determine whether two AbstractMultiFrameDatasets have the same inner DataFrame and frames
-regardless of the positioning of their columns.
+Determine whether two AbstractMultiFrameDatasets have the same inner DataFrame and frames,
+regardless of the ordering of the columns of their DataFrames.
 
 Note: the check will be performed against the instances too; if the intent is to just check
 the presence of the same attributes use [`_same_attributes`](@ref) instead.
 
 TODO: perhaps could be done better? E.g. using the aforedefined functions.
-TODO: It seems to me that is not correct.
 
 $(__note_about_utils)
 """
@@ -165,7 +164,6 @@ function _same_multiframedataset(mfd1::AbstractMultiFrameDataset, mfd2::Abstract
         end
     end
 
-    # TODO: the return is correct?
     return true
 end
 

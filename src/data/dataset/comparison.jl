@@ -15,8 +15,6 @@ If the intent is to check if two AbstractMultiFrameDatasets have same instances 
 of the order use [`isapproxeq`](@ref) instead.
 If the intent is to check if two AbstractMultiFrameDatasets have same frame descriptors and
 attributes use [`isapprox`](@ref) instead.
-
-TODO change documentation
 """
 function isequal(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     return (data(mfd1) == data(mfd2) && descriptor(mfd1) == descriptor(mfd2)) ||
