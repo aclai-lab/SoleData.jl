@@ -27,6 +27,7 @@ export frame, nframes
 export attributes, nattributes, dimension, spareattributes, hasattribute, hasattributes
 export attributeindex
 export isapproxeq, ≊
+export isapprox
 
 # instance manipulation
 export pushinstance!, deleteinstance!, keeponlyinstances!
@@ -57,7 +58,9 @@ const DF = DataFrames
 """
 GENERAL TODOs:
 * find a unique template to return, for example, AssertionError messages.
-* control that `add`/`remove` and `insert`/`drop` are coherent.
+    * a solution could be to have a module SoleDiagnosis to have a set of templates for
+    warnings, loggers, errors, exceptions, etc..
+* control that `add`/`remove` and `insert`/`drop` are coherent; done?
 * use `return` at the end of the functions
 * consider to add names to frames
 * add Logger; in particular, it should be nice to have a module SoleLogger(s)
@@ -98,31 +101,37 @@ abstract type AbstractRegressionMultiFrameDataset <: AbstractMultiFrameDataset e
 # Julia" Chap. 5 by Tom Kwong
 
 function descriptor(amfd::AbstractMultiFrameDataset)
-    error("`descriptor` accessor not implemented for type " * string(typeof(amfd)))
+    return error("`descriptor` accessor not implemented for type "
+        * string(typeof(amfd)))
 end
 frame_descriptor(amfd::AbstractMultiFrameDataset) = descriptor(amfd)
 function data(amfd::AbstractMultiFrameDataset)
-    error("`data` accessor not implemented for type " * string(typeof(amfd)))
+    return error("`data` accessor not implemented for type "
+        * string(typeof(amfd)))
 end
 
 # -------------------------------------------------------------
 # AbstractClassificationMultiFrameDataset - accessors
 
 function classes_descriptor(cmfd::AbstractClassificationMultiFrameDataset)
-    error("`classes_descriptor` accessor not implemented for type " * string(typeof(cmfd)))
+    return error("`classes_descriptor` accessor not implemented for type " *
+        string(typeof(cmfd)))
 end
 function dataset(cmfd::AbstractClassificationMultiFrameDataset)
-    error("`dataset` accessor not implemented for type " * string(typeof(cmfd)))
+    return error("`dataset` accessor not implemented for type "
+        * string(typeof(cmfd)))
 end
 
 # -------------------------------------------------------------
 # AbstractRegressionMultiFrameDataset - accessors
 
 function regressors_descriptor(rmfd::AbstractRegressionMultiFrameDataset)
-    error("`regressors_descriptor` accessor not implemented for type " * string(typeof(rmfd)))
+    return error("`regressors_descriptor` accessor not implemented for type " *
+        string(typeof(rmfd)))
 end
 function dataset(rmfd::AbstractRegressionMultiFrameDataset)
-    error("`dataset` accessor not implemented for type " * string(typeof(rmfd)))
+    return error("`dataset` accessor not implemented for type "
+        * string(typeof(rmfd)))
 end
 
 # -------------------------------------------------------------
@@ -163,10 +172,10 @@ function dimension(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbol,Int
     end
 end
 function dimension(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
-    dimension(frame(mfd, i); kwargs...)
+    return dimension(frame(mfd, i); kwargs...)
 end
 function dimension(mfd::AbstractMultiFrameDataset; kwargs...)
-    Tuple([dimension(frame; kwargs...) for frame in mfd])
+    return Tuple([dimension(frame; kwargs...) for frame in mfd])
 end
 dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
 
@@ -210,7 +219,7 @@ function DF.describe(mfd::AbstractMultiFrameDataset; kwargs...)
     return results
 end
 function DF.describe(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
-    DF.describe(frame(mfd, i), kwargs...)
+    return DF.describe(frame(mfd, i), kwargs...)
 end
 
 end # module

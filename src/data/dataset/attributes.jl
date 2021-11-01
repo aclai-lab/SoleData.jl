@@ -83,7 +83,10 @@ parameter of [`insertcols!`](@ref) in DataFrames documentation.
 TODO: examples
 """
 function insertattribute!(
-    mfd::AbstractMultiFrameDataset, col::Integer, attr_id::Symbol, values::AbstractVector
+    mfd::AbstractMultiFrameDataset,
+    col::Integer,
+    attr_id::Symbol,
+    values::AbstractVector
 )
     if col != nattributes(mfd)+1
         # TODO: implement `col` parameter
@@ -95,10 +98,19 @@ function insertattribute!(
 
     return insertcols!(data(mfd), col, attr_id => values, makeunique = true)
 end
-function insertattribute!(mfd::AbstractMultiFrameDataset, attr_id::Symbol, values::AbstractVector)
+function insertattribute!(
+    mfd::AbstractMultiFrameDataset,
+    attr_id::Symbol,
+    values::AbstractVector
+)
     return insertattribute!(mfd, nattributes(mfd)+1, attr_id, values)
 end
-function insertattribute!(mfd::AbstractMultiFrameDataset, col::Integer, attr_id::Symbol, value)
+function insertattribute!(
+    mfd::AbstractMultiFrameDataset,
+    col::Integer,
+    attr_id::Symbol,
+    value
+)
     return insertattribute!(mfd, col, attr_id, [deepcopy(value) for i in 1:ninstances(mfd)])
 end
 """
@@ -114,7 +126,11 @@ TODO: docs
 function hasattribute(df::AbstractDataFrame, attribute_name::Symbol)
     return _name2index(df, attribute_name) > 0
 end
-function hasattribute(mfd::AbstractMultiFrameDataset, frame_index::Integer, attribute_name::Symbol)
+function hasattribute(
+    mfd::AbstractMultiFrameDataset,
+    frame_index::Integer,
+    attribute_name::Symbol
+)
     return _name2index(frame(mfd, frame_index), attribute_name) > 0
 end
 function hasattribute(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
@@ -252,8 +268,7 @@ end
 Drop the `i`-th attribute from `mfd` multiframe dataset and return a DataFrame composed by
 the dropped column.
 
-TODO: To be reviewed.
-TODO: the function should return the same old mfd with without the dropped column.
+TODO: To be reviewed; I don't get the semantics of this function.
 """
 function dropattribute!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nattributes(mfd) "Attribute $(i) is not a valid attibute index " *
@@ -263,7 +278,8 @@ function dropattribute!(mfd::AbstractMultiFrameDataset, i::Integer)
     while j ≤ nframes(mfd)
         desc = descriptor(mfd)[j]
         if i in desc
-            removeattribute_fromframe!(mfd, j, i)
+            # Eduard 2: this should be dropattribute_fromframe!
+            return removeattribute_fromframe!(mfd, j, i)
         else
             j += 1
         end
@@ -304,7 +320,10 @@ function dropattribute!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{
 
     return result
 end
-function dropattribute!(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVector{Symbol})
+function dropattribute!(
+    mfd::AbstractMultiFrameDataset,
+    attribute_names::AbstractVector{Symbol}
+)
     for attr_name in attribute_names
         @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
             "attribute $(attr_name)"
@@ -339,7 +358,8 @@ function keeponlyattributes!(
             "attribute $(attr_name)"
     end
 
-    dropattribute!(mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
+    return dropattribute!(
+        mfd, setdiff(collect(1:nattributes(mfd)), _name2index(mfd, attribute_names)))
 end
 function keeponlyattributes!(
     mfd::AbstractMultiFrameDataset,

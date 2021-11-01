@@ -112,7 +112,7 @@ function keeponlyinstances!(
     mfd::AbstractMultiFrameDataset,
     indices::AbstractVector{<:Integer}
 )
-    deleteinstance!(mfd, setdiff(collect(1:ninstances(mfd)), indices))
+    return deleteinstance!(mfd, setdiff(collect(1:ninstances(mfd)), indices))
 end
 
 """
@@ -138,19 +138,19 @@ function instance(df::AbstractDataFrame, i::Integer)
     @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
         "(1:$(ninstances(mfd))"
 
-    @view df[i,:]
+    return @view df[i,:]
 end
 function instance(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ ninstances(mfd) "Index ($i) must be a valid instance number " *
         "(1:$(ninstances(mfd))"
 
-    instance(data(mfd), i)
+    return instance(data(mfd), i)
 end
 function instance(mfd::AbstractMultiFrameDataset, i_frame::Integer, i_instance::Integer)
     @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
         "frame number (1:$(nframes(mfd))"
 
-    instance(frame(mfd, i_frame), i_instance)
+    return instance(frame(mfd, i_frame), i_instance)
 end
 function instance(df::AbstractDataFrame, indices::AbstractVector{<:Integer})
     for i in indices
@@ -158,10 +158,10 @@ function instance(df::AbstractDataFrame, indices::AbstractVector{<:Integer})
             "(1:$(ninstances(mfd))"
     end
 
-    @view df[indices,:]
+    return @view df[indices,:]
 end
 function instance(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
-    instance(data(mfd), indices)
+    return instance(data(mfd), indices)
 end
 function instance(
     mfd::AbstractMultiFrameDataset,
@@ -171,5 +171,5 @@ function instance(
     @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
         "frame number (1:$(nframes(mfd))"
 
-    instance(frame(mfd, i_frame), inst_indices)
+    return instance(frame(mfd, i_frame), inst_indices)
 end
