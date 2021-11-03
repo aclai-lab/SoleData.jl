@@ -110,7 +110,7 @@ end
 # TODO: addframe! with Integer
 function addframe!(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVector{Symbol})
     for attr_name in attribute_names
-        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+        @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain " *
             "attribute $(attr_name)"
     end
 
@@ -224,7 +224,7 @@ end
 function addattribute_toframe!(
     mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_name::Symbol
 )
-    @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
+    @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
         "$(attr_name)"
 
     return addattribute_toframe!(mfd, frame_index, _name2index(mfd, attr_name))
@@ -270,7 +270,7 @@ end
 function removeattribute_fromframe!(
     mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_name::Symbol
 )
-    @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
+    @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
         "$(attr_name)"
 
     return removeattribute_fromframe!(mfd, frame_index, _name2index(mfd, attr_name))
@@ -423,7 +423,7 @@ function insertframe!(
     new_indices = (nattributes(mfd)+1):(nattributes(mfd)+ncol(new_frame))
 
     for (k, c) in collect(zip(keys(eachcol(new_frame)), collect(eachcol(new_frame))))
-        insertattribute!(mfd, k, c)
+        insertattributes!(mfd, k, c)
     end
     addframe!(mfd, new_indices)
 
@@ -440,7 +440,7 @@ function insertframe!(
     existing_attributes::AbstractVector{Symbol}
 )
     for attr_name in existing_attributes
-        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+        @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain " *
             "attribute $(attr_name)"
     end
 
@@ -459,7 +459,7 @@ function insertframe!(
     existing_attributes::AbstractVector{Symbol}
 )
     for attr_name in existing_attributes
-        @assert hasattribute(mfd, attr_name) "MultiFrameDataset does not contain " *
+        @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain " *
             "attribute $(attr_name)"
     end
 
@@ -470,7 +470,7 @@ end
     dropframe!(mfd, i)
 
 Remove `i`-th frame from `mfd` multiframe dataset while dropping all attributes in it and
-return a `DataFrame` composed by all removed attributes columns.
+return the `mfd` without the dropped frames.
 
 Note: if the dropped attributes are present in other frames they will also be removed from
 them. This can lead to the removal of additional frames other than the `i`-th.
@@ -542,5 +542,5 @@ function dropframe!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
-    return dropattribute!(mfd, descriptor(mfd)[i])
+    return dropattributes!(mfd, descriptor(mfd)[i])
 end

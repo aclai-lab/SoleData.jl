@@ -51,7 +51,7 @@ ninstances(mfd::AbstractMultiFrameDataset) = nrow(data(mfd))
 ninstances(mfd::AbstractMultiFrameDataset, i::Integer) = nrow(frame(mfd, i))
 
 """
-    pushinstance!(mfd, instance)
+    pushinstances!(mfd, instance)
 
 Add `instance` to `mfd` multiframe dataset and return `mfd`.
 
@@ -59,8 +59,9 @@ The instance can be a `DataFrameRow` or an `AbstractVector` but in both cases th
 type of attributes should match the dataset ones.
 
 TODO: add assertion on types?
+push! already throws an Exception for mismatching types in columns
 """
-function pushinstance!(mfd::AbstractMultiFrameDataset, instance::DataFrameRow)
+function pushinstances!(mfd::AbstractMultiFrameDataset, instance::DataFrameRow)
     @assert length(instance) == nattributes(mfd) "Mismatching number of attributes " *
         "between dataset ($(nattributes(mfd))) and instance ($(length(instance)))"
 
@@ -68,7 +69,7 @@ function pushinstance!(mfd::AbstractMultiFrameDataset, instance::DataFrameRow)
 
     return mfd
 end
-function pushinstance!(mfd::AbstractMultiFrameDataset, instance::AbstractVector)
+function pushinstances!(mfd::AbstractMultiFrameDataset, instance::AbstractVector)
     @assert length(instance) == nattributes(mfd) "Mismatching number of attributes " *
         "between dataset ($(nattributes(mfd))) and instance ($(length(instance)))"
 
@@ -76,21 +77,28 @@ function pushinstance!(mfd::AbstractMultiFrameDataset, instance::AbstractVector)
 
     return mfd
 end
+function pushinstances!(mfd::AbstractMultiFrameDataset, instances::AbstractDataFrame)
+    for inst in eachrow(instances)
+        pushinstances!(mfd, inst)
+    end
+
+    return mfd
+end
 
 """
-    deleteinstance!(mfd, i)
+    deleteinstances!(mfd, i)
 
 Remove the `i`-th instance in `mfd` multiframe dataset.
 
 The `AbstractMultiFrameDataset` is returned.
 
-    deleteinstance!(mfd, indices)
+    deleteinstances!(mfd, indices)
 
 Remove the instances at `indices` in `mfd` multiframe dataset and return `mfd`.
 
 The `AbstractMultiFrameDataset` is returned.
 """
-function deleteinstance!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
+function deleteinstances!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
     for i in indices
         @assert 1 ≤ i ≤ ninstances(mfd) "Index $(i) no in range 1:ninstances " *
             "(1:$(ninstances(mfd)))"
@@ -100,7 +108,7 @@ function deleteinstance!(mfd::AbstractMultiFrameDataset, indices::AbstractVector
 
     return mfd
 end
-deleteinstance!(mfd::AbstractMultiFrameDataset, i::Integer) = deleteinstance!(mfd, [i])
+deleteinstances!(mfd::AbstractMultiFrameDataset, i::Integer) = deleteinstances!(mfd, [i])
 
 """
     keeponlyinstances!(mfd, indices)
@@ -112,7 +120,7 @@ function keeponlyinstances!(
     mfd::AbstractMultiFrameDataset,
     indices::AbstractVector{<:Integer}
 )
-    return deleteinstance!(mfd, setdiff(collect(1:ninstances(mfd)), indices))
+    return deleteinstances!(mfd, setdiff(collect(1:ninstances(mfd)), indices))
 end
 
 """

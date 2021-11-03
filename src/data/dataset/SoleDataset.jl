@@ -24,16 +24,16 @@ export RegressionMultiFrameDataset
 # information gathering
 export instance, ninstances
 export frame, nframes
-export attributes, nattributes, dimension, spareattributes, hasattribute, hasattributes
+export attributes, nattributes, dimension, spareattributes, hasattributes, hasattributess
 export attributeindex
 export isapproxeq, ≊
 export isapprox
 
 # instance manipulation
-export pushinstance!, deleteinstance!, keeponlyinstances!
+export pushinstances!, deleteinstances!, keeponlyinstances!
 
 # attribute manipulation
-export insertattribute!, dropattribute!, keeponlyattributes!, dropspareattributes!
+export insertattributes!, dropattributes!, keeponlyattributes!, dropspareattributes!
 
 # frame manipulation
 export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
