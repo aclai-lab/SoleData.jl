@@ -1,5 +1,4 @@
 using SoleBase
-using DataFrames
 using Test
 
 const ts_sin = [sin(i) for i in 1:50000]
@@ -28,6 +27,8 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test isa(frame(mfd, 1), SubDataFrame)
         @test isa(frame(mfd, 2), SubDataFrame)
+
+        @test frame(mfd, [1,2]) == [frame(mfd, 1), frame(mfd, 2)]
 
         @test nframes(mfd) == 2
 
@@ -93,23 +94,23 @@ const ages = DataFrame(:age => [35, 38, 37])
         addframe!(mfd, [2])
         @test length(spareattributes(mfd)) == 0
 
-        # addinstance!
+        # pushinstances!
         new_inst = DataFrame(:sex => ["F"], :h => [deepcopy(ts_cos)])[1,:]
-        @test addinstance!(mfd, new_inst) == mfd # test return
+        @test pushinstances!(mfd, new_inst) == mfd # test return
         @test ninstances(mfd) == 4
-        addinstance!(mfd, ["M", deepcopy(ts_cos)])
+        pushinstances!(mfd, ["M", deepcopy(ts_cos)])
         @test ninstances(mfd) == 5
 
-        # removeinstance!
-        @test removeinstance!(mfd, ninstances(mfd)) == mfd # test return
+        # deleteinstances!
+        @test deleteinstances!(mfd, ninstances(mfd)) == mfd # test return
         @test ninstances(mfd) == 4
-        removeinstance!(mfd, ninstances(mfd))
+        deleteinstances!(mfd, ninstances(mfd))
         @test ninstances(mfd) == 3
 
         # keeponlyinstances!
-        addinstance!(mfd, ["F", deepcopy(ts_cos)])
-        addinstance!(mfd, ["F", deepcopy(ts_cos)])
-        addinstance!(mfd, ["F", deepcopy(ts_cos)])
+        pushinstances!(mfd, ["F", deepcopy(ts_cos)])
+        pushinstances!(mfd, ["F", deepcopy(ts_cos)])
+        pushinstances!(mfd, ["F", deepcopy(ts_cos)])
         @test keeponlyinstances!(mfd, [1, 2, 3]) == mfd # test return
         @test ninstances(mfd) == 3
         for i in 1:ninstances(mfd)
@@ -126,20 +127,20 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test dimension(mfd, 1) == 0
 
         # attributes manipulation
-        @test newframe!(mfd, deepcopy(ages)) == mfd # test return
+        @test insertframe!(mfd, deepcopy(ages)) == mfd # test return
         @test nframes(mfd) == 3
         @test nattributes(mfd, 3) == 1
 
-        @test dropframe!(mfd, 3) == DataFrame(deepcopy(ages)) # test return
+        @test dropframe!(mfd, 3) == mfd # test return
         @test nframes(mfd) == 2
 
-        newframe!(mfd, deepcopy(ages), [1])
+        insertframe!(mfd, deepcopy(ages), [1])
         @test nframes(mfd) == 3
         @test nattributes(mfd, 3) == 2
         @test dimension(mfd, 3) == 0
 
         # drop "inner" frame and multiple frames in one operation
-        newframe!(mfd, DataFrame(:t2 => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]))
+        insertframe!(mfd, DataFrame(:t2 => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]))
         @test nframes(mfd) == 4
         @test nattributes(mfd) == 4
         @test nattributes(mfd, nframes(mfd)) == 1
@@ -175,10 +176,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         )
         mfd_attr_manipulation_original = deepcopy(mfd_attr_manipulation)
 
-        @test keeponlyattributes!(mfd_attr_manipulation, [1, 3]) == DataFrame(
-                :name => ["Python", "Julia"],
-                :stat2 => [deepcopy(ts_cos), deepcopy(ts_sin)]
-            ) # test return
+        @test keeponlyattributes!(mfd_attr_manipulation, [1, 3]) == mfd_attr_manipulation
         @test mfd_attr_manipulation == MultiFrameDataset([[1], [2]],
             DataFrame(
                 :age => [30, 9],
@@ -196,17 +194,17 @@ const ages = DataFrame(:age => [35, 38, 37])
         mfd_attr_names_original = deepcopy(mfd1)
         mfd2 = deepcopy(mfd1)
 
-        @test hasattribute(mfd1, :age) == true
-        @test hasattribute(mfd1, :name) == true
-        @test hasattribute(mfd1, :missing_attribute) == false
+        @test hasattributes(mfd1, :age) == true
+        @test hasattributes(mfd1, :name) == true
+        @test hasattributes(mfd1, :missing_attribute) == false
         @test hasattributes(mfd1, [:age, :name]) == true
         @test hasattributes(mfd1, [:age, :missing_attribute]) == false
 
-        @test hasattribute(mfd1, 1, :age) == true
-        @test hasattribute(mfd1, 1, :name) == false
+        @test hasattributes(mfd1, 1, :age) == true
+        @test hasattributes(mfd1, 1, :name) == false
         @test hasattributes(mfd1, 1, [:age, :name]) == false
 
-        @test hasattribute(mfd1, 2, :name) == true
+        @test hasattributes(mfd1, 2, :name) == true
         @test hasattributes(mfd1, 2, [:name]) == true
 
         @test attributeindex(mfd1, :age) == 1
@@ -215,7 +213,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test attributeindex(mfd1, 2, :age) == 0
         @test attributeindex(mfd1, 2, :name) == 1
 
-        # addressing attributes by name - newframe!
+        # addressing attributes by name - insertframe!
         mfd1 = deepcopy(mfd_attr_names_original)
         mfd2 = deepcopy(mfd_attr_names_original)
         @test addframe!(mfd1, [1]) == addframe!(mfd2, [:age])
@@ -229,21 +227,21 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test removeattribute_fromframe!(mfd1, 2, 1) ==
             removeattribute_fromframe!(mfd2, 2, :age)
 
-        # addressing attributes by name - dropattribute!
+        # addressing attributes by name - dropattributes!
         mfd1 = deepcopy(mfd_attr_names_original)
         mfd2 = deepcopy(mfd_attr_names_original)
-        @test dropattribute!(mfd1, 1) ==
-            dropattribute!(mfd2, :age)
+        @test dropattributes!(mfd1, 1) ==
+            dropattributes!(mfd2, :age)
         @test mfd1 == mfd2
 
-        # addressing attributes by name - newframe!
+        # addressing attributes by name - insertframe!
         mfd1 = deepcopy(mfd_attr_names_original)
         mfd2 = deepcopy(mfd_attr_names_original)
-        @test newframe!(
+        @test insertframe!(
             mfd1,
             DataFrame(:stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]),
             [1]
-        ) == newframe!(
+        ) == insertframe!(
             mfd2,
             DataFrame(:stat1 => [deepcopy(ts_sin), deepcopy(ts_cos)]),
             [:age]
