@@ -3,6 +3,7 @@ module SoleBase
 using DataFrames
 using ScientificTypes
 using CSV
+using Statistics
 
 import ScientificTypes: show
 import Base: eltype, isempty, iterate, map, getindex, length
@@ -38,6 +39,7 @@ export newframe!, dropframe!
 
 # re-export from DataFrames
 export describe
+export describeonm
 # re-export from ScientificTypes
 export schema
 

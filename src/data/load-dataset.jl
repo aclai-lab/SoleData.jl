@@ -1,8 +1,6 @@
 function loaddataset(Dataset)
     
-
     # Get n_column from Metadata.txt
-
 
     df = DataFrame([Vector{Float64}[] for i in 1:1624], :auto)
     
@@ -12,15 +10,13 @@ function loaddataset(Dataset)
         current_dir = joinpath(Dataset, i)
         for file in readdir(current_dir)       
             if startswith(file, "Frame")
+                # Frame.csv to Dictionary
                 d = CSV.File(joinpath(current_dir, file)) |> Tables.columntable |> pairs |> Dict
+                # Push into DataFrame
                 push!(df, [d[Symbol(i)] for i in 0:(length(keys(d))-1)])
             end
         end
-    end
-    #println(df)
-    # describe(df)
-    
-    
+    end   
 
     return MultiFrameDataset([collect(1:nattributes(df))], df)
     
