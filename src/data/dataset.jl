@@ -1661,13 +1661,46 @@ end
 # -------------------------------------------------------------
 # describe
 
-function DF.describe(mfd::MultiFrameDataset; kwargs...)
-    results = DataFrame[]
-    for frame in mfd
-        push!(results, DF.describe(frame; kwargs...))
+function _describeonm(df::AbstractDataFrame; cols::AbstractVector{<:Integer} = 1:ncol(df), descfunction::Function)
+    results = Vector{Float64}[]
+    for j in cols
+        push!(results, descfunction.(df[:,j]))
     end
     return results
 end
+
+function describeonm(df::AbstractDataFrame; desc::AbstractVector{Symbol} = Symbol[], kwargs...)
+    cols = findall([eltype(c) <: AbstractVector{<:Number} for c in eachcol(df)])
+    df_final = describe(df)
+    for d in desc
+        df_final = insertcols!(df_final, ncol(df_final)+1, d => _describeonm(df; descfunction = desc_dict[d]))
+    end
+    return df_final
+end
+
+desc_dict = Dict{Symbol,Function}(
+    :mean_m => mean,
+    :min_m => minimum,
+    :max_m => maximum
+    #:n_f => catch22[:f1]
+    )
+
+function DF.describe(mfd::MultiFrameDataset; desc::AbstractVector{Symbol} = Symbol[], kwargs...)
+    results = DataFrame[]
+    for f in desc
+        @assert haskey(desc_dict, f) "Func not found"
+    end
+
+    for frame in mfd
+        push!(results, describeonm(frame; desc, kwargs...))
+    end
+    return results
+end
+
 function DF.describe(mfd::MultiFrameDataset, i::Integer; kwargs...)
     DF.describe(frame(mfd, i), kwargs...)
 end
+
+
+
+
