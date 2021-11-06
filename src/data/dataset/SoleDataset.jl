@@ -183,6 +183,7 @@ function dimension(mfd::AbstractMultiFrameDataset; kwargs...)
 end
 dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
 
+include("filesystem.jl")
 include("iterable.jl")
 include("utils.jl")
 include("comparison.jl")
