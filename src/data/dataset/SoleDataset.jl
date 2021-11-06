@@ -31,7 +31,7 @@ export isapproxeq, ≊
 export isapprox
 
 # filesystem
-export loaddataset
+export datasetinfo, loaddataset, savedataset
 
 # instance manipulation
 export pushinstances!, deleteinstances!, keeponlyinstances!
