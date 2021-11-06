@@ -224,6 +224,9 @@ function _describeonm(df::AbstractDataFrame; cols::AbstractVector{<:Integer} = 1
     return results
 end
 
+# TODO: describeonm should have the same interface as the `describe` function from DataFrames
+# describe(df::AbstractDataFrame; cols=:)
+# describe(df::AbstractDataFrame, stats::Union{Symbol, Pair}...; cols=:)
 function describeonm(df::AbstractDataFrame; desc::AbstractVector{Symbol} = Symbol[], kwargs...)
     cols = findall([eltype(c) <: AbstractVector{<:Number} for c in eachcol(df)])
     df_final = describe(df)
@@ -237,20 +240,29 @@ desc_dict = Dict{Symbol,Function}(
     :mean_m => mean,
     :min_m => minimum,
     :max_m => maximum
+    # TODO: add catch22 functions in this dict
     #:n_f => catch22[:f1]
     )
 
+# TODO: same as above
 function DF.describe(mfd::MultiFrameDataset; desc::AbstractVector{Symbol} = Symbol[], kwargs...)
     results = DataFrame[]
-    for f in desc
-        @assert haskey(desc_dict, f) "Func not found"
-    end
+
+    # TODO: make this assertions support Symbols from original `describe`
+    # for f in desc
+    #     @assert haskey(desc_dict, f) "Func not found"
+    # end
 
     for frame in mfd
         push!(results, describeonm(frame; desc, kwargs...))
     end
+
     return results
 end
+# TODO: implement this
+# function DF.describe(mfd::MultiFrameDataset, stats::Union{Synbol, Pair}...; cols=:)
+#     # TODO: select proper defaults stats based on `dimension` of each frame
+# end
 
 function DF.describe(mfd::MultiFrameDataset, i::Integer; kwargs...)
     DF.describe(frame(mfd, i), kwargs...)
