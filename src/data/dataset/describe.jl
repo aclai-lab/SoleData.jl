@@ -2,7 +2,21 @@
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - describe
 
-function _describeonm(df::AbstractDataFrame; cols::AbstractVector{<:Integer} = 1:ncol(df), descfunction::Function, t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)
+const desc_dict = Dict{Symbol,Function}(
+    :mean_m => mean,
+    :min_m => minimum,
+    :max_m => maximum,
+    # allow catch22 desc
+    (getnames(catch22) .=> catch22)...
+)
+
+function _describeonm(
+    df::AbstractDataFrame;
+    descfunction::Function,
+    cols::AbstractVector{<:Integer} = 1:ncol(df),
+    t::AbstractVector{<:Tuple{Integer,Integer,Integer}},
+    kwargs...
+)
     x = Matrix{AbstractFloat}[]
 
     for j in cols
@@ -19,7 +33,12 @@ end
 # TODO: describeonm should have the same interface as the `describe` function from DataFrames
 # describe(df::AbstractDataFrame; cols=:)
 # describe(df::AbstractDataFrame, stats::Union{Symbol, Pair}...; cols=:)
-function describeonm(df::AbstractDataFrame; desc::AbstractVector{Symbol} = Symbol[], t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)
+function describeonm(
+    df::AbstractDataFrame;
+    desc::AbstractVector{Symbol} = Symbol[],
+    t::AbstractVector{<:Tuple{Integer,Integer,Integer}},
+    kwargs...
+)
 
     data = DataFrame()
     data.variable = propertynames(df)
@@ -31,17 +50,19 @@ function describeonm(df::AbstractDataFrame; desc::AbstractVector{Symbol} = Symbo
     return data
 end
 
-desc_dict = Dict{Symbol,Function}(getnames(catch22) .=> catch22)
-desc_dict = push!(desc_dict, :mean_m => mean, :min_m => minimum, :max_m => maximum)
-
 # TODO: same as above
-function DF.describe(mfd::AbstractMultiFrameDataset; desc::AbstractVector{Symbol} = Symbol[], t::Vector{Tuple{Int64,Int64,Int64}} = [(1,0,0)], kwargs...)
-    results = DataFrame[]
-
+function DF.describe(
+    mfd::AbstractMultiFrameDataset;
+    desc::AbstractVector{Symbol} = Symbol[],
+    t::AbstractVector{<:Tuple{Integer,Integer,Integer}} = [(1,0,0)],
+    kwargs...
+)
     # TODO: make this assertions support Symbols from original `describe`
     # for f in desc
     #     @assert haskey(desc_dict, f) "Func not found"
     # end
+
+    results = DataFrame[]
 
     for frame in mfd
         push!(results, describeonm(frame; desc, t, kwargs...))
@@ -49,6 +70,7 @@ function DF.describe(mfd::AbstractMultiFrameDataset; desc::AbstractVector{Symbol
 
     return results
 end
+
 # TODO: implement this
 # function DF.describe(mfd::MultiFrameDataset, stats::Union{Synbol, Pair}...; cols=:)
 #     # TODO: select proper defaults stats based on `dimension` of each frame
