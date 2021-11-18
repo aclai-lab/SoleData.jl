@@ -156,7 +156,7 @@ function loaddataset(datasetpath::AbstractString)
 
     # Get n_column from Metadata.txt
     # TODO: generalize this 'magic number'
-    df = DataFrame([Vector{Float64}[] for i in 1:1624], :auto)
+    df = DataFrame([Vector{Float64}[] for i in 1:3], :auto)
 
     # For each directory (in alphabetic order) in datasetpath
     for i in sort(filter(i -> isdir(joinpath(datasetpath, i)), readdir(datasetpath, sort=true)), by = x -> parse(Int, chop(x, head=8, tail=0)))

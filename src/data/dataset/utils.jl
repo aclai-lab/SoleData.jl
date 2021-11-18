@@ -214,3 +214,33 @@ end
 function _is_attribute_in_frames(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
     return _is_attribute_in_frames(mfd, _name2index(mfd, attribute_name))
 end
+
+""" 
+Piecewise Aggregate Approximation 
+"""
+
+function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigits::Int=4, t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)
+    @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)), dims must be the same"
+    N = length(x)
+    n_chunks = t[1][1]
+    
+    @assert 1 ≤ n_chunks && n_chunks ≤ N "The number of chunks must be in [1,$(N)]"
+    @assert 0 ≤ t[1][2] ≤ floor(N/n_chunks) && 0 ≤ t[1][3] ≤ floor(N/n_chunks)
+    
+    z = Array{Float64}(undef, n_chunks) # TODO Float64?
+    for i in 1:n_chunks
+        l = Int(ceil((N*(i-1)/n_chunks) + 1))
+        h = Int(ceil(N*i/n_chunks))
+        if i == 1
+            h = h + t[1][3]
+        elseif i == n_chunks
+            l = l - t[1][2] 
+        else
+            h = h + t[1][3]
+            l = l - t[1][2]
+        end
+ 
+        z[i] = round(f(x[l:h]; kwargs...), digits=decdigits)            
+    end
+    return z
+end

@@ -218,31 +218,40 @@ end
 # -------------------------------------------------------------
 # describe
 
-function _describeonm(df::AbstractDataFrame; cols::AbstractVector{<:Integer} = 1:ncol(df), descfunction::Function)
-    results = Vector{Float64}[]
+function _describeonm(df::AbstractDataFrame; cols::AbstractVector{<:Integer} = 1:ncol(df), descfunction::Function, t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)    
+    x = Matrix{AbstractFloat}[]
+    
     for j in cols
-        push!(results, descfunction.(df[:,j]))
+        y = Matrix{AbstractFloat}(undef, nrow(df), t[1][1])
+        for (i, paa_result) in enumerate(paa.(df[:,j]; f=descfunction ,decdigits=4, t=t))
+            y[i,:] = paa_result         
+        end    
+        push!(x, y)    
     end
-    return results
+    
+    return x
 end
 
 # TODO: describeonm should have the same interface as the `describe` function from DataFrames
 # describe(df::AbstractDataFrame; cols=:)
 # describe(df::AbstractDataFrame, stats::Union{Symbol, Pair}...; cols=:)
-function describeonm(df::AbstractDataFrame; desc::AbstractVector{Symbol} = Symbol[], kwargs...)
-    cols = findall([eltype(c) <: AbstractVector{<:Number} for c in eachcol(df)])
-    df_final = describe(df)
+function describeonm(df::AbstractDataFrame; desc::AbstractVector{Symbol} = Symbol[], t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)
+
+    data = DataFrame()
+    data.variable = propertynames(df)
+
     for d in desc
-        df_final = insertcols!(df_final, ncol(df_final)+1, d => _describeonm(df; descfunction = desc_dict[d]))
+        data = insertcols!(data, ncol(data)+1, d => _describeonm(df; descfunction = desc_dict[d], t))
     end
-    return df_final
+    
+    return data
 end
 
 desc_dict = Dict{Symbol,Function}(getnames(catch22) .=> catch22)
 desc_dict = push!(desc_dict, :mean_m => mean, :min_m => minimum, :max_m => maximum)
 
 # TODO: same as above
-function DF.describe(mfd::MultiFrameDataset; desc::AbstractVector{Symbol} = Symbol[], kwargs...)
+function DF.describe(mfd::MultiFrameDataset; desc::AbstractVector{Symbol} = Symbol[], t::Vector{Tuple{Int64,Int64,Int64}} = [(1,0,0)], kwargs...)
     results = DataFrame[]
 
     # TODO: make this assertions support Symbols from original `describe`
@@ -251,7 +260,7 @@ function DF.describe(mfd::MultiFrameDataset; desc::AbstractVector{Symbol} = Symb
     # end
 
     for frame in mfd
-        push!(results, describeonm(frame; desc, kwargs...))
+        push!(results, describeonm(frame; desc, t, kwargs...))
     end
 
     return results
