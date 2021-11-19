@@ -54,7 +54,7 @@ function _read_example_metadata(datasetdir::AbstractString, inst_id::Integer)
     for (k, v) in split.(filter(x -> length(x) > 0, strip.(readlines(file))), '=')
         k = strip(k)
         v = strip(v)
-        if startswith(k, "dim") == "name"
+        if startswith(k, "dim")
             div = contains(v, ",") ? "," : " "
             dict[k] = Tuple(parse.(Int64, split(replace(replace(v, "(" => ""), ")" => ""), div)))
         else
