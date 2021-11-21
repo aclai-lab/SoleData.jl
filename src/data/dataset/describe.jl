@@ -83,3 +83,27 @@ function DF.describe(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
         return describeonm(frame(mfd, i); desc = desc, kwargs...)
     end
 end
+
+function _stat_description(
+	df::AbstractDataFrame;
+	functions::AbstractVector{Function} = [var, std],
+	cols::AbstractVector{<:Integer} = collect(2:ncol(df))
+)
+	for col in eachcol(df)[cols]
+		@assert eltype(col) <: AbstractArray "`df` is not a description DataFrame"
+	end
+
+	function apply_func_2_col(func::Function)
+		return cat(
+			[Symbol(names(df)[c] * "_" * string(nameof(func))) =>
+			[[func(r[:,chunk]) for chunk in 1:size(r, 2)] for r in df[:,c]] for c in cols]...;
+			dims = 1
+		)
+	end
+
+	total_cols = length(functions)*length(cols)
+	order = cat([collect(i:length(cols):total_cols) for i in 1:length(cols)]...; dims = 1)
+	gen_cols = cat([apply_func_2_col(f) for f in functions]...; dims = 1)
+
+	return DataFrame(:ATTRIBUTE => df[:,1], gen_cols[order]...)
+end
