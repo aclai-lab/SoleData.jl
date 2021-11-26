@@ -62,8 +62,12 @@ function describeonm(
 end
 
 # TODO: same as above
-function DF.describe(mfd::AbstractMultiFrameDataset; kwargs...)
-    return [DF.describe(mfd, i; kwargs...) for i in 1:nframes(mfd)]
+function DF.describe(
+	mfd::AbstractMultiFrameDataset;
+	t::AbstractVector{<:AbstractVector{<:NTuple{3,Integer}}} = fill([(1, 0, 0)], nframes(mfd)),
+	kwargs...
+)
+    return [DF.describe(mfd, i; t = t[i], kwargs...) for i in 1:nframes(mfd)]
 end
 
 # TODO: implement this
