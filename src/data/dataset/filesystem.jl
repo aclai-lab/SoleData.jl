@@ -86,7 +86,7 @@ and second element the total size in bytes.
 """
 function datasetinfo(
     datasetpath::AbstractString;
-    onlywithlables::AbstractVector{Pair{String,Any}} = Pair{String,Any}[]
+    onlywithlables::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} = AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
 )
     @assert isdir(datasetpath) "Dataset at path $(datasetpath) does not exist"
 
@@ -132,6 +132,17 @@ function datasetinfo(
     totalsize = 0
 
     # TODO: add exmple filtering by labels
+    filtered_ids = Integer[]
+    if length(onlywithlables) != 0
+        nt = Tuple{}()
+        for i in 1:length(onlywithlables)
+            for filters in [collect(Base.product([collect(Base.product((key,), value)) for (key, value) in onlywithlables[i]]...))...]
+                nt = NamedTuple([Symbol(fs[1]) => fs[2] for fs in filters])
+                push!(filtered_ids,(groupby(labels, collect(keys(nt)))[nt])[:,1]...)
+            end 
+        end
+        examples_ids = filtered_ids
+    end
 
     for id in examples_ids
         ex_metadata = _read_example_metadata(datasetpath, id)
@@ -180,7 +191,7 @@ TODO: docs
 """
 function loaddataset(
     datasetpath::AbstractString;
-    onlywithlables::AbstractVector{Pair{String,Any}} = Pair{String,Any}[]
+    onlywithlables::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} = AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
 )
     selected_ids, datasetsize = datasetinfo(datasetpath, onlywithlables = onlywithlables)
 
