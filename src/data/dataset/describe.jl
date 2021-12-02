@@ -77,9 +77,9 @@ end
 
 function DF.describe(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
     frame_dim = dimension(frame(mfd, i))
-    if frame_dim == :mixed
-        # TODO: implement
-        throw(ErrorException("Description for `:mixed` dimension frame not implemented"))
+    if frame_dim == :mixed || frame_dim == :empty
+        # TODO: implement for mixed???
+        throw(ErrorException("Description for `:$(frame_dim)` dimension frame not implemented"))
     elseif frame_dim == 0
         return DF.describe(frame(mfd, i))
     else
