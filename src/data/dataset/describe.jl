@@ -6,12 +6,15 @@ const desc_dict = Dict{Symbol,Function}(
     :mean_m => mean,
     :min_m => minimum,
     :max_m => maximum,
+    :median_m => median,
+    :quantile_1 => (q_1 = x -> quantile(x, 0.25)),
+    :quantile_3 =>(q_3 = x -> quantile(x, 0.75)),
     # allow catch22 desc
     (getnames(catch22) .=> catch22)...
 )
 
 const auto_desc_by_dim = Dict{Integer,Vector{Symbol}}(
-    1 => [:mean_m, :min_m, :max_m]
+    1 => [:mean_m, :min_m, :max_m, :quantile_1, :median_m, :quantile_3]
 )
 
 function _describeonm(
@@ -77,9 +80,9 @@ end
 
 function DF.describe(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
     frame_dim = dimension(frame(mfd, i))
-    if frame_dim == :mixed
-        # TODO: implement
-        throw(ErrorException("Description for `:mixed` dimension frame not implemented"))
+    if frame_dim == :mixed || frame_dim == :empty
+        # TODO: implement for mixed???
+        throw(ErrorException("Description for `:$(frame_dim)` dimension frame not implemented"))
     elseif frame_dim == 0
         return DF.describe(frame(mfd, i))
     else

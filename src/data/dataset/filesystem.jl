@@ -86,7 +86,8 @@ and second element the total size in bytes.
 """
 function datasetinfo(
     datasetpath::AbstractString;
-    onlywithlables::AbstractVector{Pair{String,Any}} = Pair{String,Any}[]
+    onlywithlabels::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} =
+        AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
 )
     @assert isdir(datasetpath) "Dataset at path $(datasetpath) does not exist"
 
@@ -120,19 +121,57 @@ function datasetinfo(
         missing_in_dirs = setdiff(examples_ids, labels[:,:id])
         if length(missing_in_dirs) > 0
             there_are_missing = true
-            @warn "Following exmaples IDs are present on filsystem but a referenced by " *
+            @warn "Following exmaples IDs are present on filsystem but arn't referenced by " *
                 "$(_ds_labels): $(missing_in_dirs)"
         end
         if there_are_missing
             examples_ids = sort!(collect(intersect(examples_ids, labels[:,:id])))
-            @warn "Will be used only instances with IDs: $(examples_ids)"
+            @warn "Will be considered only instances with IDs: $(examples_ids)"
+        end
+    end
+
+    if length(onlywithlabels) > 0
+        if isnothing(labels)
+            @warn "A filter was passed but no $(_ds_labels) was found in this dataset: all " *
+                "instances will be used"
+        else
+            # CHECKS
+            keys_not_found = String[]
+            labels_cols = names(labels)[2:end]
+            for i in 1:length(onlywithlabels)
+                for k in [pair[1] for pair in onlywithlabels[i]]
+                    if !(k in labels_cols)
+                        push!(keys_not_found, k)
+                    end
+                end
+            end
+            if length(keys_not_found) > 0
+                throw(ErrorException("Key(s) provided as filters not found: " *
+                    "$(unique(keys_not_found)); availabels are $(labels_cols)"))
+            end
+
+            # ACTUAL FILTERING
+            filtered_ids = Integer[]
+            for i in 1:length(onlywithlabels)
+                for filters in [Base.product([Base.product((key,), value)
+                        for (key, value) in onlywithlabels[i]]...)...]
+
+                    nt = NamedTuple([Symbol(fs[1]) => fs[2] for fs in filters])
+                    grouped_by_keys = groupby(labels, collect(keys(nt)))
+
+                    if haskey(grouped_by_keys, nt)
+                        push!(filtered_ids, grouped_by_keys[nt][:,1]...)
+                    else
+                        @warn "No example found for combination of labels $(nt): check " *
+                            "if the proper Type was used"
+                    end
+                end
+            end
+            examples_ids = sort(collect(intersect(examples_ids, unique(filtered_ids))))
         end
     end
 
     totalsize = 0
-
-    # TODO: add exmple filtering by labels
-
     for id in examples_ids
         ex_metadata = _read_example_metadata(datasetpath, id)
         # TODO: perform some checks on metadata
@@ -145,6 +184,7 @@ function datasetinfo(
         end
     end
 
+    println("Instances count: $(length(examples_ids))")
     println("Total size: $(totalsize) bytes")
 
     return examples_ids, totalsize
@@ -180,9 +220,10 @@ TODO: docs
 """
 function loaddataset(
     datasetpath::AbstractString;
-    onlywithlables::AbstractVector{Pair{String,Any}} = Pair{String,Any}[]
+    onlywithlabels::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} =
+        AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
 )
-    selected_ids, datasetsize = datasetinfo(datasetpath, onlywithlables = onlywithlables)
+    selected_ids, datasetsize = datasetinfo(datasetpath, onlywithlabels = onlywithlabels)
 
     @assert length(selected_ids) > 0 "No instance found"
 
