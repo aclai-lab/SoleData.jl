@@ -214,3 +214,43 @@ end
 function _is_attribute_in_frames(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
     return _is_attribute_in_frames(mfd, _name2index(mfd, attribute_name))
 end
+
+
+function _prettyprint_header(io::IO, mfd::AbstractMultiFrameDataset)
+    println(io, "● $(typeof(mfd))")
+    println(io, "   └─ dimensions: $(dimension(mfd))")
+end
+
+function _prettyprint_frames(io::IO, mfd::AbstractMultiFrameDataset)
+    for (i, frame) in enumerate(mfd)
+        println(io, "- Frame $(i) / $(nframes(mfd))")
+        println(io, "   └─ dimension: $(dimension(frame))")
+        println(io, frame)
+    end
+end
+
+function _prettyprint_spareattributes(io::IO, mfd::AbstractMultiFrameDataset)
+    spare_attrs = spareattributes(mfd)
+    if length(spare_attrs) > 0
+        spare_df = @view data(mfd)[:,spare_attrs]
+        println(io, "- Spare attributes")
+        println(io, "   └─ dimension: $(dimension(spare_df))")
+        println(io, spare_df)
+    end
+end
+
+function _pretty_domain(set::AbstractSet)
+    vec = collect(set)
+    result = "{ "
+
+    for i in 1:length(vec)
+        result *= string(vec[i])
+        if i != length(vec)
+            result *= ","
+        end
+        result *= " "
+    end
+
+    result *= "}"
+end
+_pretty_domain(dom::Tuple) = "($(dom[1]) - $(dom[end]))"
