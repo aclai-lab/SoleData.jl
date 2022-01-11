@@ -32,8 +32,8 @@ end
 descriptor(lmfd::AbstractLabeledMultiFrameDataset) = descriptor(lmfd.mfd)
 frame_descriptor(lmfd::AbstractLabeledMultiFrameDataset) = descriptor(lmfd)
 data(lmfd::AbstractLabeledMultiFrameDataset) = data(lmfd.mfd)
-labels_descriptor(lmfd::AbstractLabeledMultiFrameDataset) = lmfd.labels_descriptor
-dataset(lmfd::AbstractLabeledMultiFrameDataset) = lmfd.mfd
+labels_descriptor(lmfd::LabeledMultiFrameDataset) = lmfd.labels_descriptor
+dataset(lmfd::LabeledMultiFrameDataset) = lmfd.mfd
 
 # -------------------------------------------------------------
 # LabeledMultiFrameDataset - informations
@@ -43,11 +43,13 @@ function show(io::IO, lmfd::AbstractLabeledMultiFrameDataset)
     println(io, "   ├─ labels")
 
     if nlabels(lmfd) > 0
-        for i in 1:(nlabels(lmfd)-1)
-            println(io, "   │   ├─ $(label(lmfd, i)): $(_print_label_domain(labeldomain(lmfd, i)))")
+        lbls = labels(lmfd)
+        for i in 1:(length(lbls)-1)
+            println(io, "   │   ├─ $(lbls[i]): " *
+                "$(labeldomain(lmfd, i))")
         end
-        println(io, "   │   └─ $(label(lmfd, nlabels(lmfd))): " *
-            "$(_print_label_domain(labeldomain(lmfd, nlabels(lmfd))))")
+        println(io, "   │   └─ $(lbls[end]): " *
+            "$(labeldomain(lmfd, length(lbls)))")
     else
         println(io, "   │   └─ no label selected")
     end
