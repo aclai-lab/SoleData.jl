@@ -20,9 +20,8 @@ import Base: ∈, ⊆, ∪, ∩
 # export types
 export AbstractDataset, AbstractMultiFrameDataset
 export MultiFrameDataset
-export AbstractClassificationMultiFrameDataset, AbstractRegressionMultiFrameDataset
-export ClassificationMultiFrameDataset
-export RegressionMultiFrameDataset
+export AbstractLabeledMultiFrameDataset
+export LabeledMultiFrameDataset
 
 # information gathering
 export instance, ninstances
@@ -45,11 +44,8 @@ export insertattributes!, dropattributes!, keeponlyattributes!, dropspareattribu
 export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
 export insertframe!, dropframe!
 
-# classes manipulation
-export class, classes, nclasses, classdomain, addclass!, removeclass!
-
-# regressors manipulation
-export regressor, regressors, nregressors, regressordomain, addregressor!, removeregressor!
+# labels manipulation
+export nlabels, label, labels, labeldomain, setaslabel!, removefromlabels!, spareattributes
 
 # re-export from DataFrames
 export describe
@@ -62,6 +58,8 @@ const ST = ScientificTypes
 const DF = DataFrames
 
 """
+Resolve these todos..
+
 GENERAL TODOs:
 * find a unique template to return, for example, AssertionError messages.
     * a solution could be to have a module SoleDiagnosis to have a set of templates for
@@ -92,13 +90,15 @@ access the frame descriptor, and [`data`](@ref), to access the inner data.
 abstract type AbstractMultiFrameDataset <: AbstractDataset end
 
 """
-TODO: docs
+Abstract supertype for all multiframe datasets for supervised learning.
+
+A concrete LabeledFrameDataset should always provide accessors [`descriptor`](@ref), to
+access the frame descriptor, and [`data`](@ref), to access the inner data just like any
+other MultiFrameDataset. In addition to these it is required an implementation for accessors
+[`labels_descriptor`](@ref), to access the labels descriptor and [`dataset`](@ref), to
+access the MultiFrameDataset (forgetting about the labels).
 """
-abstract type AbstractClassificationMultiFrameDataset <: AbstractMultiFrameDataset end
-"""
-TODO: docs
-"""
-abstract type AbstractRegressionMultiFrameDataset <: AbstractMultiFrameDataset end
+abstract type AbstractLabeledMultiFrameDataset <: AbstractMultiFrameDataset end
 
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - accessors
@@ -119,25 +119,12 @@ end
 # -------------------------------------------------------------
 # AbstractClassificationMultiFrameDataset - accessors
 
-function classes_descriptor(cmfd::AbstractClassificationMultiFrameDataset)
-    return error("`classes_descriptor` accessor not implemented for type " *
-        string(typeof(cmfd)))
+function labels_descriptor(lmfd::AbstractLabeledMultiFrameDataset)
+    return error("`labels_descriptor` accessor not implemented for type " *
+        string(typeof(lmfd)))
 end
-function dataset(cmfd::AbstractClassificationMultiFrameDataset)
-    return error("`dataset` accessor not implemented for type "
-        * string(typeof(cmfd)))
-end
-
-# -------------------------------------------------------------
-# AbstractRegressionMultiFrameDataset - accessors
-
-function regressors_descriptor(rmfd::AbstractRegressionMultiFrameDataset)
-    return error("`regressors_descriptor` accessor not implemented for type " *
-        string(typeof(rmfd)))
-end
-function dataset(rmfd::AbstractRegressionMultiFrameDataset)
-    return error("`dataset` accessor not implemented for type "
-        * string(typeof(rmfd)))
+function dataset(lmfd::AbstractLabeledMultiFrameDataset)
+    return error("`dataset` accessor not implemented for type $(string(typeof(lmfd)))")
 end
 
 # -------------------------------------------------------------
@@ -195,10 +182,8 @@ include("instances.jl")
 include("frames.jl")
 include("MultiFrameDataset.jl")
 
-include("ClassificationMultiFrameDataset.jl")
-include("classification-utils.jl")
-include("RegressionMultiFrameDataset.jl")
-include("regression-utils.jl")
+include("LabeledMultiFrameDataset.jl")
+include("labels.jl")
 
 include("schema.jl")
 include("describe.jl")
