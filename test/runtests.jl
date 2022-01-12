@@ -262,4 +262,52 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test keeponlyattributes!(mfd1, [1]) == keeponlyattributes!(mfd2, [:age])
         @test mfd1 == mfd2
     end
+
+
+    @testset "labeled-dataset" begin
+        lmfd = LabeledMultiFrameDataset(
+            [2],
+            MultiFrameDataset([[1], [3]], deepcopy(df_langs))
+        )
+
+        @test isa(lmfd, LabeledMultiFrameDataset)
+
+        @test isa(frame(lmfd, 1), SubDataFrame)
+        @test isa(frame(lmfd, 2), SubDataFrame)
+
+        @test frame(lmfd, [1,2]) == [frame(lmfd, 1), frame(lmfd, 2)]
+
+        @test nframes(lmfd) == 2
+
+        @test nattributes(lmfd) == 3
+        @test nattributes(lmfd, 1) == 1
+        @test nattributes(lmfd, 2) == 1
+
+        @test ninstances(lmfd) == 2
+        @test ninstances(lmfd, 1) == 2
+        @test ninstances(lmfd, 2) == 2
+
+        @test dimension(lmfd) == (0, 1)
+        @test dimension(lmfd, 1) == 0
+        @test dimension(lmfd, 2) == 1
+
+        # labels
+        @test nlabels(lmfd) == 1
+        @test labels(lmfd) == [Symbol(names(df_langs)[2])]
+        @test labels(lmfd, 1) == Dict(Symbol(names(df_langs)[2]) => df_langs[1, 2])
+        @test labels(lmfd, 2) == Dict(Symbol(names(df_langs)[2]) => df_langs[2, 2])
+
+        @test labeldomain(lmfd, 1) == Set(df_langs[:,2])
+
+        # remove label
+        removefromlabels!(lmfd, 2)
+        @test nlabels(lmfd) == 0
+
+        setaslabel!(lmfd, 2)
+        @test nlabels(lmfd) == 1
+
+        # label
+        @test label(lmfd, 1, 1) == "Python"
+        @test label(lmfd, 2, 1) == "Julia"
+    end
 end

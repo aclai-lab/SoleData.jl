@@ -192,20 +192,9 @@ data(mfd::MultiFrameDataset) = mfd.data
 # MultiFrameDataset - informations
 
 function show(io::IO, mfd::MultiFrameDataset)
-    println(io, "● MultiFrameDataset")
-    println(io, "   └─ dimensions: $(dimension(mfd))")
-    for (i, frame) in enumerate(mfd)
-        println(io, "- Frame $(i) / $(nframes(mfd))")
-        println(io, "   └─ dimension: $(dimension(frame))")
-        println(io, frame)
-    end
-    spare_attrs = spareattributes(mfd)
-    if length(spare_attrs) > 0
-        spare_df = @view data(mfd)[:,spare_attrs]
-        println(io, "- Spare attributes")
-        println(io, "   └─ dimension: $(dimension(spare_df))")
-        println(io, spare_df)
-    end
+    _prettyprint_header(io, mfd)
+    _prettyprint_frames(io, mfd)
+    _prettyprint_spareattributes(io, mfd)
 end
 
 # -------------------------------------------------------------
