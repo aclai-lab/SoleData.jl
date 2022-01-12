@@ -59,7 +59,7 @@ function describeonm(
     end
 
     return DataFrame(
-        :Attirbutes => Symbol.(propertynames(df)),
+        :Attributes => Symbol.(propertynames(df)),
         [d => _describeonm(df; descfunction = desc_dict[d], t) for d in desc]...
     )
 end
