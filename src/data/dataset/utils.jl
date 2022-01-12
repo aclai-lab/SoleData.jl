@@ -239,6 +239,7 @@ function _prettyprint_spareattributes(io::IO, mfd::AbstractMultiFrameDataset)
     end
 end
 
+# TODO: perhaps _prettyprint_domain for uniformity?
 function _pretty_domain(set::AbstractSet)
     vec = collect(set)
     result = "{ "

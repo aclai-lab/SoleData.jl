@@ -17,8 +17,8 @@ struct LabeledMultiFrameDataset <: AbstractLabeledMultiFrameDataset
         for i in labels_descriptor
             if _is_attribute_in_frames(mfd, i)
                 # TODO: consider enforcing this instead of just warning
-                @warn "Setting as label an attribute used in a frame: this is discouraged " *
-                    "and probably will not allowed in future versions"
+                @warn "Setting as label an attribute used in a frame: this is " *
+                    "discouraged and probably will not allowed in future versions"
             end
         end
 
@@ -42,6 +42,7 @@ function show(io::IO, lmfd::AbstractLabeledMultiFrameDataset)
     println(io, "● LabeledMultiFrameDataset")
     println(io, "   ├─ labels")
 
+    # TODO: perhaps _prettyprint_labels for uniformity?
     if nlabels(lmfd) > 0
         lbls = labels(lmfd)
         for i in 1:(length(lbls)-1)

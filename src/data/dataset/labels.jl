@@ -33,7 +33,11 @@ end
 Get the label at `label_index` of instance at index `instance` in `lmfd`
 LabeledMultiFrameDataset.
 """
-function label(lmfd::AbstractLabeledMultiFrameDataset, instance::Integer, label_index::Integer)
+function label(
+    lmfd::AbstractLabeledMultiFrameDataset,
+    instance::Integer,
+    label_index::Integer
+)
     return labels(lmfd, instance)labels(lmfd)[label_index]
 end
 
@@ -103,6 +107,7 @@ function removefromlabels!(lmfd::AbstractLabeledMultiFrameDataset, attr_name::Sy
     return removefromlabels!(lmfd, _name2index(lmfd, attr_name))
 end
 
+# TODO: this function could recall the spareattributes on AbstractMultiFrameDataset?
 function spareattributes(lmfd::AbstractLabeledMultiFrameDataset)
     filter!(attr -> !(attr in labels_descriptor(lmfd)), spareattributes(dataset(lmfd)))
 end
