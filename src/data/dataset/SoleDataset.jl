@@ -91,9 +91,6 @@ access the frame descriptor, and [`data`](@ref), to access the inner data just l
 other MultiFrameDataset. In addition to these it is required an implementation for accessors
 [`labels_descriptor`](@ref), to access the labels descriptor and [`dataset`](@ref), to
 access the MultiFrameDataset (forgetting about the labels).
-
-TODO: descriptor, data, labels_descriptor, dataset are not exported? I suppose issue is also
-    for the MultiFrameDataset.. please explain why because perhaps I misunderstood it. Ty
 """
 abstract type AbstractLabeledMultiFrameDataset <: AbstractMultiFrameDataset end
 

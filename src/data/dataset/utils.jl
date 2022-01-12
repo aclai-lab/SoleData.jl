@@ -239,8 +239,7 @@ function _prettyprint_spareattributes(io::IO, mfd::AbstractMultiFrameDataset)
     end
 end
 
-# TODO: perhaps _prettyprint_domain for uniformity?
-function _pretty_domain(set::AbstractSet)
+function _prettyprint_domain(set::AbstractSet)
     vec = collect(set)
     result = "{ "
 
@@ -254,4 +253,4 @@ function _pretty_domain(set::AbstractSet)
 
     result *= "}"
 end
-_pretty_domain(dom::Tuple) = "($(dom[1]) - $(dom[end]))"
+_prettyprint_domain(dom::Tuple) = "($(dom[1]) - $(dom[end]))"

@@ -306,6 +306,8 @@ const ages = DataFrame(:age => [35, 38, 37])
         setaslabel!(lmfd, 2)
         @test nlabels(lmfd) == 1
 
-        # TODO: test label
+        # label
+        @test label(lmfd, 1, 1) == "Python"
+        @test label(lmfd, 2, 1) == "Julia"
     end
 end
