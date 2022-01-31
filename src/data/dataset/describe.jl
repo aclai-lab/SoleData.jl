@@ -2,6 +2,7 @@
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - describe
 
+# TODO: I would remove the "_m" because now it is useless?
 const desc_dict = Dict{Symbol,Function}(
     :mean_m => mean,
     :min_m => minimum,

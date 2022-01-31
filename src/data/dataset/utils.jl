@@ -256,6 +256,7 @@ _prettyprint_domain(dom::Tuple) = "($(dom[1]) - $(dom[end]))"
 
 """
 Piecewise Aggregate Approximation
+TODO: add docs
 """
 function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigits::Int=4, t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)
     @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)), dims must be the same"
@@ -265,7 +266,7 @@ function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigit
     @assert 1 ≤ n_chunks && n_chunks ≤ N "The number of chunks must be in [1,$(N)]"
     @assert 0 ≤ t[1][2] ≤ floor(N/n_chunks) && 0 ≤ t[1][3] ≤ floor(N/n_chunks)
 
-    z = Array{Float64}(undef, n_chunks) # TODO Float64?
+    z = Array{Float64}(undef, n_chunks) # TODO Float64? solve this?
     for i in 1:n_chunks
         l = Int(ceil((N*(i-1)/n_chunks) + 1))
         h = Int(ceil(N*i/n_chunks))
