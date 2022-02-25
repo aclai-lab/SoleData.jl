@@ -2,6 +2,8 @@
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - filesystem operations
 
+using DelimitedFiles
+
 const _ds_inst_prefix = "Example_"
 const _ds_frame_prefix = "Frame_"
 const _ds_metadata = "Metadata.txt"
@@ -263,19 +265,92 @@ end
 """
 TODO: docs
 """
+
 function savedataset(
-    datasetpath::AbstractString, mfd::AbstractMultiFrameDataset;
+    datasetpath::AbstractString, 
+    lmfd::AbstractLabeledMultiFrameDataset,
+    og_dataset_path::AbstractString;
     force::Bool = false
-)
+    )
+
     if !force
-        @assert "Directory $(datasetpath) already present: set `force` to `true` to " *
-            "overwrite existing dataset"
+        @assert all(!, dir == splitdir(datasetpath)[2] for dir in filter(x -> isdir(joinpath(dirname(pwd() * "/" * datasetpath), x)), readdir(dirname(pwd() * "/" * datasetpath)))) "Directory $(datasetpath) already present: set `force` to `true` to " *
+        "overwrite existing dataset"
     end
 
-    throw(ErrorException("`datasetinfo` still not implemented"))
+    mfd = lmfd.mfd
+    labels_index = lmfd.labels_descriptor
 
-    # TODO: implement savedataset
-    # useful function may be:
-    # - mkpath
-    # - write
+    savedataset(datasetpath, mfd, labels_index, og_dataset_path, force = force)
+
 end
+
+function savedataset(
+    datasetpath::AbstractString, 
+    mfd::AbstractMultiFrameDataset, 
+    labels_index::AbstractVector{<:Integer},
+    og_dataset_path::AbstractString;
+    force::Bool = false
+    )
+
+    if !force
+        @assert all(!, dir == splitdir(datasetpath)[2] for dir in filter(x -> isdir(joinpath(dirname(pwd() * "/" * datasetpath), x)), readdir(dirname(pwd() * "/" * datasetpath)))) "Directory $(datasetpath) already present: set `force` to `true` to " *
+        "overwrite existing dataset"
+    end    
+    
+    df = mfd.data
+    
+    frames = Vector{String}[]
+    for i_frame in 1:nframes(mfd)
+        push!(frames, names(mfd[i_frame]))
+    end
+
+    savedataset(datasetpath, df, labels_index, frames, og_dataset_path, force = force)
+end
+
+function savedataset(
+    datasetpath::AbstractString, 
+    df::AbstractDataFrame, 
+    labels_index::AbstractVector{<:Integer}, 
+    frames::AbstractVector{<:AbstractVector{<:AbstractString}},
+    og_dataset_path::AbstractString;
+    force::Bool = false
+    )
+
+    if !force
+        @assert all(!, dir == splitdir(datasetpath)[2] for dir in filter(x -> isdir(joinpath(dirname(pwd() * "/" * datasetpath), x)), readdir(dirname(pwd() * "/" * datasetpath)))) "Directory $(datasetpath) already present: set `force` to `true` to " *
+        "overwrite existing dataset"
+    end 
+    
+    mkpath(datasetpath)
+
+    for i_row in 1:nrow(df)
+        mkpath(datasetpath * "/" * _ds_inst_prefix * string(i_row))
+        for i_frame in 1:length(frames)
+            temp_df = DataFrame()
+            push!(temp_df, df[i_row,frames[i_frame]])
+
+            temp_df_2 = DataFrame()
+            for i_col in 1:length(names(temp_df))  
+                insertcols!(temp_df_2, i_col, Symbol.(names(temp_df)[i_col]) => df[i_row,frames[i_frame][i_col]])
+            end
+            
+            CSV.write(datasetpath * "/" * _ds_inst_prefix * string(i_row) * "/" * _ds_frame_prefix * string(i_frame) * ".csv", temp_df_2)
+        end
+        file = open(datasetpath * "/" * _ds_inst_prefix * string(i_row) * "/" * _ds_metadata, "w+")
+        writedlm(file, _read_example_metadata(og_dataset_path, i_row), "=", quotes=false)      
+        close(file)
+    end
+    
+    x = String[]
+    for i in 1:nrow(df)
+        push!(x, _ds_inst_prefix * string(i))
+    end
+
+    CSV.write(datasetpath * "/" * _ds_labels, insertcols!(df[:, labels_index], 1, :id => x))
+
+    file = open(datasetpath * "/" * _ds_metadata, "w+")
+    writedlm(file, _read_dataset_metadata(og_dataset_path), "=", quotes=false)
+    close(file)
+end
+
