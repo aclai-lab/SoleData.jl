@@ -251,7 +251,13 @@ function loaddataset(
         push!(frame_descriptor, [findfirst(x -> x == k, df_names) for k in frame])
     end
 
-    return MultiFrameDataset(frame_descriptor, df)
+    if isfile(joinpath(datasetpath, _ds_labels))
+        df_with_labels = innerjoin(df, rename!(_read_labels(datasetpath), :id => :ID), on = :ID)
+        labels_index =  collect((ncol(df)+1) : ncol(df_with_labels))
+        return LabeledMultiFrameDataset(labels_index, MultiFrameDataset(frame_descriptor, df_with_labels))
+    else
+        return MultiFrameDataset(frame_descriptor, df)
+    end
 end
 
 """
