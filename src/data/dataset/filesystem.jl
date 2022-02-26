@@ -2,8 +2,6 @@
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - filesystem operations
 
-using DelimitedFiles
-
 const _ds_inst_prefix = "Example_"
 const _ds_frame_prefix = "Frame_"
 const _ds_metadata = "Metadata.txt"
@@ -73,10 +71,10 @@ function _read_labels(datasetdir::AbstractString)
     @assert isfile(joinpath(datasetdir, _ds_labels)) "Missing $(_ds_labels) in dataset " *
         "$(datasetdir)"
 
-    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame)
-
+    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame; types=String)
+    
     df[!,:id] = parse.(Int64, replace.(df[!,:id], _ds_inst_prefix => ""))
-
+  
     return df
 end
 
@@ -90,7 +88,7 @@ function datasetinfo(
     datasetpath::AbstractString;
     onlywithlabels::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} =
         AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
-)
+    )
     @assert isdir(datasetpath) "Dataset at path $(datasetpath) does not exist"
 
     ds_metadata = _read_dataset_metadata(datasetpath)
@@ -194,7 +192,9 @@ end
 
 function _load_instance(datasetpath::AbstractString, inst_id::Integer)
     inst_metadata = _read_example_metadata(datasetpath, inst_id)
-
+        
+    dataset_metadata = _read_dataset_metadata(datasetpath)
+    
     instancedir = joinpath(datasetpath, "$(_ds_inst_prefix)$(inst_id)")
 
     frame_reg = Regex("$(_ds_frame_prefix)([[:digit:]]+).csv")
@@ -209,11 +209,16 @@ function _load_instance(datasetpath::AbstractString, inst_id::Integer)
     #Threads.@threads
     for (i, f) in collect(enumerate(frames_num))
         frame_path = joinpath(instancedir, "$(_ds_frame_prefix)$(f).csv")
-        frame = CSV.File(frame_path) |> Tables.columntable |> pairs |> Dict
-        # TODO: use dim_frame_[[:digit:]] to properly load frames
+        
+        # TODO: use dim_frame_[[:digit:]] to properly load all frames
+        dim_curr_frame = dataset_metadata["frame" * f]
+        if dim_curr_frame == 0
+            frame = (CSV.File(frame_path) |> Tables.rowtable)[1] |> pairs |> Dict
+        else
+            frame = CSV.File(frame_path) |> Tables.columntable |> pairs |> Dict
+        end
         result[i] = frame
     end
-
     return result
 end
 
@@ -224,7 +229,7 @@ function loaddataset(
     datasetpath::AbstractString;
     onlywithlabels::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} =
         AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
-)
+    )
     selected_ids, datasetsize = datasetinfo(datasetpath, onlywithlabels = onlywithlabels)
 
     @assert length(selected_ids) > 0 "No instance found"
@@ -233,7 +238,7 @@ function loaddataset(
     frames_cols = [Symbol.(attr_name) for attr_name in keys.(instance_frames)]
 
     df = DataFrame(
-        :ID => [selected_ids[1]],
+        :id => [selected_ids[1]],
         [Symbol(k) => [v] for frame in instance_frames for (k, v) in frame]...
     )
 
@@ -252,9 +257,9 @@ function loaddataset(
     for (i, frame) in enumerate(frames_cols)
         push!(frame_descriptor, [findfirst(x -> x == k, df_names) for k in frame])
     end
-
+    
     if isfile(joinpath(datasetpath, _ds_labels))
-        df_with_labels = innerjoin(df, rename!(_read_labels(datasetpath), :id => :ID), on = :ID)
+        df_with_labels = innerjoin(df, rename!(_read_labels(datasetpath), :id => :id), on = :id)
         labels_index =  collect((ncol(df)+1) : ncol(df_with_labels))
         return LabeledMultiFrameDataset(labels_index, MultiFrameDataset(frame_descriptor, df_with_labels))
     else
@@ -265,11 +270,10 @@ end
 """
 TODO: docs
 """
-
 function savedataset(
     datasetpath::AbstractString, 
-    lmfd::AbstractLabeledMultiFrameDataset,
-    og_dataset_path::AbstractString;
+    lmfd::AbstractLabeledMultiFrameDataset;
+    name::AbstractString = "saved_dataset",
     force::Bool = false
     )
 
@@ -281,15 +285,14 @@ function savedataset(
     mfd = lmfd.mfd
     labels_index = lmfd.labels_descriptor
 
-    savedataset(datasetpath, mfd, labels_index, og_dataset_path, force = force)
-
+    savedataset(datasetpath, mfd, labels_index = labels_index, name = name, force = force)
 end
 
 function savedataset(
     datasetpath::AbstractString, 
-    mfd::AbstractMultiFrameDataset, 
-    labels_index::AbstractVector{<:Integer},
-    og_dataset_path::AbstractString;
+    mfd::AbstractMultiFrameDataset;
+    labels_index::Union{AbstractVector{<:Integer},Nothing} = nothing,
+    name::AbstractString = "saved_dataset",
     force::Bool = false
     )
 
@@ -299,22 +302,24 @@ function savedataset(
     end    
     
     df = mfd.data
-    
     frames = Vector{String}[]
     for i_frame in 1:nframes(mfd)
         push!(frames, names(mfd[i_frame]))
     end
 
-    savedataset(datasetpath, df, labels_index, frames, og_dataset_path, force = force)
+    dim_frames = dimension(mfd)
+
+    savedataset(datasetpath, df, frames, dim_frames, labels_index = labels_index, name = name, force = force)
 end
 
 function savedataset(
     datasetpath::AbstractString, 
     df::AbstractDataFrame, 
-    labels_index::AbstractVector{<:Integer}, 
     frames::AbstractVector{<:AbstractVector{<:AbstractString}},
-    og_dataset_path::AbstractString;
-    force::Bool = false
+    dim_frames = Tuple{<:Integer,<:Integer};
+    labels_index::Union{AbstractVector{<:Integer},Nothing} = nothing,
+    name::AbstractString = "saved_dataset",
+    force::Bool = false,
     )
 
     if !force
@@ -324,11 +329,36 @@ function savedataset(
     
     mkpath(datasetpath)
 
+    write = true
+
+    if labels_index !== nothing
+        x = String[]
+        for i in 1:nrow(df)
+            push!(x, _ds_inst_prefix * string(i))
+        end
+    
+        df_labels = insertcols!(df[:, labels_index], 1, :id => x)
+    end
+
     for i_row in 1:nrow(df)
+        write = true
         mkpath(datasetpath * "/" * _ds_inst_prefix * string(i_row))
+        file = open(datasetpath * "/" * _ds_inst_prefix * string(i_row) * "/" * _ds_metadata, "w+")
         for i_frame in 1:length(frames)
             temp_df = DataFrame()
             push!(temp_df, df[i_row,frames[i_frame]])
+
+            println(file, "dim_frame_" * string(i_frame) * "=(" * string(length(temp_df[1,1])) * ",0)")
+
+            if write
+                if labels_index !== nothing
+                    example_labels = select(df_labels, Not("id"))[i_row,:]
+                    for col in 1:length(names(example_labels)) 
+                        println(file, names(example_labels)[col] * "=" * string(select(df_labels, Not("id"))[i_row,col]))
+                    end
+                end
+                write = false
+            end
 
             temp_df_2 = DataFrame()
             for i_col in 1:length(names(temp_df))  
@@ -337,20 +367,26 @@ function savedataset(
             
             CSV.write(datasetpath * "/" * _ds_inst_prefix * string(i_row) * "/" * _ds_frame_prefix * string(i_frame) * ".csv", temp_df_2)
         end
-        file = open(datasetpath * "/" * _ds_inst_prefix * string(i_row) * "/" * _ds_metadata, "w+")
-        writedlm(file, _read_example_metadata(og_dataset_path, i_row), "=", quotes=false)      
         close(file)
     end
-    
-    x = String[]
-    for i in 1:nrow(df)
-        push!(x, _ds_inst_prefix * string(i))
-    end
-
-    CSV.write(datasetpath * "/" * _ds_labels, insertcols!(df[:, labels_index], 1, :id => x))
 
     file = open(datasetpath * "/" * _ds_metadata, "w+")
-    writedlm(file, _read_dataset_metadata(og_dataset_path), "=", quotes=false)
-    close(file)
-end
+    
+    println(file, "name=",name)
+    
+    if labels_index !== nothing
+        CSV.write(datasetpath * "/" * _ds_labels, df_labels)
+        println(file, "supervised=true")
+        println(file, "num_classes=" * string(ncol(df_labels)-1))
+    else
+        println(file, "supervised=false")
+    end
 
+    println(file, "num_frames=", length(frames))
+
+    for i_frame in 1:length(frames)
+        println(file, "frame" * string(i_frame) * "=" * string(dim_frames[i_frame]))
+    end
+
+    close(file)    
+end
