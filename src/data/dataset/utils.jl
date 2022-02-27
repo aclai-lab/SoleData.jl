@@ -283,3 +283,14 @@ function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigit
     end
     return z
 end
+
+"""
+TODO: docs
+"""
+linearize_data(d::Any) = d
+linearize_data(d::AbstractVector) = d
+linearize_data(d::AbstractMatrix) = reshape(m', 1, :)[:]
+function linearize_data(d::AbstractArray)
+    return throw(ErrorExcpetion("Still can't linearize data of dimension > 2"))
+end
+# TODO: more linearizations

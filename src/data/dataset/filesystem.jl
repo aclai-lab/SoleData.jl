@@ -7,6 +7,12 @@ const _ds_frame_prefix = "Frame_"
 const _ds_metadata = "Metadata.txt"
 const _ds_labels = "Labels.csv"
 
+function _parse_dim_tuple(t::AbstractString)
+    t = strip(t, ['(', ')', '\n', ',', ' '])
+    div = contains(t, ",") ? "," : " "
+    return Tuple(parse.(Int64, split(t, div; keepempty = false)))
+end
+
 function _read_dataset_metadata(datasetdir::AbstractString)
     @assert isfile(joinpath(datasetdir, _ds_metadata)) "Missing $(_ds_metadata) in dataset " *
         "$(datasetdir)"
@@ -55,8 +61,7 @@ function _read_example_metadata(datasetdir::AbstractString, inst_id::Integer)
         k = strip(k)
         v = strip(v)
         if startswith(k, "dim")
-            div = contains(v, ",") ? "," : " "
-            dict[k] = Tuple(parse.(Int64, split(replace(replace(v, "(" => ""), ")" => ""), div)))
+            dict[k] = _parse_dim_tuple(v)
         else
             dict[k] = v
         end
@@ -71,24 +76,24 @@ function _read_labels(datasetdir::AbstractString)
     @assert isfile(joinpath(datasetdir, _ds_labels)) "Missing $(_ds_labels) in dataset " *
         "$(datasetdir)"
 
-    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame; types=String)
-    
+    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame; type = String)
+
     df[!,:id] = parse.(Int64, replace.(df[!,:id], _ds_inst_prefix => ""))
-  
+
     return df
 end
 
 """
     datasetinfo(datasetpath)
 
-Show dataset size on disk and return a Touple with first element a Vector of selected IDs
-and second element the total size in bytes.
+Show dataset size on disk and return a Touple with first element a Vector of selected IDs,
+second element the labels DataFrame or nothing and third element the total size in bytes.
 """
 function datasetinfo(
     datasetpath::AbstractString;
     onlywithlabels::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} =
         AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
-    )
+)
     @assert isdir(datasetpath) "Dataset at path $(datasetpath) does not exist"
 
     ds_metadata = _read_dataset_metadata(datasetpath)
@@ -187,14 +192,18 @@ function datasetinfo(
     println("Instances count: $(length(examples_ids))")
     println("Total size: $(totalsize) bytes")
 
-    return examples_ids, totalsize
+    if !isnothing(labels)
+        labels = labels[findall(id -> id in examples_ids, labels[:,:id]),:]
+    end
+
+    return examples_ids, labels, totalsize
 end
 
 function _load_instance(datasetpath::AbstractString, inst_id::Integer)
     inst_metadata = _read_example_metadata(datasetpath, inst_id)
-        
+
     dataset_metadata = _read_dataset_metadata(datasetpath)
-    
+
     instancedir = joinpath(datasetpath, "$(_ds_inst_prefix)$(inst_id)")
 
     frame_reg = Regex("$(_ds_frame_prefix)([[:digit:]]+).csv")
@@ -205,19 +214,19 @@ function _load_instance(datasetpath::AbstractString, inst_id::Integer)
     frames = filter(isframefile, readdir(instancedir))
     frames_num = sort!([match(frame_reg, f).captures[1] for f in frames])
 
-    result = Vector{Dict}(undef, length(frames_num))
+    result = Vector{OrderedDict}(undef, length(frames_num))
     #Threads.@threads
     for (i, f) in collect(enumerate(frames_num))
         frame_path = joinpath(instancedir, "$(_ds_frame_prefix)$(f).csv")
-        
+
         # TODO: use dim_frame_[[:digit:]] to properly load all frames
         dim_curr_frame = dataset_metadata["frame" * f]
         if dim_curr_frame == 0
-            frame = (CSV.File(frame_path) |> Tables.rowtable)[1] |> pairs |> Dict
+            result[i] = (CSV.File(frame_path) |> Tables.rowtable)[1] |> pairs |> OrderedDict
         else
-            frame = CSV.File(frame_path) |> Tables.columntable |> pairs |> Dict
+            result[i] = CSV.File(frame_path) |> Tables.columntable |> pairs |> OrderedDict
         end
-        result[i] = frame
+
     end
     return result
 end
@@ -227,10 +236,11 @@ TODO: docs
 """
 function loaddataset(
     datasetpath::AbstractString;
-    onlywithlabels::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} =
-        AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
-    )
-    selected_ids, datasetsize = datasetinfo(datasetpath, onlywithlabels = onlywithlabels)
+    onlywithlabels::AbstractVector{<:AbstractVector{
+        <:Pair{<:AbstractString,<:AbstractVector{<:Any}}
+    }} = AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
+)
+    selected_ids, labels, datasetsize = datasetinfo(datasetpath, onlywithlabels = onlywithlabels)
 
     @assert length(selected_ids) > 0 "No instance found"
 
@@ -257,13 +267,19 @@ function loaddataset(
     for (i, frame) in enumerate(frames_cols)
         push!(frame_descriptor, [findfirst(x -> x == k, df_names) for k in frame])
     end
-    
-    if isfile(joinpath(datasetpath, _ds_labels))
-        df_with_labels = innerjoin(df, rename!(_read_labels(datasetpath), :id => :id), on = :id)
-        labels_index =  collect((ncol(df)+1) : ncol(df_with_labels))
-        return LabeledMultiFrameDataset(labels_index, MultiFrameDataset(frame_descriptor, df_with_labels))
+
+    mfd = MultiFrameDataset(frame_descriptor, df)
+
+    if !isnothing(labels)
+        orig_length = nattributes(mfd)
+
+        for l in names(labels)[2:end]
+            insertattributes!(mfd, Symbol(l), labels[:,l])
+        end
+
+        return LabeledMultiFrameDataset(collect((orig_length+1):nattributes(mfd)), mfd)
     else
-        return MultiFrameDataset(frame_descriptor, df)
+        return mfd
     end
 end
 
@@ -271,122 +287,108 @@ end
 TODO: docs
 """
 function savedataset(
-    datasetpath::AbstractString, 
-    lmfd::AbstractLabeledMultiFrameDataset;
-    name::AbstractString = "saved_dataset",
-    force::Bool = false
+    datasetpath::AbstractString, lmfd::AbstractLabeledMultiFrameDataset;
+    kwargs...
+)
+    return savedataset(
+        datasetpath, dataset(lmfd);
+        labels_indices = labels_descriptor(lmfd),
+        kwargs...
     )
-
-    if !force
-        @assert all(!, dir == splitdir(datasetpath)[2] for dir in filter(x -> isdir(joinpath(dirname(pwd() * "/" * datasetpath), x)), readdir(dirname(pwd() * "/" * datasetpath)))) "Directory $(datasetpath) already present: set `force` to `true` to " *
-        "overwrite existing dataset"
-    end
-
-    mfd = lmfd.mfd
-    labels_index = lmfd.labels_descriptor
-
-    savedataset(datasetpath, mfd, labels_index = labels_index, name = name, force = force)
 end
 
 function savedataset(
-    datasetpath::AbstractString, 
-    mfd::AbstractMultiFrameDataset;
-    labels_index::Union{AbstractVector{<:Integer},Nothing} = nothing,
-    name::AbstractString = "saved_dataset",
-    force::Bool = false
+    datasetpath::AbstractString, mfd::AbstractMultiFrameDataset;
+    kwargs...
+)
+    return savedataset(
+        datasetpath, data(mfd);
+        frames = frame_descriptor(mfd),
+        kwargs...
     )
-
-    if !force
-        @assert all(!, dir == splitdir(datasetpath)[2] for dir in filter(x -> isdir(joinpath(dirname(pwd() * "/" * datasetpath), x)), readdir(dirname(pwd() * "/" * datasetpath)))) "Directory $(datasetpath) already present: set `force` to `true` to " *
-        "overwrite existing dataset"
-    end    
-    
-    df = mfd.data
-    frames = Vector{String}[]
-    for i_frame in 1:nframes(mfd)
-        push!(frames, names(mfd[i_frame]))
-    end
-
-    dim_frames = dimension(mfd)
-
-    savedataset(datasetpath, df, frames, dim_frames, labels_index = labels_index, name = name, force = force)
 end
 
 function savedataset(
-    datasetpath::AbstractString, 
-    df::AbstractDataFrame, 
-    frames::AbstractVector{<:AbstractVector{<:AbstractString}},
-    dim_frames = Tuple{<:Integer,<:Integer};
-    labels_index::Union{AbstractVector{<:Integer},Nothing} = nothing,
-    name::AbstractString = "saved_dataset",
-    force::Bool = false,
-    )
+    datasetpath::AbstractString, df::AbstractDataFrame;
+    instance_ids::AbstractVector{<:Integer} = 1:nrow(df),
+    frames::AbstractVector{<:AbstractVector{<:Integer}} = [collect(1:ncol(df))],
+    labels_indices::AbstractVector{<:Integer} = Int[],
+    name::AbstractString = basename(replace(datasetpath, r"/$" => "")),
+    force::Bool = false
+)
+    @assert force || !isdir(datasetpath) "Directory $(datasetpath) already present: set " *
+        "`force` to `true` to overwrite existing dataset"
 
-    if !force
-        @assert all(!, dir == splitdir(datasetpath)[2] for dir in filter(x -> isdir(joinpath(dirname(pwd() * "/" * datasetpath), x)), readdir(dirname(pwd() * "/" * datasetpath)))) "Directory $(datasetpath) already present: set `force` to `true` to " *
-        "overwrite existing dataset"
-    end 
-    
+    @assert length(instance_ids) == nrow(df) "Mismatching `length(instance_ids)` " *
+        "($(length(instance_ids))) and `nrow(df)` ($(nrow(df)))"
+
     mkpath(datasetpath)
 
-    write = true
-
-    if labels_index !== nothing
-        x = String[]
-        for i in 1:nrow(df)
-            push!(x, _ds_inst_prefix * string(i))
-        end
-    
-        df_labels = insertcols!(df[:, labels_index], 1, :id => x)
+    # NOTE: maybe this can be done in `savedataset` accepting a labeled MFD
+    df_labels = nothing
+    if length(labels_indices) > 0
+        df_labels = DataFrame(
+            :id => [string(_ds_inst_prefix, i) for i in instance_ids],
+            [l => df[:,l] for l in Symbol.(names(df)[labels_indices])]...
+        )
     end
 
-    for i_row in 1:nrow(df)
-        write = true
-        mkpath(datasetpath * "/" * _ds_inst_prefix * string(i_row))
-        file = open(datasetpath * "/" * _ds_inst_prefix * string(i_row) * "/" * _ds_metadata, "w+")
-        for i_frame in 1:length(frames)
-            temp_df = DataFrame()
-            push!(temp_df, df[i_row,frames[i_frame]])
+    for (i_inst, (id, inst)) in enumerate(zip(instance_ids, eachrow(df)))
+        inst_metadata_path = joinpath(datasetpath, string(_ds_inst_prefix, id), _ds_metadata)
 
-            println(file, "dim_frame_" * string(i_frame) * "=(" * string(length(temp_df[1,1])) * ",0)")
+        curr_inst_path = mkpath(dirname(inst_metadata_path))
+        inst_metadata_file = open(inst_metadata_path, "w+")
 
-            if write
-                if labels_index !== nothing
-                    example_labels = select(df_labels, Not("id"))[i_row,:]
-                    for col in 1:length(names(example_labels)) 
-                        println(file, names(example_labels)[col] * "=" * string(select(df_labels, Not("id"))[i_row,col]))
-                    end
-                end
-                write = false
-            end
+        for (i_frame, curr_frame_idices) in enumerate(frames)
+            curr_frame_inst = inst[curr_frame_idices]
 
-            temp_df_2 = DataFrame()
-            for i_col in 1:length(names(temp_df))  
-                insertcols!(temp_df_2, i_col, Symbol.(names(temp_df)[i_col]) => df[i_row,frames[i_frame][i_col]])
-            end
-            
-            CSV.write(datasetpath * "/" * _ds_inst_prefix * string(i_row) * "/" * _ds_frame_prefix * string(i_frame) * ".csv", temp_df_2)
+            # TODO: maybe assert all instances have same size or fill with missing
+            println(inst_metadata_file,
+                "dim_frame_", i_frame, "=", size(first(curr_frame_inst))
+            )
+
+            CSV.write(
+                joinpath(curr_inst_path, string(_ds_frame_prefix, i_frame, ".csv")),
+                DataFrame(
+                    [a => linearize_data(curr_frame_inst[a])
+                        for a in Symbol.(names(curr_frame_inst))]
+                )
+            )
         end
-        close(file)
+
+        # NOTE: this is not part of the `Data Input Format` specification pdf and it is a
+        # duplicated info from Labels.csv
+        if !isnothing(df_labels)
+            example_labels = select(df_labels, Not("id"))[i_inst,:]
+            for col in 1:length(names(example_labels))
+                println(inst_metadata_file,
+                    names(example_labels)[col], "=",
+                    string(select(df_labels, Not("id"))[i_inst, col])
+                )
+            end
+        end
+
+        close(inst_metadata_file)
     end
 
-    file = open(datasetpath * "/" * _ds_metadata, "w+")
-    
-    println(file, "name=",name)
-    
-    if labels_index !== nothing
-        CSV.write(datasetpath * "/" * _ds_labels, df_labels)
-        println(file, "supervised=true")
-        println(file, "num_classes=" * string(ncol(df_labels)-1))
+
+    ds_metadata_file = open(joinpath(datasetpath, _ds_metadata), "w+")
+
+    println(ds_metadata_file, "name=", name)
+
+    if !isnothing(df_labels)
+        CSV.write(joinpath(datasetpath, _ds_labels), df_labels)
+        println(ds_metadata_file, "supervised=true")
+        println(ds_metadata_file, "num_classes=", (ncol(df_labels)-1))
     else
-        println(file, "supervised=false")
+        println(ds_metadata_file, "supervised=false")
     end
 
-    println(file, "num_frames=", length(frames))
+    println(ds_metadata_file, "num_frames=", length(frames))
 
-    for i_frame in 1:length(frames)
-        println(file, "frame" * string(i_frame) * "=" * string(dim_frames[i_frame]))
+    for (i_frame, curr_frame_idices) in enumerate(frames)
+        println(ds_metadata_file, "frame", i_frame, "=", dimension(df[:,curr_frame_idices]))
     end
 
-    close(file)    
+    close(ds_metadata_file)
 end

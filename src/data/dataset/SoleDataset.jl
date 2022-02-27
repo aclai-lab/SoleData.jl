@@ -2,6 +2,7 @@ module SoleDataset
 
 using DataFrames
 using ScientificTypes
+using DataStructures
 using Statistics
 using Catch22
 using CSV
