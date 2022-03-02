@@ -189,6 +189,7 @@ function datasetinfo(
         end
     end
 
+    # TODO: I would comment the next two lines; is it safe?
     println("Instances count: $(length(examples_ids))")
     println("Total size: $(totalsize) bytes")
 
@@ -200,6 +201,7 @@ function datasetinfo(
 end
 
 function _load_instance(datasetpath::AbstractString, inst_id::Integer)
+    # TODO: inst_metadata is never used
     inst_metadata = _read_example_metadata(datasetpath, inst_id)
 
     dataset_metadata = _read_dataset_metadata(datasetpath)
@@ -264,7 +266,7 @@ function loaddataset(
 
     frame_descriptor = Vector{Integer}[]
     df_names = Symbol.(names(df))
-    for (i, frame) in enumerate(frames_cols)
+    for (_, frame) in enumerate(frames_cols)
         push!(frame_descriptor, [findfirst(x -> x == k, df_names) for k in frame])
     end
 
