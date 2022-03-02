@@ -234,7 +234,152 @@ function _load_instance(datasetpath::AbstractString, inst_id::Integer)
 end
 
 """
-TODO: docs
+loaddataset(datasetpath, onlywithlabels)
+
+Create a MultiFrameDataset or a LabeledMultiFrameDataset from a Dataset, based on the presence 
+of file Labels.csv.
+
+datasetpath is an AbstractString that denote the Dataset's position.
+
+onlywithlabels is an AbstractVector{AbstractVector{Pair{AbstractString,AbstractVector{Any}}}}
+and it's used to select which portion of the Dataset to load, by specifying labels and their values.
+Beginning from the center, each Pair{AbstractString,AbstractVector{Any}} must contains, as 
+AbstractString the label's name, and, as AbstractVector{Any} the values of that label. 
+Each Pair in one Vector must refer to a different label, so if the Dataset has in total n labels, 
+this Vector of Pair can contain maximun n element. That's because the elements will combine with each other.
+Every Vector of Pair act as a filter.
+Note that the same label can be used in different Vector of Pair as they don't combine with wach other.
+If onlywithlabels is not specified the function will load the entire Dataset.
+
+```jldoctest
+julia> df_data = DataFrame(
+           :id => [1, 2, 3, 4, 5],
+           :age => [30, 9, 30, 40, 9],
+           :name => ["Python", "Julia", "C", "Java", "R"],
+           :stat => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]
+       )
+5×4 DataFrame
+ Row │ id     age    name    stat                              
+     │ Int64  Int64  String  Array…                            
+─────┼─────────────────────────────────────────────────────────
+   1 │     1     30  Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │     2      9  Julia   [0.540302, -0.416147, -0.989992,…
+   3 │     3     30  C       [0.841471, 0.909297, 0.14112, -0…
+   4 │     4     40  Java    [0.540302, -0.416147, -0.989992,…
+   5 │     5      9  R       [0.841471, 0.909297, 0.14112, -0…
+
+julia> lmfd =LabeledMultiFrameDataset(
+    [2,3],
+    MultiFrameDataset([[4]], deepcopy(df_data))
+)
+● LabeledMultiFrameDataset
+├─ labels
+│   ├─ age: Set([9, 30, 40])
+│   └─ name: Set(["C", "Julia", "Python", "Java", "R"])
+└─ dimensions: (1,)
+- Frame 1 / 1
+└─ dimension: 1
+5×1 SubDataFrame
+Row │ stat                              
+│ Array…                            
+─────┼───────────────────────────────────
+1 │ [0.841471, 0.909297, 0.14112, -0…
+2 │ [0.540302, -0.416147, -0.989992,…
+3 │ [0.841471, 0.909297, 0.14112, -0…
+4 │ [0.540302, -0.416147, -0.989992,…
+5 │ [0.841471, 0.909297, 0.14112, -0…
+- Spare attributes
+└─ dimension: 0
+5×1 SubDataFrame
+Row │ id    
+│ Int64 
+─────┼───────
+1 │     1
+2 │     2
+3 │     3
+4 │     4
+5 │     5
+
+julia> savedataset("langs", lmfd, force = true)
+
+julia> loaddataset("langs", onlywithlabels = [ ["name" => ["Julia"], "age" => ["9"]] ] )
+Instances count: 1
+Total size: 981670 bytes
+● LabeledMultiFrameDataset
+   ├─ labels
+   │   ├─ age: Set(["9"])
+   │   └─ name: Set(["Julia"])
+   └─ dimensions: (1,)
+- Frame 1 / 1
+   └─ dimension: 1
+1×1 SubDataFrame
+ Row │ stat                              
+     │ Array…                            
+─────┼───────────────────────────────────
+   1 │ [0.540302, -0.416147, -0.989992,…
+- Spare attributes
+   └─ dimension: 0
+1×1 SubDataFrame
+ Row │ id    
+     │ Int64 
+─────┼───────
+   1 │     2
+
+julia> loaddataset("langs", onlywithlabels = [ ["name" => ["Julia"], "age" => ["30"]] ] )
+Instances count: 0
+Total size: 0 bytes
+ERROR: AssertionError: No instance found
+
+julia> loaddataset("langs", onlywithlabels = [ ["name" => ["Julia"]] , ["age" => ["9"]] ] )
+Instances count: 2
+Total size: 1963537 bytes
+● LabeledMultiFrameDataset
+   ├─ labels
+   │   ├─ age: Set(["9"])
+   │   └─ name: Set(["Julia", "R"])
+   └─ dimensions: (1,)
+- Frame 1 / 1
+   └─ dimension: 1
+2×1 SubDataFrame
+ Row │ stat                              
+     │ Array…                            
+─────┼───────────────────────────────────
+   1 │ [0.540302, -0.416147, -0.989992,…
+   2 │ [0.841471, 0.909297, 0.14112, -0…
+- Spare attributes
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ id    
+     │ Int64 
+─────┼───────
+   1 │     2
+   2 │     5
+
+julia> loaddataset("langs", onlywithlabels = [ ["name" => ["Julia"]], ["name" => ["C"], "age" => ["30"]] ] )
+Instances count: 2
+Total size: 1963537 bytes
+● LabeledMultiFrameDataset
+    ├─ labels
+    │   ├─ age: Set(["9", "30"])
+    │   └─ name: Set(["C", "Julia"])
+    └─ dimensions: (1,)
+- Frame 1 / 1
+    └─ dimension: 1
+2×1 SubDataFrame
+Row │ stat                              
+    │ Array…                            
+─────┼───────────────────────────────────
+    1 │ [0.540302, -0.416147, -0.989992,…
+    2 │ [0.841471, 0.909297, 0.14112, -0…
+- Spare attributes
+    └─ dimension: 0
+2×1 SubDataFrame
+Row │ id    
+    │ Int64 
+─────┼───────
+    1 │     2
+    2 │     3
+```
 """
 function loaddataset(
     datasetpath::AbstractString;
@@ -286,7 +431,43 @@ function loaddataset(
 end
 
 """
-TODO: docs
+savedataset create the Dataset from a LabeledMultiFrameDataset, or a MultiFrameDataset, or a DataFrame 
+in the following format:
+
+datasetpath
+    └─ Example_1
+    │     └─ Frame_1.csv
+    │     └─ Frame_2.csv
+    │     └─ ...
+    │     └─ Frame_n.csv
+    │     └─ Metadata.txt
+    └─ Example_2
+    │     └─ Frame_1.csv
+    │     └─ Frame_2.csv
+    │     └─ ...
+    │     └─ Frame_n.csv
+    │     └─ Metadata.txt
+    └─ ...
+    └─ Example_n
+    └─ Metadata.txt
+    └─ Labels.csv
+
+savedataset(datasetpath, lmfd)
+datasetpath denote where to save the Dataset, lmfd is the LabeledMultiFrameDataset that 
+will be used by the function to create the Dataset.
+
+savedataset(datasetpath, mfd)
+mfd is the MultiFrameDataset that will be used by the function to create the Dataset.
+
+savedataset(datasetpath, df; instance_ids, frames, labels_indices, name, force)
+df is the DataFrame that will be used by the function to create the Dataset,
+instance_ids is a AbstractVector{Integer} that denote the identifier of the instances,
+frames is a AbstractVector{AbstractVector{Integer}} and each inside vectors contain all 
+the indices of the frames with same dimension,
+labels_indices is a AbstractVector{Integer} and contains the indices of the labels' column,
+name is an AbstractString and denote the name of the Dataset, that will be saved in the Metadata of the Dataset,
+force is a Bool, if it's set to true, then in case datasetpath already exists, it will be overwritten. 
+Otherwise, if it is set to false and datasetpath already exists, this will be reported and the dataset will not be saved.
 """
 function savedataset(
     datasetpath::AbstractString, lmfd::AbstractLabeledMultiFrameDataset;
