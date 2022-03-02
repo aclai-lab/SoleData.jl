@@ -266,7 +266,7 @@ function loaddataset(
 
     frame_descriptor = Vector{Integer}[]
     df_names = Symbol.(names(df))
-    for (_, frame) in enumerate(frames_cols)
+    for frame in frames_cols
         push!(frame_descriptor, [findfirst(x -> x == k, df_names) for k in frame])
     end
 

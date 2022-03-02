@@ -2,12 +2,11 @@
 # -------------------------------------------------------------
 # AbstractMultiFrameDataset - describe
 
-# TODO: I would remove the "_m" because now it is useless?
 const desc_dict = Dict{Symbol,Function}(
-    :mean_m => mean,
-    :min_m => minimum,
-    :max_m => maximum,
-    :median_m => median,
+    :mean => mean,
+    :min => minimum,
+    :max => maximum,
+    :median => median,
     :quantile_1 => (q_1 = x -> quantile(x, 0.25)),
     :quantile_3 =>(q_3 = x -> quantile(x, 0.75)),
     # allow catch22 desc
@@ -15,7 +14,7 @@ const desc_dict = Dict{Symbol,Function}(
 )
 
 const auto_desc_by_dim = Dict{Integer,Vector{Symbol}}(
-    1 => [:mean_m, :min_m, :max_m, :quantile_1, :median_m, :quantile_3]
+    1 => [:mean, :min, :max, :quantile_1, :median, :quantile_3]
 )
 
 function _describeonm(
