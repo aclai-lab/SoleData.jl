@@ -283,32 +283,32 @@ julia> lmfd =LabeledMultiFrameDataset(
     MultiFrameDataset([[4]], deepcopy(df_data))
 )
 ● LabeledMultiFrameDataset
-├─ labels
-│   ├─ age: Set([9, 30, 40])
-│   └─ name: Set(["C", "Julia", "Python", "Java", "R"])
-└─ dimensions: (1,)
+   ├─ labels
+   │   ├─ age: Set([9, 30, 40])
+   │   └─ name: Set(["C", "Julia", "Python", "Java", "R"])
+   └─ dimensions: (1,)
 - Frame 1 / 1
-└─ dimension: 1
+   └─ dimension: 1
 5×1 SubDataFrame
-Row │ stat
-│ Array…
+ Row │ stat
+     │ Array…
 ─────┼───────────────────────────────────
-1 │ [0.841471, 0.909297, 0.14112, -0…
-2 │ [0.540302, -0.416147, -0.989992,…
-3 │ [0.841471, 0.909297, 0.14112, -0…
-4 │ [0.540302, -0.416147, -0.989992,…
-5 │ [0.841471, 0.909297, 0.14112, -0…
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+   3 │ [0.841471, 0.909297, 0.14112, -0…
+   4 │ [0.540302, -0.416147, -0.989992,…
+   5 │ [0.841471, 0.909297, 0.14112, -0…
 - Spare attributes
-└─ dimension: 0
+   └─ dimension: 0
 5×1 SubDataFrame
-Row │ id
-│ Int64
+ Row │ id
+     │ Int64
 ─────┼───────
-1 │     1
-2 │     2
-3 │     3
-4 │     4
-5 │     5
+   1 │     1
+   2 │     2
+   3 │     3
+   4 │     4
+   5 │     5
 
 julia> savedataset("langs", lmfd, force = true)
 
@@ -376,19 +376,19 @@ Total size: 1963537 bytes
 - Frame 1 / 1
     └─ dimension: 1
 2×1 SubDataFrame
-Row │ stat
-    │ Array…
+ Row │ stat
+     │ Array…
 ─────┼───────────────────────────────────
-    1 │ [0.540302, -0.416147, -0.989992,…
-    2 │ [0.841471, 0.909297, 0.14112, -0…
+   1 │ [0.540302, -0.416147, -0.989992,…
+   2 │ [0.841471, 0.909297, 0.14112, -0…
 - Spare attributes
     └─ dimension: 0
 2×1 SubDataFrame
-Row │ id
-    │ Int64
+ Row │ id
+     │ Int64
 ─────┼───────
-    1 │     2
-    2 │     3
+   1 │     2
+   2 │     3
 ```
 """
 function loaddataset(
@@ -502,7 +502,7 @@ end
 
 function savedataset(
     datasetpath::AbstractString,
-    df::AbstractDataFrame
+    df::AbstractDataFrame,
     frame_descriptor::AbstractVector{<:AbstractVector{<:Integer}} = [collect(1:ncol(df))];
     instance_ids::AbstractVector{<:Integer} = 1:nrow(df),
     labels_indices::AbstractVector{<:Integer} = Int[],
