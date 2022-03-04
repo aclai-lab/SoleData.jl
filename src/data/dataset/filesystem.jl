@@ -84,10 +84,15 @@ function _read_labels(datasetdir::AbstractString)
 end
 
 """
-    datasetinfo(datasetpath)
+    datasetinfo(datasetpath; onlywithlabels = [])
 
 Show dataset size on disk and return a Touple with first element a Vector of selected IDs,
 second element the labels DataFrame or nothing and third element the total size in bytes.
+
+## PARAMETERS
+
+* `onlywithlabels`, it's used to select which portion of the Dataset to load, by specifying
+    labels and their values to use as filters. See [`loaddataset`](@ref) for more info.
 """
 function datasetinfo(
     datasetpath::AbstractString;
@@ -234,22 +239,27 @@ function _load_instance(datasetpath::AbstractString, inst_id::Integer)
 end
 
 """
-loaddataset(datasetpath, onlywithlabels)
+    loaddataset(datasetpath; onlywithlabels = [])
 
-Create a MultiFrameDataset or a LabeledMultiFrameDataset from a Dataset, based on the presence 
-of file Labels.csv.
+Create a MultiFrameDataset or a LabeledMultiFrameDataset from a Dataset, based on the
+presence of file Labels.csv.
 
-datasetpath is an AbstractString that denote the Dataset's position.
+## PARAMETERS
 
-onlywithlabels is an AbstractVector{AbstractVector{Pair{AbstractString,AbstractVector{Any}}}}
-and it's used to select which portion of the Dataset to load, by specifying labels and their values.
-Beginning from the center, each Pair{AbstractString,AbstractVector{Any}} must contains, as 
-AbstractString the label's name, and, as AbstractVector{Any} the values of that label. 
-Each Pair in one Vector must refer to a different label, so if the Dataset has in total n labels, 
-this Vector of Pair can contain maximun n element. That's because the elements will combine with each other.
-Every Vector of Pair act as a filter.
-Note that the same label can be used in different Vector of Pair as they don't combine with wach other.
-If onlywithlabels is not specified the function will load the entire Dataset.
+* `datasetpath` is an AbstractString that denote the Dataset's position;
+* `onlywithlabels` is an AbstractVector{AbstractVector{Pair{AbstractString,AbstractVector{Any}}}}
+    and it's used to select which portion of the Dataset to load, by specifying labels and
+    their values.
+    Beginning from the center, each Pair{AbstractString,AbstractVector{Any}} must contain,
+    as AbstractString the label's name, and, as AbstractVector{Any} the values of that label.
+    Each Pair in one Vector must refer to a different label, so if the Dataset has in total
+    n labels, this Vector of Pair can contain maximun n element. That's because the elements
+    will combine with each other.
+    Every Vector of Pair act as a filter.
+    Note that the same label can be used in different Vector of Pair as they don't combine
+    with each other.
+    If `onlywithlabels` is an empty Vector (default) the function will load the entire
+    Dataset.
 
 ```jldoctest
 julia> df_data = DataFrame(
@@ -259,8 +269,8 @@ julia> df_data = DataFrame(
            :stat => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]
        )
 5×4 DataFrame
- Row │ id     age    name    stat                              
-     │ Int64  Int64  String  Array…                            
+ Row │ id     age    name    stat
+     │ Int64  Int64  String  Array…
 ─────┼─────────────────────────────────────────────────────────
    1 │     1     30  Python  [0.841471, 0.909297, 0.14112, -0…
    2 │     2      9  Julia   [0.540302, -0.416147, -0.989992,…
@@ -280,8 +290,8 @@ julia> lmfd =LabeledMultiFrameDataset(
 - Frame 1 / 1
 └─ dimension: 1
 5×1 SubDataFrame
-Row │ stat                              
-│ Array…                            
+Row │ stat
+│ Array…
 ─────┼───────────────────────────────────
 1 │ [0.841471, 0.909297, 0.14112, -0…
 2 │ [0.540302, -0.416147, -0.989992,…
@@ -291,8 +301,8 @@ Row │ stat
 - Spare attributes
 └─ dimension: 0
 5×1 SubDataFrame
-Row │ id    
-│ Int64 
+Row │ id
+│ Int64
 ─────┼───────
 1 │     1
 2 │     2
@@ -313,15 +323,15 @@ Total size: 981670 bytes
 - Frame 1 / 1
    └─ dimension: 1
 1×1 SubDataFrame
- Row │ stat                              
-     │ Array…                            
+ Row │ stat
+     │ Array…
 ─────┼───────────────────────────────────
    1 │ [0.540302, -0.416147, -0.989992,…
 - Spare attributes
    └─ dimension: 0
 1×1 SubDataFrame
- Row │ id    
-     │ Int64 
+ Row │ id
+     │ Int64
 ─────┼───────
    1 │     2
 
@@ -341,16 +351,16 @@ Total size: 1963537 bytes
 - Frame 1 / 1
    └─ dimension: 1
 2×1 SubDataFrame
- Row │ stat                              
-     │ Array…                            
+ Row │ stat
+     │ Array…
 ─────┼───────────────────────────────────
    1 │ [0.540302, -0.416147, -0.989992,…
    2 │ [0.841471, 0.909297, 0.14112, -0…
 - Spare attributes
    └─ dimension: 0
 2×1 SubDataFrame
- Row │ id    
-     │ Int64 
+ Row │ id
+     │ Int64
 ─────┼───────
    1 │     2
    2 │     5
@@ -366,16 +376,16 @@ Total size: 1963537 bytes
 - Frame 1 / 1
     └─ dimension: 1
 2×1 SubDataFrame
-Row │ stat                              
-    │ Array…                            
+Row │ stat
+    │ Array…
 ─────┼───────────────────────────────────
     1 │ [0.540302, -0.416147, -0.989992,…
     2 │ [0.841471, 0.909297, 0.14112, -0…
 - Spare attributes
     └─ dimension: 0
 2×1 SubDataFrame
-Row │ id    
-    │ Int64 
+Row │ id
+    │ Int64
 ─────┼───────
     1 │     2
     2 │     3
@@ -431,43 +441,42 @@ function loaddataset(
 end
 
 """
-savedataset create the Dataset from a LabeledMultiFrameDataset, or a MultiFrameDataset, or a DataFrame 
-in the following format:
+    savedataset(datasetpath, mfd; instance_ids, name, force = false)
+
+Save `mfd` AbstractMultiFrameDataset on disk at path `datasetpath` in the following format:
 
 datasetpath
-    └─ Example_1
+    ├─ Example_1
     │     └─ Frame_1.csv
     │     └─ Frame_2.csv
     │     └─ ...
     │     └─ Frame_n.csv
     │     └─ Metadata.txt
-    └─ Example_2
+    ├─ Example_2
     │     └─ Frame_1.csv
     │     └─ Frame_2.csv
     │     └─ ...
     │     └─ Frame_n.csv
     │     └─ Metadata.txt
-    └─ ...
-    └─ Example_n
-    └─ Metadata.txt
+    ├─ ...
+    ├─ Example_n
+    ├─ Metadata.txt
     └─ Labels.csv
 
-savedataset(datasetpath, lmfd)
-datasetpath denote where to save the Dataset, lmfd is the LabeledMultiFrameDataset that 
-will be used by the function to create the Dataset.
+## PARAMETERS
 
-savedataset(datasetpath, mfd)
-mfd is the MultiFrameDataset that will be used by the function to create the Dataset.
+* `instance_ids` is a AbstractVector{Integer} that denote the identifier of the instances,
+* `name` is an AbstractString and denote the name of the Dataset, that will be saved in the
+    Metadata of the Dataset,
+* `force` is a Bool, if it's set to `true`, then in case `datasetpath` already exists, it will
+    be overwritten otherwise the operation will be aborted. (default = `false`)
+* `labels_indices` is a AbstractVector{Integer} and contains the indices of the labels'
+    column (allowed only when passing a MultiFrameDataset)
 
-savedataset(datasetpath, df; instance_ids, frames, labels_indices, name, force)
-df is the DataFrame that will be used by the function to create the Dataset,
-instance_ids is a AbstractVector{Integer} that denote the identifier of the instances,
-frames is a AbstractVector{AbstractVector{Integer}} and each inside vectors contain all 
-the indices of the frames with same dimension,
-labels_indices is a AbstractVector{Integer} and contains the indices of the labels' column,
-name is an AbstractString and denote the name of the Dataset, that will be saved in the Metadata of the Dataset,
-force is a Bool, if it's set to true, then in case datasetpath already exists, it will be overwritten. 
-Otherwise, if it is set to false and datasetpath already exists, this will be reported and the dataset will not be saved.
+Alternatively to an AbstractMultiFrameDataset a DataFrame can be passed as second argument.
+If this is the case a third positional argument is required representing the
+`frame_descriptor` of the dataset. See [`MultiFrameDataset`](@ref) for syntax of
+`frame_descriptor`.
 """
 function savedataset(
     datasetpath::AbstractString, lmfd::AbstractLabeledMultiFrameDataset;
@@ -485,16 +494,17 @@ function savedataset(
     kwargs...
 )
     return savedataset(
-        datasetpath, data(mfd);
-        frames = frame_descriptor(mfd),
+        datasetpath, data(mfd),
+        frame_descriptor(mfd);
         kwargs...
     )
 end
 
 function savedataset(
-    datasetpath::AbstractString, df::AbstractDataFrame;
+    datasetpath::AbstractString,
+    df::AbstractDataFrame
+    frame_descriptor::AbstractVector{<:AbstractVector{<:Integer}} = [collect(1:ncol(df))];
     instance_ids::AbstractVector{<:Integer} = 1:nrow(df),
-    frames::AbstractVector{<:AbstractVector{<:Integer}} = [collect(1:ncol(df))],
     labels_indices::AbstractVector{<:Integer} = Int[],
     name::AbstractString = basename(replace(datasetpath, r"/$" => "")),
     force::Bool = false
@@ -522,7 +532,7 @@ function savedataset(
         curr_inst_path = mkpath(dirname(inst_metadata_path))
         inst_metadata_file = open(inst_metadata_path, "w+")
 
-        for (i_frame, curr_frame_idices) in enumerate(frames)
+        for (i_frame, curr_frame_idices) in enumerate(frame_descriptor)
             curr_frame_inst = inst[curr_frame_idices]
 
             # TODO: maybe assert all instances have same size or fill with missing
@@ -567,9 +577,9 @@ function savedataset(
         println(ds_metadata_file, "supervised=false")
     end
 
-    println(ds_metadata_file, "num_frames=", length(frames))
+    println(ds_metadata_file, "num_frames=", length(frame_descriptor))
 
-    for (i_frame, curr_frame_idices) in enumerate(frames)
+    for (i_frame, curr_frame_idices) in enumerate(frame_descriptor)
         println(ds_metadata_file, "frame", i_frame, "=", dimension(df[:,curr_frame_idices]))
     end
 
