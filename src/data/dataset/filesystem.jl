@@ -194,10 +194,6 @@ function datasetinfo(
         end
     end
 
-    # TODO: I would comment the next two lines; is it safe?
-    println("Instances count: $(length(examples_ids))")
-    println("Total size: $(totalsize) bytes")
-
     if !isnothing(labels)
         labels = labels[findall(id -> id in examples_ids, labels[:,:id]),:]
     end
