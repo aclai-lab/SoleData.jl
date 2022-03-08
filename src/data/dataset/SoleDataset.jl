@@ -2,6 +2,10 @@ module SoleDataset
 
 using DataFrames
 using ScientificTypes
+using DataStructures
+using Statistics
+using Catch22
+using CSV
 
 import ScientificTypes: show
 import Base: eltype, isempty, iterate, map, getindex, length
@@ -27,6 +31,9 @@ export attributes, nattributes, dimension, spareattributes, hasattributes, hasat
 export attributeindex
 export isapproxeq, ≊
 export isapprox
+
+# filesystem
+export datasetinfo, loaddataset, savedataset
 
 # instance manipulation
 export pushinstances!, deleteinstances!, keeponlyinstances!
@@ -166,6 +173,7 @@ function dimension(mfd::AbstractMultiFrameDataset; kwargs...)
 end
 dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
 
+include("filesystem.jl")
 include("iterable.jl")
 include("utils.jl")
 include("comparison.jl")
@@ -178,33 +186,7 @@ include("MultiFrameDataset.jl")
 include("LabeledMultiFrameDataset.jl")
 include("labels.jl")
 
-# -------------------------------------------------------------
-# schema
-
-function ST.schema(mfd::AbstractMultiFrameDataset; kwargs...)
-    results = ST.Schema[]
-    for frame in mfd
-        push!(results, ST.schema(frame, kwargs...))
-    end
-
-    return results
-end
-function ST.schema(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
-    ST.schema(frame(mfd, i); kwargs...)
-end
-
-# -------------------------------------------------------------
-# describe
-
-function DF.describe(mfd::AbstractMultiFrameDataset; kwargs...)
-    results = DataFrame[]
-    for frame in mfd
-        push!(results, DF.describe(frame; kwargs...))
-    end
-    return results
-end
-function DF.describe(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
-    return DF.describe(frame(mfd, i), kwargs...)
-end
+include("schema.jl")
+include("describe.jl")
 
 end # module

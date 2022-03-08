@@ -1,5 +1,13 @@
 using SoleBase
 using Test
+using CSV
+
+const testing_savedataset = mktempdir(prefix = "saved_dataset")
+
+const _ds_inst_prefix = SoleBase.SoleDataset._ds_inst_prefix
+const _ds_frame_prefix = SoleBase.SoleDataset._ds_frame_prefix
+const _ds_metadata = SoleBase.SoleDataset._ds_metadata
+const _ds_labels = SoleBase.SoleDataset._ds_labels
 
 const ts_sin = [sin(i) for i in 1:50000]
 const ts_cos = [cos(i) for i in 1:50000]
@@ -10,6 +18,13 @@ const df = DataFrame(
 )
 
 const df_langs = DataFrame(
+    :age => [30, 9],
+    :name => ["Python", "Julia"],
+    :stat => [deepcopy(ts_sin), deepcopy(ts_cos)]
+)
+
+const df_data = DataFrame(
+    :id => [1, 2],
     :age => [30, 9],
     :name => ["Python", "Julia"],
     :stat => [deepcopy(ts_sin), deepcopy(ts_cos)]
@@ -263,7 +278,6 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test mfd1 == mfd2
     end
 
-
     @testset "labeled-dataset" begin
         lmfd = LabeledMultiFrameDataset(
             [2],
@@ -309,5 +323,120 @@ const ages = DataFrame(:age => [35, 38, 37])
         # label
         @test label(lmfd, 1, 1) == "Python"
         @test label(lmfd, 2, 1) == "Julia"
+    end
+
+    @testset "dataset filesystem operations" begin
+        lmfd = LabeledMultiFrameDataset(
+            [3],
+            MultiFrameDataset([[2], [4]], deepcopy(df_data))
+        )
+
+        path = relpath(joinpath(testing_savedataset))
+        savedataset(path, lmfd, force = true)
+
+        # Labels.csv
+        @test isfile(joinpath(path, _ds_labels))
+        @test length(split(readline(joinpath(path, _ds_labels)), ","))-1 == 1
+        df_labels = CSV.read(joinpath(path, _ds_labels), DataFrame; type = String)
+        df_labels[!,:id] = parse.(Int64, replace.(df_labels[!,:id], _ds_inst_prefix => ""))
+        @test df_labels == lmfd.mfd.data[:,spareattributes(lmfd.mfd)]
+
+        # Dataset Metadata.txt
+        @test isfile(joinpath(path, _ds_metadata))
+        @test "supervised=true" in readlines(joinpath(path, _ds_metadata))
+        @test length(
+                filter(
+                    x -> occursin(_ds_frame_prefix, x),
+                    readdir(joinpath(path, _ds_inst_prefix * "1"))
+                )) == 2
+        @test parse.(Int64,
+                split(filter(
+                    (row) -> occursin("num_frames", row),
+                    readlines(joinpath(path, _ds_metadata))
+                )[1], "=")[2]
+            ) == 2
+        @test length(
+                filter(
+                    row -> occursin("frame", row),
+                    readlines(joinpath(path, _ds_metadata))
+                )[2:end]) == 2
+        frames = filter(
+                row -> occursin("frame", row),
+                readlines(joinpath(path, _ds_metadata))
+            )[2:end]
+        @test all([parse.(Int64, split(string(frame), "=")[2]) ==
+            dimension(lmfd[i_frame]) for (i_frame, frame) in enumerate(frames)])
+        @test parse(Int64, split(
+            filter(
+                    row -> occursin("num_classes", row),
+                    readlines(joinpath(path, _ds_metadata))
+                )[1], "=")[2]) == 1
+        @test length(
+            filter(
+                x -> occursin(_ds_inst_prefix, x),
+                readdir(joinpath(path))
+            )) == 2
+
+        # instances Metadata.txt
+        @test all([isfile(joinpath(path, _ds_inst_prefix * string(i), _ds_metadata))
+            for i in 1:nrow(lmfd[1])])
+        for i_inst in 1:ninstances(lmfd)
+            dim_frame_rows = filter(
+                    row -> occursin("dim_frame", row),
+                    readlines(joinpath(path, string(_ds_inst_prefix, i_inst), _ds_metadata))
+                )
+            # for each frame check the proper dimension was saved
+            for (i_frame, dim_frame) in enumerate(dim_frame_rows)
+                @test strip(split(dim_frame, "=")[2]) == string(
+                        size(first(first(lmfd[i_frame])))
+                    )
+            end
+        end
+        @test length([filter(
+                row -> occursin(string(labels), row),
+                readlines(joinpath(path, string(_ds_inst_prefix, frame), _ds_metadata))
+            ) for labels in labels(lmfd) for frame in 1:nframes(lmfd)]) == 2
+        @test [filter(
+                row -> occursin(string(labels), row),
+                readlines(joinpath(path, string(_ds_inst_prefix, frame), _ds_metadata))
+            ) for labels in labels(lmfd) for frame in 1:nframes(lmfd)] == [
+                    ["name=Python"],
+                    ["name=Julia"]
+                ]
+
+        # Example
+        @test all([isdir(joinpath(path, string(_ds_inst_prefix, instance)))
+            for instance in 1:nrow(lmfd[1])])
+        @test all([isfile(joinpath(
+                path,
+                string(_ds_inst_prefix, instance),
+                string(_ds_frame_prefix, i_frame, ".csv")
+            )) for i_frame in 1:length(lmfd) for instance in 1:nrow(lmfd[1])])
+
+        saved_lmfd = loaddataset(path)
+        @test saved_lmfd == lmfd
+
+        # load MFD (a dataset without Labels.csv isa an MFD)
+        rm(joinpath(path, _ds_labels))
+        ds_metadata_lines = readlines(joinpath(path, _ds_metadata))
+        rm(joinpath(path, _ds_metadata))
+
+        file = open(joinpath(path, _ds_metadata), "w+")
+        for line in ds_metadata_lines
+            if occursin("supervised", line)
+                println(file, "supervised=false")
+            elseif occursin("num_classes", line)
+            else
+                println(file, line)
+            end
+        end
+        close(file)
+
+        mfd = loaddataset(path)
+        @test mfd isa MultiFrameDataset
+
+        # saveing an MFD should not generate a Labels.csv
+        savedataset(path, mfd, force = true)
+        @test !isfile(joinpath(path, _ds_labels))
     end
 end
