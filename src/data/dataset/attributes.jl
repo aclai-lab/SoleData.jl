@@ -51,10 +51,44 @@ julia> frame2 = frame(mfd, 2)
 
 julia> nattributes(frame2)
 1
-```
 
-TODO: change doc, add an example of a dataset with 2 frames having 2 and 3 attributes,
-respectively.
+julia> mfd = MultiFrameDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×3 SubDataFrame
+ Row │ sex   height  weight 
+     │ Char  Int64   Int64  
+─────┼──────────────────────
+   1 │ M        180      80
+   2 │ F        175      60
+
+julia> nattributes(mfd)
+5
+
+julia> nattributes(mfd, 2)
+3
+
+julia> frame2 = frame(mfd,2)
+2×3 SubDataFrame
+Row │ sex   height  weight 
+    │ Char  Int64   Int64  
+─────┼──────────────────────
+    1 │ M        180      80
+    2 │ F        175      60
+
+julia> nattributes(frame2)
+3
+```
 """
 nattributes(df::AbstractDataFrame) = ncol(df)
 nattributes(mfd::AbstractMultiFrameDataset) = nattributes(data(mfd))
@@ -66,21 +100,128 @@ function nattributes(mfd::AbstractMultiFrameDataset, i::Integer)
 end
 
 """
-    insertattributes!(mfd[, col], attr_id, values)
-    insertattributes!(mfd[, col], attr_id, value)
+    insertattributes!(mfd, col, attr_id, values)
+    insertattributes!(mfd, attr_id, values)
+    insertattributes!(mfd, col, attr_id, value)
+    insertattributes!(mfd, attr_id, value)
 
 Insert an attibute in the dataset `mfd` with id `attr_id`.
+Note: Each attribute inserted will be added in the mfd as a spare attributes
 
-The length of `values` should match `ninstances(mfd)` or an exception is thrown.
+#PARAMETERS
+*`mfd` is an AbstractMultiFrameDataset; 
+*`col` is an Integer and indicates in which position to insert the new attribute.
+    If col isn't passed as a parameter to the function the new attribute will be placed 
+    last in the mfd's relative dataframe;
+*`attr_id` is a Symbol and denote the name of the attribute to insert.
+    Duplicated attribute names will be renamed to avoid conflicts: see `makeunique` parameter 
+    of [`insertcols!`](@ref) in DataFrames documentation;
+*`values` is an AbstractVector that indicates the values ​​of the new attribute inserted.
+    The length of `values` should match `ninstances(mfd)` or an exception is thrown;
+*`value` is a single value for the new attribute. If a single `value` is passed as last 
+    parameter this will be copied and used for each instance in the dataset.
 
-If a single `value` is passed as last parameter this will be copied and used for each
-instance in the dataset.
+```jldoctest
+julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
 
-Note: duplicated attribute names will be renamed to avoid conflicts: see `makeunique`
-parameter of [`insertcols!`](@ref) in DataFrames documentation.
+julia> insertattributes!(mfd, :weight, [80, 75])
+2×4 DataFrame
+ Row │ name    age    sex   weight 
+     │ String  Int64  Char  Int64  
+─────┼─────────────────────────────
+   1 │ Python     25  M         80
+   2 │ Julia      26  F         75
 
-# Examples
-TODO: examples
+julia> mfd
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
+- Spare attributes
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ weight 
+     │ Int64  
+─────┼────────
+   1 │     80
+   2 │     75
+
+julia> insertattributes!(mfd, 2, :height, 180)
+2×5 DataFrame
+ Row │ name    height  age    sex   weight 
+     │ String  Int64   Int64  Char  Int64  
+─────┼─────────────────────────────────────
+   1 │ Python     180     25  M         80
+   2 │ Julia      180     26  F         75
+
+julia> insertattributes!(mfd, :hair, ["brown", "blonde"])
+2×6 DataFrame
+Row │ name    height  age    sex   weight  hair   
+    │ String  Int64   Int64  Char  Int64   String 
+─────┼─────────────────────────────────────────────
+    1 │ Python     180     25  M         80  brown
+    2 │ Julia      180     26  F         75  blonde
+
+julia> mfd
+● MultiFrameDataset
+    └─ dimensions: (0, 0)
+- Frame 1 / 2
+    └─ dimension: 0
+2×2 SubDataFrame
+    Row │ name    age   
+        │ String  Int64 
+─────┼───────────────
+    1 │ Python     25
+    2 │ Julia      26
+- Frame 2 / 2
+    └─ dimension: 0
+2×1 SubDataFrame
+    Row │ sex  
+        │ Char 
+─────┼──────
+    1 │ M
+    2 │ F
+- Spare attributes
+    └─ dimension: 0
+2×3 SubDataFrame
+    Row │ height  weight  hair   
+        │ Int64   Int64   String 
+─────┼────────────────────────
+    1 │    180      80  brown
+    2 │    180      75  blonde
+```
 """
 function insertattributes!(
     mfd::AbstractMultiFrameDataset,
@@ -88,15 +229,30 @@ function insertattributes!(
     attr_id::Symbol,
     values::AbstractVector
 )
-    if col != nattributes(mfd)+1
-        # TODO: implement `col` parameter
-        throw(Exception("Still not implemented with `col` != nattributes + 1"))
-    end
 
     @assert length(values) == ninstances(mfd) "value not specified for each instance " *
-        "{length(values) != ninstances(mfd)}:{$(length(values)) != $(ninstances(mfd))}"
+    "{length(values) != ninstances(mfd)}:{$(length(values)) != $(ninstances(mfd))}"
 
-    return insertcols!(data(mfd), col, attr_id => values, makeunique = true)
+    if col != nattributes(mfd)+1
+        insertcols!(mfd.data, col, attr_id => values, makeunique = true)
+        new_frame_descriptor = mfd.frame_descriptor
+
+        for (i_frame, descriptors) in enumerate(mfd.frame_descriptor)
+            if findall(descriptors.>=col) != 0
+                indexes_descriptors_to_change = findall(descriptors.>=col) # indici dei valori da cambiare (+1)
+                changed_descriptors = descriptors[indexes_descriptors_to_change] .+ 1
+                new_frame_descriptor[i_frame][indexes_descriptors_to_change] = changed_descriptors
+            else
+                new_frame_descriptor[i_frame] = descriptors
+            end
+        end
+
+        mfd = MultiFrameDataset(new_frame_descriptor, mfd.data)
+
+        return mfd.data
+    end
+
+    return insertcols!(mfd.data, col, attr_id => values, makeunique = true)
 end
 function insertattributes!(
     mfd::AbstractMultiFrameDataset,
@@ -118,7 +274,55 @@ function insertattributes!(mfd::AbstractMultiFrameDataset, attr_id::Symbol, valu
 end
 
 """
-TODO: docs
+    hasattributes(df, attribute_name)
+    hasattributes(mfd, frame_index, attribute_name)
+    hasattributes(mfd, attribute_name)
+
+Lets you check if a mfd or a df has a certain attribute.
+When given an mfd as a parameter, it is possible to choose which frame to check for the existence of the attribute.
+
+## PARAMETERS
+*`df` is an AbstractDataFrame, which is one of the two structure in which you want to check the presence of the attribute;
+*`mfd` is an AbstractMultiFrameDataset, which is one of the two structure in which you want to check the presence of the attribute;
+*`attribute_name` is a Symbol and indicates the attribute, whose existence I want to verify;
+*`frame_index` is and Integer and indicates in which frame to look for the attribute.
+
+```jldoctest
+julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
+
+julia> hasattributes(mfd, :age)
+true
+
+julia> hasattributes(mfd.data, :name)
+true
+
+julia> hasattributes(mfd, :height)
+false
+
+julia> hasattributes(mfd, 1, :sex)
+false
+
+julia> hasattributes(mfd, 2, :sex)
+true
+```
 """
 function hasattributes(df::AbstractDataFrame, attribute_name::Symbol)
     return _name2index(df, attribute_name) > 0
