@@ -402,7 +402,8 @@ function loaddataset(
 
     df = DataFrame(
         :id => [selected_ids[1]],
-        [Symbol(k) => [v] for frame in instance_frames for (k, v) in frame]...
+        [Symbol(k) => [v] for frame in instance_frames for (k, v) in frame]...;
+        makeunique = true
     )
 
     for id in selected_ids[2:end]
