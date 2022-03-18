@@ -76,7 +76,7 @@ function _read_labels(datasetdir::AbstractString)
     @assert isfile(joinpath(datasetdir, _ds_labels)) "Missing $(_ds_labels) in dataset " *
         "$(datasetdir)"
 
-    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame; type = String)
+    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame; types = String)
 
     df[!,:id] = parse.(Int64, replace.(df[!,:id], _ds_inst_prefix => ""))
 
