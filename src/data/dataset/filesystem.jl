@@ -209,7 +209,7 @@ function _load_instance(datasetpath::AbstractString, inst_id::Integer)
 
     instancedir = joinpath(datasetpath, "$(_ds_inst_prefix)$(inst_id)")
 
-    frame_reg = Regex("$(_ds_frame_prefix)([[:digit:]]+).csv")
+    frame_reg = Regex("^$(_ds_frame_prefix)([[:digit:]]+).csv\$")
     function isframefile(path::AbstractString)
         return isfile(joinpath(instancedir, path)) && !isnothing(match(frame_reg, path))
     end
