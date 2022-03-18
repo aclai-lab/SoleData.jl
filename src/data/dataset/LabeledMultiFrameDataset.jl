@@ -29,8 +29,7 @@ end
 # -------------------------------------------------------------
 # LabeledMultiFrameDataset - accessors
 
-descriptor(lmfd::AbstractLabeledMultiFrameDataset) = descriptor(lmfd.mfd)
-frame_descriptor(lmfd::AbstractLabeledMultiFrameDataset) = descriptor(lmfd)
+frame_descriptor(lmfd::AbstractLabeledMultiFrameDataset) = frame_descriptor(lmfd.mfd)
 data(lmfd::AbstractLabeledMultiFrameDataset) = data(lmfd.mfd)
 labels_descriptor(lmfd::LabeledMultiFrameDataset) = lmfd.labels_descriptor
 dataset(lmfd::LabeledMultiFrameDataset) = lmfd.mfd
@@ -65,7 +64,7 @@ end
 
 function _empty(lmfd::AbstractLabeledMultiFrameDataset)
     return LabeledMultiFrameDataset(
-        deepcopy(descriptor(lmfd)),
+        deepcopy(frame_descriptor(lmfd)),
         df = DataFrame([attr_name => [] for attr_name in Symbol.(names(data(lmfd)))])
     )
 end

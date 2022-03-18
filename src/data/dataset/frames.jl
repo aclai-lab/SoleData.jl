@@ -15,7 +15,7 @@ function frame(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index ($i) must be a valid frame number " *
         "(1:$(nframes(mfd)))"
 
-    return @view data(mfd)[:,descriptor(mfd)[i]]
+    return @view data(mfd)[:,frame_descriptor(mfd)[i]]
 end
 function frame(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
     return [frame(mfd, i) for i in indices]
@@ -26,7 +26,7 @@ end
 
 Get the number of frames of `mfd` multiframe dataset.
 """
-nframes(mfd::AbstractMultiFrameDataset) = length(descriptor(mfd))
+nframes(mfd::AbstractMultiFrameDataset) = length(frame_descriptor(mfd))
 
 """
     addframe!(mfd, indices)
@@ -103,7 +103,7 @@ function addframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Int
             "(1:$(nattributes(mfd)))"
     end
 
-    push!(descriptor(mfd), indices)
+    push!(frame_descriptor(mfd), indices)
 
     return mfd
 end
@@ -187,7 +187,7 @@ function removeframe!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
-    deleteat!(descriptor(mfd), i)
+    deleteat!(frame_descriptor(mfd), i)
 
     return mfd
 end
@@ -212,10 +212,10 @@ function addattribute_toframe!(
     @assert 1 ≤ attr_index ≤ nattributes(mfd) "Index $(attr_index) does not correspond " *
         "to an attribute (1:$(nattributes(mfd)))"
 
-    if attr_index in descriptor(mfd)[frame_index]
+    if attr_index in frame_descriptor(mfd)[frame_index]
         @info "Attribute $(attr_index) is already part of frame $(frame_index)"
     else
-        push!(descriptor(mfd)[frame_index], attr_index)
+        push!(frame_descriptor(mfd)[frame_index], attr_index)
     end
 
     return mfd
@@ -251,7 +251,7 @@ function removeattribute_fromframe!(
     @assert 1 ≤ attr_index ≤ nattributes(mfd) "Index $(attr_index) does not correspond " *
         "to an attribute (1:$(nattributes(mfd)))"
 
-    if !(attr_index in descriptor(mfd)[frame_index])
+    if !(attr_index in frame_descriptor(mfd)[frame_index])
         @info "Attribute $(attr_index) is not part of frame $(frame_index)"
     elseif nattributes(mfd, frame_index) == 1
         @info "Attribute $(attr_index) was last attribute of frame $(frame_index): " *
@@ -259,8 +259,8 @@ function removeattribute_fromframe!(
         removeframe!(mfd, frame_index)
     else
         deleteat!(
-            descriptor(mfd)[frame_index],
-            indexin(attr_index, descriptor(mfd)[frame_index])[1]
+            frame_descriptor(mfd)[frame_index],
+            indexin(attr_index, frame_descriptor(mfd)[frame_index])[1]
         )
     end
 
@@ -542,5 +542,5 @@ function dropframe!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
-    return dropattributes!(mfd, descriptor(mfd)[i])
+    return dropattributes!(mfd, frame_descriptor(mfd)[i])
 end

@@ -184,7 +184,6 @@ end
 # -------------------------------------------------------------
 # MultiFrameDataset - accessors
 
-descriptor(mfd::MultiFrameDataset) = mfd.frame_descriptor
 frame_descriptor(mfd::MultiFrameDataset) = mfd.frame_descriptor
 data(mfd::MultiFrameDataset) = mfd.data
 
@@ -210,7 +209,7 @@ Note: since the returned AbstractMultiFrameDataset will be empty its columns typ
 """
 function _empty(mfd::MultiFrameDataset)
     return MultiFrameDataset(
-        deepcopy(descriptor(mfd)),
+        deepcopy(frame_descriptor(mfd)),
         df = DataFrame([attr_name => [] for attr_name in Symbol.(names(data(mfd)))])
     )
 end

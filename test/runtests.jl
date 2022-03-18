@@ -323,6 +323,18 @@ const ages = DataFrame(:age => [35, 38, 37])
         # label
         @test label(lmfd, 1, 1) == "Python"
         @test label(lmfd, 2, 1) == "Julia"
+
+        # joinlabels!
+        lmfd = LabeledMultiFrameDataset(
+            [2, 3],
+            MultiFrameDataset([[1], [4]], deepcopy(df_data))
+        )
+
+        joinlabels!(lmfd)
+
+        @test labels(lmfd) == [Symbol(join([:age, :name], '_'))]
+        @test label(lmfd, 1, 1) == string(30, '_', "Python")
+        @test label(lmfd, 2, 1) == string(9, '_', "Julia")
     end
 
     @testset "dataset filesystem operations" begin

@@ -17,7 +17,7 @@ If the intent is to check if two AbstractMultiFrameDatasets have same frame desc
 attributes use [`isapprox`](@ref) instead.
 """
 function isequal(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    return (data(mfd1) == data(mfd2) && descriptor(mfd1) == descriptor(mfd2)) ||
+    return (data(mfd1) == data(mfd2) && frame_descriptor(mfd1) == frame_descriptor(mfd2)) ||
         _same_multiframedataset(mfd1, mfd2)
 end
 function ==(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)

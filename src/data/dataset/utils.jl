@@ -103,7 +103,8 @@ function _same_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFr
     unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
 
     for i in 1:nframes(mfd1)
-        if descriptor(mfd1)[i] != Integer[unmixed_indices[j] for j in descriptor(mfd2)[i]]
+        if frame_descriptor(mfd1)[i] != Integer[unmixed_indices[j]
+                for j in frame_descriptor(mfd2)[i]]
             return false
         end
     end
@@ -159,7 +160,8 @@ function _same_multiframedataset(mfd1::AbstractMultiFrameDataset, mfd2::Abstract
     end
 
     for i in 1:nframes(mfd1)
-        if descriptor(mfd1)[i] != Integer[unmixed_indices[j] for j in descriptor(mfd2)[i]]
+        if frame_descriptor(mfd1)[i] != Integer[unmixed_indices[j]
+                for j in frame_descriptor(mfd2)[i]]
             return false
         end
     end

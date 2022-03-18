@@ -109,9 +109,61 @@ function removefromlabels!(lmfd::AbstractLabeledMultiFrameDataset, attr_name::Sy
     return removefromlabels!(lmfd, _name2index(lmfd, attr_name))
 end
 
-"""
-TODO: docs
-"""
 function spareattributes(lmfd::AbstractLabeledMultiFrameDataset)
     filter!(attr -> !(attr in labels_descriptor(lmfd)), spareattributes(dataset(lmfd)))
+end
+
+"""
+    joinlabels!(lmfd, [lbls...]; delim = "_")
+
+Join `lbls` in `lmfd` labeled multiframe dataset using `delim`.
+
+If not specified differently this function will join all labels.
+
+`lbls` can be of type Integer (indicating the index of the label) or the name of the
+label.
+
+!! NOTE: Resulting label will always be of type String.
+
+!! NOTE: Resulting label will always be added as last column in the original DataFrame.
+
+## EXAMPLE
+TODO: examples
+"""
+function joinlabels!(
+    lmfd::AbstractLabeledMultiFrameDataset,
+    lbls::Symbol... = labels(lmfd)...;
+    delim::Union{<:AbstractString,<:AbstractChar} = '_'
+)
+    for l in lbls
+        removefromlabels!(lmfd, l)
+    end
+
+    new_col_name = Symbol(join(lbls, delim))
+    new_vals = [join(data(lmfd)[i,collect(lbls)], delim) for i in 1:ninstances(lmfd)]
+
+    dropattributes!(lmfd, collect(lbls))
+    insertattributes!(lmfd, new_col_name, new_vals)
+    setaslabel!(lmfd, nattributes(lmfd))
+
+    return lmfd
+end
+function joinlabels!(
+    lmfd::AbstractLabeledMultiFrameDataset,
+    labels::Integer...;
+    kwargs...
+)
+    return joinlabels!(lmfd, labels(lmfd)[[labels...]]; kwargs...)
+end
+
+function dropattributes!(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
+    dropattributes!(dataset(lmfd), i)
+
+    for (i_lbl, lbl) in enumerate(labels_descriptor(lmfd))
+        if lbl > i
+            frame_descriptor(lmfd)[i_frame][i_lbl] = lbl - 1
+        end
+    end
+
+    return lmfd
 end
