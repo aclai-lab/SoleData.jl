@@ -76,7 +76,7 @@ function _read_labels(datasetdir::AbstractString)
     @assert isfile(joinpath(datasetdir, _ds_labels)) "Missing $(_ds_labels) in dataset " *
         "$(datasetdir)"
 
-    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame; type = String)
+    df = CSV.read(joinpath(datasetdir, _ds_labels), DataFrame; types = String)
 
     df[!,:id] = parse.(Int64, replace.(df[!,:id], _ds_inst_prefix => ""))
 
@@ -201,36 +201,45 @@ function datasetinfo(
     return examples_ids, labels, totalsize
 end
 
-function _load_instance(datasetpath::AbstractString, inst_id::Integer)
-    # TODO: inst_metadata is never used
+function _load_instance(
+    datasetpath::AbstractString,
+    inst_id::Integer;
+    types::Union{DataType,Nothing} = nothing
+)
     inst_metadata = _read_example_metadata(datasetpath, inst_id)
-
-    dataset_metadata = _read_dataset_metadata(datasetpath)
-
     instancedir = joinpath(datasetpath, "$(_ds_inst_prefix)$(inst_id)")
+
+    type_info = isnothing(types) ? NamedTuple() : (types = types,)
 
     frame_reg = Regex("^$(_ds_frame_prefix)([[:digit:]]+).csv\$")
     function isframefile(path::AbstractString)
         return isfile(joinpath(instancedir, path)) && !isnothing(match(frame_reg, path))
     end
 
+    function unlinearize_attr(p::Pair{Symbol,<:Any}, dims::Tuple)
+        return p[1] => unlinearize_data(p[2], dims)
+    end
+    function unlinearize_frame(ps::AbstractVector{<:Pair{Symbol,<:Any}}, dims::Tuple)
+        return [unlinearize_attr(p, dims) for p in ps]
+    end
+    function load_frame(path::AbstractString, dims::Tuple)
+        return OrderedDict(unlinearize_frame(
+            collect(CSV.read(path, pairs; type_info...)),
+            dims
+        ))
+    end
+
     frames = filter(isframefile, readdir(instancedir))
     frames_num = sort!([match(frame_reg, f).captures[1] for f in frames])
 
     result = Vector{OrderedDict}(undef, length(frames_num))
-    #Threads.@threads
-    for (i, f) in collect(enumerate(frames_num))
-        frame_path = joinpath(instancedir, "$(_ds_frame_prefix)$(f).csv")
-
-        # TODO: use dim_frame_[[:digit:]] to properly load all frames
-        dim_curr_frame = dataset_metadata["frame" * f]
-        if dim_curr_frame == 0
-            result[i] = (CSV.File(frame_path) |> Tables.rowtable)[1] |> pairs |> OrderedDict
-        else
-            result[i] = CSV.File(frame_path) |> Tables.columntable |> pairs |> OrderedDict
-        end
-
+    Threads.@threads for (i, f) in collect(enumerate(frames_num))
+        result[i] = load_frame(
+            joinpath(instancedir, "$(_ds_frame_prefix)$(f).csv"),
+            inst_metadata[string("dim_frame_", i)]
+        )
     end
+
     return result
 end
 

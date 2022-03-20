@@ -296,3 +296,21 @@ function linearize_data(d::AbstractArray)
     return throw(ErrorExcpetion("Still can't linearize data of dimension > 2"))
 end
 # TODO: more linearizations
+
+"""
+TODO: docs
+"""
+unlinearize_data(d::Any, dims::Tuple{}) where {N<:Integer} = d
+function unlinearize_data(d::AbstractVector, dims::Tuple{}) where {N<:Integer}
+    return length(d) ≤ 1 ? d[1] : collect(d)
+end
+function unlinearize_data(d::AbstractVector, dims::NTuple{1,<:Integer}) where {N<:Integer}
+    return collect(d)
+end
+function unlinearize_data(d::AbstractVector, dims::NTuple{2,<:Integer}) where {N<:Integer}
+    return collect(reshape(d, dims)')
+end
+function unlinearize_data(d::AbstractVector, dims::NTuple{N,<:Integer}) where {N<:Integer}
+    # TODO: implement generic way to unlinearize data
+    throw(ErrorException("Unlinearization of data to $(dims) still not implemented"))
+end

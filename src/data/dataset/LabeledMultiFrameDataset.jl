@@ -60,6 +60,25 @@ function show(io::IO, lmfd::AbstractLabeledMultiFrameDataset)
 end
 
 # -------------------------------------------------------------
+# LabeledMultiFrameDataset - attributes
+
+function spareattributes(lmfd::AbstractLabeledMultiFrameDataset)
+    filter!(attr -> !(attr in labels_descriptor(lmfd)), spareattributes(dataset(lmfd)))
+end
+
+function dropattributes!(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
+    dropattributes!(dataset(lmfd), i)
+
+    for (i_lbl, lbl) in enumerate(labels_descriptor(lmfd))
+        if lbl > i
+            frame_descriptor(lmfd)[i_frame][i_lbl] = lbl - 1
+        end
+    end
+
+    return lmfd
+end
+
+# -------------------------------------------------------------
 # LabeledMultiFrameDataset - utils
 
 function _empty(lmfd::AbstractLabeledMultiFrameDataset)

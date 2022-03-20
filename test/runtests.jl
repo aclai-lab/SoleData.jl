@@ -349,7 +349,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         # Labels.csv
         @test isfile(joinpath(path, _ds_labels))
         @test length(split(readline(joinpath(path, _ds_labels)), ","))-1 == 1
-        df_labels = CSV.read(joinpath(path, _ds_labels), DataFrame; type = String)
+        df_labels = CSV.read(joinpath(path, _ds_labels), DataFrame; types = String)
         df_labels[!,:id] = parse.(Int64, replace.(df_labels[!,:id], _ds_inst_prefix => ""))
         @test df_labels == lmfd.mfd.data[:,spareattributes(lmfd.mfd)]
 

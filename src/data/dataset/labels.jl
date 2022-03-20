@@ -109,10 +109,6 @@ function removefromlabels!(lmfd::AbstractLabeledMultiFrameDataset, attr_name::Sy
     return removefromlabels!(lmfd, _name2index(lmfd, attr_name))
 end
 
-function spareattributes(lmfd::AbstractLabeledMultiFrameDataset)
-    filter!(attr -> !(attr in labels_descriptor(lmfd)), spareattributes(dataset(lmfd)))
-end
-
 """
     joinlabels!(lmfd, [lbls...]; delim = "_")
 
@@ -154,16 +150,4 @@ function joinlabels!(
     kwargs...
 )
     return joinlabels!(lmfd, labels(lmfd)[[labels...]]; kwargs...)
-end
-
-function dropattributes!(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
-    dropattributes!(dataset(lmfd), i)
-
-    for (i_lbl, lbl) in enumerate(labels_descriptor(lmfd))
-        if lbl > i
-            frame_descriptor(lmfd)[i_frame][i_lbl] = lbl - 1
-        end
-    end
-
-    return lmfd
 end
