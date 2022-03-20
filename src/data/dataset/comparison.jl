@@ -18,7 +18,7 @@ attributes use [`isapprox`](@ref) instead.
 """
 function isequal(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     return (data(mfd1) == data(mfd2) && frame_descriptor(mfd1) == frame_descriptor(mfd2)) ||
-        _same_multiframedataset(mfd1, mfd2)
+        (_same_multiframedataset(mfd1, mfd2) && _same_label_descriptor(mfd1, mfd2))
 end
 function ==(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     return isequal(mfd1, mfd2)
@@ -64,6 +64,6 @@ If the intent is to check if two AbstractMultiFrameDatasets have same instances 
 of the order use [`isapproxeq`](@ref) instead.
 """
 function isapprox(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    # note: _same_descriptor already includes attributes checking
-    return _same_descriptor(mfd1, mfd2)
+    # NOTE: _same_frame_descriptor already includes attributes checking
+    return _same_frame_descriptor(mfd1, mfd2)
 end

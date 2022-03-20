@@ -78,7 +78,7 @@ function _same_dataframe(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFra
 end
 
 """
-    _same_descriptor(mfd1, mfd2)
+    _same_frame_descriptor(mfd1, mfd2)
 
 Determine whether two AbstractMultiFrameDatasets have the same frames regardless of the
 positioning of their columns.
@@ -88,7 +88,7 @@ the presence of the same attributes use [`_same_attributes`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+function _same_frame_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     if !_same_attributes(mfd1, mfd2)
         return false
     end
@@ -110,6 +110,55 @@ function _same_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFr
     end
 
     return data(mfd1) == data(mfd2)[:,unmixed_indices]
+end
+
+"""
+    _same_label_descriptor(mfd1, mfd2)
+
+Determine whether two AbstractMultiFrameDatasets have the same labels regardless of the
+positioning of their columns.
+
+Note: the check will be performed against the instances too; if the intent is to just check
+the presence of the same attributes use [`_same_label_names`](@ref) instead.
+
+$(__note_about_utils)
+"""
+function _same_label_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+    return true
+end
+function _same_label_descriptor(
+    lmfd1::AbstractLabeledMultiFrameDataset,
+    lmfd2::AbstractLabeledMultiFrameDataset
+)
+    !_same_label_names(lmfd1, lmfd2) && return false;
+
+    lmfd1_lbls = labels(lmfd1)
+    lmfd2_lbls = labels(lmfd2)
+    unmixed_indices = [findfirst(x -> isequal(x, name), Symbol.(names(data(lmfd2))))
+        for name in lmfd1_lbls]
+
+    return data(lmfd1)[:,lmfd1_lbls] == data(lmfd2)[:,unmixed_indices]
+end
+
+"""
+    _same_label_names(mfd1, mfd2)
+
+Determine whether two AbstractMultiFrameDatasets have the same label names regardless of the
+positioning of their columns.
+
+Note: the check will not be performed against the instances; if the intent is to check
+whether the two datasets have the same labels use [`_same_label_descriptor`](@ref) instead.
+
+$(__note_about_utils)
+"""
+function _same_label_names(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+    return true
+end
+function _same_label_names(
+    lmfd1::AbstractLabeledMultiFrameDataset,
+    lmfd2::AbstractLabeledMultiFrameDataset
+)
+    return Set(labels(lmfd1)) == Set(labels(lmfd2))
 end
 
 """
