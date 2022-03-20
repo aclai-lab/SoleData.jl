@@ -3,7 +3,7 @@
 # Attributes manipulation
 
 """
-    nattributes(mfd[, i])
+    nattributes(mfd, i)
 
 Get the number of attributes of `mfd` multiframe dataset.
 
@@ -12,7 +12,10 @@ index `i` is returned.
 
 Alternatively `nattributes` can be called on a single frame.
 
-# Examples
+#PARAMETERS
+*`mfd` is a MultiFrameDataset;
+*`i` is a Integer and specifies the frame of the multiframe dataset whose number of attributes you want to know.
+
 ```jldoctest
 julia> mfd = MultiFrameDataset([[1],[2]], DataFrame(:age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
@@ -232,22 +235,17 @@ function insertattributes!(
 
     @assert length(values) == ninstances(mfd) "value not specified for each instance " *
     "{length(values) != ninstances(mfd)}:{$(length(values)) != $(ninstances(mfd))}"
-
+    
     if col != nattributes(mfd)+1
         insertcols!(mfd.data, col, attr_id => values, makeunique = true)
-        new_frame_descriptor = mfd.frame_descriptor
-
-        for (i_frame, descriptors) in enumerate(mfd.frame_descriptor)
-            if findall(descriptors.>=col) != 0
-                indexes_descriptors_to_change = findall(descriptors.>=col) # indici dei valori da cambiare (+1)
-                changed_descriptors = descriptors[indexes_descriptors_to_change] .+ 1
-                new_frame_descriptor[i_frame][indexes_descriptors_to_change] = changed_descriptors
-            else
-                new_frame_descriptor[i_frame] = descriptors
+        
+        for (i_frame, desc) in enumerate(descriptor(mfd))
+            for (i_attr, attr) in enumerate(desc)
+                if attr >= col
+                    descriptor(mfd)[i_frame][i_attr] = attr + 1
+                end
             end
         end
-
-        mfd = MultiFrameDataset(new_frame_descriptor, mfd.data)
 
         return mfd.data
     end
@@ -339,8 +337,52 @@ function hasattributes(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
 end
 
 """
-TODO: docs
-"""
+    hasattributes(df, attribute_names)
+    hasattributes(mfd, frame_index, attribute_names)
+    hasattributes(mfd, attribute_names)
+
+Lets you check if a mfd or a df has certain attributes.
+When given an mfd as a parameter, it is possible to choose which frame to check for the existence of the attributes.
+
+## PARAMETERS
+*`df` is an AbstractDataFrame, which is one of the two structure in which you want to check the presence of the attributes;
+*`mfd` is an AbstractMultiFrameDataset, which is one of the two structure in which you want to check the presence of the attributes
+*`attribute_names` is an AbstractVector{Symbol} and indicates the attributes, whose existence I want to verify;
+*`frame_index` is and Integer and indicates in which frame to look for the attributes.
+
+```jldoctest
+julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
+
+julia> hasattributes(mfd, [:sex, :age])
+true
+
+julia> hasattributes(mfd, 1, [:sex])
+false
+
+julia> hasattributes(mfd, 2, [:sex])
+true
+
+julia> hasattributes(mfd.data, [:name, :sex])
+true
+```"""
 function hasattributes(df::AbstractDataFrame, attribute_names::AbstractVector{Symbol})
     return !(0 in _name2index(df, attribute_names))
 end
@@ -359,7 +401,67 @@ function hasattributes(
 end
 
 """
-TODO: docs
+    attributeindex(df, attribute_name)
+    attributeindex(mfd, frame_index, attribute_name)
+    attributeindex(mfd, attribute_name)
+
+Return the index of the attribute passed as a parameter to the function.
+When frame_index is given it return the index of the attribute in the subdataframe of the frame specified by frame_index.
+It return 0 when the attribute isn't in the frame specified by frame_index.
+
+## PARAMETERS
+*`df` is an AbstractDataFrame;
+*`mfd` is an AbstractMultiFrameDataset;
+*`attribute_name` is a Symbol and indicates the attribute whose index you want to know;
+*`frame_index` is and Integer and indicates of which frame you want to know the index of the attribute.
+
+```jldoctest
+julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
+
+julia> mfd.data
+2×3 DataFrame
+ Row │ name    age    sex  
+     │ String  Int64  Char 
+─────┼─────────────────────
+   1 │ Python     25  M
+   2 │ Julia      26  F
+
+julia> attributeindex(mfd, :age)
+2
+
+julia> attributeindex(mfd, :sex)
+3
+
+julia> attributeindex(mfd, 1, :name)
+1
+
+julia> attributeindex(mfd, 2, :name)
+0
+
+julia> attributeindex(mfd, 2, :sex)
+1
+
+julia> attributeindex(mfd.data, :age)
+2
+```
 """
 function attributeindex(df::AbstractDataFrame, attribute_name::Symbol)
     return _name2index(df, attribute_name)
@@ -380,13 +482,58 @@ end
 
 Get the indices of all the attributes currently not present in any of the frames of `mfd`
 multiframe dataset.
+
+#PARAMETERS
+*`mfd` is a MultiFrameDataset, which is the structure whose indices of the spareattributes are to be known.
+
+```jldoctest
+julia> mfd = MultiFrameDataset([[1],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name   
+     │ String 
+─────┼────────
+   1 │ Python
+   2 │ Julia
+- Frame 2 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
+- Spare attributes
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ age   
+     │ Int64 
+─────┼───────
+   1 │    25
+   2 │    26
+
+julia> mfd.data
+2×3 DataFrame
+Row │ name    age    sex  
+    │ String  Int64  Char 
+─────┼─────────────────────
+    1 │ Python     25  M
+    2 │ Julia      26  F
+   
+julia> spareattributes(mfd)
+1-element Vector{Int64}:
+ 2
+```
 """
 function spareattributes(mfd::AbstractMultiFrameDataset)::AbstractVector{<:Integer}
     return setdiff(1:nattributes(mfd), unique(cat(descriptor(mfd)..., dims = 1)))
 end
 
 """
-    attributes(mfd[, i])
+    attributes(mfd, i)
 
 Get the names as `Symbol`s of the attributes of `mfd` multiframe dataset.
 
@@ -401,36 +548,51 @@ index `i` is returned in an `AbstractVector`.
 
 Alternatively `nattributes` can be called on a single frame.
 
-# Examples
+## PARAMETERS
+*`mfd` is an MultiFrameDataset;
+*`i` is an Integer and indicates from which frame of the multiframe dataset to get the names of the attributes. 
+
 ```jldoctest
-julia> mfd = MultiFrameDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M', 'F']))
+julia> mfd = MultiFrameDataset([[2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
 - Frame 1 / 2
    └─ dimension: 0
 2×1 SubDataFrame
- Row │ age
-     │ Int64
+ Row │ age   
+     │ Int64 
 ─────┼───────
    1 │    25
    2 │    26
 - Frame 2 / 2
    └─ dimension: 0
 2×1 SubDataFrame
- Row │ sex
-     │ Char
+ Row │ sex  
+     │ Char 
 ─────┼──────
    1 │ M
    2 │ F
+- Spare attributes
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name   
+     │ String 
+─────┼────────
+   1 │ Python
+   2 │ Julia
 
 julia> attributes(mfd)
 Dict{Integer, AbstractVector{Symbol}} with 2 entries:
- 2 => [:sex]
- 1 => [:age]
+  2 => [:sex]
+  1 => [:age]
 
 julia> attributes(mfd, 2)
 1-element Vector{Symbol}:
-:sex
+ :sex
+
+julia> attributes(mfd, 1)
+1-element Vector{Symbol}:
+ :age
 
 julia> frame2 = frame(mfd, 2)
 2×1 SubDataFrame
@@ -444,7 +606,6 @@ julia> attributes(frame2)
 1-element Vector{Symbol}:
  :sex
 ```
-TODO: change doc as before; that is, use a more interesting example.
 """
 attributes(df::AbstractDataFrame) = Symbol.(names(df))
 function attributes(mfd::AbstractMultiFrameDataset, i::Integer)
@@ -465,9 +626,94 @@ end
 
 """
     dropattributes!(mfd, i)
+    dropattributes!(mfd, attribute_name)
+    dropattributes!(mfd, indices)
+    dropattributes!(mfd, attribute_names)
 
 Drop the `i`-th attribute from `mfd` multiframe dataset and return the multiframe dataset
 without that attribute.
+
+## PARAMETERS
+*`mfd` is an MultiFrameDataset;
+*`i` is an Integer that indicates the index of the attribute to drop;
+*`attribute_name` is a Symbol that idicates the attribute to drop;
+*`indices` is an AbstractVector{Integer} that indicates the indices of the attribute to drop;
+*`attribute_names` is an AbstractVector{Symbol} that indicates the attributes to drop.
+
+```jldoctest
+julia> mfd = MultiFrameDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×3 SubDataFrame
+ Row │ sex   height  weight 
+     │ Char  Int64   Int64  
+─────┼──────────────────────
+   1 │ M        180      80
+   2 │ F        175      60
+
+julia> dropattributes!(mfd, 4)
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ sex   weight 
+     │ Char  Int64  
+─────┼──────────────
+   1 │ M         80
+   2 │ F         60
+
+julia> dropattributes!(mfd, :name)
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ age   
+     │ Int64 
+─────┼───────
+   1 │    25
+   2 │    26
+- Frame 2 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ sex   weight 
+     │ Char  Int64  
+─────┼──────────────
+   1 │ M         80
+   2 │ F         60
+
+julia> dropattributes!(mfd, [1,3])
+[ Info: Attribute 1 was last attribute of frame 1: removing frame
+● MultiFrameDataset
+   └─ dimensions: (0,)
+- Frame 1 / 1
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
+```
 
 TODO: To be reviewed
 """
@@ -531,12 +777,89 @@ end
 
 """
     keeponlyattributes!(mfd, indices)
+    keeponlyattributes!(mfd, attribute_names)
 
 Drop all attributes that do not correspond to the indices present in `indices` from `mfd`
 multiframe dataset.
 
 Note: if the dropped attributes are present in some frame they will also be removed from
 them. This can lead to the removal of frames as side effect.
+
+#PARAMETERS
+*`mfd` is a MultiFrameDataset;
+*`indices` is and AbstractVector{Integer} that indicates which indices to keep in the multiframe dataset;
+*`attribute_names` is a AbstractVector{Symbol} that indicates which attributes to keep in the multiframe dataset.
+
+```jldoctest
+julia> mfd = MultiFrameDataset([[1, 2],[3, 4, 5],[5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
+● MultiFrameDataset
+   └─ dimensions: (0, 0, 0)
+- Frame 1 / 3
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ name    age   
+     │ String  Int64 
+─────┼───────────────
+   1 │ Python     25
+   2 │ Julia      26
+- Frame 2 / 3
+   └─ dimension: 0
+2×3 SubDataFrame
+ Row │ sex   height  weight 
+     │ Char  Int64   Int64  
+─────┼──────────────────────
+   1 │ M        180      80
+   2 │ F        175      60
+- Frame 3 / 3
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ weight 
+     │ Int64  
+─────┼────────
+   1 │     80
+   2 │     60
+
+julia> keeponlyattributes!(mfd, [1,3,4])
+[ Info: Attribute 5 was last attribute of frame 3: removing frame
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name   
+     │ String 
+─────┼────────
+   1 │ Python
+   2 │ Julia
+- Frame 2 / 2
+   └─ dimension: 0
+2×2 SubDataFrame
+ Row │ sex   height 
+     │ Char  Int64  
+─────┼──────────────
+   1 │ M        180
+   2 │ F        175
+
+julia> keeponlyattributes!(mfd, [:name, :sex])
+● MultiFrameDataset
+   └─ dimensions: (0, 0)
+- Frame 1 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ name   
+     │ String 
+─────┼────────
+   1 │ Python
+   2 │ Julia
+- Frame 2 / 2
+   └─ dimension: 0
+2×1 SubDataFrame
+ Row │ sex  
+     │ Char 
+─────┼──────
+   1 │ M
+   2 │ F
+```
 
 TODO: review
 """
@@ -576,7 +899,9 @@ end
 
 Drop all attributes that are not present in any of the frames in `mfd` multiframe dataset.
 
-# Examples
+#PARAMETERS
+*`mfd` is a MultiFrameDataset, that is the structure at which spareattributes will be dropped.
+
 ```jldoctest
 julia> mfd = MultiFrameDataset([[1]], DataFrame(:age => [30, 9], :name => ["Python", "Julia"]))
 ● MultiFrameDataset
@@ -620,3 +945,4 @@ function dropspareattributes!(mfd::AbstractMultiFrameDataset)
 
     return result
 end
+
