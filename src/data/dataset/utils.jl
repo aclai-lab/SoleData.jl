@@ -78,7 +78,7 @@ function _same_dataframe(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFra
 end
 
 """
-    _same_descriptor(mfd1, mfd2)
+    _same_frame_descriptor(mfd1, mfd2)
 
 Determine whether two AbstractMultiFrameDatasets have the same frames regardless of the
 positioning of their columns.
@@ -88,7 +88,7 @@ the presence of the same attributes use [`_same_attributes`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+function _same_frame_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
     if !_same_attributes(mfd1, mfd2)
         return false
     end
@@ -103,12 +103,62 @@ function _same_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFr
     unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
 
     for i in 1:nframes(mfd1)
-        if descriptor(mfd1)[i] != Integer[unmixed_indices[j] for j in descriptor(mfd2)[i]]
+        if frame_descriptor(mfd1)[i] != Integer[unmixed_indices[j]
+                for j in frame_descriptor(mfd2)[i]]
             return false
         end
     end
 
     return data(mfd1) == data(mfd2)[:,unmixed_indices]
+end
+
+"""
+    _same_label_descriptor(mfd1, mfd2)
+
+Determine whether two AbstractMultiFrameDatasets have the same labels regardless of the
+positioning of their columns.
+
+Note: the check will be performed against the instances too; if the intent is to just check
+the presence of the same attributes use [`_same_label_names`](@ref) instead.
+
+$(__note_about_utils)
+"""
+function _same_label_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+    return true
+end
+function _same_label_descriptor(
+    lmfd1::AbstractLabeledMultiFrameDataset,
+    lmfd2::AbstractLabeledMultiFrameDataset
+)
+    !_same_label_names(lmfd1, lmfd2) && return false;
+
+    lmfd1_lbls = labels(lmfd1)
+    lmfd2_lbls = labels(lmfd2)
+    unmixed_indices = [findfirst(x -> isequal(x, name), Symbol.(names(data(lmfd2))))
+        for name in lmfd1_lbls]
+
+    return data(lmfd1)[:,lmfd1_lbls] == data(lmfd2)[:,unmixed_indices]
+end
+
+"""
+    _same_label_names(mfd1, mfd2)
+
+Determine whether two AbstractMultiFrameDatasets have the same label names regardless of the
+positioning of their columns.
+
+Note: the check will not be performed against the instances; if the intent is to check
+whether the two datasets have the same labels use [`_same_label_descriptor`](@ref) instead.
+
+$(__note_about_utils)
+"""
+function _same_label_names(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+    return true
+end
+function _same_label_names(
+    lmfd1::AbstractLabeledMultiFrameDataset,
+    lmfd2::AbstractLabeledMultiFrameDataset
+)
+    return Set(labels(lmfd1)) == Set(labels(lmfd2))
 end
 
 """
@@ -159,7 +209,8 @@ function _same_multiframedataset(mfd1::AbstractMultiFrameDataset, mfd2::Abstract
     end
 
     for i in 1:nframes(mfd1)
-        if descriptor(mfd1)[i] != Integer[unmixed_indices[j] for j in descriptor(mfd2)[i]]
+        if frame_descriptor(mfd1)[i] != Integer[unmixed_indices[j]
+                for j in frame_descriptor(mfd2)[i]]
             return false
         end
     end
@@ -254,6 +305,22 @@ function _prettyprint_domain(set::AbstractSet)
 end
 _prettyprint_domain(dom::Tuple) = "($(dom[1]) - $(dom[end]))"
 
+function _prettyprint_labels(io::IO, lmfd::AbstractMultiFrameDataset)
+    println(io, "   ├─ labels")
+    if nlabels(lmfd) > 0
+        lbls = labels(lmfd)
+        for i in 1:(length(lbls)-1)
+            println(io, "   │   ├─ $(lbls[i]): " *
+                "$(labeldomain(lmfd, i))")
+        end
+        println(io, "   │   └─ $(lbls[end]): " *
+            "$(labeldomain(lmfd, length(lbls)))")
+    else
+        println(io, "   │   └─ no label selected")
+    end
+    println(io, "   └─ dimensions: $(dimension(lmfd))")
+end
+
 """
 Piecewise Aggregate Approximation
 TODO: add docs
@@ -294,3 +361,21 @@ function linearize_data(d::AbstractArray)
     return throw(ErrorExcpetion("Still can't linearize data of dimension > 2"))
 end
 # TODO: more linearizations
+
+"""
+TODO: docs
+"""
+unlinearize_data(d::Any, dims::Tuple{}) where {N<:Integer} = d
+function unlinearize_data(d::AbstractVector, dims::Tuple{}) where {N<:Integer}
+    return length(d) ≤ 1 ? d[1] : collect(d)
+end
+function unlinearize_data(d::AbstractVector, dims::NTuple{1,<:Integer}) where {N<:Integer}
+    return collect(d)
+end
+function unlinearize_data(d::AbstractVector, dims::NTuple{2,<:Integer}) where {N<:Integer}
+    return collect(reshape(d, dims)')
+end
+function unlinearize_data(d::AbstractVector, dims::NTuple{N,<:Integer}) where {N<:Integer}
+    # TODO: implement generic way to unlinearize data
+    throw(ErrorException("Unlinearization of data to $(dims) still not implemented"))
+end

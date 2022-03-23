@@ -1,6 +1,6 @@
 name = "SoleBase"
 uuid = "142d03a6-36c4-4bac-9273-c7ed2abbbb4d"
-authors = ["Eduard I. STAN", "Giovanni PAGLIARINI"]
+authors = ["Eduard I. STAN", "Federico MANZELLA", "Giovanni PAGLIARINI"]
 version = "0.1.0"
 
 [deps]
@@ -13,6 +13,9 @@ ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+CSV = "0.10.3"
+DataFrames = "1.3.2"
+ScientificTypes = "3.0.0"
 julia = "1"
 
 [extras]

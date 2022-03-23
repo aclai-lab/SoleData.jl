@@ -29,8 +29,7 @@ end
 # -------------------------------------------------------------
 # LabeledMultiFrameDataset - accessors
 
-descriptor(lmfd::AbstractLabeledMultiFrameDataset) = descriptor(lmfd.mfd)
-frame_descriptor(lmfd::AbstractLabeledMultiFrameDataset) = descriptor(lmfd)
+frame_descriptor(lmfd::AbstractLabeledMultiFrameDataset) = frame_descriptor(lmfd.mfd)
 data(lmfd::AbstractLabeledMultiFrameDataset) = data(lmfd.mfd)
 labels_descriptor(lmfd::LabeledMultiFrameDataset) = lmfd.labels_descriptor
 dataset(lmfd::LabeledMultiFrameDataset) = lmfd.mfd
@@ -40,24 +39,28 @@ dataset(lmfd::LabeledMultiFrameDataset) = lmfd.mfd
 
 function show(io::IO, lmfd::AbstractLabeledMultiFrameDataset)
     println(io, "● LabeledMultiFrameDataset")
-    println(io, "   ├─ labels")
-
-    # TODO: perhaps _prettyprint_labels for uniformity?
-    if nlabels(lmfd) > 0
-        lbls = labels(lmfd)
-        for i in 1:(length(lbls)-1)
-            println(io, "   │   ├─ $(lbls[i]): " *
-                "$(labeldomain(lmfd, i))")
-        end
-        println(io, "   │   └─ $(lbls[end]): " *
-            "$(labeldomain(lmfd, length(lbls)))")
-    else
-        println(io, "   │   └─ no label selected")
-    end
-    println(io, "   └─ dimensions: $(dimension(lmfd))")
-
+    _prettyprint_labels(io, lmfd)
     _prettyprint_frames(io, lmfd)
     _prettyprint_spareattributes(io, lmfd)
+end
+
+# -------------------------------------------------------------
+# LabeledMultiFrameDataset - attributes
+
+function spareattributes(lmfd::AbstractLabeledMultiFrameDataset)
+    filter!(attr -> !(attr in labels_descriptor(lmfd)), spareattributes(dataset(lmfd)))
+end
+
+function dropattributes!(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
+    dropattributes!(dataset(lmfd), i)
+
+    for (i_lbl, lbl) in enumerate(labels_descriptor(lmfd))
+        if lbl > i
+            frame_descriptor(lmfd)[i_frame][i_lbl] = lbl - 1
+        end
+    end
+
+    return lmfd
 end
 
 # -------------------------------------------------------------
@@ -65,7 +68,7 @@ end
 
 function _empty(lmfd::AbstractLabeledMultiFrameDataset)
     return LabeledMultiFrameDataset(
-        deepcopy(descriptor(lmfd)),
+        deepcopy(frame_descriptor(lmfd)),
         df = DataFrame([attr_name => [] for attr_name in Symbol.(names(data(lmfd)))])
     )
 end

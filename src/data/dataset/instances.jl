@@ -104,7 +104,7 @@ function deleteinstances!(mfd::AbstractMultiFrameDataset, indices::AbstractVecto
             "(1:$(ninstances(mfd)))"
     end
 
-    delete!(data(mfd), unique(indices))
+    deleteat!(data(mfd), unique(indices))
 
     return mfd
 end

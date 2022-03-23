@@ -42,11 +42,11 @@ export pushinstances!, deleteinstances!, keeponlyinstances!
 export insertattributes!, dropattributes!, keeponlyattributes!, dropspareattributes!
 
 # frame manipulation
-export addframe!, removeframe!, addattribute_toframe!, dropattribute_fromframe!
+export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
 export insertframe!, dropframe!
 
 # labels manipulation
-export nlabels, label, labels, labeldomain, setaslabel!, removefromlabels!, spareattributes
+export nlabels, label, labels, labeldomain, setaslabel!, removefromlabels!, joinlabels!
 
 # re-export from DataFrames
 export describe
@@ -85,7 +85,7 @@ abstract type AbstractDataset end
 """
 Abstract supertype for all multiframe datasets.
 
-A concrete MultiFrameDataset should always provide accessors [`descriptor`](@ref), to
+A concrete MultiFrameDataset should always provide accessors [`frame_descriptor`](@ref), to
 access the frame descriptor, and [`data`](@ref), to access the inner data.
 """
 abstract type AbstractMultiFrameDataset <: AbstractDataset end
@@ -93,8 +93,8 @@ abstract type AbstractMultiFrameDataset <: AbstractDataset end
 """
 Abstract supertype for all multiframe datasets for supervised learning.
 
-A concrete LabeledFrameDataset should always provide accessors [`descriptor`](@ref), to
-access the frame descriptor, and [`data`](@ref), to access the inner data just like any
+A concrete LabeledFrameDataset should always provide accessors [`frame_descriptor`](@ref),
+to access the frame descriptor, and [`data`](@ref), to access the inner data just like any
 other MultiFrameDataset. In addition to these it is required an implementation for accessors
 [`labels_descriptor`](@ref), to access the labels descriptor and [`dataset`](@ref), to
 access the MultiFrameDataset (forgetting about the labels).
@@ -107,11 +107,10 @@ abstract type AbstractLabeledMultiFrameDataset <: AbstractMultiFrameDataset end
 # Inspired by the "Delegation pattern" of "Hands-On Design Patterns and Best Practices with
 # Julia" Chap. 5 by Tom Kwong
 
-function descriptor(amfd::AbstractMultiFrameDataset)
-    return error("`descriptor` accessor not implemented for type "
+function frame_descriptor(amfd::AbstractMultiFrameDataset)
+    return error("`frame_descriptor` accessor not implemented for type "
         * string(typeof(amfd)))
 end
-frame_descriptor(amfd::AbstractMultiFrameDataset) = descriptor(amfd)
 function data(amfd::AbstractMultiFrameDataset)
     return error("`data` accessor not implemented for type "
         * string(typeof(amfd)))

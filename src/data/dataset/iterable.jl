@@ -7,7 +7,7 @@ function getindex(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Inte
     return [frame(mfd, i) for i in indices]
 end
 
-length(mfd::AbstractMultiFrameDataset) = length(descriptor(mfd))
+length(mfd::AbstractMultiFrameDataset) = length(frame_descriptor(mfd))
 ndims(mfd::AbstractMultiFrameDataset) = length(mfd)
 isempty(mfd::AbstractMultiFrameDataset) = length(mfd) == 0
 firstindex(mfd::AbstractMultiFrameDataset) = 1

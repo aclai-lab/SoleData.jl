@@ -323,6 +323,18 @@ const ages = DataFrame(:age => [35, 38, 37])
         # label
         @test label(lmfd, 1, 1) == "Python"
         @test label(lmfd, 2, 1) == "Julia"
+
+        # joinlabels!
+        lmfd = LabeledMultiFrameDataset(
+            [2, 3],
+            MultiFrameDataset([[1], [4]], deepcopy(df_data))
+        )
+
+        joinlabels!(lmfd)
+
+        @test labels(lmfd) == [Symbol(join([:age, :name], '_'))]
+        @test label(lmfd, 1, 1) == string(30, '_', "Python")
+        @test label(lmfd, 2, 1) == string(9, '_', "Julia")
     end
 
     @testset "dataset filesystem operations" begin
@@ -337,7 +349,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         # Labels.csv
         @test isfile(joinpath(path, _ds_labels))
         @test length(split(readline(joinpath(path, _ds_labels)), ","))-1 == 1
-        df_labels = CSV.read(joinpath(path, _ds_labels), DataFrame; type = String)
+        df_labels = CSV.read(joinpath(path, _ds_labels), DataFrame; types = String)
         df_labels[!,:id] = parse.(Int64, replace.(df_labels[!,:id], _ds_inst_prefix => ""))
         @test df_labels == lmfd.mfd.data[:,spareattributes(lmfd.mfd)]
 
