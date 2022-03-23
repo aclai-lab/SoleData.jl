@@ -107,7 +107,7 @@ function addframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Int
 
     return mfd
 end
-# TODO: addframe! with Integer
+addframe!(mfd::AbstractMultiFrameDataset, index::Integer) = addframe!(mfd, [index])
 function addframe!(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVector{Symbol})
     for attr_name in attribute_names
         @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain " *
@@ -116,7 +116,9 @@ function addframe!(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVect
 
     return addframe!(mfd, _name2index(mfd, attribute_names))
 end
-# TODO: addframe! with Symbol
+function addframe!(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
+    return addframe!(mfd, [attribute_name])
+end
 
 """
     removeframe!(mfd, i)
@@ -182,12 +184,18 @@ julia> removeframe!(mfd, 2)
    2 │ [0.540302, -0.416147, -0.989992,…
 ```
 """
-# TODO: add removeframe! with AbstractVector{<:Integer}
 function removeframe!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
         "(1:$(nframes(mfd)))"
 
     deleteat!(frame_descriptor(mfd), i)
+
+    return mfd
+end
+function removeframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{Integer})
+    for i in sort(unique(indices))
+        removeframe!(mfd, i)
+    end
 
     return mfd
 end
@@ -203,7 +211,6 @@ Alternatively to `attr_index` the attribute name can be used.
 
 TODO: examples & review
 """
-# TODO: add addattribute_toframe! with AbstractVector{<:Integer}
 function addattribute_toframe!(
     mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_index::Integer
 )
@@ -220,7 +227,6 @@ function addattribute_toframe!(
 
     return mfd
 end
-# TODO: add addattribute_toframe! with AbstractVector{Symbol}
 function addattribute_toframe!(
     mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_name::Symbol
 )
@@ -228,6 +234,15 @@ function addattribute_toframe!(
         "$(attr_name)"
 
     return addattribute_toframe!(mfd, frame_index, _name2index(mfd, attr_name))
+end
+function addattribute_toframe!(
+    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_names::AbstractVector{Symbol}
+)
+    for attr_name in attr_names
+        addattribute_toframe!(mfd, frame_index, attr_name)
+    end
+
+    return mfd
 end
 
 """
@@ -241,8 +256,6 @@ Alternatively to `attr_index` the attribute name can be used.
 
 TODO: examples & review
 """
-# TODO: should be dropattribute_fromframe!
-# TODO: add dropattribute_toframe! with AbstractVector{<:Integer}
 function removeattribute_fromframe!(
     mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_index::Integer
 )
@@ -266,7 +279,17 @@ function removeattribute_fromframe!(
 
     return mfd
 end
-# TODO: add dropattribute_toframe! with AbstractVector{Symbol}
+function removeattribute_fromframe!(
+    mfd::AbstractMultiFrameDataset,
+    frame_index::Integer,
+    attr_indices::AbstractVector{<:Integer}
+)
+    for i in attr_indices
+        removeattribute_fromframe!(mfd, frame_index, i)
+    end
+
+    return mfd
+end
 function removeattribute_fromframe!(
     mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_name::Symbol
 )
@@ -274,6 +297,15 @@ function removeattribute_fromframe!(
         "$(attr_name)"
 
     return removeattribute_fromframe!(mfd, frame_index, _name2index(mfd, attr_name))
+end
+function removeattribute_fromframe!(
+    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_names::AbstractVector{Symbol}
+)
+    for attr_name in attr_names
+        removeattribute_fromframe!(mfd, frame_index, attr_name)
+    end
+
+    return mfd
 end
 
 """
@@ -543,4 +575,14 @@ function dropframe!(mfd::AbstractMultiFrameDataset, i::Integer)
         "(1:$(nframes(mfd)))"
 
     return dropattributes!(mfd, frame_descriptor(mfd)[i])
+end
+function dropframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
+    for i in indices
+        @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
+            "(1:$(nframes(mfd)))"
+    end
+
+    return dropattributes!(mfd, sort!(
+        unique(vcat(frame_descriptor(mfd)[indices])); rev = true
+    ))
 end

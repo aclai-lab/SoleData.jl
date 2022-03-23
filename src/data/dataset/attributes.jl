@@ -279,7 +279,10 @@ end
     hasattributes(mfd, attribute_name)
 
 Lets you check if a mfd or a df has a certain attribute.
-When given an mfd as a parameter, it is possible to choose which frame to check for the existence of the attribute.
+When given an mfd as a parameter, it is possible to choose which frame to check for the
+existence of the attribute.
+
+Instead of a single attribute name a Vector of names can be passed.
 
 ## PARAMETERS
 *`df` is an AbstractDataFrame, which is one of the two structure in which you want to check the presence of the attribute;
@@ -337,10 +340,6 @@ end
 function hasattributes(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
     return _name2index(mfd, attribute_name) > 0
 end
-
-"""
-TODO: docs
-"""
 function hasattributes(df::AbstractDataFrame, attribute_names::AbstractVector{Symbol})
     return !(0 in _name2index(df, attribute_names))
 end
@@ -359,7 +358,15 @@ function hasattributes(
 end
 
 """
-TODO: docs
+    attributeindex(mfd, [frame_index,] attribute_name)
+
+Get the index of the attribute named `attribute_name` inside the `mfd` multiframe dataset.
+
+As second parameter `frame_index` can be passed: in this case the index returned is relative
+to the attribute position in the `frame_index`-th frame.
+
+If no attribute is named `attribute_name` in the dataset (or in the selected frame)
+`0` is returned.
 """
 function attributeindex(df::AbstractDataFrame, attribute_name::Symbol)
     return _name2index(df, attribute_name)
@@ -469,7 +476,6 @@ Drop the `i`-th attribute from `mfd` multiframe dataset and return the multifram
 without that attribute.
 
 TODO: To be reviewed
-TODO: Need to implement dropattributes!(lmfd, i) for labeledMFD
 """
 function dropattributes!(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nattributes(mfd) "Attribute $(i) is not a valid attibute index " *
