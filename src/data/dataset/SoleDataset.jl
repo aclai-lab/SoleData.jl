@@ -42,7 +42,7 @@ export pushinstances!, deleteinstances!, keeponlyinstances!
 export insertattributes!, dropattributes!, keeponlyattributes!, dropspareattributes!
 
 # frame manipulation
-export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
+export addframe!, removeframe!, addattribute_toframe!, dropattribute_fromframe!
 export insertframe!, dropframe!
 
 # labels manipulation

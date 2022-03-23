@@ -725,7 +725,7 @@ function dropattributes!(mfd::AbstractMultiFrameDataset, i::Integer)
     while j ≤ nframes(mfd)
         desc = descriptor(mfd)[j]
         if i in desc
-            removeattribute_fromframe!(mfd, j, i)
+            dropattribute_fromframe!(mfd, j, i)
         else
             j += 1
         end
