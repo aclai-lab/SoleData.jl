@@ -125,7 +125,7 @@ label.
 !!! note
     Resulting label will always be added as last column in the original DataFrame.
 
-## EXAMPLE
+## EXAMPLES
 
 ```
 julia> lmfd = LabeledMultiFrameDataset(

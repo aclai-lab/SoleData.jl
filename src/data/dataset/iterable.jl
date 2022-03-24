@@ -18,3 +18,20 @@ Base.@propagate_inbounds function iterate(mfd::AbstractMultiFrameDataset, i::Int
     (i ≤ 0 || i > length(mfd)) && return nothing
     return (@inbounds frame(mfd, i), i+1)
 end
+
+# TODO: consider adding the following interfaces to access the inner dataframe
+function getindex(
+    mfd::AbstractMultiFrameDataset,
+    i::Union{Colon,<:Integer,<:AbstractVector{<:Integer},<:Tuple{<:Integer}},
+    j::Union{
+        Colon,
+        <:Integer,
+        <:AbstractVector{<:Integer},
+        <:Tuple{<:Integer},
+        Symbol,
+        <:AbstractVector{Symbol}
+    },
+)
+    # NOTE: typeof(!) is left-out to avoid problems but consider adding it
+    return getindex(data(mfd), i, j)
+end

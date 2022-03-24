@@ -12,7 +12,8 @@ a frame index `i` even if `ninstances(mfd) != ninstances(mfd, i)` can't be `true
 
 This method can be called on a single frame directly.
 
-# Examples
+## EXAMPLES
+
 ```jldoctest
 julia> mfd = MultiFrameDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
@@ -57,9 +58,6 @@ Add `instance` to `mfd` multiframe dataset and return `mfd`.
 
 The instance can be a `DataFrameRow` or an `AbstractVector` but in both cases the number and
 type of attributes should match the dataset ones.
-
-TODO: add assertion on types?
-push! already throws an Exception for mismatching types in columns
 """
 function pushinstances!(mfd::AbstractMultiFrameDataset, instance::DataFrameRow)
     @assert length(instance) == nattributes(mfd) "Mismatching number of attributes " *

@@ -37,16 +37,24 @@ nframes(mfd::AbstractMultiFrameDataset) = length(frame_descriptor(mfd))
 Create a new frame in `mfd` multiframe dataset using attributes at `indices`
 or `index` and return`mfd`.
 
-Alternatively to the `indices` and the `index`, can be used respectively the attribute_names and the attribute_name.
+Alternatively to the `indices` and the `index`, can be used respectively the attribute_names
+and the attribute_name.
 
 Note: to add a new frame with new attributes see [`insertfframe!`](@ref).
 
-#PARAMETERS
-*`mfd` is a MultiFrameDataset;
-*`indices` is an AbstractVector{Integer} that indicates which indices of the multiframe dataset's corresponding dataframe to add to the new frame;
-*`index` is a Integer that indicates the index of the multiframe dataset's corresponding dataframe to add to the new frame;
-*`attribute_names` is an AbstractVector{Symbol} that indicates which attributes of the multiframe dataset's corresponding dataframe to add to the new frame;
-*`attribute_name` is a Symbol that indicates the attribute of the multiframe dataset's corresponding dataframe to add to the new frame;
+## PARAMETERS
+
+* `mfd` is a MultiFrameDataset;
+* `indices` is an AbstractVector{Integer} that indicates which indices of the multiframe
+    dataset's corresponding dataframe to add to the new frame;
+* `index` is a Integer that indicates the index of the multiframe dataset's corresponding
+    dataframe to add to the new frame;
+* `attribute_names` is an AbstractVector{Symbol} that indicates which attributes of the
+    multiframe dataset's corresponding dataframe to add to the new frame;
+* `attribute_name` is a Symbol that indicates the attribute of the multiframe dataset's
+    corresponding dataframe to add to the new frame;
+
+## EXAMPLES
 
 ```jldoctest
 julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60])
@@ -178,10 +186,14 @@ Remove `i`-th frame from `mfd` multiframe dataset and return `mfd`.
 Note: to completely remove a frame and all attributes in it use [`dropframe!`](@ref)
 instead.
 
-#PARAMETERS
-*`mfd` is a MultiFrameDataset;
-*`index` is a Integer that indicates which frame to remove from the multiframe dataset;
-*`indices` is a AbstractVector{Integer} that indicates the frames to remove from the multiframe dataset;
+## PARAMETERS
+
+* `mfd` is a MultiFrameDataset;
+* `index` is a Integer that indicates which frame to remove from the multiframe dataset;
+* `indices` is a AbstractVector{Integer} that indicates the frames to remove from the
+    multiframe dataset;
+
+## EXAMPLES
 
 ```jldoctest
 julia> df = DataFrame(:name => ["Python", "Julia"],
@@ -191,11 +203,11 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
                       :weight => [80, 60])
                      )
 2×5 DataFrame
-Row │ name    age    sex   height  weight
-    │ String  Int64  Char  Int64   Int64
+ Row │ name    age    sex   height  weight
+     │ String  Int64  Char  Int64   Int64
 ─────┼─────────────────────────────────────
-    1 │ Python     25  M        180      80
-    2 │ Julia      26  F        175      60
+   1 │ Python     25  M        180      80
+   2 │ Julia      26  F        175      60
 
 julia> mfd = MultiFrameDataset([[1, 2],[3],[4],[5]], df)
 ● MultiFrameDataset
@@ -316,19 +328,27 @@ end
 Add attribute at index `attr_index` to the frame at index `frame_index` in `mfd` multiframe
 dataset and return `mfd`.
 Alternatively to `attr_index` the attribute name can be used.
-Multiple attributes can be inserted into the multiframe dataset at once using `attr_indices` or
-`attr_inames`.
+Multiple attributes can be inserted into the multiframe dataset at once using `attr_indices`
+or `attr_inames`.
 
 Note: The function does not allow you to add an attribute to a new frame, but only to add it
 to an existing frame in the mfd. To add a new frame use [`addframe!`](@ref) instead.
 
-#PARAMETERS
-*`mfd` is a MultiFrameDataset;
-*`frame_index` is a Integer which indicates the frame in which the attribute or attributes will be added;
-*`attr_index` is a Integer that indicates the index of the attribute to add to a specific frame of the multiframe dataset;
-*`attr_indices` is a AbstractVector{Integer} which indicates the indices of the attributes to add to a specific frame of the multiframe dataset;
-*`attr_name` is a Symbol which indicates the name of the attribute to add to a specific frame of the multiframe dataset;
-*`attr_names` is a AbstractVector{Symbol} which indicates the name of the attributes to add to a specific frame of the multiframe dataset;
+## PARAMETERS
+
+* `mfd` is a MultiFrameDataset;
+* `frame_index` is a Integer which indicates the frame in which the attribute or attributes
+    will be added;
+* `attr_index` is a Integer that indicates the index of the attribute to add to a specific
+    frame of the multiframe dataset;
+* `attr_indices` is a AbstractVector{Integer} which indicates the indices of the attributes
+    to add to a specific frame of the multiframe dataset;
+* `attr_name` is a Symbol which indicates the name of the attribute to add to a specific
+    frame of the multiframe dataset;
+* `attr_names` is a AbstractVector{Symbol} which indicates the name of the attributes to
+    add to a specific frame of the multiframe dataset;
+
+## EXAMPLES
 
 ```jldoctest
 julia> df = DataFrame(:name => ["Python", "Julia"],
@@ -338,11 +358,11 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
                       :weight => [80, 60])
                      )
 2×5 DataFrame
-Row │ name    age    sex   height  weight
-    │ String  Int64  Char  Int64   Int64
+ Row │ name    age    sex   height  weight
+     │ String  Int64  Char  Int64   Int64
 ─────┼─────────────────────────────────────
-    1 │ Python     25  M        180      80
-    2 │ Julia      26  F        175      60
+   1 │ Python     25  M        180      80
+   2 │ Julia      26  F        175      60
 
 julia> mfd = MultiFrameDataset([[1, 2],[3]], df)
 ● MultiFrameDataset
@@ -464,19 +484,28 @@ end
 
 Remove attribute at index `attr_index` from the frame at index `frame_index` in `mfd`
 multiframe dataset and return `mfd`.
+
 Alternatively to `attr_index` the attribute name can be used.
-Multiple attributes can be dropped from the multiframe dataset at once using `attr_indices` or
-`attr_inames`.
+Multiple attributes can be dropped from the multiframe dataset at once passing a Vector of
+Symbols (for names) or a Vector of Integers (for indices) as last parameter.
 
 Note: when all attributes are dropped to a frame, it will be removed.
 
-#PARAMETERS
-*`mfd` is a MultiFrameDataset;
-*`frame_index` is a Integer which indicates the frame in which the attribute or attributes will be dropped;
-*`attr_index` is a Integer that indicates the index of the attribute to drop from a specific frame of the multiframe dataset;
-*`attr_indices` is a AbstractVector{Integer} which indicates the indices of the attributes to drop from a specific frame of the multiframe dataset;
-*`attr_name` is a Symbol which indicates the name of the attribute to drop from a specific frame of the multiframe dataset;
-*`attr_names` is a AbstractVector{Symbol} which indicates the name of the attributes to drop from a specific frame of the multiframe dataset;
+## PARAMETERS
+
+* `mfd` is a MultiFrameDataset;
+* `frame_index` is a Integer which indicates the frame in which the attribute or attributes
+    will be dropped;
+* `attr_index` is a Integer that indicates the index of the attribute to drop from a
+    specific frame of the multiframe dataset;
+* `attr_indices` is a AbstractVector{Integer} which indicates the indices of the attributes
+    to drop from a specific frame of the multiframe dataset;
+* `attr_name` is a Symbol which indicates the name of the attribute to drop from a specific
+    frame of the multiframe dataset;
+* `attr_names` is a AbstractVector{Symbol} which indicates the name of the attributes to
+    drop from a specific frame of the multiframe dataset;
+
+## EXAMPLES
 
 ```jldoctest
 julia> df = DataFrame(:name => ["Python", "Julia"],
@@ -486,145 +515,146 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
                       :weight => [80, 60])
                      )
 2×5 DataFrame
-Row │ name    age    sex   height  weight
-    │ String  Int64  Char  Int64   Int64
+ Row │ name    age    sex   height  weight
+     │ String  Int64  Char  Int64   Int64
 ─────┼─────────────────────────────────────
-    1 │ Python     25  M        180      80
-    2 │ Julia      26  F        175      60
+   1 │ Python     25  M        180      80
+   2 │ Julia      26  F        175      60
 
 julia> mfd = MultiFrameDataset([[1,2,4],[2,3,4],[5]], df)
 ● MultiFrameDataset
-    └─ dimensions: (0, 0, 0)
+   └─ dimensions: (0, 0, 0)
 - Frame 1 / 3
-    └─ dimension: 0
+   └─ dimension: 0
 2×3 SubDataFrame
-    Row │ name    age    height
-        │ String  Int64  Int64
+ Row │ name    age    height
+     │ String  Int64  Int64
 ─────┼───────────────────────
-    1 │ Python     25     180
-    2 │ Julia      26     175
+   1 │ Python     25     180
+   2 │ Julia      26     175
 - Frame 2 / 3
-    └─ dimension: 0
+   └─ dimension: 0
 2×3 SubDataFrame
-    Row │ age    sex   height
-        │ Int64  Char  Int64
+ Row │ age    sex   height
+     │ Int64  Char  Int64
 ─────┼─────────────────────
-    1 │    25  M        180
-    2 │    26  F        175
+   1 │    25  M        180
+   2 │    26  F        175
 - Frame 3 / 3
-    └─ dimension: 0
+   └─ dimension: 0
 2×1 SubDataFrame
-    Row │ weight
-        │ Int64
+ Row │ weight
+     │ Int64
 ─────┼────────
-    1 │     80
-    2 │     60
+   1 │     80
+   2 │     60
 
 julia> removeattribute_fromframe!(mfd, 3, 5)
 [ Info: Attribute 5 was last attribute of frame 3: removing frame
 ● MultiFrameDataset
-    └─ dimensions: (0, 0)
+   └─ dimensions: (0, 0)
 - Frame 1 / 2
-    └─ dimension: 0
+   └─ dimension: 0
 2×3 SubDataFrame
-    Row │ name    age    height
-        │ String  Int64  Int64
+ Row │ name    age    height
+     │ String  Int64  Int64
 ─────┼───────────────────────
-    1 │ Python     25     180
-    2 │ Julia      26     175
+   1 │ Python     25     180
+   2 │ Julia      26     175
 - Frame 2 / 2
-    └─ dimension: 0
+   └─ dimension: 0
 2×3 SubDataFrame
-    Row │ age    sex   height
-        │ Int64  Char  Int64
+ Row │ age    sex   height
+     │ Int64  Char  Int64
 ─────┼─────────────────────
-    1 │    25  M        180
-    2 │    26  F        175
+   1 │    25  M        180
+   2 │    26  F        175
 - Spare attributes
-    └─ dimension: 0
+   └─ dimension: 0
 2×1 SubDataFrame
-    Row │ weight
-        │ Int64
+ Row │ weight
+     │ Int64
 ─────┼────────
-    1 │     80
-    2 │     60
+   1 │     80
+   2 │     60
 
 julia> removeattribute_fromframe!(mfd, 1, :age)
 ● MultiFrameDataset
-    └─ dimensions: (0, 0)
+   └─ dimensions: (0, 0)
 - Frame 1 / 2
-    └─ dimension: 0
+   └─ dimension: 0
 2×2 SubDataFrame
-    Row │ name    height
-        │ String  Int64
+ Row │ name    height
+     │ String  Int64
 ─────┼────────────────
-    1 │ Python     180
-    2 │ Julia      175
+   1 │ Python     180
+   2 │ Julia      175
 - Frame 2 / 2
-    └─ dimension: 0
+   └─ dimension: 0
 2×3 SubDataFrame
-    Row │ age    sex   height
-        │ Int64  Char  Int64
+ Row │ age    sex   height
+     │ Int64  Char  Int64
 ─────┼─────────────────────
-    1 │    25  M        180
-    2 │    26  F        175
+   1 │    25  M        180
+   2 │    26  F        175
 - Spare attributes
-    └─ dimension: 0
+   └─ dimension: 0
 2×1 SubDataFrame
-    Row │ weight
-        │ Int64
+ Row │ weight
+     │ Int64
 ─────┼────────
-    1 │     80
-    2 │     60
+   1 │     80
+   2 │     60
 
 julia> removeattribute_fromframe!(mfd, 2, [3,4])
 ● MultiFrameDataset
-    └─ dimensions: (0, 0)
+   └─ dimensions: (0, 0)
 - Frame 1 / 2
-    └─ dimension: 0
+   └─ dimension: 0
 2×2 SubDataFrame
-    Row │ name    height
-        │ String  Int64
+ Row │ name    height
+     │ String  Int64
 ─────┼────────────────
-    1 │ Python     180
-    2 │ Julia      175
+   1 │ Python     180
+   2 │ Julia      175
 - Frame 2 / 2
-    └─ dimension: 0
+   └─ dimension: 0
 2×1 SubDataFrame
-    Row │ age
-        │ Int64
+ Row │ age
+     │ Int64
 ─────┼───────
-    1 │    25
-    2 │    26
+   1 │    25
+   2 │    26
 - Spare attributes
-    └─ dimension: 0
+   └─ dimension: 0
 2×2 SubDataFrame
-    Row │ sex   weight
-        │ Char  Int64
+ Row │ sex   weight
+     │ Char  Int64
 ─────┼──────────────
-    1 │ M         80
-    2 │ F         60
+   1 │ M         80
+   2 │ F         60
 
 julia> removeattribute_fromframe!(mfd, 1, [:name,:height])
 [ Info: Attribute 4 was last attribute of frame 1: removing frame
 ● MultiFrameDataset
-    └─ dimensions: (0,)
+   └─ dimensions: (0,)
 - Frame 1 / 1
-    └─ dimension: 0
+   └─ dimension: 0
 2×1 SubDataFrame
-    Row │ age
-        │ Int64
+ Row │ age
+     │ Int64
 ─────┼───────
-    1 │    25
-    2 │    26
+   1 │    25
+   2 │    26
 - Spare attributes
-    └─ dimension: 0
+   └─ dimension: 0
 2×4 SubDataFrame
-    Row │ name    sex   height  weight
-        │ String  Char  Int64   Int64
+ Row │ name    sex   height  weight
+     │ String  Char  Int64   Int64
 ─────┼──────────────────────────────
-    1 │ Python  M        180      80
-    2 │ Julia   F        175      60
+   1 │ Python  M        180      80
+   2 │ Julia   F        175      60
+```
 """
 function removeattribute_fromframe!(
     mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_index::Integer
@@ -687,12 +717,17 @@ Existing attributes can be added to the new frame while adding it to the dataset
 the corresponding inidices by `existing_attributes`.
 If `col` is specified then the attributes will be inserted starting at index `col`.
 
-#PARAMETERS
-*`mfd` is a MultiFrameDataset;
-*`col` is a Integer which indicates the column in which to insert the columns of the new frame `new_frame`;
-*`new_frame` is a AbstractDataFrame which will be added to the multiframe dataset as a subdataframe of a new frame;
-*`existing_attributes` is AbstractVector{Integer} and a AbstractVector{Symbol} also. It indicates which attributes
-of the multiframe dataset relative's dataframe to insert in the new frame `new_frame`.
+## PARAMETERS
+* `mfd` is a MultiFrameDataset;
+* `col` is a Integer which indicates the column in which to insert the columns of the new
+    frame `new_frame`;
+* `new_frame` is a AbstractDataFrame which will be added to the multiframe dataset as a
+    subdataframe of a new frame;
+* `existing_attributes` is AbstractVector{Integer} and a AbstractVector{Symbol} also. It
+    indicates which attributes of the multiframe dataset relative's dataframe to insert
+    in the new frame `new_frame`.
+
+## EXAMPLES
 
 ```jldoctest
 julia> df = DataFrame(
@@ -756,11 +791,11 @@ julia> insertframe!(mfd, DataFrame(:age => [30, 9]))
 
 julia> mfd.data
 2×3 DataFrame
-Row │ name    stat1                              age
-    │ String  Array…                             Int64
+ Row │ name    stat1                              age
+     │ String  Array…                             Int64
 ─────┼──────────────────────────────────────────────────
-    1 │ Python  [0.841471, 0.909297, 0.14112, -0…     30
-    2 │ Julia   [0.540302, -0.416147, -0.989992,…      9
+   1 │ Python  [0.841471, 0.909297, 0.14112, -0…     30
+   2 │ Julia   [0.540302, -0.416147, -0.989992,…      9
 ```
 or, selecting the column
 
@@ -798,39 +833,39 @@ julia> mfd = MultiFrameDataset(df; group = :all)
 
 julia> insertframe!(mfd, 2, DataFrame(:age => [30, 9]))
 ● MultiFrameDataset
-    └─ dimensions: (1, 0)
+   └─ dimensions: (1, 0)
 - Frame 1 / 2
-    └─ dimension: 1
+   └─ dimension: 1
 2×1 SubDataFrame
-Row │ stat1
-    │ Array…
+ Row │ stat1
+     │ Array…
 ─────┼───────────────────────────────────
     1 │ [0.841471, 0.909297, 0.14112, -0…
     2 │ [0.540302, -0.416147, -0.989992,…
 - Frame 2 / 2
-    └─ dimension: 0
+   └─ dimension: 0
 2×1 SubDataFrame
-Row │ age
-    │ Int64
+ Row │ age
+     │ Int64
 ─────┼───────
-    1 │    30
-    2 │     9
+   1 │    30
+   2 │     9
 - Spare attributes
-    └─ dimension: 0
+   └─ dimension: 0
 2×1 SubDataFrame
-Row │ name
-    │ String
+ Row │ name
+     │ String
 ─────┼────────
-    1 │ Python
-    2 │ Julia
+   1 │ Python
+   2 │ Julia
 
 julia> mfd.data
 2×3 DataFrame
-Row │ name    age    stat1
-    │ String  Int64  Array…
+ Row │ name    age    stat1
+     │ String  Int64  Array…
 ─────┼──────────────────────────────────────────────────
-    1 │ Python     30  [0.841471, 0.909297, 0.14112, -0…
-    2 │ Julia       9  [0.540302, -0.416147, -0.989992,…
+   1 │ Python     30  [0.841471, 0.909297, 0.14112, -0…
+   2 │ Julia       9  [0.540302, -0.416147, -0.989992,…
 ```
 or, adding an existing attribute:
 
@@ -869,9 +904,9 @@ julia> mfd = MultiFrameDataset([[2]], df)
 
 julia> insertframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
 ● MultiFrameDataset
-  └─ dimensions: (1, 0)
+   └─ dimensions: (1, 0)
 - Frame 1 / 2
-  └─ dimension: 1
+   └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -879,7 +914,7 @@ julia> insertframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 - Frame 2 / 2
-  └─ dimension: 0
+   └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    name
      │ Int64  String
@@ -963,10 +998,13 @@ them. This can lead to the removal of additional frames other than the `i`-th.
 If the intection is to remove a frame without releasing the attributes use
 [`removeframe!`](@ref) instead.
 
-#PARAMETERS
+## PARAMETERS
+
 * `mfd` is a MultiFrameDataset;
 * `index` is a Integer which indicates the index of the frame to drop;
 * `indices` is an AbstractVector{Integer} which indicates the indices of the frames to drop.
+
+## EXAMPLES
 
 ```jldoctest
 julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60])

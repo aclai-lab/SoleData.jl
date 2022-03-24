@@ -322,11 +322,24 @@ function _prettyprint_labels(io::IO, lmfd::AbstractMultiFrameDataset)
 end
 
 """
+    paa(x; f = identity, t = (1, 0, 0))
+
 Piecewise Aggregate Approximation
-TODO: add docs
+
+Apply `f` function to each dimension of `x` array divinding it in `t[1]` windows taking
+`t[2]` extra points left and `t[3]` extra points right.
+
+Note: first window will always consider `t[2] = 0` and last one will always consider
+`t[3] = 0`.
 """
-function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigits::Int=4, t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)
-    @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)), dims must be the same"
+function paa(
+    x::AbstractArray{T};
+    f::Function = identity,
+    t::AbstractVector{<:NTuple{3,Integer}} = [(1, 0, 0)]
+) where {T <: Real}
+    @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)): " *
+        "length(t) has to be equal to ndims(x)"
+
     N = length(x)
     n_chunks = t[1][1]
 
@@ -346,13 +359,16 @@ function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigit
             l = l - t[1][2]
         end
 
-        z[i] = round(f(x[l:h]; kwargs...), digits=decdigits)
+        z[i] = f(x[l:h])
     end
+
     return z
 end
 
 """
-TODO: docs
+    linearize_data(d)
+
+Linearize dimensional object `d`.
 """
 linearize_data(d::Any) = d
 linearize_data(d::AbstractVector) = d
@@ -363,7 +379,9 @@ end
 # TODO: more linearizations
 
 """
-TODO: docs
+    unlinearize_data(d, dims)
+
+Unlinearize Vector `d` using dimensions `dims`.
 """
 unlinearize_data(d::Any, dims::Tuple{}) where {N<:Integer} = d
 function unlinearize_data(d::AbstractVector, dims::Tuple{}) where {N<:Integer}

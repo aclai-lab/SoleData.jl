@@ -266,6 +266,8 @@ presence of file Labels.csv.
     If `onlywithlabels` is an empty Vector (default) the function will load the entire
     Dataset.
 
+## EXMAPLES
+
 ```jldoctest
 julia> df_data = DataFrame(
            :id => [1, 2, 3, 4, 5],
