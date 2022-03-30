@@ -35,8 +35,10 @@ function _describeonm(
     x = Matrix{AbstractFloat}[]
 
     for j in cols
+		# TODO: not a good habit using abstract type as elements of Arrays
         y = Matrix{AbstractFloat}(undef, nrow(df), t[1][1])
-        for (i, paa_result) in enumerate(paa.(df[:,j]; f=descfunction, decdigits=4, t=t))
+		# TODO: maybe Threads.@threads
+        for (i, paa_result) in enumerate(paa.(df[:,j]; f = descfunction, t = t))
             y[i,:] = paa_result
         end
         push!(x, y)

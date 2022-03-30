@@ -166,7 +166,7 @@ function datasetinfo(
                 for filters in [Base.product([Base.product((key,), value)
                         for (key, value) in onlywithlabels[i]]...)...]
 
-                    nt = NamedTuple([Symbol(fs[1]) => fs[2] for fs in filters])
+                    nt = NamedTuple([Symbol(fs[1]) => string(fs[2]) for fs in filters])
                     grouped_by_keys = groupby(labels, collect(keys(nt)))
 
                     if haskey(grouped_by_keys, nt)
@@ -265,6 +265,8 @@ presence of file Labels.csv.
     with each other.
     If `onlywithlabels` is an empty Vector (default) the function will load the entire
     Dataset.
+
+## EXMAPLES
 
 ```jldoctest
 julia> df_data = DataFrame(

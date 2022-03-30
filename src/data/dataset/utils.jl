@@ -186,8 +186,6 @@ regardless of the ordering of the columns of their DataFrames.
 Note: the check will be performed against the instances too; if the intent is to just check
 the presence of the same attributes use [`_same_attributes`](@ref) instead.
 
-TODO: perhaps could be done better? E.g. using the aforedefined functions.
-
 $(__note_about_utils)
 """
 function _same_multiframedataset(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
@@ -322,18 +320,33 @@ function _prettyprint_labels(io::IO, lmfd::AbstractMultiFrameDataset)
 end
 
 """
+    paa(x; f = identity, t = (1, 0, 0))
+
 Piecewise Aggregate Approximation
-TODO: add docs
+
+Apply `f` function to each dimension of `x` array divinding it in `t[1]` windows taking
+`t[2]` extra points left and `t[3]` extra points right.
+
+Note: first window will always consider `t[2] = 0` and last one will always consider
+`t[3] = 0`.
 """
-function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigits::Int=4, t::Vector{Tuple{Int64,Int64,Int64}}, kwargs...)
-    @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)), dims must be the same"
+function paa(
+    x::AbstractArray{T};
+    f::Function = identity,
+    t::AbstractVector{<:NTuple{3,Integer}} = [(1, 0, 0)]
+) where {T <: Real}
+    @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)): " *
+        "length(t) has to be equal to ndims(x)"
+
     N = length(x)
     n_chunks = t[1][1]
 
     @assert 1 ≤ n_chunks && n_chunks ≤ N "The number of chunks must be in [1,$(N)]"
     @assert 0 ≤ t[1][2] ≤ floor(N/n_chunks) && 0 ≤ t[1][3] ≤ floor(N/n_chunks)
 
-    z = Array{Float64}(undef, n_chunks) # TODO Float64? solve this?
+    z = Array{Float64}(undef, n_chunks)
+    # TODO Float64? solve this? any better ideas?
+    # TODO: maybe use Threads.@threads
     for i in 1:n_chunks
         l = Int(ceil((N*(i-1)/n_chunks) + 1))
         h = Int(ceil(N*i/n_chunks))
@@ -346,13 +359,16 @@ function paa(x::AbstractArray{T} where T <: Real; f::Function=identity, decdigit
             l = l - t[1][2]
         end
 
-        z[i] = round(f(x[l:h]; kwargs...), digits=decdigits)
+        z[i] = f(x[l:h])
     end
+
     return z
 end
 
 """
-TODO: docs
+    linearize_data(d)
+
+Linearize dimensional object `d`.
 """
 linearize_data(d::Any) = d
 linearize_data(d::AbstractVector) = d
@@ -363,7 +379,9 @@ end
 # TODO: more linearizations
 
 """
-TODO: docs
+    unlinearize_data(d, dims)
+
+Unlinearize Vector `d` using dimensions `dims`.
 """
 unlinearize_data(d::Any, dims::Tuple{}) where {N<:Integer} = d
 function unlinearize_data(d::AbstractVector, dims::Tuple{}) where {N<:Integer}
