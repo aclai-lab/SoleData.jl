@@ -60,8 +60,10 @@ Selection of frames can be controlled by the parameter `group` which can be:
 
 Note: `:all` and `:none` are the only `Symbol`s accepted by `group`.
 
-# TODO group should be [0] by default?
-# Examples
+# TODO: `:all` should be default parameter value for `group`
+# TODO: fix passing a vector of Integer to `group` parameter
+# TODO: rewrite examples
+## EXAMPLES
 ```jldoctest
 julia> df = DataFrame(
                   :age => [30, 9],
