@@ -72,7 +72,11 @@ function _read_example_metadata(datasetdir::AbstractString, inst_id::Integer)
     return dict
 end
 
-function _read_labels(datasetdir::AbstractString)
+function _read_labels(
+    datasetdir::AbstractString;
+    shufflelabels::AbstractVector{Symbol} = Symbol[], # TODO: add tests for labels shuffling
+    rng::Union{<:AbstractRNG,<:Integer} = Random.GLOBAL_RNG
+)
     @assert isfile(joinpath(datasetdir, _ds_labels)) "Missing $(_ds_labels) in dataset " *
         "$(datasetdir)"
 
@@ -80,11 +84,17 @@ function _read_labels(datasetdir::AbstractString)
 
     df[!,:id] = parse.(Int64, replace.(df[!,:id], _ds_inst_prefix => ""))
 
+    rng = isa(rng, Integer) ? MersenneTwister(rng) : rng
+    for l in shufflelabels
+        @assert l in names(df)[2:end] "`$l` is not a label of the dataset"
+        df[!,l] = shuffle(rng, df[:,l])
+    end
+
     return df
 end
 
 """
-    datasetinfo(datasetpath; onlywithlabels = [])
+    datasetinfo(datasetpath; onlywithlabels = [], shufflelabels = [], rng = Random.GLOBAL_RNG)
 
 Show dataset size on disk and return a Touple with first element a Vector of selected IDs,
 second element the labels DataFrame or nothing and third element the total size in bytes.
@@ -93,11 +103,17 @@ second element the labels DataFrame or nothing and third element the total size 
 
 * `onlywithlabels`, it's used to select which portion of the Dataset to load, by specifying
     labels and their values to use as filters. See [`loaddataset`](@ref) for more info.
+* `shufflelabels` is an AbstractVector of names of labels to shuffle (default = [], means
+    no shuffle).
+* `rng` the RandomNumberGenerator to be used when shuffling (for reproducibility); can be
+    either a Integer (used as seed for MersenneTwister) or an AbstractRNG.
+
 """
 function datasetinfo(
     datasetpath::AbstractString;
     onlywithlabels::AbstractVector{<:AbstractVector{<:Pair{<:AbstractString,<:AbstractVector{<:Any}}}} =
-        AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
+        AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[],
+    kwargs...
 )
     @assert isdir(datasetpath) "Dataset at path $(datasetpath) does not exist"
 
@@ -120,7 +136,7 @@ function datasetinfo(
     labels = nothing
     if ds_metadata["supervised"] ||
             (haskey(ds_metadata, "num_classes") && ds_metadata["num_classes"] > 0)
-        labels = _read_labels(datasetpath)
+        labels = _read_labels(datasetpath; kwargs...)
         missing_in_labels = setdiff(labels[:,:id], examples_ids)
         there_are_missing = false
         if length(missing_in_labels) > 0
@@ -244,7 +260,7 @@ function _load_instance(
 end
 
 """
-    loaddataset(datasetpath; onlywithlabels = [])
+    loaddataset(datasetpath; onlywithlabels = [], shufflelabels = [], rng = Random.GLOBAL_RNG)
 
 Create a MultiFrameDataset or a LabeledMultiFrameDataset from a Dataset, based on the
 presence of file Labels.csv.
@@ -265,8 +281,12 @@ presence of file Labels.csv.
     with each other.
     If `onlywithlabels` is an empty Vector (default) the function will load the entire
     Dataset.
+* `shufflelabels` is an AbstractVector of names of labels to shuffle (default = [], means
+    no shuffle).
+* `rng` the RandomNumberGenerator to be used when shuffling (for reproducibility); can be
+    either a Integer (used as seed for MersenneTwister) or an AbstractRNG.
 
-## EXMAPLES
+## EXAMPLES
 
 ```jldoctest
 julia> df_data = DataFrame(
@@ -400,11 +420,9 @@ Total size: 1963537 bytes
 """
 function loaddataset(
     datasetpath::AbstractString;
-    onlywithlabels::AbstractVector{<:AbstractVector{
-        <:Pair{<:AbstractString,<:AbstractVector{<:Any}}
-    }} = AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[]
+    kwargs...
 )
-    selected_ids, labels, datasetsize = datasetinfo(datasetpath, onlywithlabels = onlywithlabels)
+    selected_ids, labels, datasetsize = datasetinfo(datasetpath, kwargs...)
 
     @assert length(selected_ids) > 0 "No instance found"
 

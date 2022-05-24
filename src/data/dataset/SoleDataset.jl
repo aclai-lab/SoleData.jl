@@ -6,6 +6,7 @@ using DataStructures
 using Statistics
 using Catch22
 using CSV
+using Random
 
 import ScientificTypes: show
 import Base: eltype, isempty, iterate, map, getindex, length
