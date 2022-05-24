@@ -112,10 +112,10 @@ function datasetinfo(
         return isdir(joinpath(datasetpath, name)) && startswith(name, _ds_inst_prefix)
     end
 
-    examples_ids = parse.(Int64, replace.(
+    examples_ids = sort!(parse.(Int64, replace.(
         filter(isexdir, readdir(datasetpath)),
         _ds_inst_prefix => ""
-    ))
+    )))
 
     labels = nothing
     if ds_metadata["supervised"] ||
