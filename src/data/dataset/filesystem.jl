@@ -86,7 +86,7 @@ function _read_labels(
 
     rng = isa(rng, Integer) ? MersenneTwister(rng) : rng
     for l in shufflelabels
-        @assert l in names(df)[2:end] "`$l` is not a label of the dataset"
+        @assert l in Symbol.(names(df)[2:end]) "`$l` is not a label of the dataset"
         df[!,l] = shuffle(rng, df[:,l])
     end
 
@@ -418,11 +418,8 @@ Total size: 1963537 bytes
    2 │     3
 ```
 """
-function loaddataset(
-    datasetpath::AbstractString;
-    kwargs...
-)
-    selected_ids, labels, datasetsize = datasetinfo(datasetpath, kwargs...)
+function loaddataset(datasetpath::AbstractString; kwargs...)
+    selected_ids, labels, datasetsize = datasetinfo(datasetpath; kwargs...)
 
     @assert length(selected_ids) > 0 "No instance found"
 
