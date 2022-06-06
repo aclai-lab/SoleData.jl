@@ -438,7 +438,7 @@ function loaddataset(
 
     for id in selected_ids[2:end]
         curr_row = Any[id]
-        for (i, frame) in enumerate(_load_instance(datasetpath, id))
+        for (i, frame) in enumerate(_load_instance(datasetpath, id; types = types))
             for attr_name in frames_cols[i]
                 push!(curr_row, frame[attr_name])
             end
