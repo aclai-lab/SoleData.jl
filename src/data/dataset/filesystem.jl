@@ -418,12 +418,16 @@ Total size: 1963537 bytes
    2 │     3
 ```
 """
-function loaddataset(datasetpath::AbstractString; kwargs...)
+function loaddataset(
+    datasetpath::AbstractString;
+    types::Union{DataType,Nothing} = nothing,
+    kwargs...
+)
     selected_ids, labels, datasetsize = datasetinfo(datasetpath; kwargs...)
 
     @assert length(selected_ids) > 0 "No instance found"
 
-    instance_frames = _load_instance(datasetpath, selected_ids[1])
+    instance_frames = _load_instance(datasetpath, selected_ids[1]; types = types)
     frames_cols = [Symbol.(attr_name) for attr_name in keys.(instance_frames)]
 
     df = DataFrame(
