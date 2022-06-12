@@ -10,7 +10,7 @@ using Random
 
 import ScientificTypes: show
 import Base: eltype, isempty, iterate, map, getindex, length
-import Base: firstindex, lastindex, ndims, size, show
+import Base: firstindex, lastindex, ndims, size, show, summary
 import Base: isequal, isapprox
 import Base: ==, ≈
 import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersect!
@@ -172,6 +172,9 @@ function dimension(mfd::AbstractMultiFrameDataset; kwargs...)
     return Tuple([dimension(frame; kwargs...) for frame in mfd])
 end
 dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
+
+Base.summary(amfd::AbstractMultiFrameDataset) = string(length(amfd), "-frame ", typeof(amfd))
+Base.summary(io::IO, amfd::AbstractMultiFrameDataset) = print(stdout, summary(amfd))
 
 include("filesystem.jl")
 include("iterable.jl")
