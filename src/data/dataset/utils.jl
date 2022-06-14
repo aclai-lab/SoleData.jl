@@ -346,10 +346,9 @@ function paa(
 
     z = Array{Float64}(undef, n_chunks)
     # TODO Float64? solve this? any better ideas?
-    # TODO: maybe use Threads.@threads
-    for i in 1:n_chunks
-        l = Int(ceil((N*(i-1)/n_chunks) + 1))
-        h = Int(ceil(N*i/n_chunks))
+    Threads.@threads for i in collect(1:n_chunks)
+        l = ceil(Int, (N*(i-1)/n_chunks) + 1)
+        h = ceil(Int, N*i/n_chunks)
         if i == 1
             h = h + t[1][3]
         elseif i == n_chunks
