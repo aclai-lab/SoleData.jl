@@ -650,6 +650,8 @@ end
     dropattributes!(mfd, attribute_name)
     dropattributes!(mfd, indices)
     dropattributes!(mfd, attribute_names)
+    dropattributes!(mfd, frame_index, indices)
+    dropattributes!(mfd, frame_index, attribute_names)
 
 Drop the `i`-th attribute from `mfd` multiframe dataset and return the multiframe dataset
 without that attribute.
@@ -662,6 +664,8 @@ without that attribute.
 * `indices` is an AbstractVector{Integer} that indicates the indices of the attribute to
     drop;
 * `attribute_names` is an AbstractVector{Symbol} that indicates the attributes to drop.
+* `frame_index`: index of the frame; if this parameter is specified `indcies` are relative to the
+    `frame_index`-th frame
 
 ## EXAMPLES
 
@@ -797,6 +801,30 @@ function dropattributes!(
     end
 
     return dropattributes!(mfd, _name2index(mfd, attribute_names))
+end
+function dropattributes!(
+    mfd::AbstractMultiFrameDataset,
+    frame_index::Integer,
+    indices::Union{Integer, AbstractVector{<:Integer}}
+)
+    attr_idxes = [ indices... ]
+    !(1 <= frame_index <= nframes(mfd)) &&
+        throw(DimensionMismatch("Index $(frame_index) does not correspond to a frame"))
+    attridx = SoleBase.SoleDataset.frame_descriptor(mfd)[frame_index][attr_idxes]
+    return SoleBase.dropattributes!(mfd, attridx)
+end
+function dropattributes!(
+    mfd::AbstractMultiFrameDataset,
+    frame_index::Integer,
+    attribute_names::Union{Symbol, AbstractVector{<:Symbol}}
+)
+    attribute_names = [ attribute_names... ]
+    !(1 <= frame_index <= nframes(mfd)) &&
+        throw(DimensionMismatch("Index $(frame_index) does not correspond to a frame"))
+    !issubset(attribute_names, attributes(mfd, frame_index)) &&
+        throw(DomainError(attribute_names, "One or more attributes in `attr_names` are not in attributes frame"))
+    attridx = SoleBase.SoleDataset._name2index(mfd, attribute_names)
+    return SoleBase.dropattributes!(mfd, attridx)
 end
 
 """
