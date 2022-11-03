@@ -810,8 +810,8 @@ function dropattributes!(
     attr_idxes = [ indices... ]
     !(1 <= frame_index <= nframes(mfd)) &&
         throw(DimensionMismatch("Index $(frame_index) does not correspond to a frame"))
-    attridx = SoleBase.SoleDataset.frame_descriptor(mfd)[frame_index][attr_idxes]
-    return SoleBase.dropattributes!(mfd, attridx)
+    attridx = frame_descriptor(mfd)[frame_index][attr_idxes]
+    return dropattributes!(mfd, attridx)
 end
 function dropattributes!(
     mfd::AbstractMultiFrameDataset,
@@ -823,8 +823,8 @@ function dropattributes!(
         throw(DimensionMismatch("Index $(frame_index) does not correspond to a frame"))
     !issubset(attribute_names, attributes(mfd, frame_index)) &&
         throw(DomainError(attribute_names, "One or more attributes in `attr_names` are not in attributes frame"))
-    attridx = SoleBase.SoleDataset._name2index(mfd, attribute_names)
-    return SoleBase.dropattributes!(mfd, attridx)
+    attridx = _name2index(mfd, attribute_names)
+    return dropattributes!(mfd, attridx)
 end
 
 """
