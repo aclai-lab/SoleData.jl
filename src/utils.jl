@@ -4,15 +4,15 @@ using Random
 """
 Log overview info
 """
-const DTOverview = LogLevel(-500)
+const LogOverview = LogLevel(-500)
 """
 Log debug info
 """
-const DTDebug = LogLevel(-1000)
+const LogDebug = LogLevel(-1000)
 """
 Log detailed debug info
 """
-const DTDetail = LogLevel(-1500)
+const LogDetail = LogLevel(-1500)
 
 """
     throw_n_log(str::AbstractString, err_type = ErrorException)
