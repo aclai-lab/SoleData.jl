@@ -142,7 +142,7 @@ julia> mfd = MultiFrameDataset(df; group = [0])
 ```
 """
 struct MultiFrameDataset <: AbstractMultiFrameDataset
-    frame_descriptor::AbstractVector{AbstractVector{Integer}}
+    frame_descriptor::Vector{Vector{Int}}
     data::AbstractDataFrame
 
     function MultiFrameDataset(

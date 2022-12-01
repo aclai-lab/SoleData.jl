@@ -49,7 +49,7 @@ julia> lmfd = LabeledMultiFrameDataset([1, 3], MultiFrameDataset([[2],[4]], Data
 ```
 """
 struct LabeledMultiFrameDataset <: AbstractLabeledMultiFrameDataset
-    labels_descriptor::AbstractVector{Integer}
+    labels_descriptor::Vector{Int}
     mfd::AbstractMultiFrameDataset
 
     function LabeledMultiFrameDataset(

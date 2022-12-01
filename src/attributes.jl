@@ -546,7 +546,7 @@ julia> spareattributes(mfd)
 ```
 """
 function spareattributes(mfd::AbstractMultiFrameDataset)::AbstractVector{<:Integer}
-    return setdiff(1:nattributes(mfd), unique(cat(frame_descriptor(mfd)..., dims = 1)))
+    return Int.(setdiff(1:nattributes(mfd), unique(cat(frame_descriptor(mfd)..., dims = 1))))
 end
 
 """

@@ -4,10 +4,10 @@ using CSV
 
 const testing_savedataset = mktempdir(prefix = "saved_dataset")
 
-const _ds_inst_prefix = SoleBase.SoleDataset._ds_inst_prefix
-const _ds_frame_prefix = SoleBase.SoleDataset._ds_frame_prefix
-const _ds_metadata = SoleBase.SoleDataset._ds_metadata
-const _ds_labels = SoleBase.SoleDataset._ds_labels
+const _ds_inst_prefix = SoleBase._ds_inst_prefix
+const _ds_frame_prefix = SoleBase._ds_frame_prefix
+const _ds_metadata = SoleBase._ds_metadata
+const _ds_labels = SoleBase._ds_labels
 
 const ts_sin = [sin(i) for i in 1:50000]
 const ts_cos = [cos(i) for i in 1:50000]
