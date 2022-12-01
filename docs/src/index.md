@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = SoleBase
+CurrentModule = SoleData
 ```
 
-# SoleBase
+# SoleData
 
-Documentation for [SoleBase](https://github.com/aclai-lab/SoleBase.jl).
+Documentation for [SoleData](https://github.com/aclai-lab/SoleData.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [SoleBase]
+Modules = [SoleData]
 ```

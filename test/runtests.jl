@@ -1,13 +1,13 @@
-using SoleBase
+using SoleData
 using Test
 using CSV
 
 const testing_savedataset = mktempdir(prefix = "saved_dataset")
 
-const _ds_inst_prefix = SoleBase._ds_inst_prefix
-const _ds_frame_prefix = SoleBase._ds_frame_prefix
-const _ds_metadata = SoleBase._ds_metadata
-const _ds_labels = SoleBase._ds_labels
+const _ds_inst_prefix = SoleData._ds_inst_prefix
+const _ds_frame_prefix = SoleData._ds_frame_prefix
+const _ds_metadata = SoleData._ds_metadata
+const _ds_labels = SoleData._ds_labels
 
 const ts_sin = [sin(i) for i in 1:50000]
 const ts_cos = [cos(i) for i in 1:50000]
@@ -32,7 +32,7 @@ const df_data = DataFrame(
 
 const ages = DataFrame(:age => [35, 38, 37])
 
-@testset "SoleBase.jl" begin
+@testset "SoleData.jl" begin
 
     @testset "dataset" begin
         mfd = MultiFrameDataset([[1],[2]], deepcopy(df))

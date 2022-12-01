@@ -1,4 +1,4 @@
-module SoleBase
+module SoleData
 
 using DataFrames
 using ScientificTypes

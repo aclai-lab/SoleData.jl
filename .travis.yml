@@ -26,9 +26,9 @@ jobs:
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
           using Documenter: DocMeta, doctest
-          using SoleBase
-          DocMeta.setdocmeta!(SoleBase, :DocTestSetup, :(using SoleBase); recursive=true)
-          doctest(SoleBase)
+          using SoleData
+          DocMeta.setdocmeta!(SoleData, :DocTestSetup, :(using SoleData); recursive=true)
+          doctest(SoleData)
           include("docs/make.jl")'
       after_success: skip
 after_success:
