@@ -196,6 +196,4 @@ include("labels.jl")
 include("schema.jl")
 include("describe.jl")
 
-include("SoleBase-utils.jl")
-
 end # module
