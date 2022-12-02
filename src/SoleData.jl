@@ -196,4 +196,6 @@ include("labels.jl")
 include("schema.jl")
 include("describe.jl")
 
+include("dimensional-dataset.jl")
+
 end # module
