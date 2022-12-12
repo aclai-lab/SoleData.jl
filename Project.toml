@@ -1,6 +1,6 @@
 name = "SoleData"
-uuid = "142d03a6-36c4-4bac-9273-c7ed2abbbb4d"
-authors = ["Eduard I. STAN", "Federico MANZELLA", "Giovanni PAGLIARINI"]
+uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
+authors = ["Eduard I. Stan", "Federico Manzella", "Giovanni Pagliarini"]
 version = "0.1.0"
 
 [deps]
@@ -12,6 +12,7 @@ Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
+SoleBase = "4475fa32-7023-44a0-aa70-4813b230e492"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]

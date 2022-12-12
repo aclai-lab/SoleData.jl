@@ -196,6 +196,6 @@ include("labels.jl")
 include("schema.jl")
 include("describe.jl")
 
-include("SoleBase-utils.jl")
+include("dimensional-dataset.jl")
 
 end # module

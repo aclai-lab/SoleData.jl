@@ -2,7 +2,7 @@
 # Dimensional dataset: a simple dataset structure (basically, an hypercube)
 ############################################################################################
 
-export slice_dataset, concat_datasets,
+export get_instance, slice_dataset, concat_datasets,
        nframes, nsamples, nattributes, max_channel_size
 
 """
@@ -41,7 +41,7 @@ instance(d::DimensionalDataset{T,3},     idx::Integer) where T = @views d[:, :, 
 instance(d::DimensionalDataset{T,4},     idx::Integer) where T = @views d[:, :, :, idx]   # N=2
 
 # TODO remove? @ferdiu
-get_instance = instance
+get_instance(args...) = instance(args...)
 
 function slice_dataset(d::DimensionalDataset{T,2}, inds::AbstractVector{<:Integer}; allow_no_instances = false, return_view = false) where T # N=0
     @assert (allow_no_instances || length(inds) > 0) "Can't apply empty slice to dataset."
