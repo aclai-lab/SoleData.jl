@@ -335,6 +335,22 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test labels(lmfd) == [Symbol(join([:age, :name], '_'))]
         @test label(lmfd, 1, 1) == string(30, '_', "Python")
         @test label(lmfd, 2, 1) == string(9, '_', "Julia")
+
+        # dropattributes!
+        lmfd = LabeledMultiFrameDataset(
+            [3],
+            MultiFrameDataset([[2], [4]], deepcopy(df_data))
+        )
+        @test nframes(lmfd) == 2
+        @test nattributes(lmfd) == 4
+
+        dropattributes!(lmfd, 2)
+
+        @test SoleData.labels_descriptor(lmfd) == [2]
+        @test nattributes(lmfd) == 3
+        @test nframes(lmfd) == 1
+        @test nlabels(lmfd) == 1
+        @test labels(lmfd) == [Symbol(names(df_data)[3])]
     end
 
     @testset "dataset filesystem operations" begin
