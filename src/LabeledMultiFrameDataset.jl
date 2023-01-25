@@ -98,7 +98,7 @@ function dropattributes!(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
 
     for (i_lbl, lbl) in enumerate(labels_descriptor(lmfd))
         if lbl > i
-            frame_descriptor(lmfd)[i_frame][i_lbl] = lbl - 1
+            labels_descriptor(lmfd)[i_lbl] = lbl - 1
         end
     end
 

@@ -249,7 +249,9 @@ function _load_instance(
     frames_num = sort!([match(frame_reg, f).captures[1] for f in frames])
 
     result = Vector{OrderedDict}(undef, length(frames_num))
-    Threads.@threads for (i, f) in collect(enumerate(frames_num))
+    # TODO: address problem with Threads.@threads
+    # (`@threads :static` cannot be used concurrently or nested)
+    for (i, f) in collect(enumerate(frames_num))
         result[i] = load_frame(
             joinpath(instancedir, "$(_ds_frame_prefix)$(f).csv"),
             inst_metadata[string("dim_frame_", i)]
