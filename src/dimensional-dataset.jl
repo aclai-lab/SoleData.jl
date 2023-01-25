@@ -29,7 +29,8 @@ const UniformDimensionalDataset{T<:Number,D}     = Union{Array{T,D},SubArray{T,D
 const DimensionalChannel{T<:Number,N}            = Union{Array{T,N},SubArray{T,N}}
 const DimensionalInstance{T<:Number,MN}          = Union{Array{T,MN},SubArray{T,MN}}
 
-max_channel_size(d::DimensionalChannel{T,D}) where {T,D} = size(d)[1:end-2]
+channel_size(d::DimensionalChannel) = size(d)[1:end-2]
+max_channel_size(d::DimensionalChannel) = channel_size(d)
 
 ############################################################################################
 
