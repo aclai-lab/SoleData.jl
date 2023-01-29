@@ -29,8 +29,11 @@ const UniformDimensionalDataset{T<:Number,D}     = Union{Array{T,D},SubArray{T,D
 const DimensionalChannel{T<:Number,N}            = Union{Array{T,N},SubArray{T,N}}
 const DimensionalInstance{T<:Number,MN}          = Union{Array{T,MN},SubArray{T,MN}}
 
-channel_size(d::DimensionalChannel) = size(d)[1:end-2]
-max_channel_size(d::DimensionalChannel) = channel_size(d)
+channel_size(d::UniformDimensionalDataset) = size(d)[1:end-2]
+max_channel_size(d::UniformDimensionalDataset) = channel_size(d)
+
+instance_channel_size(d::DimensionalDataset, i_sample) = instance_channel_size(get_instance(d, i_sample))
+instance_channel_size(d::UniformDimensionalDataset, i_sample) = channel_size(d)
 
 ############################################################################################
 
