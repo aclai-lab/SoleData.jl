@@ -37,8 +37,8 @@ instance_channel_size(d::UniformDimensionalDataset, i_sample) = channel_size(d)
 
 ############################################################################################
 
-nsamples(d::DimensionalDataset{T,D})        where {T,D} = size(d, D)::Int64
-nattributes(d::DimensionalDataset{T,D})     where {T,D} = size(d, D-1)::Int64
+nsamples(d::DimensionalDataset{T,D})        where {T,D} = size(d, D)
+nattributes(d::DimensionalDataset{T,D})     where {T,D} = size(d, D-1)
 
 instance(d::DimensionalDataset{T,2},     idx::Integer) where T = @views d[:, idx]         # N=0
 instance(d::DimensionalDataset{T,3},     idx::Integer) where T = @views d[:, :, idx]      # N=1
