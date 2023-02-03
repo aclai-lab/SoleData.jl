@@ -5,6 +5,8 @@
 export get_instance, slice_dataset, concat_datasets,
        nframes, nsamples, nattributes, max_channel_size
 
+# TODO make DimensionalDataset a wrapper around an AbstractArray
+
 """
     DimensionalDataset{T<:Number,D}             = AbstractArray{T,D}
 
@@ -34,6 +36,13 @@ max_channel_size(d::UniformDimensionalDataset) = channel_size(d)
 
 instance_channel_size(d::DimensionalDataset, i_sample) = instance_channel_size(get_instance(d, i_sample))
 instance_channel_size(d::UniformDimensionalDataset, i_sample) = channel_size(d)
+
+_isnan(n::Number) = isnan(n)
+_isnan(n::Nothing) = false
+hasnans(n::Number) = _isnan(n)
+hasnans(n::AbstractArray{<:Union{Nothing, Number}}) = any(_isnan.(n))
+
+hasnans(X::UniformDimensionalDataset) = any(_isnan.(X))
 
 ############################################################################################
 
