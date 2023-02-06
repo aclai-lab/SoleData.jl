@@ -5,6 +5,22 @@
 export get_instance, slice_dataset, concat_datasets,
        nframes, nsamples, nattributes, max_channel_size
 
+
+############################################################################################
+
+function slice_dataset(
+    dataset::Any,
+    dataset_slice::AbstractVector{<:Integer};
+    allow_no_instances = false,
+    return_view = false,
+    kwargs...,
+)
+    @assert (allow_no_instances || length(dataset_slice) > 0) "Can't apply empty slice to dataset."
+    _slice_dataset(dataset, dataset_slice, Val(return_view); kwargs...)
+end
+
+############################################################################################
+
 # TODO make DimensionalDataset a wrapper around an AbstractArray
 
 """
@@ -56,17 +72,14 @@ instance(d::DimensionalDataset{T,4},     idx::Integer) where T = @views d[:, :, 
 # TODO remove? @ferdiu
 get_instance(args...) = instance(args...)
 
-function slice_dataset(d::DimensionalDataset{T,2}, inds::AbstractVector{<:Integer}; allow_no_instances = false, return_view = false) where T # N=0
-    @assert (allow_no_instances || length(inds) > 0) "Can't apply empty slice to dataset."
-    if return_view @views d[:, inds]       else d[:, inds]    end
+function _slice_dataset(d::DimensionalDataset{T,2}, inds::AbstractVector{<:Integer}, return_view::Val = Val(false)) where {T}
+    if return_view == Val(true) @views d[:, inds]       else d[:, inds]    end
 end
-function slice_dataset(d::DimensionalDataset{T,3}, inds::AbstractVector{<:Integer}; allow_no_instances = false, return_view = false) where T # N=1
-    @assert (allow_no_instances || length(inds) > 0) "Can't apply empty slice to dataset."
-    if return_view @views d[:, :, inds]    else d[:, :, inds] end
+function _slice_dataset(d::DimensionalDataset{T,3}, inds::AbstractVector{<:Integer}, return_view::Val = Val(false)) where {T}
+    if return_view == Val(true) @views d[:, :, inds]    else d[:, :, inds] end
 end
-function slice_dataset(d::DimensionalDataset{T,4}, inds::AbstractVector{<:Integer}; allow_no_instances = false, return_view = false) where T # N=2
-    @assert (allow_no_instances || length(inds) > 0) "Can't apply empty slice to dataset."
-    if return_view @views d[:, :, :, inds] else d[:, :, :, inds] end
+function _slice_dataset(d::DimensionalDataset{T,4}, inds::AbstractVector{<:Integer}, return_view::Val = Val(false)) where {T}
+    if return_view == Val(true) @views d[:, :, :, inds] else d[:, :, :, inds] end
 end
 
 concat_datasets(d1::DimensionalDataset{T,N}, d2::DimensionalDataset{T,N}) where {T,N} = cat(d1, d2; dims=N)
