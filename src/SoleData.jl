@@ -58,6 +58,7 @@ export describe
 # re-export from ScientificTypes
 export schema
 
+using SoleBase: AbstractDataset
 # -------------------------------------------------------------
 # Abbreviations
 const ST = ScientificTypes
@@ -80,11 +81,6 @@ GENERAL TODOs:
 
 # -------------------------------------------------------------
 # Abstract types
-
-"""
-Abstract supertype for all datasets.
-"""
-abstract type AbstractDataset end
 
 
 """
