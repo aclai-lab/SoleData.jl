@@ -59,6 +59,9 @@ dimensionality(d::AbstractDimensionalDataset) = dimensionality(typeof(d))
 nsamples(d::AbstractDimensionalDataset{T,D})        where {T,D} = size(d, D)
 nattributes(d::AbstractDimensionalDataset{T,D})     where {T,D} = size(d, D-1)
 
+function _slice_dataset(d::AbstractVector, inds::AbstractVector{<:Integer}, return_view::Val = Val(false))
+    if return_view == Val(true) @views d[inds]       else d[inds]    end
+end
 function _slice_dataset(d::AbstractDimensionalDataset{T,2}, inds::AbstractVector{<:Integer}, return_view::Val = Val(false)) where {T}
     if return_view == Val(true) @views d[:, inds]       else d[:, inds]    end
 end
