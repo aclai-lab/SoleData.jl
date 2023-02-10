@@ -5,6 +5,7 @@
 export get_instance, slice_dataset, concat_datasets,
        nframes, nsamples, nattributes, max_channel_size
 
+import Base: eltype
 
 ############################################################################################
 
@@ -52,7 +53,8 @@ const DimensionalInstance{T<:Number,MN}          = Union{Array{T,MN},SubArray{T,
 
 hasnans(n::AbstractDimensionalDataset{<:Union{Nothing, Number}}) = any(_isnan.(n))
 
-dimensionality(d::AbstractDimensionalDataset{T,D}) where {T,D} = D-1-1
+dimensionality(::Type{<:AbstractDimensionalDataset{T,D}}) where {T,D} = D-1-1
+dimensionality(d::AbstractDimensionalDataset) = dimensionality(typeof(d))
 
 nsamples(d::AbstractDimensionalDataset{T,D})        where {T,D} = size(d, D)
 nattributes(d::AbstractDimensionalDataset{T,D})     where {T,D} = size(d, D-1)
