@@ -59,6 +59,7 @@ export describe
 export schema
 
 using SoleBase: AbstractDataset
+import SoleBase: nsamples
 # -------------------------------------------------------------
 # Abbreviations
 const ST = ScientificTypes
