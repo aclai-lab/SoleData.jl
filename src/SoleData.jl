@@ -10,7 +10,7 @@ using Random
 using Reexport
 using SoleBase: AbstractDataset
 
-# @reexport using DataFrames
+@reexport using DataFrames
 
 import Base: eltype, isempty, iterate, map, getindex, length
 import Base: firstindex, lastindex, ndims, size, show, summary
