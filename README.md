@@ -1,11 +1,11 @@
 # *SoleData.jl* – Unstructured and Multimodal datasets
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aclai-lab.github.io/SoleData.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleData.jl/dev)
-[![Build Status](https://travis-ci.com/aclai-lab/SoleData.jl.svg?branch=master)](https://travis-ci.com/aclai-lab/SoleData.jl)
+[![Build Status](https://api.cirrus-ci.com/github/aclai-lab/SoleData.jl.svg)](https://cirrus-ci.com/github/aclai-lab/SoleData.jl)
 [![Coverage](https://codecov.io/gh/aclai-lab/SoleData.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/aclai-lab/SoleData.jl)
-[![Coverage](https://coveralls.io/repos/github/aclai-lab/SoleData.jl/badge.svg?branch=master)](https://coveralls.io/github/aclai-lab/SoleData.jl?branch=master)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
+
+<!-- [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleData.jl/dev) -->
 
 ## In a nutshell
 
