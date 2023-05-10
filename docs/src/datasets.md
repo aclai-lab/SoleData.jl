@@ -21,7 +21,7 @@ it is non-trivial combining their statistical properties since they may be very 
 one another. To keep separated different modalities of the data while keeping the data
 easily manageable here we provide a general way yo handle this kind of data.
 
-The abstract representation of a multi-modal dataset provided by this package is the
+The abstract representation of a multimodal dataset provided by this package is the
 [`AbstractMultiFrameDataset`](@ref).
 
 ```@docs
@@ -36,7 +36,7 @@ dimension
 Datasets that consist not labeled examples, meaning that each data point contains only
 features but it is not associated with label are known as _unsupervised datasets_.
 
-Multi-modal _unsupervised_ datasets are represented by [`MultiFrameDataset`](@ref).
+Multimodal _unsupervised_ datasets are represented by [`MultiFrameDataset`](@ref).
 
 ### [MultiFrameDataset](@id man-MultiFrameDataset)
 
@@ -52,7 +52,7 @@ and an associated label are known as _supervised datasets_.
 
 As an extension of the [`AbstractMultiFrameDataset`](@ref) the
 [`AbstractLabeledMultiFrameDataset`](@ref) is an interface that can be implemented to
-represent multi-modal _supervised_ datasets.
+represent multimodal _supervised_ datasets.
 
 ```@docs
 AbstractLabeledMultiFrameDataset
@@ -60,7 +60,7 @@ labels_descriptor
 dataset
 ```
 
-Multi-modal _supervised_ datasets are represented by [`LabeledMultiFrameDataset`](@ref).
+Multimodal _supervised_ datasets are represented by [`LabeledMultiFrameDataset`](@ref).
 
 ### [LabeledMultiFrameDataset](@id man-LabeledMultiFrameDataset)
 

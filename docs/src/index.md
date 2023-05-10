@@ -8,7 +8,7 @@ CurrentModule = SoleData
 ```
 
 The aim of this package is to provide a simple and comfortable interface to manage
-multi-modal data. It is built on top of
+multimodal data. It is built on top of
 [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl/) package which is implemented
 on the [Tables.jl](https://github.com/JuliaData/Tables.jl) interface.
 

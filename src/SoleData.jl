@@ -11,9 +11,9 @@ using Catch22
 using CSV
 using Random
 using Reexport
+using SoleBase: AbstractDataset
 @reexport using DataFrames
 
-import ScientificTypes: show
 import Base: eltype, isempty, iterate, map, getindex, length
 import Base: firstindex, lastindex, ndims, size, show, summary
 import Base: isequal, isapprox
@@ -21,8 +21,8 @@ import Base: ==, ≈
 import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersect!
 import Base: ∈, ⊆, ∪, ∩
 import DataFrames: describe
-
-# using ScientificTypes
+import ScientificTypes: show
+import SoleBase: nsamples
 
 # -------------------------------------------------------------
 # exports
@@ -84,11 +84,6 @@ GENERAL TODOs:
 
 # -------------------------------------------------------------
 # Abstract types
-
-"""
-Abstract supertype for all datasets.
-"""
-abstract type AbstractDataset end
 
 
 """
