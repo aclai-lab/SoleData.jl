@@ -127,7 +127,7 @@ label.
 
 ## EXAMPLES
 
-```
+```julia-repl
 julia> lmfd = LabeledMultiFrameDataset(
            [1, 3],
            MultiFrameDataset(

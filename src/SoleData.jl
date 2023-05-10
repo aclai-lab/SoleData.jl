@@ -1,3 +1,6 @@
+
+__precompile__()
+
 module SoleData
 
 using DataFrames
@@ -17,6 +20,7 @@ import Base: isequal, isapprox
 import Base: ==, ≈
 import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersect!
 import Base: ∈, ⊆, ∪, ∩
+import DataFrames: describe
 
 # using ScientificTypes
 
@@ -112,10 +116,22 @@ abstract type AbstractLabeledMultiFrameDataset <: AbstractMultiFrameDataset end
 # Inspired by the "Delegation pattern" of "Hands-On Design Patterns and Best Practices with
 # Julia" Chap. 5 by Tom Kwong
 
+"""
+    frame_descriptor(amfd)
+
+Access the *descriptor* of the `amfd` `AbstractMultiFrameDataset`. A descriptor is a data
+structure which describes how the different frames are organized in respect to the inner
+data representation of the `AbstractMultiFrameDataset`.
+"""
 function frame_descriptor(amfd::AbstractMultiFrameDataset)
     return error("`frame_descriptor` accessor not implemented for type "
         * string(typeof(amfd)))
 end
+"""
+    data(amfd)
+
+Access the inner data representation of the `amfd` `AbstractMultiFrameDataset`.
+"""
 function data(amfd::AbstractMultiFrameDataset)
     return error("`data` accessor not implemented for type "
         * string(typeof(amfd)))
@@ -124,10 +140,23 @@ end
 # -------------------------------------------------------------
 # AbstractClassificationMultiFrameDataset - accessors
 
+"""
+    labels_descriptor(lmfd)
+
+Access the *label descriptor* of the `lmfd` `AbstractLabeledMultiFrameDataset`. A descriptor
+is a data structure which describes how the labels are organized in respect to the inner
+data representation of the `AbstractLabeledMultiFrameDataset`.
+"""
 function labels_descriptor(lmfd::AbstractLabeledMultiFrameDataset)
     return error("`labels_descriptor` accessor not implemented for type " *
         string(typeof(lmfd)))
 end
+"""
+    dataset(amfd)
+
+Access the inner [`AbstractMultiFrameDataset`](@ref) of the `lmfd`
+`AbstractLabeledMultiFrameDataset`.
+"""
 function dataset(lmfd::AbstractLabeledMultiFrameDataset)
     return error("`dataset` accessor not implemented for type $(string(typeof(lmfd)))")
 end

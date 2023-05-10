@@ -13,7 +13,7 @@ of `Integer`s representing the index of the attributes selected for that frame.
 
 The order matters for both the frames indices and the attributes in them.
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(
                   :age => [30, 9],
                   :name => ["Python", "Julia"],
@@ -64,7 +64,7 @@ Note: `:all` and `:none` are the only `Symbol`s accepted by `group`.
 # TODO: fix passing a vector of Integer to `group` parameter
 # TODO: rewrite examples
 ## EXAMPLES
-```jldoctest
+```julia-repl
 julia> df = DataFrame(
                   :age => [30, 9],
                   :name => ["Python", "Julia"],

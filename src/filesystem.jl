@@ -290,7 +290,7 @@ presence of file Labels.csv.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> df_data = DataFrame(
            :id => [1, 2, 3, 4, 5],
            :age => [30, 9, 30, 40, 9],

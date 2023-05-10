@@ -17,7 +17,7 @@ labels attributes at indices contained in `labels_descriptor`.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> lmfd = LabeledMultiFrameDataset([1, 3], MultiFrameDataset([[2],[4]], DataFrame(
            :id => [1, 2],
            :age => [30, 9],

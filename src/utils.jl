@@ -382,14 +382,14 @@ end
 
 Unlinearize Vector `d` using dimensions `dims`.
 """
-unlinearize_data(d::Any, dims::Tuple{}) where {N<:Integer} = d
-function unlinearize_data(d::AbstractVector, dims::Tuple{}) where {N<:Integer}
+unlinearize_data(d::Any, dims::Tuple{}) = d
+function unlinearize_data(d::AbstractVector, dims::Tuple{})
     return length(d) ≤ 1 ? d[1] : collect(d)
 end
-function unlinearize_data(d::AbstractVector, dims::NTuple{1,<:Integer}) where {N<:Integer}
+function unlinearize_data(d::AbstractVector, dims::NTuple{1,<:Integer})
     return collect(d)
 end
-function unlinearize_data(d::AbstractVector, dims::NTuple{2,<:Integer}) where {N<:Integer}
+function unlinearize_data(d::AbstractVector, dims::NTuple{2,<:Integer})
     return collect(reshape(d, dims)')
 end
 function unlinearize_data(d::AbstractVector, dims::NTuple{N,<:Integer}) where {N<:Integer}

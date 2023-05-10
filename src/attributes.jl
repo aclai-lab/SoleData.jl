@@ -21,7 +21,7 @@ Alternatively `nattributes` can be called on a single frame.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1],[2]], DataFrame(:age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -126,7 +126,8 @@ Insert an attibute in `mfd` multiframe dataset with id `attr_id`.
     last in the mfd's relative dataframe;
 * `attr_id` is a Symbol and denote the name of the attribute to insert.
     Duplicated attribute names will be renamed to avoid conflicts: see `makeunique` parameter
-    of [`insertcols!`](@ref) in DataFrames documentation;
+    of [`insertcols!`](https://dataframes.juliadata.org/stable/lib/functions/#DataFrames.insertcols!)
+    in DataFrames documentation;
 * `values` is an AbstractVector that indicates the values ​​of the new attribute inserted.
     The length of `values` should match `ninstances(mfd)` or an exception is thrown;
 * `value` is a single value for the new attribute. If a single `value` is passed as last
@@ -134,7 +135,7 @@ Insert an attibute in `mfd` multiframe dataset with id `attr_id`.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -307,7 +308,7 @@ this function will return `true` only if `mfd` contains all the attribute listed
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -344,7 +345,7 @@ julia> hasattributes(mfd, 2, :sex)
 true
 ```
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -428,7 +429,7 @@ It returns 0 when the attribute isn't in the frame specified by `frame_index`.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -503,7 +504,7 @@ multiframe dataset.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -573,7 +574,7 @@ Alternatively `nattributes` can be called on a single frame.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -669,7 +670,7 @@ without that attribute.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)
@@ -847,7 +848,7 @@ them. This can lead to the removal of frames as side effect.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1, 2],[3, 4, 5],[5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
 ● MultiFrameDataset
    └─ dimensions: (0, 0, 0)
@@ -962,7 +963,7 @@ Drop all attributes that are not present in any of the frames in `mfd` multifram
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1]], DataFrame(:age => [30, 9], :name => ["Python", "Julia"]))
 ● MultiFrameDataset
    └─ dimensions: (0,)

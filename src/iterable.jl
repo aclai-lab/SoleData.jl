@@ -13,6 +13,7 @@ isempty(mfd::AbstractMultiFrameDataset) = length(mfd) == 0
 firstindex(mfd::AbstractMultiFrameDataset) = 1
 lastindex(mfd::AbstractMultiFrameDataset) = length(mfd)
 eltype(::Type{AbstractMultiFrameDataset}) = SubDataFrame
+eltype(::AbstractMultiFrameDataset) = SubDataFrame
 
 Base.@propagate_inbounds function iterate(mfd::AbstractMultiFrameDataset, i::Integer = 1)
     (i ≤ 0 || i > length(mfd)) && return nothing
