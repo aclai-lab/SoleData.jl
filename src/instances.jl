@@ -14,7 +14,7 @@ This method can be called on a single frame directly.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> mfd = MultiFrameDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M', 'F']))
 ● MultiFrameDataset
    └─ dimensions: (0, 0)

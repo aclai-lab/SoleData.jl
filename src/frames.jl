@@ -40,7 +40,7 @@ or `index` and return`mfd`.
 Alternatively to the `indices` and the `index`, can be used respectively the attribute_names
 and the attribute_name.
 
-Note: to add a new frame with new attributes see [`insertfframe!`](@ref).
+Note: to add a new frame with new attributes see [`insertframe!`](@ref).
 
 ## PARAMETERS
 
@@ -56,7 +56,7 @@ Note: to add a new frame with new attributes see [`insertfframe!`](@ref).
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60])
 2×5 DataFrame
  Row │ name    age    sex   height  weight
@@ -150,6 +150,7 @@ julia> addframe!(mfd, 5)
 ─────┼────────
    1 │    180
    2 │    175
+```
 """
 function addframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
     @assert length(indices) > 0 "Can't add an empty frame to dataset"
@@ -195,7 +196,7 @@ instead.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"],
                       :age => [25, 26],
                       :sex => ['M', 'F'],
@@ -350,7 +351,7 @@ to an existing frame in the mfd. To add a new frame use [`addframe!`](@ref) inst
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"],
                       :age => [25, 26],
                       :sex => ['M', 'F'],
@@ -507,7 +508,7 @@ Note: when all attributes are dropped to a frame, it will be removed.
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"],
                       :age => [25, 26],
                       :sex => ['M', 'F'],
@@ -729,7 +730,7 @@ If `col` is specified then the attributes will be inserted starting at index `co
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(
            :name => ["Python", "Julia"],
            :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
@@ -799,7 +800,7 @@ julia> mfd.data
 ```
 or, selecting the column
 
-jldoctest```
+```julia-repl
 julia> df = DataFrame(
            :name => ["Python", "Julia"],
            :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
@@ -869,7 +870,7 @@ julia> mfd.data
 ```
 or, adding an existing attribute:
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(
            :name => ["Python", "Julia"],
            :stat1 => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
@@ -1006,7 +1007,7 @@ If the intection is to remove a frame without releasing the attributes use
 
 ## EXAMPLES
 
-```jldoctest
+```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60])
 2×5 DataFrame
  Row │ name    age    sex   height  weight

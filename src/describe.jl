@@ -67,6 +67,24 @@ function describeonm(
 end
 
 # TODO: same as above
+"""
+	describe(mfd; t = fill([(1, 0, 0)], nframes(mfd)), kwargs...)
+
+Return descriptive statistics for an `AbstractMultiFrameDataset` as a `Vector` of new
+`DataFrame`s where each row represents a variable and each column a summary statistic.
+
+## Arguments
+
+* `mfd`: the `AbstractMultiFrameDataset`;
+* `t`: is a Vector `nframes` long where each element is a Vector as long as the dimension of
+	the data held by the i-th frame. Each element of the innermost Vector is a tuple
+	describing the parameters as described in [`paa`](@ref) algorithm documentation.
+
+For other see the documentation of [`DataFrames.describe`](@ref) function.
+
+## Examples
+TODO: examples
+"""
 function DF.describe(
 	mfd::AbstractMultiFrameDataset;
 	t::AbstractVector{<:AbstractVector{<:NTuple{3,Integer}}} = fill([(1, 0, 0)], nframes(mfd)),
