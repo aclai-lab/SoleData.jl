@@ -10,9 +10,6 @@ It is built
  on top of
 [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl/)
 with Machine learning applications in mind.
-<!--  package which is implemented
-on the [Tables.jl](https://github.com/JuliaData/Tables.jl) interface.
- -->
 
 ```@contents
 ```

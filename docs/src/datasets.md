@@ -17,11 +17,9 @@ and each row corresponds to a given instance. However, a dataset can also be *no
 an image.
 
 When data is composed of different
-[modalities](https://en.wikipedia.org/wiki/Modality_(human%E2%80%93computer_interaction))
+[modalities](https://en.wikipedia.org/wiki/Multimodal_learning))
 combining their statistical properties is non-trivial, since they may be quite different in nature
 one another.
-<!-- To keep different modalities separated, while keeping the data
-easily manageable, SoleData provides a general way yo handle this kind of data. -->
 
 The abstract representation of a multimodal dataset provided by this package is the
 [`AbstractMultiFrameDataset`](@ref).
@@ -41,12 +39,7 @@ or *features*) have equal role in the representation.
 These datasets are used in
 [unsupervised learning](https://en.wikipedia.org/wiki/Unsupervised_learning) contexts,
 for discovering internal correlation patterns between the features.
-<!-- Datasets that consist not labeled examples, meaning that each instance contains only
-features but it is not associated with label are known as _unsupervised datasets_.
- -->
 Multimodal *unlabeled* datasets can be instantiated with [`MultiFrameDataset`](@ref).
-
-<!-- ### [MultiFrameDataset](@id man-MultiFrameDataset) -->
 
 ```@autodocs
 Modules = [SoleData]
