@@ -5,7 +5,7 @@
 """
     ninstances(mfd[, i])
 
-Get the number of instances present in `mfd` multiframe dataset.
+Get the number of instances present in a multiframe dataset.
 
 Note: for consistency with other methods interface `ninstances` can be called specifying
 a frame index `i` even if `ninstances(mfd) != ninstances(mfd, i)` can't be `true`.
@@ -54,7 +54,7 @@ ninstances(mfd::AbstractMultiFrameDataset, i::Integer) = nrow(frame(mfd, i))
 """
     pushinstances!(mfd, instance)
 
-Add `instance` to `mfd` multiframe dataset and return `mfd`.
+Add `instance` to a multiframe dataset and return `mfd`.
 
 The instance can be a `DataFrameRow` or an `AbstractVector` but in both cases the number and
 type of attributes should match the dataset ones.
@@ -86,13 +86,13 @@ end
 """
     deleteinstances!(mfd, i)
 
-Remove the `i`-th instance in `mfd` multiframe dataset.
+Remove the `i`-th instance in a multiframe dataset.
 
 The `AbstractMultiFrameDataset` is returned.
 
     deleteinstances!(mfd, indices)
 
-Remove the instances at `indices` in `mfd` multiframe dataset and return `mfd`.
+Remove the instances at `indices` in a multiframe dataset and return `mfd`.
 
 The `AbstractMultiFrameDataset` is returned.
 """
@@ -111,7 +111,7 @@ deleteinstances!(mfd::AbstractMultiFrameDataset, i::Integer) = deleteinstances!(
 """
     keeponlyinstances!(mfd, indices)
 
-Removes all instances that do not correspond to the indices present in `indices` from `mfd`
+Removes all instances that do not correspond to the indices present in `indices` from a
 multiframe dataset.
 """
 function keeponlyinstances!(
@@ -124,20 +124,20 @@ end
 """
     instance(mfd, i)
 
-Get `i`-th instance in `mfd` multiframe dataset.
+Get `i`-th instance in a multiframe dataset.
 
     instance(mfd, i_frame, i_instance)
 
-Get `i_instance`-th instance in `mfd` multiframe dataset with only attributes present in
+Get `i_instance`-th instance in a multiframe dataset with only attributes present in
 the `i_frame`-th frame.
 
     instance(mfd, indices)
 
-Get instances at `indices` in `mfd` multiframe dataset.
+Get instances at `indices` in a multiframe dataset.
 
     instance(mfd, i_frame, inst_indices)
 
-Get indices at `inst_indices` in `mfd` multiframe dataset with only attributes present in
+Get indices at `inst_indices` in a multiframe dataset with only attributes present in
 the `i_frame`-th frame.
 """
 function instance(df::AbstractDataFrame, i::Integer)

@@ -9,7 +9,7 @@ Create a `MultiFrameDataset` from a `DataFrame`, `df`, initializing frames accor
 `frames_descriptor` parameter.
 
 `frames_descriptor` is an `AbstractVector` of frame descriptor which are `AbstractVector`s
-of `Integer`s representing the index of the attributes selected for that frame.
+of integers representing the index of the attributes selected for that frame.
 
 The order matters for both the frames indices and the attributes in them.
 
@@ -204,7 +204,7 @@ end
 """
     _empty(mfd)
 
-Get a copy of `mfd` multiframe dataset with no instances.
+Get a copy of a multiframe dataset with no instances.
 
 Note: since the returned AbstractMultiFrameDataset will be empty its columns types will be
 `Any`.

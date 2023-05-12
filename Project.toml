@@ -1,6 +1,6 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-authors = ["Lorenzo BALBONI", "Federico MANZELLA", "Giovanni Pagliarini", "Eduard I. Stan"]
+authors = ["Lorenzo Balboni", "Federico Manzella", "Giovanni Pagliarini", "Eduard I. Stan"]
 version = "0.1.0"
 
 [deps]

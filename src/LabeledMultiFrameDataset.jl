@@ -6,8 +6,9 @@
 """
     LabeledMultiFrameDataset(labels_descriptor, mfd)
 
-Create a `LabeledMultiFrameDataset` from an `AbstractMultiFrameDataset`, `mfd`, setting as
-labels attributes at indices contained in `labels_descriptor`.
+Create a `LabeledMultiFrameDataset` from an `AbstractMultiFrameDataset` having the
+feature and labeling variables, specifying the labeling variables by means of
+`labels_descriptor`.
 
 ## PARAMETERS
 

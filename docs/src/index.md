@@ -4,18 +4,22 @@ CurrentModule = SoleData
 
 # SoleData
 
+The aim of this package is to provide a simple and comfortable interface for managing
+multimodal data.
+It is built
+ on top of
+[DataFrames.jl](https://github.com/JuliaData/DataFrames.jl/)
+with Machine learning applications in mind.
+<!--  package which is implemented
+on the [Tables.jl](https://github.com/JuliaData/Tables.jl) interface.
+ -->
+
 ```@contents
 ```
 
-The aim of this package is to provide a simple and comfortable interface to manage
-multimodal data. It is built on top of
-[DataFrames.jl](https://github.com/JuliaData/DataFrames.jl/) package which is implemented
-on the [Tables.jl](https://github.com/JuliaData/Tables.jl) interface.
-
-
 ## Installation
 
-Currently this packages is still not registered so you need to execute the following
+Currently this packages is still not registered so you need to run the following
 commands in a Julia REPL to install it:
 
 ```julia
@@ -23,7 +27,7 @@ import Pkg
 Pkg.add("https://aclai-lab.github.io/SoleData.jl")
 ```
 
-or, to install the developement version, run:
+To install the developement version, run:
 
 ```julia
 import Pkg
@@ -33,7 +37,13 @@ Pkg.add("https://aclai-lab.github.io/SoleData.jl#dev")
 
 ## Usage
 
-To instantiate a multi modal dataset the [`MultiFrameDataset`](@ref) structure has to be used:
+To instantiate a multimodal dataset, instantiate a [`MultiFrameDataset`](@ref) by providing:
+*a)* a
+`DataFrame` containing all attributes from different modalities, and 
+*b)* a
+`Vector{Vector{Union{Symbol,String,Int64}}}`,
+grouping attributes (identified by column index or name)
+into different modalities.
 
 ```julia-repl
 julia> using SoleData
@@ -89,7 +99,7 @@ julia> mfd = MultiFrameDataset(frames_descriptor, df_data)
 
 ```
 
-now the variable `mfd` holds a `MultiFrameDataset` and all of its modalities can be
+Now `mfd` holds a `MultiFrameDataset` and all of its modalities can be
 conveniently iterated as elements of a `Vector`:
 
 ```julia-repl
@@ -115,7 +125,7 @@ Modality: 2
    2 │ [0.540302, -0.416147, -0.989992,…
 ```
 
-each element of a `MultiFrameDataset` is a `SubDataFrame`.
+Note that each element of a `MultiFrameDataset` is a `SubDataFrame`:
 
 ```julia-repl
 julia> eltype(mfd)

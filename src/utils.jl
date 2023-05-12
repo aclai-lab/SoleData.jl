@@ -14,7 +14,7 @@ const __note_about_utils = "
 """
     _empty(mfd)
 
-Get a copy of `mfd` multiframe dataset with no instances.
+Get a copy of a multiframe dataset with no instances.
 
 Note: since the returned AbstractMultiFrameDataset will be empty its columns types will be
 `Any`.
@@ -29,7 +29,7 @@ end
 """
     _empty!(mfd)
 
-Remove all instances from `mfd` multiframe dataset.
+Remove all instances from a multiframe dataset.
 
 Note: since the AbstractMultiFrameDataset will be empty its columns types will become of
 type `Any`.
@@ -221,14 +221,14 @@ end
 
 Get the index of the attribute named `attribute_name`.
 
-If the attribute does not exist `0` will be returned.
+If the attribute does not exist `0` is returned.
 
 
     _name2index(df, attribute_names)
 
 Get the indices of the attributes named `attribute_names`.
 
-If an attribute does not exist the returned Vector will contain `0`(-es).
+If an attribute does not exist, the returned Vector contains `0`(-es).
 
 $(__note_about_utils)
 """

@@ -6,7 +6,7 @@
     nattributes(mfd)
     nattributes(mfd, i)
 
-Get the number of attributes of `mfd` multiframe dataset.
+Get the number of attributes of a multiframe dataset.
 
 If an index is passed as second argument then the number of attributes of the frame at
 index `i` is returned.
@@ -113,7 +113,7 @@ end
     insertattributes!(mfd, col, attr_id, value)
     insertattributes!(mfd, attr_id, value)
 
-Insert an attibute in `mfd` multiframe dataset with id `attr_id`.
+Insert an attibute in a multiframe dataset with id `attr_id`.
 
 !!! note
     Each attribute inserted will be added in the mfd as a spare attributes.
@@ -291,7 +291,7 @@ end
     hasattributes(mfd, frame_index, attribute_names)
     hasattributes(mfd, attribute_names)
 
-Check whether `mfd` multiframe dataset contains an attribute named `attribute_name`.
+Check whether a multiframe dataset contains an attribute named `attribute_name`.
 
 Instead of a single attribute name a Vector of names can be passed. It this is the case
 this function will return `true` only if `mfd` contains all the attribute listed.
@@ -494,7 +494,7 @@ end
 """
     spareattributes(mfd)
 
-Get the indices of all the attributes currently not present in any of the frames of `mfd`
+Get the indices of all the attributes currently not present in any of the frames of a
 multiframe dataset.
 
 ## PARAMETERS
@@ -553,7 +553,7 @@ end
 """
     attributes(mfd, i)
 
-Get the names as `Symbol`s of the attributes of `mfd` multiframe dataset.
+Get the names as `Symbol`s of the attributes of a multiframe dataset.
 
 When called on a object of type `MultiFrameDataset` a `Dict` is returned which will map the
 frame index to an `AbstractVector` of `Symbol`s.
@@ -654,7 +654,7 @@ end
     dropattributes!(mfd, frame_index, indices)
     dropattributes!(mfd, frame_index, attribute_names)
 
-Drop the `i`-th attribute from `mfd` multiframe dataset and return the multiframe dataset
+Drop the `i`-th attribute from a multiframe dataset and return the multiframe dataset
 without that attribute.
 
 ## PARAMETERS
@@ -832,7 +832,7 @@ end
     keeponlyattributes!(mfd, indices)
     keeponlyattributes!(mfd, attribute_names)
 
-Drop all attributes that do not correspond to the indices present in `indices` from `mfd`
+Drop all attributes that do not correspond to the indices present in `indices` from a
 multiframe dataset.
 
 Note: if the dropped attributes are present in some frame they will also be removed from
@@ -954,7 +954,7 @@ end
 """
     dropspareattributes!(mfd)
 
-Drop all attributes that are not present in any of the frames in `mfd` multiframe dataset.
+Drop all attributes that are not present in any of the frames in a multiframe dataset.
 
 ## PARAMETERS
 

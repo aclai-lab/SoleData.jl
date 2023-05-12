@@ -8,18 +8,20 @@ CurrentModule = SoleData
 Pages = ["datasets.md"]
 ```
 
-A dataset is a collection of data. In the case of tabular data, a data set corresponds to
-one or more database tables, where every column of a table represents a particular variable,
-and each row corresponds to a given record of the data set in question. The data set lists
-values for each of the variables, such as for example height and weight of an object, for
-each member of the data set. Data sets can also consist of a collection of documents or
-files.
+Machine learning datasets are a collection of samples (or instances),
+each one described by a number of variables.
+In the case of *tabular* data, a dataset looks like
+a database table, where every column is a variable,
+and each row corresponds to a given instance. However, a dataset can also be *non-tabular*
+(or *unstructured*); for example, each instance can consist of a multivariate time-series, or
+an image.
 
-When data is composed by different
+When data is composed of different
 [modalities](https://en.wikipedia.org/wiki/Modality_(human%E2%80%93computer_interaction))
-it is non-trivial combining their statistical properties since they may be very different
-one another. To keep separated different modalities of the data while keeping the data
-easily manageable here we provide a general way yo handle this kind of data.
+combining their statistical properties is non-trivial, since they may be quite different in nature
+one another.
+<!-- To keep different modalities separated, while keeping the data
+easily manageable, SoleData provides a general way yo handle this kind of data. -->
 
 The abstract representation of a multimodal dataset provided by this package is the
 [`AbstractMultiFrameDataset`](@ref).
@@ -31,28 +33,40 @@ data
 dimension
 ```
 
-## [Unsupervised](@id man-unsupervised)
+## [Unlabeled Datasets](@id man-unlabeled-datasets)
 
-Datasets that consist not labeled examples, meaning that each data point contains only
+In *unlabeled datasets*
+there is no label variable, and all of the variables (also called *feature variables*,
+or *features*) have equal role in the representation.
+These datasets are used in
+[unsupervised learning](https://en.wikipedia.org/wiki/Unsupervised_learning) contexts,
+for discovering internal correlation patterns between the features.
+<!-- Datasets that consist not labeled examples, meaning that each instance contains only
 features but it is not associated with label are known as _unsupervised datasets_.
+ -->
+Multimodal *unlabeled* datasets can be instantiated with [`MultiFrameDataset`](@ref).
 
-Multimodal _unsupervised_ datasets are represented by [`MultiFrameDataset`](@ref).
-
-### [MultiFrameDataset](@id man-MultiFrameDataset)
+<!-- ### [MultiFrameDataset](@id man-MultiFrameDataset) -->
 
 ```@autodocs
 Modules = [SoleData]
 Pages = ["src/MultiFrameDataset.jl"]
 ```
 
-## [Supervised](@id man-supervised)
+## [Labeled Datasets](@id man-supervised-datasets)
 
-Datasets that consist of labeled examples, meaning that each data point contains features
-and an associated label are known as _supervised datasets_.
+In *labeled datasets*, one or more variables are considered to have special semantics
+with respect to the other variables;
+each of these *labeling variables* (or *target variables*) can be thought as assigning
+a label to each instance, which is typically a categorical value (*classification label*)
+or a numerical value (*regression label*).
+[Supervised learning](https://en.wikipedia.org/wiki/Unsupervised_learning) methods
+can be applied on these datasets
+for modeling the target variables as a function of the feature variables.
 
-As an extension of the [`AbstractMultiFrameDataset`](@ref) the
-[`AbstractLabeledMultiFrameDataset`](@ref) is an interface that can be implemented to
-represent multimodal _supervised_ datasets.
+As an extension of the [`AbstractMultiFrameDataset`](@ref),
+[`AbstractLabeledMultiFrameDataset`](@ref) has an interface that can be implemented to
+represent multimodal labeled datasets.
 
 ```@docs
 AbstractLabeledMultiFrameDataset
@@ -60,9 +74,7 @@ labels_descriptor
 dataset
 ```
 
-Multimodal _supervised_ datasets are represented by [`LabeledMultiFrameDataset`](@ref).
-
-### [LabeledMultiFrameDataset](@id man-LabeledMultiFrameDataset)
+Multimodal *labeled* datasets can be instantiated with [`LabeledMultiFrameDataset`](@ref).
 
 ```@autodocs
 Modules = [SoleData]

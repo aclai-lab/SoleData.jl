@@ -5,11 +5,11 @@
 """
     frame(mfd, i)
 
-Get the `i`-th frame of `mfd` multiframe dataset.
+Get the `i`-th frame of a multiframe dataset.
 
     frame(mfd, indices)
 
-Get a Vector of frames at `indices` of `mfd` multiframe dataset.
+Get a Vector of frames at `indices` of a multiframe dataset.
 """
 function frame(mfd::AbstractMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nframes(mfd) "Index ($i) must be a valid frame number " *
@@ -24,7 +24,7 @@ end
 """
     nframes(mfd)
 
-Get the number of frames of `mfd` multiframe dataset.
+Get the number of frames of a multiframe dataset.
 """
 nframes(mfd::AbstractMultiFrameDataset) = length(frame_descriptor(mfd))
 
@@ -34,8 +34,8 @@ nframes(mfd::AbstractMultiFrameDataset) = length(frame_descriptor(mfd))
     addframe!(mfd, attribute_names)
     addframe!(mfd, attribute_name)
 
-Create a new frame in `mfd` multiframe dataset using attributes at `indices`
-or `index` and return`mfd`.
+Create a new frame in a multiframe dataset using attributes at `indices`
+or `index`, and return`mfd`.
 
 Alternatively to the `indices` and the `index`, can be used respectively the attribute_names
 and the attribute_name.
@@ -182,7 +182,7 @@ end
     removeframe!(mfd, indices)
     removeframe!(mfd, index)
 
-Remove `i`-th frame from `mfd` multiframe dataset and return `mfd`.
+Remove `i`-th frame from a multiframe dataset, and return the dataset.
 
 Note: to completely remove a frame and all attributes in it use [`dropframe!`](@ref)
 instead.
@@ -326,8 +326,8 @@ end
     addattribute_toframe!(mfd, frame_index, attr_name)
     addattribute_toframe!(mfd, frame_index, attr_names)
 
-Add attribute at index `attr_index` to the frame at index `frame_index` in `mfd` multiframe
-dataset and return `mfd`.
+Add attribute at index `attr_index` to the frame at index `frame_index` in a
+multiframe dataset, and return the dataset.
 Alternatively to `attr_index` the attribute name can be used.
 Multiple attributes can be inserted into the multiframe dataset at once using `attr_indices`
 or `attr_inames`.
@@ -483,8 +483,8 @@ end
     removeattribute_fromframe!(mfd, farme_index, attr_name)
     removeattribute_fromframe!(mfd, farme_index, attr_names)
 
-Remove attribute at index `attr_index` from the frame at index `frame_index` in `mfd`
-multiframe dataset and return `mfd`.
+Remove attribute at index `attr_index` from the frame at index `frame_index` in a
+multiframe dataset, and return `mfd`.
 
 Alternatively to `attr_index` the attribute name can be used.
 Multiple attributes can be dropped from the multiframe dataset at once passing a Vector of
@@ -713,7 +713,7 @@ end
     insertframe!(mfd, col, new_frame, existing_attributes)
     insertframe!(mfd, new_frame, existing_attributes)
 
-Insert `new_frame` as new frame to `mfd` multiframe dataset and return `mfd`.
+Insert `new_frame` as new frame to multiframe dataset, and return the dataset.
 Existing attributes can be added to the new frame while adding it to the dataset passing
 the corresponding inidices by `existing_attributes`.
 If `col` is specified then the attributes will be inserted starting at index `col`.
@@ -990,8 +990,8 @@ end
     dropframe!(mfd, indices)
     dropframe!(mfd, index)
 
-Remove `i`-th frame from `mfd` multiframe dataset while dropping all attributes in it and
-return the `mfd` without the dropped frames.
+Remove `i`-th frame from a multiframe dataset while dropping all attributes in it and
+return `mfd` without the dropped frames.
 
 Note: if the dropped attributes are present in other frames they will also be removed from
 them. This can lead to the removal of additional frames other than the `i`-th.

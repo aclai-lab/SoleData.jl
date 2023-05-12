@@ -5,7 +5,7 @@
 """
     nlabels(lmfd)
 
-Get the number of labels in `lmfd` LabeledMultiFrameDataset.
+Get the number of labels of a labeled multiframe dataset.
 """
 function nlabels(lmfd::AbstractLabeledMultiFrameDataset)
     return length(labels_descriptor(lmfd))
@@ -15,8 +15,8 @@ end
     labels(lmfd, instance)
     labels(lmfd)
 
-Get the labels of instance at index `instance` in `lmfd` LabeledMultiFrameDataset. Will
-be returned a Dict of type `labelname => value`.
+Get the labels of instance at index `instance` in a labeled multiframe dataset.
+A dictionary of type `labelname => value` is returned.
 
 If only the first argument is passed then the names of all labels are returned.
 """
@@ -28,25 +28,25 @@ function labels(lmfd::AbstractLabeledMultiFrameDataset, instance::Integer)
 end
 
 """
-    label(lmfd, instance, label_index)
+    label(lmfd, instance, i)
 
-Get the label at `label_index` of instance at index `instance` in `lmfd`
-LabeledMultiFrameDataset.
+Get the value of the `i`-th labeling variable for instance
+at index `instance` in a labeled multiframe dataset.
 """
 function label(
     lmfd::AbstractLabeledMultiFrameDataset,
     instance::Integer,
-    label_index::Integer
+    i::Integer
 )
     return labels(lmfd, instance)[
-        attributes(data(lmfd))[labels_descriptor(lmfd)[label_index]]
+        attributes(data(lmfd))[labels_descriptor(lmfd)[i]]
     ]
 end
 
 """
     labeldomain(lmfd, i)
 
-Get the domain of `i`-th label of `lmfd` LabeledMultiFrameDataset.
+Get the domain of `i`-th label of a labeled multiframe dataset.
 """
 function labeldomain(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
     @assert 1 ≤ i ≤ nlabels(lmfd) "Index ($i) must be a valid label number " *
@@ -88,7 +88,7 @@ end
     removefromlabels!(lmfd, i)
     removefromlabels!(lmfd, attr_name)
 
-Remove `i`-th attribute from labels list.
+Remove `i`-th labeling variable from labels list.
 
 The attribute name can be passed as second argument instead of its index.
 """
@@ -112,18 +112,20 @@ end
 """
     joinlabels!(lmfd, [lbls...]; delim = "_")
 
-Join `lbls` in `lmfd` labeled multiframe dataset using `delim`.
+With a labeled multiframe dataset, collapse the label variables identified by `lbls`
+into a single label variable of type `String`, by means of a `join` that uses `delim`
+for string delimiter.
 
 If not specified differently this function will join all labels.
 
 `lbls` can be of type Integer (indicating the index of the label) or the name of the
 label.
 
-!!! note
-    Resulting label will always be of type String.
+# !!! note
+#     The resulting label will always be of type String.
 
 !!! note
-    Resulting label will always be added as last column in the original DataFrame.
+    The resulting label will always be added as last column in the underlying `DataFrame`.
 
 ## EXAMPLES
 

@@ -90,19 +90,20 @@ GENERAL TODOs:
 """
 Abstract supertype for all multiframe datasets.
 
-A concrete MultiFrameDataset should always provide accessors [`frame_descriptor`](@ref), to
-access the frame descriptor, and [`data`](@ref), to access the inner data.
+A concrete multiframe dataset should always provide accessors [`frame_descriptor`](@ref), to
+access the frame descriptor, and [`data`](@ref), to access the underlying data structure.
 """
 abstract type AbstractMultiFrameDataset <: AbstractDataset end
 
 """
-Abstract supertype for all multiframe datasets for supervised learning.
+Abstract supertype for all labelled multiframe datasets (used in supervised learning).
 
-A concrete LabeledFrameDataset should always provide accessors [`frame_descriptor`](@ref),
-to access the frame descriptor, and [`data`](@ref), to access the inner data just like any
-other MultiFrameDataset. In addition to these it is required an implementation for accessors
+As any multiframe dataset, any concrete `LabeledFrameDataset` should always provide
+the accessors [`frame_descriptor`](@ref),
+to access the frame descriptor, and [`data`](@ref), to access the underlying data structure.
+In addition to these, implementations are required for accessors
 [`labels_descriptor`](@ref), to access the labels descriptor and [`dataset`](@ref), to
-access the MultiFrameDataset (forgetting about the labels).
+access the (unlabeled) `MultiFrameDataset`.
 """
 abstract type AbstractLabeledMultiFrameDataset <: AbstractMultiFrameDataset end
 
@@ -115,9 +116,9 @@ abstract type AbstractLabeledMultiFrameDataset <: AbstractMultiFrameDataset end
 """
     frame_descriptor(amfd)
 
-Access the *descriptor* of the `amfd` `AbstractMultiFrameDataset`. A descriptor is a data
-structure which describes how the different frames are organized in respect to the inner
-data representation of the `AbstractMultiFrameDataset`.
+Access the *frame descriptor* of an `AbstractMultiFrameDataset`. A fram descriptor is a data
+structure describing how the different frames are composed from the underlying
+`AbstractDataFrame` structure.
 """
 function frame_descriptor(amfd::AbstractMultiFrameDataset)
     return error("`frame_descriptor` accessor not implemented for type "
@@ -126,7 +127,7 @@ end
 """
     data(amfd)
 
-Access the inner data representation of the `amfd` `AbstractMultiFrameDataset`.
+Access the `AbstractDataFrame` structure that underlies an `AbstractMultiFrameDataset`.
 """
 function data(amfd::AbstractMultiFrameDataset)
     return error("`data` accessor not implemented for type "
@@ -139,9 +140,10 @@ end
 """
     labels_descriptor(lmfd)
 
-Access the *label descriptor* of the `lmfd` `AbstractLabeledMultiFrameDataset`. A descriptor
-is a data structure which describes how the labels are organized in respect to the inner
-data representation of the `AbstractLabeledMultiFrameDataset`.
+Access the *label descriptor* of the `AbstractLabeledMultiFrameDataset`.
+A label descriptor
+is a data structure describing which labels are composed from the underlying
+`AbstractDataFrame` structure.
 """
 function labels_descriptor(lmfd::AbstractLabeledMultiFrameDataset)
     return error("`labels_descriptor` accessor not implemented for type " *
@@ -150,8 +152,8 @@ end
 """
     dataset(amfd)
 
-Access the inner [`AbstractMultiFrameDataset`](@ref) of the `lmfd`
-`AbstractLabeledMultiFrameDataset`.
+Access the inner [`AbstractMultiFrameDataset`](@ref) of the
+`AbstractLabeledMultiFrameDataset`; the returned dataset only has the feature variables.
 """
 function dataset(lmfd::AbstractLabeledMultiFrameDataset)
     return error("`dataset` accessor not implemented for type $(string(typeof(lmfd)))")
