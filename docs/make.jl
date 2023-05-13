@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(SoleData, :DocTestSetup, :(using SoleData); recursive=true)
 
 makedocs(;
     modules=[SoleData],
-    authors="Lorenzo BALBONI, Federico MANZELLA, Giovanni PAGLIARINI, Eduard I. STAN",
+    authors="Lorenzo Balboni, Federico Manzella, Giovanni Pagliarini, Eduard I. Stan",
     repo="https://github.com/aclai-lab/SoleData.jl/blob/{commit}{path}#{line}",
     sitename="SoleData.jl",
     format=Documenter.HTML(;
