@@ -13,6 +13,30 @@ _isnan(n::Number) = isnan(n)
 _isnan(n::Nothing) = false
 hasnans(n::Number) = _isnan(n)
 
+_doc_slice_dataset = """
+    function slice_dataset(
+        dataset::D,
+        dataset_slice::AbstractVector{<:Integer};
+        allow_no_instances = false,
+        return_view = false,
+        kwargs...,
+    )::D where {D}
+
+Return a dataset that has a selected subset of instances.
+
+# Implementation
+
+In order to use slice_dataset on a custom dataset representation,
+provide the following method:
+    _slice_dataset(
+        dataset::D,
+        dataset_slice::AbstractVector{<:Integer},
+        return_view::Union{Val{true},Val{false}};
+        kwargs...
+    )::D where {D}
+"""
+
+"""$(_doc_slice_dataset)"""
 function slice_dataset(
     dataset::Any,
     dataset_slice::AbstractVector{<:Integer};
@@ -23,6 +47,9 @@ function slice_dataset(
     @assert (allow_no_instances || length(dataset_slice) > 0) "Can't apply empty slice to dataset."
     _slice_dataset(dataset, dataset_slice, Val(return_view); kwargs...)
 end
+
+"""$(_doc_slice_dataset)"""
+function _slice_dataset end
 
 ############################################################################################
 
