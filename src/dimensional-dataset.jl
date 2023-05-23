@@ -111,9 +111,9 @@ get_instance(args...) = instance(args...)
 instance_channel_size(d::AbstractDimensionalDataset, i_sample) = instance_channel_size(get_instance(d, i_sample))
 instance_channel_size(inst::DimensionalInstance{T,MN}) where {T,MN} = size(inst)[1:end-1]
 
-get_instance_attribute(inst::DimensionalInstance{T,1}, idx_a::Integer) where T = @views inst[      idx_a]::T                       # N=0
-get_instance_attribute(inst::DimensionalInstance{T,2}, idx_a::Integer) where T = @views inst[:,    idx_a]::DimensionalChannel{T,1} # N=1
-get_instance_attribute(inst::DimensionalInstance{T,3}, idx_a::Integer) where T = @views inst[:, :, idx_a]::DimensionalChannel{T,2} # N=2
+channelvariable(inst::DimensionalInstance{T,1}, i_var::Integer) where T = @views inst[      i_var]::T                       # N=0
+channelvariable(inst::DimensionalInstance{T,2}, i_var::Integer) where T = @views inst[:,    i_var]::DimensionalChannel{T,1} # N=1
+channelvariable(inst::DimensionalInstance{T,3}, i_var::Integer) where T = @views inst[:, :, i_var]::DimensionalChannel{T,2} # N=2
 
 ############################################################################################
 
