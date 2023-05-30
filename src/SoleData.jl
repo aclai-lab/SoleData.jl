@@ -23,7 +23,7 @@ import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersec
 import Base: ∈, ⊆, ∪, ∩
 import DataFrames: describe
 import ScientificTypes: show
-import SoleBase: nsamples
+import SoleBase: frame, nsamples
 
 # -------------------------------------------------------------
 # exports
