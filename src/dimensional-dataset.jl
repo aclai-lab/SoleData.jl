@@ -115,6 +115,9 @@ channelvariable(inst::DimensionalInstance{T,1}, i_var::Integer) where T = @views
 channelvariable(inst::DimensionalInstance{T,2}, i_var::Integer) where T = @views inst[:,    i_var]::DimensionalChannel{T,1} # N=1
 channelvariable(inst::DimensionalInstance{T,3}, i_var::Integer) where T = @views inst[:, :, i_var]::DimensionalChannel{T,2} # N=2
 
+# TODO remove
+@deprecate get_instance_attribute(inst, i_var) channelvariable(inst, i_var)
+
 ############################################################################################
 
 const UniformDimensionalDataset{T<:Number,D}     = Union{Array{T,D},SubArray{T,D}}
