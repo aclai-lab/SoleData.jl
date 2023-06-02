@@ -1,11 +1,13 @@
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - filesystem operations
+# AbstractMultiModalDataset - filesystem operations
 
 const _ds_inst_prefix = "Example_"
-const _ds_frame_prefix = "Frame_"
+const _ds_modality_prefix = "Modality_"
 const _ds_metadata = "Metadata.txt"
 const _ds_labels = "Labels.csv"
+
+DATASET_ENC_NAME = "Dataset" # Name for our enconding TODO choose name
 
 function _parse_dim_tuple(t::AbstractString)
     t = strip(t, ['(', ')', '\n', ',', ' '])
@@ -27,8 +29,8 @@ function _read_dataset_metadata(datasetdir::AbstractString)
             dict[k] = v
         elseif k == "supervised"
             dict[k] = parse(Bool, v)
-        elseif k == "num_frames" ||
-            !isnothing(match(r"frame[[:digit:]]+", string(k))) ||
+        elseif k == "num_modalities" ||
+            !isnothing(match(r"modality[[:digit:]]+", string(k))) ||
             k == "num_classes"
                 dict[k] = parse(Int64, v)
         else
@@ -38,7 +40,7 @@ function _read_dataset_metadata(datasetdir::AbstractString)
     end
 
     if dict["supervised"] && haskey(dict, "num_classes") && dict["num_classes"] < 1
-        @warn "Dataset $(dict["name"]) is marked as `supervised` but has `num_classes` = 0"
+        @warn "$(DATASET_ENC_NAME) $(dict["name"]) is marked as `supervised` but has `num_classes` = 0"
     end
 
     close(file)
@@ -101,7 +103,7 @@ second element the labels DataFrame or nothing and third element the total size 
 
 ## PARAMETERS
 
-* `onlywithlabels`, it's used to select which portion of the Dataset to load, by specifying
+* `onlywithlabels`, it's used to select which portion of the $(DATASET_ENC_NAME) to load, by specifying
     labels and their values to use as filters. See [`loaddataset`](@ref) for more info.
 * `shufflelabels` is an AbstractVector of names of labels to shuffle (default = [], means
     no shuffle).
@@ -115,12 +117,12 @@ function datasetinfo(
         AbstractVector{Pair{AbstractString,AbstractVector{Any}}}[],
     kwargs...
 )
-    @assert isdir(datasetpath) "Dataset at path $(datasetpath) does not exist"
+    @assert isdir(datasetpath) "$(DATASET_ENC_NAME) at path $(datasetpath) does not exist"
 
     ds_metadata = _read_dataset_metadata(datasetpath)
 
     if ds_metadata["supervised"] && !isfile(joinpath(datasetpath, _ds_labels))
-        @warn "Dataset $(ds_metadata["name"]) is marked as `supervised` but has no " *
+        @warn "$(DATASET_ENC_NAME) $(ds_metadata["name"]) is marked as `supervised` but has no " *
             "file `$(_ds_labels)`"
     end
 
@@ -201,11 +203,11 @@ function datasetinfo(
     for id in examples_ids
         ex_metadata = _read_example_metadata(datasetpath, id)
         # TODO: perform some checks on metadata
-        for frame in 1:ds_metadata["num_frames"]
+        for modality in 1:ds_metadata["num_modalities"]
             totalsize += filesize(joinpath(
                 datasetpath,
                 "$(_ds_inst_prefix)$(string(id))",
-                "$(_ds_frame_prefix)$(frame).csv"
+                "$(_ds_modality_prefix)$(modality).csv"
             ))
         end
     end
@@ -227,34 +229,34 @@ function _load_instance(
 
     type_info = isnothing(types) ? NamedTuple() : (types = types,)
 
-    frame_reg = Regex("^$(_ds_frame_prefix)([[:digit:]]+).csv\$")
-    function isframefile(path::AbstractString)
-        return isfile(joinpath(instancedir, path)) && !isnothing(match(frame_reg, path))
+    modality_reg = Regex("^$(_ds_modality_prefix)([[:digit:]]+).csv\$")
+    function ismodalityfile(path::AbstractString)
+        return isfile(joinpath(instancedir, path)) && !isnothing(match(modality_reg, path))
     end
 
-    function unlinearize_attr(p::Pair{Symbol,<:Any}, dims::Tuple)
+    function unlinearize_var(p::Pair{Symbol,<:Any}, dims::Tuple)
         return p[1] => unlinearize_data(p[2], dims)
     end
-    function unlinearize_frame(ps::AbstractVector{<:Pair{Symbol,<:Any}}, dims::Tuple)
-        return [unlinearize_attr(p, dims) for p in ps]
+    function unlinearize_modality(ps::AbstractVector{<:Pair{Symbol,<:Any}}, dims::Tuple)
+        return [unlinearize_var(p, dims) for p in ps]
     end
-    function load_frame(path::AbstractString, dims::Tuple)
-        return OrderedDict(unlinearize_frame(
+    function load_modality(path::AbstractString, dims::Tuple)
+        return OrderedDict(unlinearize_modality(
             collect(CSV.read(path, pairs; type_info...)),
             dims
         ))
     end
 
-    frames = filter(isframefile, readdir(instancedir))
-    frames_num = sort!([match(frame_reg, f).captures[1] for f in frames])
+    modalities = filter(ismodalityfile, readdir(instancedir))
+    modalities_num = sort!([match(modality_reg, f).captures[1] for f in modalities])
 
-    result = Vector{OrderedDict}(undef, length(frames_num))
+    result = Vector{OrderedDict}(undef, length(modalities_num))
     # TODO: address problem with Threads.@threads
     # (`@threads :static` cannot be used concurrently or nested)
-    for (i, f) in collect(enumerate(frames_num))
-        result[i] = load_frame(
-            joinpath(instancedir, "$(_ds_frame_prefix)$(f).csv"),
-            inst_metadata[string("dim_frame_", i)]
+    for (i, f) in collect(enumerate(modalities_num))
+        result[i] = load_modality(
+            joinpath(instancedir, "$(_ds_modality_prefix)$(f).csv"),
+            inst_metadata[string("dim_modality_", i)]
         )
     end
 
@@ -264,25 +266,25 @@ end
 """
     loaddataset(datasetpath; onlywithlabels = [], shufflelabels = [], rng = Random.GLOBAL_RNG)
 
-Create a MultiFrameDataset or a LabeledMultiFrameDataset from a Dataset, based on the
+Create a MultiModalDataset or a LabeledMultiModalDataset from a $(DATASET_ENC_NAME), based on the
 presence of file Labels.csv.
 
 ## PARAMETERS
 
-* `datasetpath` is an AbstractString that denote the Dataset's position;
+* `datasetpath` is an AbstractString that denote the $(DATASET_ENC_NAME)'s position;
 * `onlywithlabels` is an AbstractVector{AbstractVector{Pair{AbstractString,AbstractVector{Any}}}}
-    and it's used to select which portion of the Dataset to load, by specifying labels and
+    and it's used to select which portion of the $(DATASET_ENC_NAME) to load, by specifying labels and
     their values.
     Beginning from the center, each Pair{AbstractString,AbstractVector{Any}} must contain,
     as AbstractString the label's name, and, as AbstractVector{Any} the values of that label.
-    Each Pair in one Vector must refer to a different label, so if the Dataset has in total
+    Each Pair in one Vector must refer to a different label, so if the $(DATASET_ENC_NAME) has in total
     n labels, this Vector of Pair can contain maximun n element. That's because the elements
     will combine with each other.
     Every Vector of Pair act as a filter.
     Note that the same label can be used in different Vector of Pair as they don't combine
     with each other.
     If `onlywithlabels` is an empty Vector (default) the function will load the entire
-    Dataset.
+    $(DATASET_ENC_NAME).
 * `shufflelabels` is an AbstractVector of names of labels to shuffle (default = [], means
     no shuffle).
 * `rng` the RandomNumberGenerator to be used when shuffling (for reproducibility); can be
@@ -307,16 +309,16 @@ julia> df_data = DataFrame(
    4 │     4     40  Java    [0.540302, -0.416147, -0.989992,…
    5 │     5      9  R       [0.841471, 0.909297, 0.14112, -0…
 
-julia> lmfd =LabeledMultiFrameDataset(
+julia> lmd = LabeledMultiModalDataset(
+    MultiModalDataset([[4]], deepcopy(df_data)),
     [2,3],
-    MultiFrameDataset([[4]], deepcopy(df_data))
 )
-● LabeledMultiFrameDataset
+● LabeledMultiModalDataset
    ├─ labels
    │   ├─ age: Set([9, 30, 40])
    │   └─ name: Set(["C", "Julia", "Python", "Java", "R"])
    └─ dimensions: (1,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 1
 5×1 SubDataFrame
  Row │ stat
@@ -327,7 +329,7 @@ julia> lmfd =LabeledMultiFrameDataset(
    3 │ [0.841471, 0.909297, 0.14112, -0…
    4 │ [0.540302, -0.416147, -0.989992,…
    5 │ [0.841471, 0.909297, 0.14112, -0…
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 5×1 SubDataFrame
  Row │ id
@@ -339,24 +341,24 @@ julia> lmfd =LabeledMultiFrameDataset(
    4 │     4
    5 │     5
 
-julia> savedataset("langs", lmfd, force = true)
+julia> savedataset("langs", lmd, force = true)
 
 julia> loaddataset("langs", onlywithlabels = [ ["name" => ["Julia"], "age" => ["9"]] ] )
 Instances count: 1
 Total size: 981670 bytes
-● LabeledMultiFrameDataset
+● LabeledMultiModalDataset
    ├─ labels
    │   ├─ age: Set(["9"])
    │   └─ name: Set(["Julia"])
    └─ dimensions: (1,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 1
 1×1 SubDataFrame
  Row │ stat
      │ Array…
 ─────┼───────────────────────────────────
    1 │ [0.540302, -0.416147, -0.989992,…
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 1×1 SubDataFrame
  Row │ id
@@ -372,12 +374,12 @@ ERROR: AssertionError: No instance found
 julia> loaddataset("langs", onlywithlabels = [ ["name" => ["Julia"]] , ["age" => ["9"]] ] )
 Instances count: 2
 Total size: 1963537 bytes
-● LabeledMultiFrameDataset
+● LabeledMultiModalDataset
    ├─ labels
    │   ├─ age: Set(["9"])
    │   └─ name: Set(["Julia", "R"])
    └─ dimensions: (1,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat
@@ -385,7 +387,7 @@ Total size: 1963537 bytes
 ─────┼───────────────────────────────────
    1 │ [0.540302, -0.416147, -0.989992,…
    2 │ [0.841471, 0.909297, 0.14112, -0…
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ id
@@ -397,12 +399,12 @@ Total size: 1963537 bytes
 julia> loaddataset("langs", onlywithlabels = [ ["name" => ["Julia"]], ["name" => ["C"], "age" => ["30"]] ] )
 Instances count: 2
 Total size: 1963537 bytes
-● LabeledMultiFrameDataset
+● LabeledMultiModalDataset
     ├─ labels
     │   ├─ age: Set(["9", "30"])
     │   └─ name: Set(["C", "Julia"])
     └─ dimensions: (1,)
-- Frame 1 / 1
+- Modality 1 / 1
     └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat
@@ -410,7 +412,7 @@ Total size: 1963537 bytes
 ─────┼───────────────────────────────────
    1 │ [0.540302, -0.416147, -0.989992,…
    2 │ [0.841471, 0.909297, 0.14112, -0…
-- Spare attributes
+- Spare variables
     └─ dimension: 0
 2×1 SubDataFrame
  Row │ id
@@ -429,63 +431,63 @@ function loaddataset(
 
     @assert length(selected_ids) > 0 "No instance found"
 
-    instance_frames = _load_instance(datasetpath, selected_ids[1]; types = types)
-    frames_cols = [Symbol.(attr_name) for attr_name in keys.(instance_frames)]
+    instance_modalities = _load_instance(datasetpath, selected_ids[1]; types = types)
+    modalities_cols = [Symbol.(var_name) for var_name in keys.(instance_modalities)]
 
     df = DataFrame(
         :id => [selected_ids[1]],
-        [Symbol(k) => [v] for frame in instance_frames for (k, v) in frame]...;
+        [Symbol(k) => [v] for modality in instance_modalities for (k, v) in modality]...;
         makeunique = true
     )
 
     for id in selected_ids[2:end]
         curr_row = Any[id]
-        for (i, frame) in enumerate(_load_instance(datasetpath, id; types = types))
-            for attr_name in frames_cols[i]
-                push!(curr_row, frame[attr_name])
+        for (i, modality) in enumerate(_load_instance(datasetpath, id; types = types))
+            for var_name in modalities_cols[i]
+                push!(curr_row, modality[var_name])
             end
         end
         push!(df, curr_row)
     end
 
-    frame_descriptor = Vector{Integer}[]
+    grouped_variables = Vector{Integer}[]
     df_names = Symbol.(names(df))
-    for frame in frames_cols
-        push!(frame_descriptor, [findfirst(x -> x == k, df_names) for k in frame])
+    for modality in modalities_cols
+        push!(grouped_variables, [findfirst(x -> x == k, df_names) for k in modality])
     end
 
-    mfd = MultiFrameDataset(frame_descriptor, df)
+    md = MultiModalDataset(grouped_variables, df)
 
     if !isnothing(labels)
-        orig_length = nattributes(mfd)
+        orig_length = nvariables(md)
 
         for l in names(labels)[2:end]
-            insertattributes!(mfd, Symbol(l), labels[:,l])
+            insertvariables!(md, Symbol(l), labels[:,l])
         end
 
-        return LabeledMultiFrameDataset(collect((orig_length+1):nattributes(mfd)), mfd)
+        return LabeledMultiModalDataset(md, collect((orig_length+1):nvariables(md)))
     else
-        return mfd
+        return md
     end
 end
 
 """
-    savedataset(datasetpath, mfd; instance_ids, name, force = false)
+    savedataset(datasetpath, md; instance_ids, name, force = false)
 
-Save `mfd` AbstractMultiFrameDataset on disk at path `datasetpath` in the following format:
+Save `md` AbstractMultiModalDataset on disk at path `datasetpath` in the following format:
 
 datasetpath
     ├─ Example_1
-    │     └─ Frame_1.csv
-    │     └─ Frame_2.csv
+    │     └─ Modality_1.csv
+    │     └─ Modality_2.csv
     │     └─ ...
-    │     └─ Frame_n.csv
+    │     └─ Modality_n.csv
     │     └─ Metadata.txt
     ├─ Example_2
-    │     └─ Frame_1.csv
-    │     └─ Frame_2.csv
+    │     └─ Modality_1.csv
+    │     └─ Modality_2.csv
     │     └─ ...
-    │     └─ Frame_n.csv
+    │     └─ Modality_n.csv
     │     └─ Metadata.txt
     ├─ ...
     ├─ Example_n
@@ -495,36 +497,36 @@ datasetpath
 ## PARAMETERS
 
 * `instance_ids` is a AbstractVector{Integer} that denote the identifier of the instances,
-* `name` is an AbstractString and denote the name of the Dataset, that will be saved in the
-    Metadata of the Dataset,
+* `name` is an AbstractString and denote the name of the $(DATASET_ENC_NAME), that will be saved in the
+    Metadata of the $(DATASET_ENC_NAME),
 * `force` is a Bool, if it's set to `true`, then in case `datasetpath` already exists, it will
     be overwritten otherwise the operation will be aborted. (default = `false`)
 * `labels_indices` is a AbstractVector{Integer} and contains the indices of the labels'
-    column (allowed only when passing a MultiFrameDataset)
+    column (allowed only when passing a MultiModalDataset)
 
-Alternatively to an AbstractMultiFrameDataset a DataFrame can be passed as second argument.
+Alternatively to an AbstractMultiModalDataset a DataFrame can be passed as second argument.
 If this is the case a third positional argument is required representing the
-`frame_descriptor` of the dataset. See [`MultiFrameDataset`](@ref) for syntax of
-`frame_descriptor`.
+`grouped_variables` of the dataset. See [`MultiModalDataset`](@ref) for syntax of
+`grouped_variables`.
 """
 function savedataset(
-    datasetpath::AbstractString, lmfd::AbstractLabeledMultiFrameDataset;
+    datasetpath::AbstractString, md::AbstractMultiModalDataset;
     kwargs...
 )
     return savedataset(
-        datasetpath, dataset(lmfd);
-        labels_indices = labels_descriptor(lmfd),
+        datasetpath, data(md),
+        grouped_variables(md);
         kwargs...
     )
 end
 
 function savedataset(
-    datasetpath::AbstractString, mfd::AbstractMultiFrameDataset;
+    datasetpath::AbstractString, lmd::LabeledMultiModalDataset;
     kwargs...
 )
     return savedataset(
-        datasetpath, data(mfd),
-        frame_descriptor(mfd);
+        datasetpath, unlabeleddataset(lmd);
+        labels_indices = labeling_variables(lmd),
         kwargs...
     )
 end
@@ -532,7 +534,7 @@ end
 function savedataset(
     datasetpath::AbstractString,
     df::AbstractDataFrame,
-    frame_descriptor::AbstractVector{<:AbstractVector{<:Integer}} = [collect(1:ncol(df))];
+    grouped_variables::AbstractVector{<:AbstractVector{<:Integer}} = [collect(1:ncol(df))];
     instance_ids::AbstractVector{<:Integer} = 1:nrow(df),
     labels_indices::AbstractVector{<:Integer} = Int[],
     name::AbstractString = basename(replace(datasetpath, r"/$" => "")),
@@ -546,7 +548,7 @@ function savedataset(
 
     mkpath(datasetpath)
 
-    # NOTE: maybe this can be done in `savedataset` accepting a labeled MFD
+    # NOTE: maybe this can be done in `savedataset` accepting a labeled modal dataset
     df_labels = nothing
     if length(labels_indices) > 0
         df_labels = DataFrame(
@@ -561,19 +563,19 @@ function savedataset(
         curr_inst_path = mkpath(dirname(inst_metadata_path))
         inst_metadata_file = open(inst_metadata_path, "w+")
 
-        for (i_frame, curr_frame_idices) in enumerate(frame_descriptor)
-            curr_frame_inst = inst[curr_frame_idices]
+        for (i_modality, curr_modality_indices) in enumerate(grouped_variables)
+            curr_modality_inst = inst[curr_modality_indices]
 
             # TODO: maybe assert all instances have same size or fill with missing
             println(inst_metadata_file,
-                "dim_frame_", i_frame, "=", size(first(curr_frame_inst))
+                "dim_modality_", i_modality, "=", size(first(curr_modality_inst))
             )
 
             CSV.write(
-                joinpath(curr_inst_path, string(_ds_frame_prefix, i_frame, ".csv")),
+                joinpath(curr_inst_path, string(_ds_modality_prefix, i_modality, ".csv")),
                 DataFrame(
-                    [a => linearize_data(curr_frame_inst[a])
-                        for a in Symbol.(names(curr_frame_inst))]
+                    [a => linearize_data(curr_modality_inst[a])
+                        for a in Symbol.(names(curr_modality_inst))]
                 )
             )
         end
@@ -606,10 +608,10 @@ function savedataset(
         println(ds_metadata_file, "supervised=false")
     end
 
-    println(ds_metadata_file, "num_frames=", length(frame_descriptor))
+    println(ds_metadata_file, "num_modalities=", length(grouped_variables))
 
-    for (i_frame, curr_frame_idices) in enumerate(frame_descriptor)
-        println(ds_metadata_file, "frame", i_frame, "=", dimension(df[:,curr_frame_idices]))
+    for (i_modality, curr_modality_indices) in enumerate(grouped_variables)
+        println(ds_metadata_file, "modality", i_modality, "=", dimension(df[:,curr_modality_indices]))
     end
 
     close(ds_metadata_file)

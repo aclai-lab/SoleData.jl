@@ -5,145 +5,145 @@ const __note_about_utils = "
     It is important to consider that this function is intended for internal use only.
 
     It assumes that any check is performed prior its call (e.g., check if the index of an
-    attribute is valid or not).
+    variable is valid or not).
 "
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - utils
+# AbstractMultiModalDataset - utils
 
 """
-    _empty(mfd)
+    _empty(md)
 
-Get a copy of a multiframe dataset with no instances.
+Return a copy of a multimodal dataset with no instances.
 
-Note: since the returned AbstractMultiFrameDataset will be empty its columns types will be
+Note: since the returned AbstractMultiModalDataset will be empty its columns types will be
 `Any`.
 
 $(__note_about_utils)
 """
-function _empty(mfd::AbstractMultiFrameDataset)
-    warn("This function is extremely not efficent especially for large datasets: " *
-        "consider creating a dispatch for type " * string(typeof(mfd)))
-    return _empty!(deepcopy(mfd))
+function _empty(md::AbstractMultiModalDataset)
+    warn("This method for `_empty` is extremely not efficent especially for " *
+        "large datasets: consider providing a custom method for _empty(::$(typeof(md))).")
+    return _empty!(deepcopy(md))
 end
 """
-    _empty!(mfd)
+    _empty!(md)
 
-Remove all instances from a multiframe dataset.
+Remove all instances from a multimodal dataset.
 
-Note: since the AbstractMultiFrameDataset will be empty its columns types will become of
+Note: since the AbstractMultiModalDataset will be empty its columns types will become of
 type `Any`.
 
 $(__note_about_utils)
 """
-function _empty!(mfd::AbstractMultiFrameDataset)
-    return removeinstances!(mfd, 1:nisnstances(mfd))
+function _empty!(md::AbstractMultiModalDataset)
+    return removeinstances!(md, 1:nisnstances(md))
 end
 
 """
-    _same_attributes(mfd1, mfd2)
+    _same_variables(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets have the same attributes.
+Determine whether two AbstractMultiModalDatasets have the same variables.
 
 $(__note_about_utils)
 """
-function _same_attributes(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+function _same_variables(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
     return isequal(
-        Dict{Symbol,DataType}(Symbol.(names(data(mfd1))) .=> eltype.(eachcol(data(mfd1)))),
-        Dict{Symbol,DataType}(Symbol.(names(data(mfd2))) .=> eltype.(eachcol(data(mfd2))))
+        Dict{Symbol,DataType}(Symbol.(names(data(md1))) .=> eltype.(eachcol(data(md1)))),
+        Dict{Symbol,DataType}(Symbol.(names(data(md2))) .=> eltype.(eachcol(data(md2))))
     )
 end
 
 """
-    _same_dataframe(mfd1, mfd2)
+    _same_dataset(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets have the same inner DataFrame regardless of
+Determine whether two AbstractMultiModalDatasets have the same inner DataFrame regardless of
 the positioning of their columns.
 
 Note: the check will be performed against the instances too; if the intent is to just check
-the presence of the same attributes use [`_same_attributes`](@ref) instead.
+the presence of the same variables use [`_same_variables`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_dataframe(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
+function _same_dataset(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    if !_same_variables(md1, md2) || ninstances(md1) != ninstances(md2)
         return false
     end
 
-    mfd1_attrs = Symbol.(names(data(mfd1)))
-    mfd2_attrs = Symbol.(names(data(mfd2)))
-    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
+    md1_vars = Symbol.(names(data(md1)))
+    md2_vars = Symbol.(names(data(md2)))
+    unmixed_indices = [findfirst(x -> isequal(x, name), md2_vars) for name in md1_vars]
 
-    return data(mfd1) == data(mfd2)[:,unmixed_indices]
+    return data(md1) == data(md2)[:,unmixed_indices]
 end
 
 """
-    _same_frame_descriptor(mfd1, mfd2)
+    _same_grouped_variables(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets have the same frames regardless of the
+Determine whether two AbstractMultiModalDatasets have the same modalities regardless of the
 positioning of their columns.
 
 Note: the check will be performed against the instances too; if the intent is to just check
-the presence of the same attributes use [`_same_attributes`](@ref) instead.
+the presence of the same variables use [`_same_variables`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_frame_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    if !_same_attributes(mfd1, mfd2)
+function _same_grouped_variables(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    if !_same_variables(md1, md2)
         return false
     end
 
-    if nframes(mfd1) != nframes(mfd2) ||
-            [nattributes(f) for f in mfd1] != [nattributes(f) for f in mfd2]
+    if nmodalities(md1) != nmodalities(md2) ||
+            [nvariables(f) for f in md1] != [nvariables(f) for f in md2]
         return false
     end
 
-    mfd1_attrs = Symbol.(names(data(mfd1)))
-    mfd2_attrs = Symbol.(names(data(mfd2)))
-    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
+    md1_vars = Symbol.(names(data(md1)))
+    md2_vars = Symbol.(names(data(md2)))
+    unmixed_indices = [findfirst(x -> isequal(x, name), md2_vars) for name in md1_vars]
 
-    for i in 1:nframes(mfd1)
-        if frame_descriptor(mfd1)[i] != Integer[unmixed_indices[j]
-                for j in frame_descriptor(mfd2)[i]]
+    for i in 1:nmodalities(md1)
+        if grouped_variables(md1)[i] != Integer[unmixed_indices[j]
+                for j in grouped_variables(md2)[i]]
             return false
         end
     end
 
-    return data(mfd1) == data(mfd2)[:,unmixed_indices]
+    return data(md1) == data(md2)[:,unmixed_indices]
 end
 
 """
-    _same_label_descriptor(mfd1, mfd2)
+    _same_label_descriptor(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets have the same labels regardless of the
+Determine whether two AbstractMultiModalDatasets have the same labels regardless of the
 positioning of their columns.
 
 Note: the check will be performed against the instances too; if the intent is to just check
-the presence of the same attributes use [`_same_label_names`](@ref) instead.
+the presence of the same variables use [`_same_label_names`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_label_descriptor(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+function _same_label_descriptor(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
     return true
 end
 function _same_label_descriptor(
-    lmfd1::AbstractLabeledMultiFrameDataset,
-    lmfd2::AbstractLabeledMultiFrameDataset
+    lmd1::AbstractLabeledMultiModalDataset,
+    lmd2::AbstractLabeledMultiModalDataset
 )
-    !_same_label_names(lmfd1, lmfd2) && return false;
+    !_same_label_names(lmd1, lmd2) && return false;
 
-    lmfd1_lbls = labels(lmfd1)
-    lmfd2_lbls = labels(lmfd2)
-    unmixed_indices = [findfirst(x -> isequal(x, name), Symbol.(names(data(lmfd2))))
-        for name in lmfd1_lbls]
+    lmd1_lbls = labels(lmd1)
+    lmd2_lbls = labels(lmd2)
+    unmixed_indices = [findfirst(x -> isequal(x, name), Symbol.(names(data(lmd2))))
+        for name in lmd1_lbls]
 
-    return data(lmfd1)[:,lmfd1_lbls] == data(lmfd2)[:,unmixed_indices]
+    return data(lmd1)[:,lmd1_lbls] == data(lmd2)[:,unmixed_indices]
 end
 
 """
-    _same_label_names(mfd1, mfd2)
+    _same_label_names(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets have the same label names regardless of the
+Determine whether two AbstractMultiModalDatasets have the same label names regardless of the
 positioning of their columns.
 
 Note: the check will not be performed against the instances; if the intent is to check
@@ -151,64 +151,64 @@ whether the two datasets have the same labels use [`_same_label_descriptor`](@re
 
 $(__note_about_utils)
 """
-function _same_label_names(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
+function _same_label_names(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
     return true
 end
 function _same_label_names(
-    lmfd1::AbstractLabeledMultiFrameDataset,
-    lmfd2::AbstractLabeledMultiFrameDataset
+    lmd1::AbstractLabeledMultiModalDataset,
+    lmd2::AbstractLabeledMultiModalDataset
 )
-    return Set(labels(lmfd1)) == Set(labels(lmfd2))
+    return Set(labels(lmd1)) == Set(labels(lmd2))
 end
 
 """
-    _same_instances(mfd1, mfd2)
+    _same_instances(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets have the same instances regardless of their
+Determine whether two AbstractMultiModalDatasets have the same instances regardless of their
 order.
 
 $(__note_about_utils)
 """
-function _same_instances(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
+function _same_instances(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    if !_same_variables(md1, md2) || ninstances(md1) != ninstances(md2)
         return false
     end
 
-    return mfd1 ⊆ mfd2 && mfd2 ⊆ mfd1
+    return md1 ⊆ md2 && md2 ⊆ md1
 end
 
 """
-    _same_multiframedataset(mfd1, mfd2)
+    _same_md(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets have the same inner DataFrame and frames,
+Determine whether two AbstractMultiModalDatasets have the same inner DataFrame and modalities,
 regardless of the ordering of the columns of their DataFrames.
 
 Note: the check will be performed against the instances too; if the intent is to just check
-the presence of the same attributes use [`_same_attributes`](@ref) instead.
+the presence of the same variables use [`_same_variables`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_multiframedataset(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    if !_same_attributes(mfd1, mfd2) || ninstances(mfd1) != ninstances(mfd2)
+function _same_md(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    if !_same_variables(md1, md2) || ninstances(md1) != ninstances(md2)
         return false
     end
 
-    if nframes(mfd1) != nframes(mfd2) ||
-            [nattributes(f) for f in mfd1] != [nattributes(f) for f in mfd2]
+    if nmodalities(md1) != nmodalities(md2) ||
+            [nvariables(f) for f in md1] != [nvariables(f) for f in md2]
         return false
     end
 
-    mfd1_attrs = Symbol.(names(data(mfd1)))
-    mfd2_attrs = Symbol.(names(data(mfd2)))
-    unmixed_indices = [findfirst(x -> isequal(x, name), mfd2_attrs) for name in mfd1_attrs]
+    md1_vars = Symbol.(names(data(md1)))
+    md2_vars = Symbol.(names(data(md2)))
+    unmixed_indices = [findfirst(x -> isequal(x, name), md2_vars) for name in md1_vars]
 
-    if data(mfd1) != data(mfd2)[:,unmixed_indices]
+    if data(md1) != data(md2)[:,unmixed_indices]
         return false
     end
 
-    for i in 1:nframes(mfd1)
-        if frame_descriptor(mfd1)[i] != Integer[unmixed_indices[j]
-                for j in frame_descriptor(mfd2)[i]]
+    for i in 1:nmodalities(md1)
+        if grouped_variables(md1)[i] != Integer[unmixed_indices[j]
+                for j in grouped_variables(md2)[i]]
             return false
         end
     end
@@ -217,71 +217,71 @@ function _same_multiframedataset(mfd1::AbstractMultiFrameDataset, mfd2::Abstract
 end
 
 """
-    _name2index(df, attribute_name)
+    _name2index(df, variable_name)
 
-Get the index of the attribute named `attribute_name`.
+Return the index of the variable named `variable_name`.
 
-If the attribute does not exist `0` is returned.
+If the variable does not exist `0` is returned.
 
 
-    _name2index(df, attribute_names)
+    _name2index(df, variable_names)
 
-Get the indices of the attributes named `attribute_names`.
+Return the indices of the variables named `variable_names`.
 
-If an attribute does not exist, the returned Vector contains `0`(-es).
+If an variable does not exist, the returned Vector contains `0`(-es).
 
 $(__note_about_utils)
 """
-function _name2index(df::AbstractDataFrame, attribute_name::Symbol)
-    return columnindex(df, attribute_name)
+function _name2index(df::AbstractDataFrame, variable_name::Symbol)
+    return columnindex(df, variable_name)
 end
-function _name2index(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
-    return columnindex(data(mfd), attribute_name)
+function _name2index(md::AbstractMultiModalDataset, variable_name::Symbol)
+    return columnindex(data(md), variable_name)
 end
-function _name2index(df::AbstractDataFrame, attribute_names::AbstractVector{Symbol})
-    return [_name2index(df, attr_name) for attr_name in attribute_names]
+function _name2index(df::AbstractDataFrame, variable_names::AbstractVector{Symbol})
+    return [_name2index(df, var_name) for var_name in variable_names]
 end
 function _name2index(
-    mfd::AbstractMultiFrameDataset,
-    attribute_names::AbstractVector{Symbol}
+    md::AbstractMultiModalDataset,
+    variable_names::AbstractVector{Symbol}
 )
-    return [_name2index(mfd, attr_name) for attr_name in attribute_names]
+    return [_name2index(md, var_name) for var_name in variable_names]
 end
 
 """
-    _is_attribute_in_frames(mfd, i)
+    _is_variable_in_modalities(md, i)
 
-Check if `i`-th attribute is used in any frame or not.
+Check if `i`-th variable is used in any modality or not.
 
-Alternatively to the index the `attribute_name` can be passed as second argument.
+Alternatively to the index the `variable_name` can be passed as second argument.
 
 $(__note_about_utils)
 """
-function _is_attribute_in_frames(mfd::AbstractMultiFrameDataset, i::Integer)
-    return i in cat(frame_descriptor(mfd)...; dims = 1)
+function _is_variable_in_modalities(md::AbstractMultiModalDataset, i::Integer)
+    return i in cat(grouped_variables(md)...; dims = 1)
 end
-function _is_attribute_in_frames(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
-    return _is_attribute_in_frames(mfd, _name2index(mfd, attribute_name))
-end
-
-function _prettyprint_header(io::IO, mfd::AbstractMultiFrameDataset)
-    println(io, "● $(typeof(mfd))")
-    println(io, "   └─ dimensions: $(dimension(mfd))")
+function _is_variable_in_modalities(md::AbstractMultiModalDataset, variable_name::Symbol)
+    return _is_variable_in_modalities(md, _name2index(md, variable_name))
 end
 
-function _prettyprint_frames(io::IO, mfd::AbstractMultiFrameDataset)
-    for (i, frame) in enumerate(mfd)
-        println(io, "- Frame $(i) / $(nframes(mfd))")
-        println(io, "   └─ dimension: $(dimension(frame))")
-        println(io, frame)
+function _prettyprint_header(io::IO, md::AbstractMultiModalDataset)
+    println(io, "● $(typeof(md))")
+    println(io, "   └─ dimensions: $(dimension(md))")
+end
+
+function _prettyprint_modalities(io::IO, md::AbstractMultiModalDataset)
+    for (i, modality) in enumerate(md)
+        println(io, "- Modality $(i) / $(nmodalities(md))")
+        println(io, "   └─ dimension: $(dimension(modality))")
+        println(io, modality)
     end
 end
 
-function _prettyprint_spareattributes(io::IO, mfd::AbstractMultiFrameDataset)
-    spare_attrs = spareattributes(mfd)
-    if length(spare_attrs) > 0
-        spare_df = @view data(mfd)[:,spare_attrs]
-        println(io, "- Spare attributes")
+function _prettyprint_sparevariables(io::IO, md::AbstractMultiModalDataset)
+    spare_vars = sparevariables(md)
+    if length(spare_vars) > 0
+        spare_df = @view data(md)[:,spare_vars]
+        println(io, "- Spare variables")
         println(io, "   └─ dimension: $(dimension(spare_df))")
         println(io, spare_df)
     end
@@ -303,20 +303,20 @@ function _prettyprint_domain(set::AbstractSet)
 end
 _prettyprint_domain(dom::Tuple) = "($(dom[1]) - $(dom[end]))"
 
-function _prettyprint_labels(io::IO, lmfd::AbstractMultiFrameDataset)
+function _prettyprint_labels(io::IO, lmd::AbstractMultiModalDataset)
     println(io, "   ├─ labels")
-    if nlabels(lmfd) > 0
-        lbls = labels(lmfd)
+    if nlabelingvariables(lmd) > 0
+        lbls = labels(lmd)
         for i in 1:(length(lbls)-1)
             println(io, "   │   ├─ $(lbls[i]): " *
-                "$(labeldomain(lmfd, i))")
+                "$(labeldomain(lmd, i))")
         end
         println(io, "   │   └─ $(lbls[end]): " *
-            "$(labeldomain(lmfd, length(lbls)))")
+            "$(labeldomain(lmd, length(lbls)))")
     else
         println(io, "   │   └─ no label selected")
     end
-    println(io, "   └─ dimensions: $(dimension(lmfd))")
+    println(io, "   └─ dimensions: $(dimension(lmd))")
 end
 
 """

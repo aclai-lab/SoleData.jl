@@ -1,24 +1,24 @@
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - instances manipulation
+# AbstractMultiModalDataset - instances manipulation
 
 """
-    ninstances(mfd[, i])
+    ninstances(md[, i])
 
-Get the number of instances present in a multiframe dataset.
+Return the number of instances present in a multimodal dataset.
 
 Note: for consistency with other methods interface `ninstances` can be called specifying
-a frame index `i` even if `ninstances(mfd) != ninstances(mfd, i)` can't be `true`.
+a modality index `i` even if `ninstances(md) != ninstances(md, i)` can't be `true`.
 
-This method can be called on a single frame directly.
+This method can be called on a single modality directly.
 
 ## EXAMPLES
 
 ```julia-repl
-julia> mfd = MultiFrameDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M', 'F']))
-● MultiFrameDataset
+julia> md = MultiModalDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M', 'F']))
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -26,7 +26,7 @@ julia> mfd = MultiFrameDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M
 ─────┼───────
    1 │    25
    2 │    26
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ sex
@@ -35,7 +35,7 @@ julia> mfd = MultiFrameDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M
    1 │ M
    2 │ F
 
-julia> frame2 = frame(mfd, 2)
+julia> mod2 = modality(md, 2)
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -43,139 +43,139 @@ julia> frame2 = frame(mfd, 2)
    1 │ M
    2 │ F
 
-julia> ninstances(mfd) == ninstances(mfd, 2) == ninstances(frame2) == 2
+julia> ninstances(md) == ninstances(md, 2) == ninstances(mod2) == 2
 true
 ```
 """
 ninstances(df::AbstractDataFrame) = nrow(df)
-ninstances(mfd::AbstractMultiFrameDataset) = nrow(data(mfd))
-ninstances(mfd::AbstractMultiFrameDataset, i::Integer) = nrow(frame(mfd, i))
+ninstances(md::AbstractMultiModalDataset) = nrow(data(md))
+ninstances(md::AbstractMultiModalDataset, i::Integer) = nrow(modality(md, i))
 
 """
-    pushinstances!(mfd, instance)
+    pushinstances!(md, instance)
 
-Add `instance` to a multiframe dataset and return `mfd`.
+Add `instance` to a multimodal dataset and return `md`.
 
 The instance can be a `DataFrameRow` or an `AbstractVector` but in both cases the number and
-type of attributes should match the dataset ones.
+type of variables should match the dataset ones.
 """
-function pushinstances!(mfd::AbstractMultiFrameDataset, instance::DataFrameRow)
-    @assert length(instance) == nattributes(mfd) "Mismatching number of attributes " *
-        "between dataset ($(nattributes(mfd))) and instance ($(length(instance)))"
+function pushinstances!(md::AbstractMultiModalDataset, instance::DataFrameRow)
+    @assert length(instance) == nvariables(md) "Mismatching number of variables " *
+        "between dataset ($(nvariables(md))) and instance ($(length(instance)))"
 
-    push!(data(mfd), instance)
+    push!(data(md), instance)
 
-    return mfd
+    return md
 end
-function pushinstances!(mfd::AbstractMultiFrameDataset, instance::AbstractVector)
-    @assert length(instance) == nattributes(mfd) "Mismatching number of attributes " *
-        "between dataset ($(nattributes(mfd))) and instance ($(length(instance)))"
+function pushinstances!(md::AbstractMultiModalDataset, instance::AbstractVector)
+    @assert length(instance) == nvariables(md) "Mismatching number of variables " *
+        "between dataset ($(nvariables(md))) and instance ($(length(instance)))"
 
-    push!(data(mfd), instance)
+    push!(data(md), instance)
 
-    return mfd
+    return md
 end
-function pushinstances!(mfd::AbstractMultiFrameDataset, instances::AbstractDataFrame)
+function pushinstances!(md::AbstractMultiModalDataset, instances::AbstractDataFrame)
     for inst in eachrow(instances)
-        pushinstances!(mfd, inst)
+        pushinstances!(md, inst)
     end
 
-    return mfd
+    return md
 end
 
 """
-    deleteinstances!(mfd, i)
+    deleteinstances!(md, i)
 
-Remove the `i`-th instance in a multiframe dataset.
+Remove the `i`-th instance in a multimodal dataset.
 
-The `AbstractMultiFrameDataset` is returned.
+The `AbstractMultiModalDataset` is returned.
 
-    deleteinstances!(mfd, indices)
+    deleteinstances!(md, indices)
 
-Remove the instances at `indices` in a multiframe dataset and return `mfd`.
+Remove the instances at `indices` in a multimodal dataset and return `md`.
 
-The `AbstractMultiFrameDataset` is returned.
+The `AbstractMultiModalDataset` is returned.
 """
-function deleteinstances!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
+function deleteinstances!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
     for i in indices
-        @assert 1 ≤ i ≤ ninstances(mfd) "Index $(i) no in range 1:ninstances " *
-            "(1:$(ninstances(mfd)))"
+        @assert 1 ≤ i ≤ ninstances(md) "Index $(i) no in range 1:ninstances " *
+            "(1:$(ninstances(md)))"
     end
 
-    deleteat!(data(mfd), unique(indices))
+    deleteat!(data(md), unique(indices))
 
-    return mfd
+    return md
 end
-deleteinstances!(mfd::AbstractMultiFrameDataset, i::Integer) = deleteinstances!(mfd, [i])
+deleteinstances!(md::AbstractMultiModalDataset, i::Integer) = deleteinstances!(md, [i])
 
 """
-    keeponlyinstances!(mfd, indices)
+    keeponlyinstances!(md, indices)
 
 Removes all instances that do not correspond to the indices present in `indices` from a
-multiframe dataset.
+multimodal dataset.
 """
 function keeponlyinstances!(
-    mfd::AbstractMultiFrameDataset,
+    md::AbstractMultiModalDataset,
     indices::AbstractVector{<:Integer}
 )
-    return deleteinstances!(mfd, setdiff(collect(1:ninstances(mfd)), indices))
+    return deleteinstances!(md, setdiff(collect(1:ninstances(md)), indices))
 end
 
 """
-    instance(mfd, i)
+    instance(md, i)
 
-Get `i`-th instance in a multiframe dataset.
+Return `i`-th instance in a multimodal dataset.
 
-    instance(mfd, i_frame, i_instance)
+    instance(md, i_modality, i_instance)
 
-Get `i_instance`-th instance in a multiframe dataset with only attributes present in
-the `i_frame`-th frame.
+Return `i_instance`-th instance in a multimodal dataset with only variables present in
+the `i_modality`-th modality.
 
-    instance(mfd, indices)
+    instance(md, indices)
 
-Get instances at `indices` in a multiframe dataset.
+Return instances at `indices` in a multimodal dataset.
 
-    instance(mfd, i_frame, inst_indices)
+    instance(md, i_modality, inst_indices)
 
-Get indices at `inst_indices` in a multiframe dataset with only attributes present in
-the `i_frame`-th frame.
+Return indices at `inst_indices` in a multimodal dataset with only variables present in
+the `i_modality`-th modality.
 """
 function instance(df::AbstractDataFrame, i::Integer)
     @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
-        "(1:$(ninstances(mfd))"
+        "(1:$(ninstances(md))"
 
     return @view df[i,:]
 end
-function instance(mfd::AbstractMultiFrameDataset, i::Integer)
-    @assert 1 ≤ i ≤ ninstances(mfd) "Index ($i) must be a valid instance number " *
-        "(1:$(ninstances(mfd))"
+function instance(md::AbstractMultiModalDataset, i::Integer)
+    @assert 1 ≤ i ≤ ninstances(md) "Index ($i) must be a valid instance number " *
+        "(1:$(ninstances(md))"
 
-    return instance(data(mfd), i)
+    return instance(data(md), i)
 end
-function instance(mfd::AbstractMultiFrameDataset, i_frame::Integer, i_instance::Integer)
-    @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
-        "frame number (1:$(nframes(mfd))"
+function instance(md::AbstractMultiModalDataset, i_modality::Integer, i_instance::Integer)
+    @assert 1 ≤ i_modality ≤ nmodalities(md) "Index ($i_modality) must be a valid " *
+        "modality number (1:$(nmodalities(md))"
 
-    return instance(frame(mfd, i_frame), i_instance)
+    return instance(modality(md, i_modality), i_instance)
 end
 function instance(df::AbstractDataFrame, indices::AbstractVector{<:Integer})
     for i in indices
         @assert 1 ≤ i ≤ ninstances(df) "Index ($i) must be a valid instance number " *
-            "(1:$(ninstances(mfd))"
+            "(1:$(ninstances(md))"
     end
 
     return @view df[indices,:]
 end
-function instance(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
-    return instance(data(mfd), indices)
+function instance(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
+    return instance(data(md), indices)
 end
 function instance(
-    mfd::AbstractMultiFrameDataset,
-    i_frame::Integer,
+    md::AbstractMultiModalDataset,
+    i_modality::Integer,
     inst_indices::AbstractVector{<:Integer}
 )
-    @assert 1 ≤ i_frame ≤ nframes(mfd) "Index ($i_frame) must be a valid " *
-        "frame number (1:$(nframes(mfd))"
+    @assert 1 ≤ i_modality ≤ nmodalities(md) "Index ($i_modality) must be a valid " *
+        "modality number (1:$(nmodalities(md))"
 
-    return instance(frame(mfd, i_frame), inst_indices)
+    return instance(modality(md, i_modality), inst_indices)
 end

@@ -8,18 +8,18 @@ CurrentModule = SoleData
 Pages = ["manipulation.md"]
 ```
 
-## [Frames](@id man-frames)
+## [Modalities](@id man-modalities)
 
 ```@autodocs
 Modules = [SoleData]
-Pages = ["frames.jl"]
+Pages = ["modalities.jl"]
 ```
 
-## [Attributes](@id man-attributes)
+## [Variables](@id man-variables)
 
 ```@autodocs
 Modules = [SoleData]
-Pages = ["attributes.jl"]
+Pages = ["variables.jl"]
 ```
 
 ## [Instances](@id man-instances)

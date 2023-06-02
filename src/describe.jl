@@ -1,6 +1,6 @@
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - describe
+# AbstractMultiModalDataset - describe
 
 const desc_dict = Dict{Symbol,Function}(
     :mean => mean,
@@ -23,13 +23,13 @@ function _describeonm(
     cols::AbstractVector{<:Integer} = 1:ncol(df),
     t::AbstractVector{<:NTuple{3,Integer}} = [(1, 0, 0)]
 )
-    frame_dim = dimension(df)
-    @assert length(t) == 1 || length(t) == frame_dim "`t` length has to be `1` or the " *
-        "dimension of the frame ($(frame_dim))"
+    modality_dim = dimension(df)
+    @assert length(t) == 1 || length(t) == modality_dim "`t` length has to be `1` or the " *
+        "dimension of the modality ($(modality_dim))"
 
-    if frame_dim > 1 && length(t) == 1
+    if modality_dim > 1 && length(t) == 1
         # if dimension is > 1 but only 1 triple is passed use it for all dimensions
-        t = fill(t, frame_dim)
+        t = fill(t, modality_dim)
     end
 
     x = Matrix{AbstractFloat}[]
@@ -61,23 +61,23 @@ function describeonm(
     end
 
     return DataFrame(
-        :Attributes => Symbol.(propertynames(df)),
+        :Variables => Symbol.(propertynames(df)),
         [d => _describeonm(df; descfunction = desc_dict[d], t) for d in desc]...
     )
 end
 
 # TODO: same as above
 """
-	describe(mfd; t = fill([(1, 0, 0)], nframes(mfd)), kwargs...)
+	describe(md; t = fill([(1, 0, 0)], nmodalities(md)), kwargs...)
 
-Return descriptive statistics for an `AbstractMultiFrameDataset` as a `Vector` of new
+Return descriptive statistics for an `AbstractMultiModalDataset` as a `Vector` of new
 `DataFrame`s where each row represents a variable and each column a summary statistic.
 
 ## Arguments
 
-* `mfd`: the `AbstractMultiFrameDataset`;
-* `t`: is a Vector `nframes` long where each element is a Vector as long as the dimension of
-	the data held by the i-th frame. Each element of the innermost Vector is a tuple
+* `md`: the `AbstractMultiModalDataset`;
+* `t`: is a Vector `nmodalities` long where each element is a Vector as long as the dimension of
+	the data held by the i-th modality. Each element of the innermost Vector is a tuple
 	describing the parameters as described in [`paa`](@ref) algorithm documentation.
 
 For other see the documentation of [`DataFrames.describe`](@ref) function.
@@ -86,28 +86,28 @@ For other see the documentation of [`DataFrames.describe`](@ref) function.
 TODO: examples
 """
 function DF.describe(
-	mfd::AbstractMultiFrameDataset;
-	t::AbstractVector{<:AbstractVector{<:NTuple{3,Integer}}} = fill([(1, 0, 0)], nframes(mfd)),
+	md::AbstractMultiModalDataset;
+	t::AbstractVector{<:AbstractVector{<:NTuple{3,Integer}}} = fill([(1, 0, 0)], nmodalities(md)),
 	kwargs...
 )
-    return [DF.describe(mfd, i; t = t[i], kwargs...) for i in 1:nframes(mfd)]
+    return [DF.describe(md, i; t = t[i], kwargs...) for i in 1:nmodalities(md)]
 end
 
 # TODO: implement this
-# function DF.describe(mfd::MultiFrameDataset, stats::Union{Symbol, Pair}...; cols=:)
-#     # TODO: select proper defaults stats based on `dimension` of each frame
+# function DF.describe(md::MultiModalDataset, stats::Union{Symbol, Pair}...; cols=:)
+#     # TODO: select proper defaults stats based on `dimension` of each modality
 # end
 
-function DF.describe(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
-    frame_dim = dimension(frame(mfd, i))
-    if frame_dim == :mixed || frame_dim == :empty
+function DF.describe(md::AbstractMultiModalDataset, i::Integer; kwargs...)
+    modality_dim = dimension(modality(md, i))
+    if modality_dim == :mixed || modality_dim == :empty
         # TODO: implement for mixed???
-        throw(ErrorException("Description for `:$(frame_dim)` dimension frame not implemented"))
-    elseif frame_dim == 0
-        return DF.describe(frame(mfd, i))
+        throw(ErrorException("Description for `:$(modality_dim)` dimension modality not implemented"))
+    elseif modality_dim == 0
+        return DF.describe(modality(md, i))
     else
-        desc = haskey(kwargs, :desc) ? kwargs[:desc] : auto_desc_by_dim[frame_dim]
-        return describeonm(frame(mfd, i); desc = desc, kwargs...)
+        desc = haskey(kwargs, :desc) ? kwargs[:desc] : auto_desc_by_dim[modality_dim]
+        return describeonm(modality(md, i); desc = desc, kwargs...)
     end
 end
 
@@ -132,5 +132,5 @@ function _stat_description(
 	order = cat([collect(i:length(cols):total_cols) for i in 1:length(cols)]...; dims = 1)
 	gen_cols = cat([apply_func_2_col(f) for f in functions]...; dims = 1)
 
-	return DataFrame(:ATTRIBUTE => df[:,1], gen_cols[order]...)
+	return DataFrame(:VARIABLE => df[:,1], gen_cols[order]...)
 end

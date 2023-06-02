@@ -8,7 +8,7 @@ CurrentModule = SoleData
 Pages = ["datasets.md"]
 ```
 
-Machine learning datasets are a collection of samples (or instances),
+Machine learning datasets are a collection of instances (or samples),
 each one described by a number of variables.
 In the case of *tabular* data, a dataset looks like
 a database table, where every column is a variable,
@@ -22,11 +22,11 @@ combining their statistical properties is non-trivial, since they may be quite d
 one another.
 
 The abstract representation of a multimodal dataset provided by this package is the
-[`AbstractMultiFrameDataset`](@ref).
+[`AbstractMultiModalDataset`](@ref).
 
 ```@docs
-AbstractMultiFrameDataset
-frame_descriptor
+AbstractMultiModalDataset
+grouped_variables
 data
 dimension
 ```
@@ -39,11 +39,11 @@ or *features*) have equal role in the representation.
 These datasets are used in
 [unsupervised learning](https://en.wikipedia.org/wiki/Unsupervised_learning) contexts,
 for discovering internal correlation patterns between the features.
-Multimodal *unlabeled* datasets can be instantiated with [`MultiFrameDataset`](@ref).
+Multimodal *unlabeled* datasets can be instantiated with [`MultiModalDataset`](@ref).
 
 ```@autodocs
 Modules = [SoleData]
-Pages = ["src/MultiFrameDataset.jl"]
+Pages = ["src/MultiModalDataset.jl"]
 ```
 
 ## [Labeled Datasets](@id man-supervised-datasets)
@@ -57,19 +57,19 @@ or a numerical value (*regression label*).
 can be applied on these datasets
 for modeling the target variables as a function of the feature variables.
 
-As an extension of the [`AbstractMultiFrameDataset`](@ref),
-[`AbstractLabeledMultiFrameDataset`](@ref) has an interface that can be implemented to
+As an extension of the [`AbstractMultiModalDataset`](@ref),
+[`AbstractLabeledMultiModalDataset`](@ref) has an interface that can be implemented to
 represent multimodal labeled datasets.
 
 ```@docs
-AbstractLabeledMultiFrameDataset
-labels_descriptor
+AbstractLabeledMultiModalDataset
+labeling_variables
 dataset
 ```
 
-Multimodal *labeled* datasets can be instantiated with [`LabeledMultiFrameDataset`](@ref).
+Multimodal *labeled* datasets can be instantiated with [`LabeledMultiModalDataset`](@ref).
 
 ```@autodocs
 Modules = [SoleData]
-Pages = ["LabeledMultiFrameDataset.jl", "labels.jl"]
+Pages = ["LabeledMultiModalDataset.jl", "labels.jl"]
 ```

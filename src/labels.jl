@@ -1,118 +1,118 @@
 
 # -------------------------------------------------------------
-# LabeledMultiFrameDataset - utils
+# LabeledMultiModalDataset - utils
 
 """
-    nlabels(lmfd)
+    nlabelingvariables(lmd)
 
-Get the number of labels of a labeled multiframe dataset.
+Return the number of labels of a labeled multimodal dataset.
 """
-function nlabels(lmfd::AbstractLabeledMultiFrameDataset)
-    return length(labels_descriptor(lmfd))
+function nlabelingvariables(lmd::AbstractLabeledMultiModalDataset)
+    return length(labeling_variables(lmd))
 end
 
 """
-    labels(lmfd, instance)
-    labels(lmfd)
+    labels(lmd, instance)
+    labels(lmd)
 
-Get the labels of instance at index `instance` in a labeled multiframe dataset.
+Return the labels of instance at index `instance` in a labeled multimodal dataset.
 A dictionary of type `labelname => value` is returned.
 
 If only the first argument is passed then the names of all labels are returned.
 """
-function labels(lmfd::AbstractLabeledMultiFrameDataset)
-    return Symbol.(names(data(lmfd)))[labels_descriptor(lmfd)]
+function labels(lmd::AbstractLabeledMultiModalDataset)
+    return Symbol.(names(data(lmd)))[labeling_variables(lmd)]
 end
-function labels(lmfd::AbstractLabeledMultiFrameDataset, instance::Integer)
-    return Dict{Symbol,Any}([attr => data(lmfd)[instance,attr] for attr in labels(lmfd)]...)
+function labels(lmd::AbstractLabeledMultiModalDataset, instance::Integer)
+    return Dict{Symbol,Any}([var => data(lmd)[instance,var] for var in labels(lmd)]...)
 end
 
 """
-    label(lmfd, instance, i)
+    label(lmd, instance, i)
 
-Get the value of the `i`-th labeling variable for instance
-at index `instance` in a labeled multiframe dataset.
+Return the value of the `i`-th labeling variable for instance
+at index `instance` in a labeled multimodal dataset.
 """
 function label(
-    lmfd::AbstractLabeledMultiFrameDataset,
+    lmd::AbstractLabeledMultiModalDataset,
     instance::Integer,
     i::Integer
 )
-    return labels(lmfd, instance)[
-        attributes(data(lmfd))[labels_descriptor(lmfd)[i]]
+    return labels(lmd, instance)[
+        variables(data(lmd))[labeling_variables(lmd)[i]]
     ]
 end
 
 """
-    labeldomain(lmfd, i)
+    labeldomain(lmd, i)
 
-Get the domain of `i`-th label of a labeled multiframe dataset.
+Return the domain of `i`-th label of a labeled multimodal dataset.
 """
-function labeldomain(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
-    @assert 1 ≤ i ≤ nlabels(lmfd) "Index ($i) must be a valid label number " *
-        "(1:$(nlabels(lmfd)))"
+function labeldomain(lmd::AbstractLabeledMultiModalDataset, i::Integer)
+    @assert 1 ≤ i ≤ nlabelingvariables(lmd) "Index ($i) must be a valid label number " *
+        "(1:$(nlabelingvariables(lmd)))"
 
-    if eltype(scitype(data(lmfd)[:,labels_descriptor(lmfd)[i]])) <: Continuous
-        return extrema(data(lmfd)[:,labels_descriptor(lmfd)[i]])
+    if eltype(scitype(data(lmd)[:,labeling_variables(lmd)[i]])) <: Continuous
+        return extrema(data(lmd)[:,labeling_variables(lmd)[i]])
     else
-        return Set(data(lmfd)[:,labels_descriptor(lmfd)[i]])
+        return Set(data(lmd)[:,labeling_variables(lmd)[i]])
     end
 end
 
 """
-    setaslabel!(lmfd, i)
-    setaslabel!(lmfd, attr_name)
+    setaslabelinging!(lmd, i)
+    setaslabelinging!(lmd, var_name)
 
-Set `i`-th attribute as label.
+Set `i`-th variable as label.
 
-The attribute name can be passed as second argument instead of its index.
+The variable name can be passed as second argument instead of its index.
 """
-function setaslabel!(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
-    @assert 1 ≤ i ≤ nattributes(lmfd) "Index ($i) must be a valid attribute number " *
-        "(1:$(nattributes(lmfd)))"
+function setaslabelinging!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
+    @assert 1 ≤ i ≤ nvariables(lmd) "Index ($i) must be a valid variable number " *
+        "(1:$(nvariables(lmd)))"
 
-    @assert !(i in labels_descriptor(lmfd)) "Attribute at index $(i) is already a label."
+    @assert !(i in labeling_variables(lmd)) "Variable at index $(i) is already a label."
 
-    push!(labels_descriptor(lmfd), i)
+    push!(labeling_variables(lmd), i)
 
-    return lmfd
+    return lmd
 end
-function setaslabel!(lmfd::AbstractLabeledMultiFrameDataset, attr_name::Symbol)
-    @assert hasattributes(lmfd, attr_name) "LabeldMultiFrameDataset does not contain " *
-        "attribute $(attr_name)"
+function setaslabelinging!(lmd::AbstractLabeledMultiModalDataset, var_name::Symbol)
+    @assert hasvariables(lmd, var_name) "LabeldMultiModalDataset does not contain " *
+        "variable $(var_name)"
 
-    return setaslabel!(lmfd, _name2index(lmfd, attr_name))
+    return setaslabelinging!(lmd, _name2index(lmd, var_name))
 end
 
 """
-    removefromlabels!(lmfd, i)
-    removefromlabels!(lmfd, attr_name)
+    removefromlabels!(lmd, i)
+    removefromlabels!(lmd, var_name)
 
 Remove `i`-th labeling variable from labels list.
 
-The attribute name can be passed as second argument instead of its index.
+The variable name can be passed as second argument instead of its index.
 """
-function removefromlabels!(lmfd::AbstractLabeledMultiFrameDataset, i::Integer)
-    @assert 1 ≤ i ≤ nattributes(lmfd) "Index ($i) must be a valid attribute number " *
-        "(1:$(nattributes(lmfd)))"
+function removefromlabels!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
+    @assert 1 ≤ i ≤ nvariables(lmd) "Index ($i) must be a valid variable number " *
+        "(1:$(nvariables(lmd)))"
 
-    @assert i in labels_descriptor(lmfd) "Attribute at index $(i) is not a label."
+    @assert i in labeling_variables(lmd) "Variable at index $(i) is not a label."
 
-    deleteat!(labels_descriptor(lmfd), indexin(i, labels_descriptor(lmfd))[1])
+    deleteat!(labeling_variables(lmd), indexin(i, labeling_variables(lmd))[1])
 
-    return lmfd
+    return lmd
 end
-function removefromlabels!(lmfd::AbstractLabeledMultiFrameDataset, attr_name::Symbol)
-    @assert hasattributes(lmfd, attr_name) "LabeledMultiFrameDataset does not contain " *
-        "attribute $(attr_name)"
+function removefromlabels!(lmd::AbstractLabeledMultiModalDataset, var_name::Symbol)
+    @assert hasvariables(lmd, var_name) "LabeledMultiModalDataset does not contain " *
+        "variable $(var_name)"
 
-    return removefromlabels!(lmfd, _name2index(lmfd, attr_name))
+    return removefromlabels!(lmd, _name2index(lmd, var_name))
 end
 
 """
-    joinlabels!(lmfd, [lbls...]; delim = "_")
+    joinlabels!(lmd, [lbls...]; delim = "_")
 
-With a labeled multiframe dataset, collapse the label variables identified by `lbls`
+With a labeled multimodal dataset, collapse the label variables identified by `lbls`
 into a single label variable of type `String`, by means of a `join` that uses `delim`
 for string delimiter.
 
@@ -130,9 +130,8 @@ label.
 ## EXAMPLES
 
 ```julia-repl
-julia> lmfd = LabeledMultiFrameDataset(
-           [1, 3],
-           MultiFrameDataset(
+julia> lmd = LabeledMultiModalDataset(
+           MultiModalDataset(
                [[2],[4]],
                DataFrame(
                    :id => [1, 2],
@@ -140,14 +139,15 @@ julia> lmfd = LabeledMultiFrameDataset(
                    :name => ["Python", "Julia"],
                    :stat => [[sin(i) for i in 1:50000], [cos(i) for i in 1:50000]]
                )
-           )
+           ),
+           [1, 3],
        )
-● LabeledMultiFrameDataset
+● LabeledMultiModalDataset
    ├─ labels
    │   ├─ id: Set([2, 1])
    │   └─ name: Set(["Julia", "Python"])
    └─ dimensions: (0, 1)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -155,7 +155,7 @@ julia> lmfd = LabeledMultiFrameDataset(
 ─────┼───────
    1 │    30
    2 │     9
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat
@@ -165,12 +165,12 @@ julia> lmfd = LabeledMultiFrameDataset(
    2 │ [0.540302, -0.416147, -0.989992,…
 
 
-julia> joinlabels!(lmfd)
-● LabeledMultiFrameDataset
+julia> joinlabels!(lmd)
+● LabeledMultiModalDataset
    ├─ labels
    │   └─ id_name: Set(["1_Python", "2_Julia"])
    └─ dimensions: (0, 1)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -178,7 +178,7 @@ julia> joinlabels!(lmfd)
 ─────┼───────
    1 │    30
    2 │     9
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat
@@ -189,27 +189,27 @@ julia> joinlabels!(lmfd)
 ```
 """
 function joinlabels!(
-    lmfd::AbstractLabeledMultiFrameDataset,
-    lbls::Symbol... = labels(lmfd)...;
+    lmd::AbstractLabeledMultiModalDataset,
+    lbls::Symbol... = labels(lmd)...;
     delim::Union{<:AbstractString,<:AbstractChar} = '_'
 )
     for l in lbls
-        removefromlabels!(lmfd, l)
+        removefromlabels!(lmd, l)
     end
 
     new_col_name = Symbol(join(lbls, delim))
-    new_vals = [join(data(lmfd)[i,collect(lbls)], delim) for i in 1:ninstances(lmfd)]
+    new_vals = [join(data(lmd)[i,collect(lbls)], delim) for i in 1:ninstances(lmd)]
 
-    dropattributes!(lmfd, collect(lbls))
-    insertattributes!(lmfd, new_col_name, new_vals)
-    setaslabel!(lmfd, nattributes(lmfd))
+    dropvariables!(lmd, collect(lbls))
+    insertvariables!(lmd, new_col_name, new_vals)
+    setaslabelinging!(lmd, nvariables(lmd))
 
-    return lmfd
+    return lmd
 end
 function joinlabels!(
-    lmfd::AbstractLabeledMultiFrameDataset,
+    lmd::AbstractLabeledMultiModalDataset,
     labels::Integer...;
     kwargs...
 )
-    return joinlabels!(lmfd, labels(lmfd)[[labels...]]; kwargs...)
+    return joinlabels!(lmd, labels(lmd)[[labels...]]; kwargs...)
 end

@@ -1,28 +1,28 @@
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - iterable interface
+# AbstractMultiModalDataset - iterable interface
 
-getindex(mfd::AbstractMultiFrameDataset, i::Integer) = frame(mfd, i)
-function getindex(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
-    return [frame(mfd, i) for i in indices]
+getindex(md::AbstractMultiModalDataset, i::Integer) = modality(md, i)
+function getindex(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
+    return [modality(md, i) for i in indices]
 end
 
-length(mfd::AbstractMultiFrameDataset) = length(frame_descriptor(mfd))
-ndims(mfd::AbstractMultiFrameDataset) = length(mfd)
-isempty(mfd::AbstractMultiFrameDataset) = length(mfd) == 0
-firstindex(mfd::AbstractMultiFrameDataset) = 1
-lastindex(mfd::AbstractMultiFrameDataset) = length(mfd)
-eltype(::Type{AbstractMultiFrameDataset}) = SubDataFrame
-eltype(::AbstractMultiFrameDataset) = SubDataFrame
+length(md::AbstractMultiModalDataset) = length(grouped_variables(md))
+ndims(md::AbstractMultiModalDataset) = length(md)
+isempty(md::AbstractMultiModalDataset) = length(md) == 0
+firstindex(md::AbstractMultiModalDataset) = 1
+lastindex(md::AbstractMultiModalDataset) = length(md)
+eltype(::Type{AbstractMultiModalDataset}) = SubDataFrame
+eltype(::AbstractMultiModalDataset) = SubDataFrame
 
-Base.@propagate_inbounds function iterate(mfd::AbstractMultiFrameDataset, i::Integer = 1)
-    (i ≤ 0 || i > length(mfd)) && return nothing
-    return (@inbounds frame(mfd, i), i+1)
+Base.@propagate_inbounds function iterate(md::AbstractMultiModalDataset, i::Integer = 1)
+    (i ≤ 0 || i > length(md)) && return nothing
+    return (@inbounds modality(md, i), i+1)
 end
 
 # TODO: consider adding the following interfaces to access the inner dataframe
 function getindex(
-    mfd::AbstractMultiFrameDataset,
+    md::AbstractMultiModalDataset,
     i::Union{Colon,<:Integer,<:AbstractVector{<:Integer},<:Tuple{<:Integer}},
     j::Union{
         Colon,
@@ -34,5 +34,5 @@ function getindex(
     },
 )
     # NOTE: typeof(!) is left-out to avoid problems but consider adding it
-    return getindex(data(mfd), i, j)
+    return getindex(data(md), i, j)
 end

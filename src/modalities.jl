@@ -1,58 +1,58 @@
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - frames
+# AbstractMultiModalDataset - modalities
 
 """
-    frame(mfd, i)
+    modality(md, i)
 
-Get the `i`-th frame of a multiframe dataset.
+Return the `i`-th modality of a multimodal dataset.
 
-    frame(mfd, indices)
+    modality(md, indices)
 
-Get a Vector of frames at `indices` of a multiframe dataset.
+Return a Vector of modalities at `indices` of a multimodal dataset.
 """
-function frame(mfd::AbstractMultiFrameDataset, i::Integer)
-    @assert 1 ≤ i ≤ nframes(mfd) "Index ($i) must be a valid frame number " *
-        "(1:$(nframes(mfd)))"
+function modality(md::AbstractMultiModalDataset, i::Integer)
+    @assert 1 ≤ i ≤ nmodalities(md) "Index ($i) must be a valid modality number " *
+        "(1:$(nmodalities(md)))"
 
-    return @view data(mfd)[:,frame_descriptor(mfd)[i]]
+    return @view data(md)[:,grouped_variables(md)[i]]
 end
-function frame(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
-    return [frame(mfd, i) for i in indices]
+function modality(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
+    return [modality(md, i) for i in indices]
 end
 
 """
-    nframes(mfd)
+    nmodalities(md)
 
-Get the number of frames of a multiframe dataset.
+Return the number of modalities of a multimodal dataset.
 """
-nframes(mfd::AbstractMultiFrameDataset) = length(frame_descriptor(mfd))
+nmodalities(md::AbstractMultiModalDataset) = length(grouped_variables(md))
 
 """
-    addframe!(mfd, indices)
-    addframe!(mfd, index)
-    addframe!(mfd, attribute_names)
-    addframe!(mfd, attribute_name)
+    addmodality!(md, indices)
+    addmodality!(md, index)
+    addmodality!(md, variable_names)
+    addmodality!(md, variable_name)
 
-Create a new frame in a multiframe dataset using attributes at `indices`
-or `index`, and return`mfd`.
+Create a new modality in a multimodal dataset using variables at `indices`
+or `index`, and return`md`.
 
-Alternatively to the `indices` and the `index`, can be used respectively the attribute_names
-and the attribute_name.
+Alternatively to the `indices` and the `index`, can be used respectively the variable_names
+and the variable_name.
 
-Note: to add a new frame with new attributes see [`insertframe!`](@ref).
+Note: to add a new modality with new variables see [`insertmodality!`](@ref).
 
 ## PARAMETERS
 
-* `mfd` is a MultiFrameDataset;
-* `indices` is an AbstractVector{Integer} that indicates which indices of the multiframe
-    dataset's corresponding dataframe to add to the new frame;
-* `index` is a Integer that indicates the index of the multiframe dataset's corresponding
-    dataframe to add to the new frame;
-* `attribute_names` is an AbstractVector{Symbol} that indicates which attributes of the
-    multiframe dataset's corresponding dataframe to add to the new frame;
-* `attribute_name` is a Symbol that indicates the attribute of the multiframe dataset's
-    corresponding dataframe to add to the new frame;
+* `md` is a MultiModalDataset;
+* `indices` is an AbstractVector{Integer} that indicates which indices of the multimodal
+    dataset's corresponding dataframe to add to the new modality;
+* `index` is a Integer that indicates the index of the multimodal dataset's corresponding
+    dataframe to add to the new modality;
+* `variable_names` is an AbstractVector{Symbol} that indicates which variables of the
+    multimodal dataset's corresponding dataframe to add to the new modality;
+* `variable_name` is a Symbol that indicates the variable of the multimodal dataset's
+    corresponding dataframe to add to the new modality;
 
 ## EXAMPLES
 
@@ -65,10 +65,10 @@ julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['
    1 │ Python     25  M        180      80
    2 │ Julia      26  F        175      60
 
-julia> mfd = MultiFrameDataset([[1]], df)
-● MultiFrameDataset
+julia> md = MultiModalDataset([[1]], df)
+● MultiModalDataset
    └─ dimensions: (0,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -76,7 +76,7 @@ julia> mfd = MultiFrameDataset([[1]], df)
 ─────┼────────
    1 │ Python
    2 │ Julia
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×4 SubDataFrame
  Row │ age    sex   height  weight
@@ -86,10 +86,10 @@ julia> mfd = MultiFrameDataset([[1]], df)
    2 │    26  F        175      60
 
 
-julia> addframe!(mfd, [:age, :sex])
-● MultiFrameDataset
+julia> addmodality!(md, [:age, :sex])
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -97,7 +97,7 @@ julia> addframe!(mfd, [:age, :sex])
 ─────┼────────
    1 │ Python
    2 │ Julia
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    sex
@@ -105,7 +105,7 @@ julia> addframe!(mfd, [:age, :sex])
 ─────┼─────────────
    1 │    25  M
    2 │    26  F
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ height  weight
@@ -115,10 +115,10 @@ julia> addframe!(mfd, [:age, :sex])
    2 │    175      60
 
 
-julia> addframe!(mfd, 5)
-● MultiFrameDataset
+julia> addmodality!(md, 5)
+● MultiModalDataset
    └─ dimensions: (0, 0, 0)
-- Frame 1 / 3
+- Modality 1 / 3
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -126,7 +126,7 @@ julia> addframe!(mfd, 5)
 ─────┼────────
    1 │ Python
    2 │ Julia
-- Frame 2 / 3
+- Modality 2 / 3
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    sex
@@ -134,7 +134,7 @@ julia> addframe!(mfd, 5)
 ─────┼─────────────
    1 │    25  M
    2 │    26  F
-- Frame 3 / 3
+- Modality 3 / 3
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -142,7 +142,7 @@ julia> addframe!(mfd, 5)
 ─────┼────────
    1 │     80
    2 │     60
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ height
@@ -152,47 +152,47 @@ julia> addframe!(mfd, 5)
    2 │    175
 ```
 """
-function addframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
-    @assert length(indices) > 0 "Can't add an empty frame to dataset"
+function addmodality!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
+    @assert length(indices) > 0 "Can't add an empty modality to dataset"
 
     for i in indices
-        @assert i in 1:nattributes(mfd) "Index $(i) is out of range 1:nattributes " *
-            "(1:$(nattributes(mfd)))"
+        @assert i in 1:nvariables(md) "Index $(i) is out of range 1:nvariables " *
+            "(1:$(nvariables(md)))"
     end
 
-    push!(frame_descriptor(mfd), indices)
+    push!(grouped_variables(md), indices)
 
-    return mfd
+    return md
 end
-addframe!(mfd::AbstractMultiFrameDataset, index::Integer) = addframe!(mfd, [index])
-function addframe!(mfd::AbstractMultiFrameDataset, attribute_names::AbstractVector{Symbol})
-    for attr_name in attribute_names
-        @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain " *
-            "attribute $(attr_name)"
+addmodality!(md::AbstractMultiModalDataset, index::Integer) = addmodality!(md, [index])
+function addmodality!(md::AbstractMultiModalDataset, variable_names::AbstractVector{Symbol})
+    for var_name in variable_names
+        @assert hasvariables(md, var_name) "MultiModalDataset does not contain " *
+            "variable $(var_name)"
     end
 
-    return addframe!(mfd, _name2index(mfd, attribute_names))
+    return addmodality!(md, _name2index(md, variable_names))
 end
-function addframe!(mfd::AbstractMultiFrameDataset, attribute_name::Symbol)
-    return addframe!(mfd, [attribute_name])
+function addmodality!(md::AbstractMultiModalDataset, variable_name::Symbol)
+    return addmodality!(md, [variable_name])
 end
 
 """
 
-    removeframe!(mfd, indices)
-    removeframe!(mfd, index)
+    removemodality!(md, indices)
+    removemodality!(md, index)
 
-Remove `i`-th frame from a multiframe dataset, and return the dataset.
+Remove `i`-th modality from a multimodal dataset, and return the dataset.
 
-Note: to completely remove a frame and all attributes in it use [`dropframe!`](@ref)
+Note: to completely remove a modality and all variables in it use [`dropmodality!`](@ref)
 instead.
 
 ## PARAMETERS
 
-* `mfd` is a MultiFrameDataset;
-* `index` is a Integer that indicates which frame to remove from the multiframe dataset;
-* `indices` is a AbstractVector{Integer} that indicates the frames to remove from the
-    multiframe dataset;
+* `md` is a MultiModalDataset;
+* `index` is a Integer that indicates which modality to remove from the multimodal dataset;
+* `indices` is a AbstractVector{Integer} that indicates the modalities to remove from the
+    multimodal dataset;
 
 ## EXAMPLES
 
@@ -210,10 +210,10 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
    1 │ Python     25  M        180      80
    2 │ Julia      26  F        175      60
 
-julia> mfd = MultiFrameDataset([[1, 2],[3],[4],[5]], df)
-● MultiFrameDataset
+julia> md = MultiModalDataset([[1, 2],[3],[4],[5]], df)
+● MultiModalDataset
    └─ dimensions: (0, 0, 0, 0)
-- Frame 1 / 4
+- Modality 1 / 4
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ name    age
@@ -221,7 +221,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3],[4],[5]], df)
 ─────┼───────────────
    1 │ Python     25
    2 │ Julia      26
-- Frame 2 / 4
+- Modality 2 / 4
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ sex
@@ -229,7 +229,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3],[4],[5]], df)
 ─────┼──────
    1 │ M
    2 │ F
-- Frame 3 / 4
+- Modality 3 / 4
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ height
@@ -237,7 +237,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3],[4],[5]], df)
 ─────┼────────
    1 │    180
    2 │    175
-- Frame 4 / 4
+- Modality 4 / 4
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -246,10 +246,10 @@ julia> mfd = MultiFrameDataset([[1, 2],[3],[4],[5]], df)
    1 │     80
    2 │     60
 
-julia> removeframe!(mfd, [3])
-● MultiFrameDataset
+julia> removemodality!(md, [3])
+● MultiModalDataset
    └─ dimensions: (0, 0, 0)
-- Frame 1 / 3
+- Modality 1 / 3
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ name    age
@@ -257,7 +257,7 @@ julia> removeframe!(mfd, [3])
 ─────┼───────────────
    1 │ Python     25
    2 │ Julia      26
-- Frame 2 / 3
+- Modality 2 / 3
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ sex
@@ -265,7 +265,7 @@ julia> removeframe!(mfd, [3])
 ─────┼──────
    1 │ M
    2 │ F
-- Frame 3 / 3
+- Modality 3 / 3
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -273,7 +273,7 @@ julia> removeframe!(mfd, [3])
 ─────┼────────
    1 │     80
    2 │     60
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ height
@@ -282,10 +282,10 @@ julia> removeframe!(mfd, [3])
    1 │    180
    2 │    175
 
-julia> removeframe!(mfd, [1,2])
-● MultiFrameDataset
+julia> removemodality!(md, [1,2])
+● MultiModalDataset
    └─ dimensions: (0,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -293,7 +293,7 @@ julia> removeframe!(mfd, [1,2])
 ─────┼────────
    1 │     80
    2 │     60
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×4 SubDataFrame
  Row │ name    age    sex   height
@@ -304,50 +304,50 @@ julia> removeframe!(mfd, [1,2])
 
 ```
 """
-function removeframe!(mfd::AbstractMultiFrameDataset, i::Integer)
-    @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
-        "(1:$(nframes(mfd)))"
+function removemodality!(md::AbstractMultiModalDataset, i::Integer)
+    @assert 1 ≤ i ≤ nmodalities(md) "Index $(i) does not correspond to a modality " *
+        "(1:$(nmodalities(md)))"
 
-    deleteat!(frame_descriptor(mfd), i)
+    deleteat!(grouped_variables(md), i)
 
-    return mfd
+    return md
 end
-function removeframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{Integer})
+function removemodality!(md::AbstractMultiModalDataset, indices::AbstractVector{Integer})
     for i in sort(unique(indices))
-        removeframe!(mfd, i)
+        removemodality!(md, i)
     end
 
-    return mfd
+    return md
 end
 
 """
-    addattribute_toframe!(mfd, frame_index, attr_index)
-    addattribute_toframe!(mfd, frame_index, attr_indices)
-    addattribute_toframe!(mfd, frame_index, attr_name)
-    addattribute_toframe!(mfd, frame_index, attr_names)
+    addvariable_tomodality!(md, i_modality, var_index)
+    addvariable_tomodality!(md, i_modality, var_indices)
+    addvariable_tomodality!(md, i_modality, var_name)
+    addvariable_tomodality!(md, i_modality, var_names)
 
-Add attribute at index `attr_index` to the frame at index `frame_index` in a
-multiframe dataset, and return the dataset.
-Alternatively to `attr_index` the attribute name can be used.
-Multiple attributes can be inserted into the multiframe dataset at once using `attr_indices`
-or `attr_inames`.
+Add variable at index `var_index` to the modality at index `i_modality` in a
+multimodal dataset, and return the dataset.
+Alternatively to `var_index` the variable name can be used.
+Multiple variables can be inserted into the multimodal dataset at once using `var_indices`
+or `var_inames`.
 
-Note: The function does not allow you to add an attribute to a new frame, but only to add it
-to an existing frame in the mfd. To add a new frame use [`addframe!`](@ref) instead.
+Note: The function does not allow you to add an variable to a new modality, but only to add it
+to an existing modality in the md. To add a new modality use [`addmodality!`](@ref) instead.
 
 ## PARAMETERS
 
-* `mfd` is a MultiFrameDataset;
-* `frame_index` is a Integer which indicates the frame in which the attribute or attributes
+* `md` is a MultiModalDataset;
+* `i_modality` is a Integer which indicates the modality in which the variable(s)
     will be added;
-* `attr_index` is a Integer that indicates the index of the attribute to add to a specific
-    frame of the multiframe dataset;
-* `attr_indices` is a AbstractVector{Integer} which indicates the indices of the attributes
-    to add to a specific frame of the multiframe dataset;
-* `attr_name` is a Symbol which indicates the name of the attribute to add to a specific
-    frame of the multiframe dataset;
-* `attr_names` is a AbstractVector{Symbol} which indicates the name of the attributes to
-    add to a specific frame of the multiframe dataset;
+* `var_index` is a Integer that indicates the index of the variable to add to a specific
+    modality of the multimodal dataset;
+* `var_indices` is a AbstractVector{Integer} which indicates the indices of the variables
+    to add to a specific modality of the multimodal dataset;
+* `var_name` is a Symbol which indicates the name of the variable to add to a specific
+    modality of the multimodal dataset;
+* `var_names` is a AbstractVector{Symbol} which indicates the name of the variables to
+    add to a specific modality of the multimodal dataset;
 
 ## EXAMPLES
 
@@ -365,10 +365,10 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
    1 │ Python     25  M        180      80
    2 │ Julia      26  F        175      60
 
-julia> mfd = MultiFrameDataset([[1, 2],[3]], df)
-● MultiFrameDataset
+julia> md = MultiModalDataset([[1, 2],[3]], df)
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ name    age
@@ -376,7 +376,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3]], df)
 ─────┼───────────────
    1 │ Python     25
    2 │ Julia      26
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ sex
@@ -384,7 +384,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3]], df)
 ─────┼──────
    1 │ M
    2 │ F
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ height  weight
@@ -393,10 +393,10 @@ julia> mfd = MultiFrameDataset([[1, 2],[3]], df)
    1 │    180      80
    2 │    175      60
 
-julia> addattribute_toframe!(mfd, 1, [4,5])
-● MultiFrameDataset
+julia> addvariable_tomodality!(md, 1, [4,5])
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×4 SubDataFrame
  Row │ name    age    height  weight
@@ -404,7 +404,7 @@ julia> addattribute_toframe!(mfd, 1, [4,5])
 ─────┼───────────────────────────────
    1 │ Python     25     180      80
    2 │ Julia      26     175      60
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ sex
@@ -413,10 +413,10 @@ julia> addattribute_toframe!(mfd, 1, [4,5])
    1 │ M
    2 │ F
 
-julia> addattribute_toframe!(mfd, 2, [:name,:weight])
-● MultiFrameDataset
+julia> addvariable_tomodality!(md, 2, [:name,:weight])
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×4 SubDataFrame
  Row │ name    age    height  weight
@@ -424,7 +424,7 @@ julia> addattribute_toframe!(mfd, 2, [:name,:weight])
 ─────┼───────────────────────────────
    1 │ Python     25     180      80
    2 │ Julia      26     175      60
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×3 SubDataFrame
  Row │ sex   name    weight
@@ -434,77 +434,77 @@ julia> addattribute_toframe!(mfd, 2, [:name,:weight])
    2 │ F     Julia       60
 ```
 """
-function addattribute_toframe!(
-    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_index::Integer
+function addvariable_tomodality!(
+    md::AbstractMultiModalDataset, i_modality::Integer, var_index::Integer
 )
-    @assert 1 ≤ frame_index ≤ nframes(mfd) "Index $(frame_index) does not correspond " *
-        "to a frame (1:$(nframes(mfd)))"
-    @assert 1 ≤ attr_index ≤ nattributes(mfd) "Index $(attr_index) does not correspond " *
-        "to an attribute (1:$(nattributes(mfd)))"
+    @assert 1 ≤ i_modality ≤ nmodalities(md) "Index $(i_modality) does not correspond " *
+        "to a modality (1:$(nmodalities(md)))"
+    @assert 1 ≤ var_index ≤ nvariables(md) "Index $(var_index) does not correspond " *
+        "to an variable (1:$(nvariables(md)))"
 
-    if attr_index in frame_descriptor(mfd)[frame_index]
-        @info "Attribute $(attr_index) is already part of frame $(frame_index)"
+    if var_index in grouped_variables(md)[i_modality]
+        @info "Variable $(var_index) is already part of modality $(i_modality)"
     else
-        push!(frame_descriptor(mfd)[frame_index], attr_index)
+        push!(grouped_variables(md)[i_modality], var_index)
     end
 
-    return mfd
+    return md
 end
-function addattribute_toframe!(
-    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_indeices::AbstractVector{<:Integer}
+function addvariable_tomodality!(
+    md::AbstractMultiModalDataset, i_modality::Integer, var_indices::AbstractVector{<:Integer}
 )
-    for attr_index in attr_indeices
-        addattribute_toframe!(mfd, frame_index, attr_index)
+    for var_index in var_indices
+        addvariable_tomodality!(md, i_modality, var_index)
     end
 
-    return mfd
+    return md
 end
-function addattribute_toframe!(
-    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_name::Symbol
+function addvariable_tomodality!(
+    md::AbstractMultiModalDataset, i_modality::Integer, var_name::Symbol
 )
-    @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
-        "$(attr_name)"
+    @assert hasvariables(md, var_name) "MultiModalDataset does not contain variable " *
+        "$(var_name)"
 
-    return addattribute_toframe!(mfd, frame_index, _name2index(mfd, attr_name))
+    return addvariable_tomodality!(md, i_modality, _name2index(md, var_name))
 end
-function addattribute_toframe!(
-    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_names::AbstractVector{Symbol}
+function addvariable_tomodality!(
+    md::AbstractMultiModalDataset, i_modality::Integer, var_names::AbstractVector{Symbol}
 )
-    for attr_name in attr_names
-        addattribute_toframe!(mfd, frame_index, attr_name)
+    for var_name in var_names
+        addvariable_tomodality!(md, i_modality, var_name)
     end
 
-    return mfd
+    return md
 end
 
 """
-    removeattribute_fromframe!(mfd, farme_index, attr_indices)
-    removeattribute_fromframe!(mfd, farme_index, attr_index)
-    removeattribute_fromframe!(mfd, farme_index, attr_name)
-    removeattribute_fromframe!(mfd, farme_index, attr_names)
+    removevariable_frommodality!(md, i_modality, var_indices)
+    removevariable_frommodality!(md, i_modality, var_index)
+    removevariable_frommodality!(md, i_modality, var_name)
+    removevariable_frommodality!(md, i_modality, var_names)
 
-Remove attribute at index `attr_index` from the frame at index `frame_index` in a
-multiframe dataset, and return `mfd`.
+Remove variable at index `var_index` from the modality at index `i_modality` in a
+multimodal dataset, and return `md`.
 
-Alternatively to `attr_index` the attribute name can be used.
-Multiple attributes can be dropped from the multiframe dataset at once passing a Vector of
+Alternatively to `var_index` the variable name can be used.
+Multiple variables can be dropped from the multimodal dataset at once passing a Vector of
 Symbols (for names) or a Vector of Integers (for indices) as last parameter.
 
-Note: when all attributes are dropped to a frame, it will be removed.
+Note: when all variables are dropped to a modality, it will be removed.
 
 ## PARAMETERS
 
-* `mfd` is a MultiFrameDataset;
-* `frame_index` is a Integer which indicates the frame in which the attribute or attributes
+* `md` is a MultiModalDataset;
+* `i_modality` is a Integer which indicates the modality in which the variable(s)
     will be dropped;
-* `attr_index` is a Integer that indicates the index of the attribute to drop from a
-    specific frame of the multiframe dataset;
-* `attr_indices` is a AbstractVector{Integer} which indicates the indices of the attributes
-    to drop from a specific frame of the multiframe dataset;
-* `attr_name` is a Symbol which indicates the name of the attribute to drop from a specific
-    frame of the multiframe dataset;
-* `attr_names` is a AbstractVector{Symbol} which indicates the name of the attributes to
-    drop from a specific frame of the multiframe dataset;
+* `var_index` is a Integer that indicates the index of the variable to drop from a
+    specific modality of the multimodal dataset;
+* `var_indices` is a AbstractVector{Integer} which indicates the indices of the variables
+    to drop from a specific modality of the multimodal dataset;
+* `var_name` is a Symbol which indicates the name of the variable to drop from a specific
+    modality of the multimodal dataset;
+* `var_names` is a AbstractVector{Symbol} which indicates the name of the variables to
+    drop from a specific modality of the multimodal dataset;
 
 ## EXAMPLES
 
@@ -522,10 +522,10 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
    1 │ Python     25  M        180      80
    2 │ Julia      26  F        175      60
 
-julia> mfd = MultiFrameDataset([[1,2,4],[2,3,4],[5]], df)
-● MultiFrameDataset
+julia> md = MultiModalDataset([[1,2,4],[2,3,4],[5]], df)
+● MultiModalDataset
    └─ dimensions: (0, 0, 0)
-- Frame 1 / 3
+- Modality 1 / 3
    └─ dimension: 0
 2×3 SubDataFrame
  Row │ name    age    height
@@ -533,7 +533,7 @@ julia> mfd = MultiFrameDataset([[1,2,4],[2,3,4],[5]], df)
 ─────┼───────────────────────
    1 │ Python     25     180
    2 │ Julia      26     175
-- Frame 2 / 3
+- Modality 2 / 3
    └─ dimension: 0
 2×3 SubDataFrame
  Row │ age    sex   height
@@ -541,7 +541,7 @@ julia> mfd = MultiFrameDataset([[1,2,4],[2,3,4],[5]], df)
 ─────┼─────────────────────
    1 │    25  M        180
    2 │    26  F        175
-- Frame 3 / 3
+- Modality 3 / 3
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -550,11 +550,11 @@ julia> mfd = MultiFrameDataset([[1,2,4],[2,3,4],[5]], df)
    1 │     80
    2 │     60
 
-julia> removeattribute_fromframe!(mfd, 3, 5)
-[ Info: Attribute 5 was last attribute of frame 3: removing frame
-● MultiFrameDataset
+julia> removevariable_frommodality!(md, 3, 5)
+[ Info: Variable 5 was last variable of modality 3: removing modality
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×3 SubDataFrame
  Row │ name    age    height
@@ -562,7 +562,7 @@ julia> removeattribute_fromframe!(mfd, 3, 5)
 ─────┼───────────────────────
    1 │ Python     25     180
    2 │ Julia      26     175
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×3 SubDataFrame
  Row │ age    sex   height
@@ -570,7 +570,7 @@ julia> removeattribute_fromframe!(mfd, 3, 5)
 ─────┼─────────────────────
    1 │    25  M        180
    2 │    26  F        175
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -579,10 +579,10 @@ julia> removeattribute_fromframe!(mfd, 3, 5)
    1 │     80
    2 │     60
 
-julia> removeattribute_fromframe!(mfd, 1, :age)
-● MultiFrameDataset
+julia> removevariable_frommodality!(md, 1, :age)
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ name    height
@@ -590,7 +590,7 @@ julia> removeattribute_fromframe!(mfd, 1, :age)
 ─────┼────────────────
    1 │ Python     180
    2 │ Julia      175
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×3 SubDataFrame
  Row │ age    sex   height
@@ -598,7 +598,7 @@ julia> removeattribute_fromframe!(mfd, 1, :age)
 ─────┼─────────────────────
    1 │    25  M        180
    2 │    26  F        175
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -607,10 +607,10 @@ julia> removeattribute_fromframe!(mfd, 1, :age)
    1 │     80
    2 │     60
 
-julia> removeattribute_fromframe!(mfd, 2, [3,4])
-● MultiFrameDataset
+julia> removevariable_frommodality!(md, 2, [3,4])
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ name    height
@@ -618,7 +618,7 @@ julia> removeattribute_fromframe!(mfd, 2, [3,4])
 ─────┼────────────────
    1 │ Python     180
    2 │ Julia      175
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -626,7 +626,7 @@ julia> removeattribute_fromframe!(mfd, 2, [3,4])
 ─────┼───────
    1 │    25
    2 │    26
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ sex   weight
@@ -635,11 +635,11 @@ julia> removeattribute_fromframe!(mfd, 2, [3,4])
    1 │ M         80
    2 │ F         60
 
-julia> removeattribute_fromframe!(mfd, 1, [:name,:height])
-[ Info: Attribute 4 was last attribute of frame 1: removing frame
-● MultiFrameDataset
+julia> removevariable_frommodality!(md, 1, [:name,:height])
+[ Info: Variable 4 was last variable of modality 1: removing modality
+● MultiModalDataset
    └─ dimensions: (0,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -647,7 +647,7 @@ julia> removeattribute_fromframe!(mfd, 1, [:name,:height])
 ─────┼───────
    1 │    25
    2 │    26
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×4 SubDataFrame
  Row │ name    sex   height  weight
@@ -657,76 +657,76 @@ julia> removeattribute_fromframe!(mfd, 1, [:name,:height])
    2 │ Julia   F        175      60
 ```
 """
-function removeattribute_fromframe!(
-    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_index::Integer
+function removevariable_frommodality!(
+    md::AbstractMultiModalDataset, i_modality::Integer, var_index::Integer
 )
-    @assert 1 ≤ frame_index ≤ nframes(mfd) "Index $(frame_index) does not correspond " *
-        "to a frame (1:$(nframes(mfd)))"
-    @assert 1 ≤ attr_index ≤ nattributes(mfd) "Index $(attr_index) does not correspond " *
-        "to an attribute (1:$(nattributes(mfd)))"
+    @assert 1 ≤ i_modality ≤ nmodalities(md) "Index $(i_modality) does not correspond " *
+        "to a modality (1:$(nmodalities(md)))"
+    @assert 1 ≤ var_index ≤ nvariables(md) "Index $(var_index) does not correspond " *
+        "to an variable (1:$(nvariables(md)))"
 
-    if !(attr_index in frame_descriptor(mfd)[frame_index])
-        @info "Attribute $(attr_index) is not part of frame $(frame_index)"
-    elseif nattributes(mfd, frame_index) == 1
-        @info "Attribute $(attr_index) was last attribute of frame $(frame_index): " *
-            "removing frame"
-        removeframe!(mfd, frame_index)
+    if !(var_index in grouped_variables(md)[i_modality])
+        @info "Variable $(var_index) is not part of modality $(i_modality)"
+    elseif nvariables(md, i_modality) == 1
+        @info "Variable $(var_index) was last variable of modality $(i_modality): " *
+            "removing modality"
+        removemodality!(md, i_modality)
     else
         deleteat!(
-            frame_descriptor(mfd)[frame_index],
-            indexin(attr_index, frame_descriptor(mfd)[frame_index])[1]
+            grouped_variables(md)[i_modality],
+            indexin(var_index, grouped_variables(md)[i_modality])[1]
         )
     end
 
-    return mfd
+    return md
 end
-function removeattribute_fromframe!(
-    mfd::AbstractMultiFrameDataset,
-    frame_index::Integer,
-    attr_indices::AbstractVector{<:Integer}
+function removevariable_frommodality!(
+    md::AbstractMultiModalDataset,
+    i_modality::Integer,
+    var_indices::AbstractVector{<:Integer}
 )
-    for i in attr_indices
-        removeattribute_fromframe!(mfd, frame_index, i)
+    for i in var_indices
+        removevariable_frommodality!(md, i_modality, i)
     end
 
-    return mfd
+    return md
 end
-function removeattribute_fromframe!(
-    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_name::Symbol
+function removevariable_frommodality!(
+    md::AbstractMultiModalDataset, i_modality::Integer, var_name::Symbol
 )
-    @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain attribute " *
-        "$(attr_name)"
+    @assert hasvariables(md, var_name) "MultiModalDataset does not contain variable " *
+        "$(var_name)"
 
-    return removeattribute_fromframe!(mfd, frame_index, _name2index(mfd, attr_name))
+    return removevariable_frommodality!(md, i_modality, _name2index(md, var_name))
 end
-function removeattribute_fromframe!(
-    mfd::AbstractMultiFrameDataset, frame_index::Integer, attr_names::AbstractVector{Symbol}
+function removevariable_frommodality!(
+    md::AbstractMultiModalDataset, i_modality::Integer, var_names::AbstractVector{Symbol}
 )
-    for attr_name in attr_names
-        removeattribute_fromframe!(mfd, frame_index, attr_name)
+    for var_name in var_names
+        removevariable_frommodality!(md, i_modality, var_name)
     end
 
-    return mfd
+    return md
 end
 
 """
-    insertframe!(mfd, col, new_frame, existing_attributes)
-    insertframe!(mfd, new_frame, existing_attributes)
+    insertmodality!(md, col, new_modality, existing_variables)
+    insertmodality!(md, new_modality, existing_variables)
 
-Insert `new_frame` as new frame to multiframe dataset, and return the dataset.
-Existing attributes can be added to the new frame while adding it to the dataset passing
-the corresponding inidices by `existing_attributes`.
-If `col` is specified then the attributes will be inserted starting at index `col`.
+Insert `new_modality` as new modality to multimodal dataset, and return the dataset.
+Existing variables can be added to the new modality while adding it to the dataset passing
+the corresponding inidices by `existing_variables`.
+If `col` is specified then the variables will be inserted starting at index `col`.
 
 ## PARAMETERS
-* `mfd` is a MultiFrameDataset;
+* `md` is a MultiModalDataset;
 * `col` is a Integer which indicates the column in which to insert the columns of the new
-    frame `new_frame`;
-* `new_frame` is a AbstractDataFrame which will be added to the multiframe dataset as a
-    subdataframe of a new frame;
-* `existing_attributes` is AbstractVector{Integer} and a AbstractVector{Symbol} also. It
-    indicates which attributes of the multiframe dataset relative's dataframe to insert
-    in the new frame `new_frame`.
+    modality `new_modality`;
+* `new_modality` is a AbstractDataFrame which will be added to the multimodal dataset as a
+    subdataframe of a new modality;
+* `existing_variables` is AbstractVector{Integer} and a AbstractVector{Symbol} also. It
+    indicates which variables of the multimodal dataset relative's dataframe to insert
+    in the new modality `new_modality`.
 
 ## EXAMPLES
 
@@ -742,10 +742,10 @@ julia> df = DataFrame(
    1 │ Python  [0.841471, 0.909297, 0.14112, -0…
    2 │ Julia   [0.540302, -0.416147, -0.989992,…
 
-julia> mfd = MultiFrameDataset(df; group = :all)
-● MultiFrameDataset
+julia> md = MultiModalDataset(df; group = :all)
+● MultiModalDataset
    └─ dimensions: (0, 1)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -753,7 +753,7 @@ julia> mfd = MultiFrameDataset(df; group = :all)
 ─────┼────────
    1 │ Python
    2 │ Julia
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
@@ -762,10 +762,10 @@ julia> mfd = MultiFrameDataset(df; group = :all)
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 
-julia> insertframe!(mfd, DataFrame(:age => [30, 9]))
-● MultiFrameDataset
+julia> insertmodality!(md, DataFrame(:age => [30, 9]))
+● MultiModalDataset
    └─ dimensions: (0, 1, 0)
-- Frame 1 / 3
+- Modality 1 / 3
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -773,7 +773,7 @@ julia> insertframe!(mfd, DataFrame(:age => [30, 9]))
 ─────┼────────
    1 │ Python
    2 │ Julia
-- Frame 2 / 3
+- Modality 2 / 3
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
@@ -781,7 +781,7 @@ julia> insertframe!(mfd, DataFrame(:age => [30, 9]))
 ─────┼───────────────────────────────────
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
-- Frame 3 / 3
+- Modality 3 / 3
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -790,7 +790,7 @@ julia> insertframe!(mfd, DataFrame(:age => [30, 9]))
    1 │    30
    2 │     9
 
-julia> mfd.data
+julia> md.data
 2×3 DataFrame
  Row │ name    stat1                              age
      │ String  Array…                             Int64
@@ -812,10 +812,10 @@ julia> df = DataFrame(
    1 │ Python  [0.841471, 0.909297, 0.14112, -0…
    2 │ Julia   [0.540302, -0.416147, -0.989992,…
 
-julia> mfd = MultiFrameDataset(df; group = :all)
-● MultiFrameDataset
+julia> md = MultiModalDataset(df; group = :all)
+● MultiModalDataset
    └─ dimensions: (0, 1)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -823,7 +823,7 @@ julia> mfd = MultiFrameDataset(df; group = :all)
 ─────┼────────
    1 │ Python
    2 │ Julia
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
@@ -832,10 +832,10 @@ julia> mfd = MultiFrameDataset(df; group = :all)
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 
-julia> insertframe!(mfd, 2, DataFrame(:age => [30, 9]))
-● MultiFrameDataset
+julia> insertmodality!(md, 2, DataFrame(:age => [30, 9]))
+● MultiModalDataset
    └─ dimensions: (1, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
@@ -843,7 +843,7 @@ julia> insertframe!(mfd, 2, DataFrame(:age => [30, 9]))
 ─────┼───────────────────────────────────
     1 │ [0.841471, 0.909297, 0.14112, -0…
     2 │ [0.540302, -0.416147, -0.989992,…
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -851,7 +851,7 @@ julia> insertframe!(mfd, 2, DataFrame(:age => [30, 9]))
 ─────┼───────
    1 │    30
    2 │     9
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -860,7 +860,7 @@ julia> insertframe!(mfd, 2, DataFrame(:age => [30, 9]))
    1 │ Python
    2 │ Julia
 
-julia> mfd.data
+julia> md.data
 2×3 DataFrame
  Row │ name    age    stat1
      │ String  Int64  Array…
@@ -868,7 +868,7 @@ julia> mfd.data
    1 │ Python     30  [0.841471, 0.909297, 0.14112, -0…
    2 │ Julia       9  [0.540302, -0.416147, -0.989992,…
 ```
-or, adding an existing attribute:
+or, adding an existing variable:
 
 ```julia-repl
 julia> df = DataFrame(
@@ -882,10 +882,10 @@ julia> df = DataFrame(
    1 │ Python  [0.841471, 0.909297, 0.14112, -0…
    2 │ Julia   [0.540302, -0.416147, -0.989992,…
 
-julia> mfd = MultiFrameDataset([[2]], df)
-● MultiFrameDataset
+julia> md = MultiModalDataset([[2]], df)
+● MultiModalDataset
    └─ dimensions: (1,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
@@ -893,7 +893,7 @@ julia> mfd = MultiFrameDataset([[2]], df)
 ─────┼───────────────────────────────────
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
-- Spare attributes
+- Spare variables
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -903,10 +903,10 @@ julia> mfd = MultiFrameDataset([[2]], df)
    2 │ Julia
 
 
-julia> insertframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
-● MultiFrameDataset
+julia> insertmodality!(md, DataFrame(:age => [30, 9]); existing_variables = [1])
+● MultiModalDataset
    └─ dimensions: (1, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
@@ -914,7 +914,7 @@ julia> insertframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
 ─────┼───────────────────────────────────
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    name
@@ -924,86 +924,86 @@ julia> insertframe!(mfd, DataFrame(:age => [30, 9]); existing_attributes = [1])
    2 │     9  Julia
 ```
 """
-function insertframe!(
-    mfd::AbstractMultiFrameDataset,
+function insertmodality!(
+    md::AbstractMultiModalDataset,
     col::Integer,
-    new_frame::AbstractDataFrame,
-    existing_attributes::AbstractVector{<:Integer} = Integer[]
+    new_modality::AbstractDataFrame,
+    existing_variables::AbstractVector{<:Integer} = Integer[]
 )
-    if col != nattributes(mfd)+1
-        new_indices = col:col+ncol(new_frame)-1
+    if col != nvariables(md)+1
+        new_indices = col:col+ncol(new_modality)-1
 
-        for (k, c) in collect(zip(keys(eachcol(new_frame)), collect(eachcol(new_frame))))
-            insertattributes!(mfd, col, k, c)
+        for (k, c) in collect(zip(keys(eachcol(new_modality)), collect(eachcol(new_modality))))
+            insertvariables!(md, col, k, c)
             col = col + 1
         end
     else
-        new_indices = (nattributes(mfd)+1):(nattributes(mfd)+ncol(new_frame))
+        new_indices = (nvariables(md)+1):(nvariables(md)+ncol(new_modality))
 
-        for (k, c) in collect(zip(keys(eachcol(new_frame)), collect(eachcol(new_frame))))
-            insertattributes!(mfd, k, c)
+        for (k, c) in collect(zip(keys(eachcol(new_modality)), collect(eachcol(new_modality))))
+            insertvariables!(md, k, c)
         end
     end
 
-    addframe!(mfd, new_indices)
+    addmodality!(md, new_indices)
 
-    for i in existing_attributes
-        addattribute_toframe!(mfd, nframes(mfd), i)
+    for i in existing_variables
+        addvariable_tomodality!(md, nmodalities(md), i)
     end
 
-    return mfd
+    return md
 end
-function insertframe!(
-    mfd::AbstractMultiFrameDataset,
+function insertmodality!(
+    md::AbstractMultiModalDataset,
     col::Integer,
-    new_frame::AbstractDataFrame,
-    existing_attributes::AbstractVector{Symbol}
+    new_modality::AbstractDataFrame,
+    existing_variables::AbstractVector{Symbol}
 )
-    for attr_name in existing_attributes
-        @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain " *
-            "attribute $(attr_name)"
+    for var_name in existing_variables
+        @assert hasvariables(md, var_name) "MultiModalDataset does not contain " *
+            "variable $(var_name)"
     end
 
-    return insertframe!(mfd, col, new_frame, _name2index(mfd, existing_attributes))
+    return insertmodality!(md, col, new_modality, _name2index(md, existing_variables))
 end
-function insertframe!(
-    mfd::AbstractMultiFrameDataset,
-    new_frame::AbstractDataFrame,
-    existing_attributes::AbstractVector{<:Integer} = Integer[]
+function insertmodality!(
+    md::AbstractMultiModalDataset,
+    new_modality::AbstractDataFrame,
+    existing_variables::AbstractVector{<:Integer} = Integer[]
 )
-    insertframe!(mfd, nattributes(mfd)+1, new_frame, existing_attributes)
+    insertmodality!(md, nvariables(md)+1, new_modality, existing_variables)
 end
-function insertframe!(
-    mfd::AbstractMultiFrameDataset,
-    new_frame::AbstractDataFrame,
-    existing_attributes::AbstractVector{Symbol}
+function insertmodality!(
+    md::AbstractMultiModalDataset,
+    new_modality::AbstractDataFrame,
+    existing_variables::AbstractVector{Symbol}
 )
-    for attr_name in existing_attributes
-        @assert hasattributes(mfd, attr_name) "MultiFrameDataset does not contain " *
-            "attribute $(attr_name)"
+    for var_name in existing_variables
+        @assert hasvariables(md, var_name) "MultiModalDataset does not contain " *
+            "variable $(var_name)"
     end
 
-    return insertframe!(mfd, nattributes(mfd)+1, new_frame, _name2index(mfd, existing_attributes))
+    return insertmodality!(md, nvariables(md)+1, new_modality, _name2index(md, existing_variables))
 end
 
 """
-    dropframe!(mfd, indices)
-    dropframe!(mfd, index)
+    dropmodality!(md, indices)
+    dropmodality!(md, index)
 
-Remove `i`-th frame from a multiframe dataset while dropping all attributes in it and
-return `mfd` without the dropped frames.
+Remove the `i`-th modality from a multimodal dataset while dropping all variables in it and
+return `md` without the dropped modalities.
 
-Note: if the dropped attributes are present in other frames they will also be removed from
-them. This can lead to the removal of additional frames other than the `i`-th.
+Note: if the dropped variables are present in other modalities they will also be removed from
+them. This can lead to the removal of additional modalities other than the `i`-th.
 
-If the intection is to remove a frame without releasing the attributes use
-[`removeframe!`](@ref) instead.
+If the intection is to remove a modality without releasing the variables use
+[`removemodality!`](@ref) instead.
 
 ## PARAMETERS
 
-* `mfd` is a MultiFrameDataset;
-* `index` is a Integer which indicates the index of the frame to drop;
-* `indices` is an AbstractVector{Integer} which indicates the indices of the frames to drop.
+* `md` is a MultiModalDataset;
+* `index` is a Integer which indicates the index of the modality to drop;
+* `indices` is an AbstractVector{Integer} which indicates the indices of the modalities to drop.
 
 ## EXAMPLES
 
@@ -1016,10 +1016,10 @@ julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['
    1 │ Python     25  M        180      80
    2 │ Julia      26  F        175      60
 
-julia> mfd = MultiFrameDataset([[1, 2],[3,4],[5],[2,3]], df)
-● MultiFrameDataset
+julia> md = MultiModalDataset([[1, 2],[3,4],[5],[2,3]], df)
+● MultiModalDataset
    └─ dimensions: (0, 0, 0, 0)
-- Frame 1 / 4
+- Modality 1 / 4
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ name    age
@@ -1027,7 +1027,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3,4],[5],[2,3]], df)
 ─────┼───────────────
    1 │ Python     25
    2 │ Julia      26
-- Frame 2 / 4
+- Modality 2 / 4
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ sex   height
@@ -1035,7 +1035,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3,4],[5],[2,3]], df)
 ─────┼──────────────
    1 │ M        180
    2 │ F        175
-- Frame 3 / 4
+- Modality 3 / 4
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ weight
@@ -1043,7 +1043,7 @@ julia> mfd = MultiFrameDataset([[1, 2],[3,4],[5],[2,3]], df)
 ─────┼────────
    1 │     80
    2 │     60
-- Frame 4 / 4
+- Modality 4 / 4
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    sex
@@ -1052,12 +1052,12 @@ julia> mfd = MultiFrameDataset([[1, 2],[3,4],[5],[2,3]], df)
    1 │    25  M
    2 │    26  F
 
-julia> dropframe!(mfd, [2,3])
-[ Info: Attribute 3 was last attribute of frame 2: removing frame
-[ Info: Attribute 3 was last attribute of frame 2: removing frame
-● MultiFrameDataset
+julia> dropmodality!(md, [2,3])
+[ Info: Variable 3 was last variable of modality 2: removing modality
+[ Info: Variable 3 was last variable of modality 2: removing modality
+● MultiModalDataset
    └─ dimensions: (0, 0)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ name    age
@@ -1065,7 +1065,7 @@ julia> dropframe!(mfd, [2,3])
 ─────┼───────────────
    1 │ Python     25
    2 │ Julia      26
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ age
@@ -1074,11 +1074,11 @@ julia> dropframe!(mfd, [2,3])
    1 │    25
    2 │    26
 
-julia> dropframe!(mfd, 2)
-[ Info: Attribute 2 was last attribute of frame 2: removing frame
-● MultiFrameDataset
+julia> dropmodality!(md, 2)
+[ Info: Variable 2 was last variable of modality 2: removing modality
+● MultiModalDataset
    └─ dimensions: (0,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -1088,19 +1088,19 @@ julia> dropframe!(mfd, 2)
    2 │ Julia
 ```
 """
-function dropframe!(mfd::AbstractMultiFrameDataset, index::Integer)
-    @assert 1 ≤ index ≤ nframes(mfd) "Index $(index) does not correspond to a frame " *
-        "(1:$(nframes(mfd)))"
+function dropmodality!(md::AbstractMultiModalDataset, index::Integer)
+    @assert 1 ≤ index ≤ nmodalities(md) "Index $(index) does not correspond to a modality " *
+        "(1:$(nmodalities(md)))"
 
-    return dropattributes!(mfd, frame_descriptor(mfd)[index])
+    return dropvariables!(md, grouped_variables(md)[index])
 end
-function dropframe!(mfd::AbstractMultiFrameDataset, indices::AbstractVector{<:Integer})
+function dropmodality!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
     for i in indices
-        @assert 1 ≤ i ≤ nframes(mfd) "Index $(i) does not correspond to a frame " *
-            "(1:$(nframes(mfd)))"
+        @assert 1 ≤ i ≤ nmodalities(md) "Index $(i) does not correspond to a modality " *
+            "(1:$(nmodalities(md)))"
     end
 
-    return dropattributes!(mfd, sort!(
-        unique(vcat(frame_descriptor(mfd)[indices])); rev = true
+    return dropvariables!(md, sort!(
+        unique(vcat(grouped_variables(md)[indices])); rev = true
     ))
 end

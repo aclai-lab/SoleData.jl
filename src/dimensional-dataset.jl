@@ -1,13 +1,7 @@
-############################################################################################
+# -------------------------------------------------------------
 # Dimensional dataset: a simple dataset structure (basically, an hypercube)
-############################################################################################
-
-export get_instance, slice_dataset, concat_datasets,
-       nframes, nsamples, nattributes, max_channel_size
 
 import Base: eltype
-
-############################################################################################
 
 _isnan(n::Number) = isnan(n)
 _isnan(n::Nothing) = false
@@ -53,14 +47,12 @@ function _slice_dataset end
 
 ############################################################################################
 
-# TODO make AbstractDimensionalDataset a wrapper around an AbstractArray
-
 """
     AbstractDimensionalDataset{T<:Number,D}             = AbstractArray{T,D}
 
 An D-dimensional dataset is a multi-dimensional `Array` representing a set of
- (multi-attribute) D-dimensional instances (or samples):
-The size of the `Array` is {X × Y × ...} × nattributes × nsamples
+ (multivariate) D-dimensional instances (or samples):
+The size of the `Array` is {X × Y × ...} × nvariables × ninstances
 The dimensionality of the channel is denoted as N = D-1-1 (e.g. 1 for time series,
  2 for images), and its dimensions are denoted as X, Y, Z, etc.
 
@@ -68,7 +60,7 @@ Note: It'd be nice to define these with N being the dimensionality of the channe
   e.g. const AbstractDimensionalInstance{T,N} = AbstractArray{T,N+1+1}
 Unfortunately, this is not currently allowed ( see https://github.com/JuliaLang/julia/issues/8322 )
 
-Note: This implementation assumes that all samples have uniform channel size (e.g. time
+Note: This implementation assumes that all instances have uniform channel size (e.g. time
  series with same number of points, or images of same width and height)
 """
 const AbstractDimensionalDataset{T<:Number,D}     = AbstractArray{T,D}
@@ -83,8 +75,8 @@ hasnans(n::AbstractDimensionalDataset{<:Union{Nothing, Number}}) = any(_isnan.(n
 dimensionality(::Type{<:AbstractDimensionalDataset{T,D}}) where {T,D} = D-1-1
 dimensionality(d::AbstractDimensionalDataset) = dimensionality(typeof(d))
 
-nsamples(d::AbstractDimensionalDataset{T,D})        where {T,D} = size(d, D)
-nattributes(d::AbstractDimensionalDataset{T,D})     where {T,D} = size(d, D-1)
+ninstances(d::AbstractDimensionalDataset{T,D})        where {T,D} = size(d, D)
+nvariables(d::AbstractDimensionalDataset{T,D})     where {T,D} = size(d, D-1)
 
 function _slice_dataset(d::AbstractVector, inds::AbstractVector{<:Integer}, return_view::Val = Val(false))
     if return_view == Val(true) @views d[inds]       else d[inds]    end
@@ -108,7 +100,7 @@ instance(d::AbstractDimensionalDataset{T,4},     idx::Integer) where T = @views 
 # TODO remove? @ferdiu
 get_instance(args...) = instance(args...)
 
-instance_channel_size(d::AbstractDimensionalDataset, i_sample) = instance_channel_size(get_instance(d, i_sample))
+instance_channel_size(d::AbstractDimensionalDataset, i_instance) = instance_channel_size(get_instance(d, i_instance))
 instance_channel_size(inst::DimensionalInstance{T,MN}) where {T,MN} = size(inst)[1:end-1]
 
 channelvariable(inst::DimensionalInstance{T,1}, i_var::Integer) where T = @views inst[      i_var]::T                       # N=0
@@ -116,7 +108,7 @@ channelvariable(inst::DimensionalInstance{T,2}, i_var::Integer) where T = @views
 channelvariable(inst::DimensionalInstance{T,3}, i_var::Integer) where T = @views inst[:, :, i_var]::DimensionalChannel{T,2} # N=2
 
 # TODO remove
-@deprecate get_instance_attribute(inst, i_var) channelvariable(inst, i_var)
+@deprecate get_instance_variable(inst, i_var) channelvariable(inst, i_var)
 
 ############################################################################################
 
@@ -127,6 +119,6 @@ hasnans(X::UniformDimensionalDataset) = any(_isnan.(X))
 channel_size(d::UniformDimensionalDataset) = size(d)[1:end-2]
 max_channel_size(d::UniformDimensionalDataset) = channel_size(d)
 
-instance_channel_size(d::UniformDimensionalDataset, i_sample) = channel_size(d)
+instance_channel_size(d::UniformDimensionalDataset, i_instance) = channel_size(d)
 
 ############################################################################################

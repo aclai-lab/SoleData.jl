@@ -1,17 +1,17 @@
 
 # -------------------------------------------------------------
-# MultiFrameDataset
+# MultiModalDataset
 
 """
-    MultiFrameDataset(frames_descriptor, df)
+    MultiModalDataset(grouped_variables, df)
 
-Create a `MultiFrameDataset` from a `DataFrame`, `df`, initializing frames accordingly to
-`frames_descriptor` parameter.
+Create a `MultiModalDataset` from a `DataFrame`, `df`, initializing modalities accordingly to
+`grouped_variables` parameter.
 
-`frames_descriptor` is an `AbstractVector` of frame descriptor which are `AbstractVector`s
-of integers representing the index of the attributes selected for that frame.
+`grouped_variables` is an `AbstractVector` of modality descriptor which are `AbstractVector`s
+of integers representing the index of the variables selected for that modality.
 
-The order matters for both the frames indices and the attributes in them.
+The order matters for both the indices and the variables in them.
 
 ```julia-repl
 julia> df = DataFrame(
@@ -27,10 +27,10 @@ julia> df = DataFrame(
    1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…  [0.540302, -0.416147, -0.989992,… ⋯
    2 │     9  Julia   [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
-julia> mfd = MultiFrameDataset([[2]], df)
-● MultiFrameDataset
+julia> md = MultiModalDataset([[2]], df)
+● MultiModalDataset
    └─ dimensions: (0,)
-- Frame 1 / 1
+- Modality 1 / 1
    └─ dimension: 0
 2×1 SubDataFrame
  Row │ name
@@ -38,7 +38,7 @@ julia> mfd = MultiFrameDataset([[2]], df)
 ─────┼────────
    1 │ Python
    2 │ Julia
-- Spare attributes
+- Spare variables
    └─ dimension: mixed
 2×3 SubDataFrame
  Row │ age    stat1                              stat2
@@ -48,14 +48,14 @@ julia> mfd = MultiFrameDataset([[2]], df)
    2 │     9  [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 ```
 
-    MultiFrameDataset(df; group = :none)
+    MultiModalDataset(df; group = :none)
 
-Create a `MultiFrameDataset` from a `DataFrame`, `df`, automatically selecting frames.
+Create a `MultiModalDataset` from a `DataFrame`, `df`, automatically selecting modalities.
 
-Selection of frames can be controlled by the parameter `group` which can be:
+Selection of modalities can be controlled by the parameter `group` which can be:
 
-- `:none` (default): no frame will be created
-- `:all`: all attributes will be grouped by their [`dimension`](@ref)
+- `:none` (default): no modality will be created
+- `:all`: all variables will be grouped by their [`dimension`](@ref)
 - a list of dimensions which will be grouped.
 
 Note: `:all` and `:none` are the only `Symbol`s accepted by `group`.
@@ -78,10 +78,10 @@ julia> df = DataFrame(
    1 │    30  Python  [0.841471, 0.909297, 0.14112, -0…  [0.540302, -0.416147, -0.989992,… ⋯
    2 │     9  Julia   [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
-julia> mfd = MultiFrameDataset(df)
-● MultiFrameDataset
+julia> md = MultiModalDataset(df)
+● MultiModalDataset
    └─ dimensions: ()
-- Spare attributes
+- Spare variables
    └─ dimension: mixed
 2×4 SubDataFrame
  Row │ age    name    stat1                              stat2                             ⋯
@@ -91,10 +91,10 @@ julia> mfd = MultiFrameDataset(df)
    2 │     9  Julia   [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
 
-julia> mfd = MultiFrameDataset(df; group = :all)
-● MultiFrameDataset
+julia> md = MultiModalDataset(df; group = :all)
+● MultiModalDataset
    └─ dimensions: (0, 1)
-- Frame 1 / 2
+- Modality 1 / 2
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    name
@@ -102,7 +102,7 @@ julia> mfd = MultiFrameDataset(df; group = :all)
 ─────┼───────────────
    1 │    30  Python
    2 │     9  Julia
-- Frame 2 / 2
+- Modality 2 / 2
    └─ dimension: 1
 2×2 SubDataFrame
  Row │ stat1                              stat2
@@ -112,10 +112,10 @@ julia> mfd = MultiFrameDataset(df; group = :all)
    2 │ [0.540302, -0.416147, -0.989992,…  [0.841471, 0.909297, 0.14112, -0…
 
 
-julia> mfd = MultiFrameDataset(df; group = [0])
-● MultiFrameDataset
+julia> md = MultiModalDataset(df; group = [0])
+● MultiModalDataset
    └─ dimensions: (0, 1, 1)
-- Frame 1 / 3
+- Modality 1 / 3
    └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    name
@@ -123,7 +123,7 @@ julia> mfd = MultiFrameDataset(df; group = [0])
 ─────┼───────────────
    1 │    30  Python
    2 │     9  Julia
-- Frame 2 / 3
+- Modality 2 / 3
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat1
@@ -131,7 +131,7 @@ julia> mfd = MultiFrameDataset(df; group = [0])
 ─────┼───────────────────────────────────
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
-- Frame 3 / 3
+- Modality 3 / 3
    └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat2
@@ -141,26 +141,36 @@ julia> mfd = MultiFrameDataset(df; group = [0])
    2 │ [0.841471, 0.909297, 0.14112, -0…
 ```
 """
-struct MultiFrameDataset <: AbstractMultiFrameDataset
-    frame_descriptor::Vector{Vector{Int}}
-    data::AbstractDataFrame
+struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
+    grouped_variables::Vector{Vector{Int}}
+    data::DF
 
-    function MultiFrameDataset(
-        frames_descriptor::AbstractVector{<:AbstractVector{<:Integer}},
-        df::AbstractDataFrame
-    )
-        return new(frames_descriptor, df)
+    function MultiModalDataset(
+        grouped_variables::AbstractVector,
+        df::DF,
+    ) where {DF<:AbstractDataFrame}
+        grouped_variables = collect(Vector{Int}.(collect.(grouped_variables)))
+        grouped_variables = Vector{Vector{Int}}(grouped_variables)
+        return new{DF}(grouped_variables, df)
     end
 
-    function MultiFrameDataset(
-        df::AbstractDataFrame;
+    # Helper
+    function MultiModalDataset(
+        df::DF,
+        grouped_variables::AbstractVector,
+    ) where {DF<:AbstractDataFrame}
+        return MultiModalDataset(grouped_variables, df)
+    end
+
+    function MultiModalDataset(
+        df::DF;
         group::Union{Symbol,AbstractVector{<:Integer}} = :none
-    )
+    ) where {DF<:AbstractDataFrame}
         @assert isa(group, AbstractVector) || group in [:all, :none] "group can be " *
             "`:all`, `:none` or an AbstractVector of dimensions"
 
         if group == :none
-            return new([], df)
+            return MultiModalDataset([], df)
         end
 
         dimdict = Dict{Integer,AbstractVector{<:Integer}}()
@@ -179,39 +189,39 @@ struct MultiFrameDataset <: AbstractMultiFrameDataset
 
         desc = sort(collect(zip(keys(dimdict), values(dimdict))), by = x -> x[1])
 
-        return new(append!(map(x -> x[2], desc), spare), df)
+        return MultiModalDataset(append!(map(x -> x[2], desc), spare), df)
     end
 end
 
 # -------------------------------------------------------------
-# MultiFrameDataset - accessors
+# MultiModalDataset - accessors
 
-frame_descriptor(mfd::MultiFrameDataset) = mfd.frame_descriptor
-data(mfd::MultiFrameDataset) = mfd.data
+grouped_variables(md::MultiModalDataset) = md.grouped_variables
+data(md::MultiModalDataset) = md.data
 
 # -------------------------------------------------------------
-# MultiFrameDataset - informations
+# MultiModalDataset - informations
 
-function show(io::IO, mfd::MultiFrameDataset)
-    _prettyprint_header(io, mfd)
-    _prettyprint_frames(io, mfd)
-    _prettyprint_spareattributes(io, mfd)
+function show(io::IO, md::MultiModalDataset)
+    _prettyprint_header(io, md)
+    _prettyprint_modalities(io, md)
+    _prettyprint_sparevariables(io, md)
 end
 
 # -------------------------------------------------------------
-# MultiFrameDataset - utils
+# MultiModalDataset - utils
 
 """
-    _empty(mfd)
+    _empty(md)
 
-Get a copy of a multiframe dataset with no instances.
+Return a copy of a multimodal dataset with no instances.
 
-Note: since the returned AbstractMultiFrameDataset will be empty its columns types will be
+Note: since the returned AbstractMultiModalDataset will be empty its columns types will be
 `Any`.
 """
-function _empty(mfd::MultiFrameDataset)
-    return MultiFrameDataset(
-        deepcopy(frame_descriptor(mfd)),
-        df = DataFrame([attr_name => [] for attr_name in Symbol.(names(data(mfd)))])
+function _empty(md::MultiModalDataset)
+    return MultiModalDataset(
+        deepcopy(grouped_variables(md)),
+        DataFrame([var_name => [] for var_name in Symbol.(names(data(md)))])
     )
 end

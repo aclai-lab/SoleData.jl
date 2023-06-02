@@ -34,12 +34,12 @@ Pkg.add("https://aclai-lab.github.io/SoleData.jl#dev")
 
 ## Usage
 
-To instantiate a multimodal dataset, instantiate a [`MultiFrameDataset`](@ref) by providing:
+To instantiate a multimodal dataset, instantiate a [`MultiModalDataset`](@ref) by providing:
 *a)* a
-`DataFrame` containing all attributes from different modalities, and 
+`DataFrame` containing all variables from different modalities, and 
 *b)* a
 `Vector{Vector{Union{Symbol,String,Int64}}}`,
-grouping attributes (identified by column index or name)
+grouping variables (identified by column index or name)
 into different modalities.
 
 ```julia-repl
@@ -62,14 +62,14 @@ julia> df_data = DataFrame(
    1 │     1     30  Python  [0.841471, 0.909297, 0.14112, -0…
    2 │     2      9  Julia   [0.540302, -0.416147, -0.989992,…
 
-julia> frames_descriptor = [[2,3], [4]]; # group 2nd and 3rd attributes in the first frame
-                                         # the 4th attribute in the second frame and
-                                         # leave the first attribute as a "spare attribute"
+julia> grouped_variables = [[2,3], [4]]; # group 2nd and 3rd variables in the first modality
+                                         # the 4th variable in the second modality and
+                                         # leave the first variable as a "spare variable"
 
-julia> mfd = MultiFrameDataset(frames_descriptor, df_data)
-● MultiFrameDataset
+julia> md = MultiModalDataset(grouped_variables, df_data)
+● MultiModalDataset
   └─ dimensions: (0, 1)
-- Frame 1 / 2
+- Modality 1 / 2
   └─ dimension: 0
 2×2 SubDataFrame
  Row │ age    name   
@@ -77,7 +77,7 @@ julia> mfd = MultiFrameDataset(frames_descriptor, df_data)
 ─────┼───────────────
    1 │    30  Python
    2 │     9  Julia
-- Frame 2 / 2
+- Modality 2 / 2
   └─ dimension: 1
 2×1 SubDataFrame
  Row │ stat                              
@@ -85,7 +85,7 @@ julia> mfd = MultiFrameDataset(frames_descriptor, df_data)
 ─────┼───────────────────────────────────
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
-- Spare attributes
+- Spare variables
   └─ dimension: 0
 2×1 SubDataFrame
  Row │ id    
@@ -96,11 +96,11 @@ julia> mfd = MultiFrameDataset(frames_descriptor, df_data)
 
 ```
 
-Now `mfd` holds a `MultiFrameDataset` and all of its modalities can be
+Now `md` holds a `MultiModalDataset` and all of its modalities can be
 conveniently iterated as elements of a `Vector`:
 
 ```julia-repl
-julia> for (i, f) in enumerate(mfd)
+julia> for (i, f) in enumerate(md)
            println("Modality: ", i)
            println(f)
            println()
@@ -122,14 +122,14 @@ Modality: 2
    2 │ [0.540302, -0.416147, -0.989992,…
 ```
 
-Note that each element of a `MultiFrameDataset` is a `SubDataFrame`:
+Note that each element of a `MultiModalDataset` is a `SubDataFrame`:
 
 ```julia-repl
-julia> eltype(mfd)
+julia> eltype(md)
 SubDataFrame
 
 ```
 
-!!! note "Spare attributes"
-    Spare attributes will never be seen when accessing a `MultiFrameDataset` through its
-    iterator interface. To access them see [`spareattributes`](@ref).
+!!! note "Spare variables"
+    Spare variables will never be seen when accessing a `MultiModalDataset` through its
+    iterator interface. To access them see [`sparevariables`](@ref).

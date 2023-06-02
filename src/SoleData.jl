@@ -23,22 +23,22 @@ import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersec
 import Base: ∈, ⊆, ∪, ∩
 import DataFrames: describe
 import ScientificTypes: show
-import SoleBase: frame, nsamples
+import SoleBase: ninstances
 
 # -------------------------------------------------------------
 # exports
 
 # export types
-export AbstractDataset, AbstractMultiFrameDataset
-export MultiFrameDataset
-export AbstractLabeledMultiFrameDataset
-export LabeledMultiFrameDataset
+export AbstractDataset, AbstractMultiModalDataset
+export MultiModalDataset
+export AbstractLabeledMultiModalDataset
+export LabeledMultiModalDataset
 
 # information gathering
 export instance, ninstances
-export frame, nframes
-export attributes, nattributes, dimension, spareattributes, hasattributes, hasattributess
-export attributeindex
+export modality, nmodalities
+export variables, nvariables, dimension, sparevariables, hasvariables
+export variableindex
 export isapproxeq, ≊
 export isapprox
 
@@ -48,15 +48,15 @@ export datasetinfo, loaddataset, savedataset
 # instance manipulation
 export pushinstances!, deleteinstances!, keeponlyinstances!
 
-# attribute manipulation
-export insertattributes!, dropattributes!, keeponlyattributes!, dropspareattributes!
+# variable manipulation
+export insertvariables!, dropvariables!, keeponlyvariables!, dropsparevariables!
 
-# frame manipulation
-export addframe!, removeframe!, addattribute_toframe!, removeattribute_fromframe!
-export insertframe!, dropframe!
+# modality manipulation
+export addmodality!, removemodality!, addvariable_tomodality!, removevariable_frommodality!
+export insertmodality!, dropmodality!
 
 # labels manipulation
-export nlabels, label, labels, labeldomain, setaslabel!, removefromlabels!, joinlabels!
+export nlabelingvariables, label, labels, labeldomain, setaslabelinging!, removefromlabels!, joinlabels!
 
 # re-export from DataFrames
 export describe
@@ -65,163 +65,105 @@ export schema
 
 # -------------------------------------------------------------
 # Abbreviations
-const ST = ScientificTypes
 const DF = DataFrames
-
-"""
-Resolve these todos..
-
-GENERAL TODOs:
-* find a unique template to return, for example, AssertionError messages.
-    * a solution could be to have a module SoleDiagnosis to have a set of templates for
-    warnings, loggers, errors, exceptions, etc..
-* control that `add`/`remove` and `insert`/`drop` are coherent; done?
-* use `return` at the end of the functions
-* consider to add names to frames
-* add Logger; in particular, it should be nice to have a module SoleLogger(s)
-* consider making enforcing class type check (ex: classes should not be of scitype Continuous)
-* enforce class (and regressor) attributes not be part any frame
-"""
 
 # -------------------------------------------------------------
 # Abstract types
 
 
 """
-Abstract supertype for all multiframe datasets.
+Abstract supertype for all multimodal datasets.
 
-A concrete multiframe dataset should always provide accessors [`frame_descriptor`](@ref), to
-access the frame descriptor, and [`data`](@ref), to access the underlying data structure.
+A concrete multimodal dataset should always provide accessors
+[`data`](@ref), to access the underlying tabular structure (e.g., `DataFrame`) and
+[`grouped_variables`](@ref), to access the grouping of variables
+(a vector of vectors of column indices).
 """
-abstract type AbstractMultiFrameDataset <: AbstractDataset end
+abstract type AbstractMultiModalDataset <: AbstractDataset end
 
 """
-Abstract supertype for all labelled multiframe datasets (used in supervised learning).
+Abstract supertype for all labelled multimodal datasets (used in supervised learning).
 
-As any multiframe dataset, any concrete `LabeledFrameDataset` should always provide
-the accessors [`frame_descriptor`](@ref),
-to access the frame descriptor, and [`data`](@ref), to access the underlying data structure.
-In addition to these, implementations are required for accessors
-[`labels_descriptor`](@ref), to access the labels descriptor and [`dataset`](@ref), to
-access the (unlabeled) `MultiFrameDataset`.
+As any multimodal dataset, any concrete labeled multimodal dataset should always provide
+the accessors [`data`](@ref), to access the underlying tabular structure (e.g., `DataFrame`) and
+[`grouped_variables`](@ref), to access the grouping of variables.
+In addition to these, implementations are required for
+[`labeling_variables`](@ref), to access the indices of the labeling variables.
+
+See also [`AbstractMultiModalDataset`](@ref).
 """
-abstract type AbstractLabeledMultiFrameDataset <: AbstractMultiFrameDataset end
+abstract type AbstractLabeledMultiModalDataset <: AbstractMultiModalDataset end
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - accessors
+# AbstractMultiModalDataset - accessors
 #
-# Inspired by the "Delegation pattern" of "Hands-On Design Patterns and Best Practices with
-# Julia" Chap. 5 by Tom Kwong
+# Inspired by the "Delegation pattern" of "Design Patterns and Best Practices with
+# Julia" Chap. 5 by Tom KwongHands-On
 
 """
-    frame_descriptor(amfd)
+    grouped_variables(amd)::Vector{Vector{Int}}
 
-Access the *frame descriptor* of an `AbstractMultiFrameDataset`. A fram descriptor is a data
-structure describing how the different frames are composed from the underlying
+Return the indices of the variables grouped by modality, of an `AbstractMultiModalDataset`.
+The grouping describes how the different modalities are composed from the underlying
 `AbstractDataFrame` structure.
+
+See also [`data`](@ref), [`AbstractMultiModalDataset`](@ref).
 """
-function frame_descriptor(amfd::AbstractMultiFrameDataset)
-    return error("`frame_descriptor` accessor not implemented for type "
-        * string(typeof(amfd)))
+function grouped_variables(amd::AbstractMultiModalDataset)::Vector{Vector{Int}}
+    return error("`grouped_variables` accessor not implemented for type "
+        * string(typeof(amd)))
 end
 """
-    data(amfd)
+    data(amd)::AbstractDataFrame
 
-Access the `AbstractDataFrame` structure that underlies an `AbstractMultiFrameDataset`.
+Return the structure that underlies an `AbstractMultiModalDataset`.
+
+See also [`grouped_variables`](@ref), [`AbstractMultiModalDataset`](@ref).
 """
-function data(amfd::AbstractMultiFrameDataset)
+function data(amd::AbstractMultiModalDataset)::AbstractDataFrame
     return error("`data` accessor not implemented for type "
-        * string(typeof(amfd)))
+        * string(typeof(amd)))
 end
 
 # -------------------------------------------------------------
-# AbstractClassificationMultiFrameDataset - accessors
+# AbstractLabeledMultiModalDataset - accessors
 
 """
-    labels_descriptor(lmfd)
+    labeling_variables(lmd)::Vector{Int}
 
-Access the *label descriptor* of the `AbstractLabeledMultiFrameDataset`.
-A label descriptor
-is a data structure describing which labels are composed from the underlying
-`AbstractDataFrame` structure.
-"""
-function labels_descriptor(lmfd::AbstractLabeledMultiFrameDataset)
-    return error("`labels_descriptor` accessor not implemented for type " *
-        string(typeof(lmfd)))
-end
-"""
-    dataset(amfd)
+Return the indices of the labelling variables, of the `AbstractLabeledMultiModalDataset`.
+with respect to the underlying `AbstractDataFrame` structure (see [`data`](@ref)).
 
-Access the inner [`AbstractMultiFrameDataset`](@ref) of the
-`AbstractLabeledMultiFrameDataset`; the returned dataset only has the feature variables.
+See also [`grouped_variables`](@ref), [`AbstractLabeledMultiModalDataset`](@ref).
 """
-function dataset(lmfd::AbstractLabeledMultiFrameDataset)
-    return error("`dataset` accessor not implemented for type $(string(typeof(lmfd)))")
+function labeling_variables(lmd::AbstractLabeledMultiModalDataset)::Vector{Int}
+    return error("`labeling_variables` accessor not implemented for type " *
+        string(typeof(lmd)))
 end
 
-# -------------------------------------------------------------
-# AbstractMultiFrameDataset - infos
+Base.summary(amd::AbstractMultiModalDataset) = string(length(amd), "-modality ", typeof(amd))
+Base.summary(io::IO, amd::AbstractMultiModalDataset) = print(stdout, summary(amd))
 
-"""
-    dimension(df)
-
-Get the dimension of a dataframe `df`.
-
-If the dataframe has attributes of various dimensions `:mixed` is returned.
-
-If the dataframe is empty (no instances) `:empty` is returned.
-This behavior can be changed by setting the keyword argument `force`:
-
-- `:no` (default): return `:mixed` in case of mixed dimension
-- `:max`: return the greatest dimension
-- `:min`: return the lowest dimension
-"""
-function dimension(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbol,Integer}
-    @assert force in [:no, :max, :min] "`force` can be either :no, :max or :min"
-
-    if nrow(df) == 0
-        return :empty
-    end
-
-    dims = [maximum(x -> isa(x, AbstractVector) ? ndims(x) : 0, [inst for inst in c])
-        for c in eachcol(df)]
-
-    if all(y -> y == dims[1], dims)
-        return dims[1]
-    elseif force == :max
-        return max(dims...)
-    elseif force == :min
-        return min(dims...)
-    else
-        return :mixed
-    end
-end
-function dimension(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
-    return dimension(frame(mfd, i); kwargs...)
-end
-function dimension(mfd::AbstractMultiFrameDataset; kwargs...)
-    return Tuple([dimension(frame; kwargs...) for frame in mfd])
-end
-dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
-
-Base.summary(amfd::AbstractMultiFrameDataset) = string(length(amfd), "-frame ", typeof(amfd))
-Base.summary(io::IO, amfd::AbstractMultiFrameDataset) = print(stdout, summary(amfd))
-
-include("filesystem.jl")
-include("iterable.jl")
 include("utils.jl")
-include("comparison.jl")
-include("set.jl")
-include("attributes.jl")
-include("instances.jl")
-include("frames.jl")
-include("MultiFrameDataset.jl")
-
-include("LabeledMultiFrameDataset.jl")
-include("labels.jl")
-
 include("schema.jl")
 include("describe.jl")
+include("iterable.jl")
+include("comparison.jl")
+include("set.jl")
+include("variables.jl")
+include("instances.jl")
+include("modalities.jl")
+
+include("MultiModalDataset.jl")
+
+include("labels.jl")
+include("LabeledMultiModalDataset.jl")
+
+include("filesystem.jl")
+
+include("dimensionality.jl")
+
+export get_instance, slice_dataset, concat_datasets, max_channel_size
 
 include("dimensional-dataset.jl")
 

@@ -1,15 +1,15 @@
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - schema
+# AbstractMultiModalDataset - schema
 
-function ST.schema(mfd::AbstractMultiFrameDataset; kwargs...)
-    results = ST.Schema[]
-    for frame in mfd
-        push!(results, ST.schema(frame, kwargs...))
+function ScientificTypes.schema(md::AbstractMultiModalDataset; kwargs...)
+    results = ScientificTypes.Schema[]
+    for modality in md
+        push!(results, ScientificTypes.schema(modality, kwargs...))
     end
 
     return results
 end
-function ST.schema(mfd::AbstractMultiFrameDataset, i::Integer; kwargs...)
-    ST.schema(frame(mfd, i); kwargs...)
+function ScientificTypes.schema(md::AbstractMultiModalDataset, i::Integer; kwargs...)
+    ScientificTypes.schema(modality(md, i); kwargs...)
 end

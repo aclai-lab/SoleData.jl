@@ -1,69 +1,69 @@
 
 # -------------------------------------------------------------
-# AbstractMultiFrameDataset - comparison
+# AbstractMultiModalDataset - comparison
 
 """
-    ==(mfd1, mfd2)
-    isequal(mfd1, mfd2)
+    ==(md1, md2)
+    isequal(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets are equal.
+Determine whether two AbstractMultiModalDatasets are equal.
 
 Note: the check is also performed on the instances. This means that if the two datasets are
 the same but they differ by instance order this will return `false`.
 
-If the intent is to check if two AbstractMultiFrameDatasets have same instances regardless
+If the intent is to check if two AbstractMultiModalDatasets have same instances regardless
 of the order use [`isapproxeq`](@ref) instead.
-If the intent is to check if two AbstractMultiFrameDatasets have same frame descriptors and
-attributes use [`isapprox`](@ref) instead.
+If the intent is to check if two AbstractMultiModalDatasets have same modality descriptors and
+variables use [`isapprox`](@ref) instead.
 """
-function isequal(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    return (data(mfd1) == data(mfd2) && frame_descriptor(mfd1) == frame_descriptor(mfd2)) ||
-        (_same_multiframedataset(mfd1, mfd2) && _same_label_descriptor(mfd1, mfd2))
+function isequal(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    return (data(md1) == data(md2) && grouped_variables(md1) == grouped_variables(md2)) ||
+        (_same_md(md1, md2) && _same_label_descriptor(md1, md2))
 end
-function ==(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    return isequal(mfd1, mfd2)
+function ==(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    return isequal(md1, md2)
 end
 
 """
-    ≊(mfd1, mfd2)
-    isapproxeq(mfd1, mfd2)
+    ≊(md1, md2)
+    isapproxeq(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets are "approximately" equivalent.
+Determine whether two AbstractMultiModalDatasets are "approximately" equivalent.
 
-Two AbstractMultiFrameDatasets are considered "approximately" equivalent if they have
-same frame descriptors, attributes and instances.
+Two AbstractMultiModalDatasets are considered "approximately" equivalent if they have
+same modality descriptors, variables and instances.
 
 Note: this means that the order of the instance in the datasets does not matter.
 
-If the intent is to check if two AbstractMultiFrameDatasets have same instances in the
+If the intent is to check if two AbstractMultiModalDatasets have same instances in the
 same order use [`isequal`](@ref) instead.
-If the intent is to check if two AbstractMultiFrameDatasets have same frame descriptors and
-attributes use [`isapprox`](@ref) instead.
+If the intent is to check if two AbstractMultiModalDatasets have same modality descriptors and
+variables use [`isapprox`](@ref) instead.
 
 TODO review
 """
-function isapproxeq(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    return isequal(mfd1, mfd2) && _same_instances(mfd1, mfd2)
+function isapproxeq(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    return isequal(md1, md2) && _same_instances(md1, md2)
 end
-function ≊(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    return isapproxeq(mfd1, mfd2)
+function ≊(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    return isapproxeq(md1, md2)
 end
 
 """
-    ≈(mfd1, mfd2)
-    isapprox(mfd1, mfd2)
+    ≈(md1, md2)
+    isapprox(md1, md2)
 
-Determine whether two AbstractMultiFrameDatasets are similar.
+Determine whether two AbstractMultiModalDatasets are similar.
 
-Two AbstractMultiFrameDatasets are considered similar if they have same frame descriptors
-and attributes. Note that this means no check over instances is performed.
+Two AbstractMultiModalDatasets are considered similar if they have same modality descriptors
+and variables. Note that this means no check over instances is performed.
 
-If the intent is to check if two AbstractMultiFrameDatasets have same instances in the same
+If the intent is to check if two AbstractMultiModalDatasets have same instances in the same
 order use [`isequal`](@ref) instead.
-If the intent is to check if two AbstractMultiFrameDatasets have same instances regardless
+If the intent is to check if two AbstractMultiModalDatasets have same instances regardless
 of the order use [`isapproxeq`](@ref) instead.
 """
-function isapprox(mfd1::AbstractMultiFrameDataset, mfd2::AbstractMultiFrameDataset)
-    # NOTE: _same_frame_descriptor already includes attributes checking
-    return _same_frame_descriptor(mfd1, mfd2)
+function isapprox(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+    # NOTE: _same_grouped_variables already includes variables checking
+    return _same_grouped_variables(md1, md2)
 end
