@@ -746,7 +746,7 @@ julia> dropvariables!(md, [1,3])
 ```
 TODO: To be reviewed
 """
-function dropvariables!(md::AbstractMultiModalDataset, i::Integer)
+function dropvariables!(md::AbstractMultiModalDataset, i::Integer; kwargs...)
     @assert 1 ≤ i ≤ nvariables(md) "Variable $(i) is not a valid attibute index " *
         "(1:$(nvariables(md)))"
 
@@ -754,7 +754,7 @@ function dropvariables!(md::AbstractMultiModalDataset, i::Integer)
     while j ≤ nmodalities(md)
         desc = grouped_variables(md)[j]
         if i in desc
-            removevariable_frommodality!(md, j, i)
+            removevariable_frommodality!(md, j, i; kwargs...)
         else
             j += 1
         end
@@ -772,13 +772,13 @@ function dropvariables!(md::AbstractMultiModalDataset, i::Integer)
 
     return md
 end
-function dropvariables!(md::AbstractMultiModalDataset, variable_name::Symbol)
+function dropvariables!(md::AbstractMultiModalDataset, variable_name::Symbol; kwargs...)
     @assert hasvariables(md, variable_name) "MultiModalDataset does not contain " *
         "variable $(variable_name)"
 
-    return dropvariables!(md, _name2index(md, variable_name))
+    return dropvariables!(md, _name2index(md, variable_name); kwargs...)
 end
-function dropvariables!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
+function dropvariables!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer}; kwargs...)
     for i in indices
         @assert 1 ≤ i ≤ nvariables(md) "Index $(i) does not correspond to an " *
             "variable (1:$(nvariables(md)))"
@@ -787,37 +787,40 @@ function dropvariables!(md::AbstractMultiModalDataset, indices::AbstractVector{<
     var_names = Symbol.(names(data(md)))
 
     for i_var in sort!(deepcopy(indices), rev = true)
-        dropvariables!(md, i_var)
+        dropvariables!(md, i_var; kwargs...)
     end
 
     return md
 end
 function dropvariables!(
     md::AbstractMultiModalDataset,
-    variable_names::AbstractVector{Symbol}
+    variable_names::AbstractVector{Symbol};
+    kwargs...
 )
     for var_name in variable_names
         @assert hasvariables(md, var_name) "MultiModalDataset does not contain " *
             "variable $(var_name)"
     end
 
-    return dropvariables!(md, _name2index(md, variable_names))
+    return dropvariables!(md, _name2index(md, variable_names); kwargs...)
 end
 function dropvariables!(
     md::AbstractMultiModalDataset,
     i_modality::Integer,
-    indices::Union{Integer, AbstractVector{<:Integer}}
+    indices::Union{Integer, AbstractVector{<:Integer}};
+    kwargs...
 )
     var_ids = [ indices... ]
     !(1 <= i_modality <= nmodalities(md)) &&
         throw(DimensionMismatch("Index $(i_modality) does not correspond to a modality"))
     varidx = grouped_variables(md)[i_modality][var_ids]
-    return dropvariables!(md, varidx)
+    return dropvariables!(md, varidx; kwargs...)
 end
 function dropvariables!(
     md::AbstractMultiModalDataset,
     i_modality::Integer,
-    variable_names::Union{Symbol, AbstractVector{<:Symbol}}
+    variable_names::Union{Symbol, AbstractVector{<:Symbol}};
+    kwargs...
 )
     variable_names = [ variable_names... ]
     !(1 <= i_modality <= nmodalities(md)) &&
@@ -825,7 +828,7 @@ function dropvariables!(
     !issubset(variable_names, variables(md, i_modality)) &&
         throw(DomainError(variable_names, "One or more variables in `var_names` are not in variables modality"))
     varidx = _name2index(md, variable_names)
-    return dropvariables!(md, varidx)
+    return dropvariables!(md, varidx; kwargs...)
 end
 
 """
@@ -922,15 +925,17 @@ TODO: review
 """
 function keeponlyvariables!(
     md::AbstractMultiModalDataset,
-    indices::AbstractVector{<:Integer}
+    indices::AbstractVector{<:Integer};
+    kwargs...
 )
-    return dropvariables!(md, setdiff(collect(1:nvariables(md)), indices))
+    return dropvariables!(md, setdiff(collect(1:nvariables(md)), indices); kwargs...)
 end
 keeponlyvariables!(md::AbstractMultiModalDataset, index::Integer) = keeponlyvariables!(md, [index])
 
 function keeponlyvariables!(
     md::AbstractMultiModalDataset,
-    variable_names::AbstractVector{Symbol}
+    variable_names::AbstractVector{Symbol};
+    kwargs...
 )
     for var_name in variable_names
         @assert hasvariables(md, var_name) "MultiModalDataset does not contain " *
@@ -938,11 +943,14 @@ function keeponlyvariables!(
     end
 
     return dropvariables!(
-        md, setdiff(collect(1:nvariables(md)), _name2index(md, variable_names)))
+        md,
+        setdiff(collect(1:nvariables(md)), _name2index(md, variable_names));
+        kwargs...)
 end
 function keeponlyvariables!(
     md::AbstractMultiModalDataset,
-    variable_names::AbstractVector{<:AbstractVector{Symbol}}
+    variable_names::AbstractVector{<:AbstractVector{Symbol}};
+    kwargs...
 )
     for var_name in variable_names
         @assert hasvariables(md, var_name) "MultiModalDataset does not contain " *
@@ -950,7 +958,9 @@ function keeponlyvariables!(
     end
 
     return dropvariables!(
-        md, setdiff(collect(1:nvariables(md)), _name2index(md, variable_names)))
+        md,
+        setdiff(collect(1:nvariables(md)), _name2index(md, variable_names));
+        kwargs...)
 end
 
 """
@@ -996,14 +1006,14 @@ julia> dropsparevariables!(md)
    2 │ Julia
 ```
 """
-function dropsparevariables!(md::AbstractMultiModalDataset)
+function dropsparevariables!(md::AbstractMultiModalDataset; kwargs...)
     spare = sort!(sparevariables(md), rev = true)
 
     var_names = Symbol.(names(data(md)))
     result = DataFrame([(var_names[i] => data(md)[:,i]) for i in reverse(spare)]...)
 
     for i_var in spare
-        dropvariables!(md, i_var)
+        dropvariables!(md, i_var; kwargs...)
     end
 
     return result

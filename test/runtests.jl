@@ -56,7 +56,7 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test ninstances(md) == length(eachinstance(md)) == 3
 
-        @test_throws MethodError slicedataset(md, [])
+        @test_throws AssertionError slicedataset(md, [])
         @test_nowarn slicedataset(md, :)
         @test_nowarn slicedataset(md, 1)
         @test_nowarn slicedataset(md, [1])
@@ -166,13 +166,13 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test_nowarn md[:,:]
         @test_nowarn md[1,:]
-        @test_logs (:info,) md[:,1]
-        @test_logs (:info,) md[:,1:2]
+        @test_nowarn md[:,1]
+        @test_nowarn md[:,1:2]
         @test_nowarn md[[1,2],:]
-        @test_logs (:info,) md[1,1]
-        @test_logs (:info,) md[[1,2],[1,2]]
-        @test_logs (:info,) md[1,[1,2]]
-        @test_logs (:info,) md[[1,2],1]
+        @test_nowarn md[1,1]
+        @test_nowarn md[[1,2],[1,2]]
+        @test_nowarn md[1,[1,2]]
+        @test_nowarn md[[1,2],1]
 
         # drop "inner" modality and multiple modalities in one operation
         insertmodality!(md, DataFrame(:t2 => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]))
@@ -322,7 +322,7 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test ninstances(lmd) == length(eachinstance(lmd)) == 2
 
-        @test_throws MethodError slicedataset(lmd, [])
+        @test_throws AssertionError slicedataset(lmd, [])
         @test_nowarn slicedataset(lmd, :)
         @test_nowarn slicedataset(lmd, 1)
         @test_nowarn slicedataset(lmd, [1])

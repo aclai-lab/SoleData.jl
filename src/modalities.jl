@@ -668,7 +668,10 @@ julia> removevariable_frommodality!(md, 1, [:name,:height])
 ```
 """
 function removevariable_frommodality!(
-    md::AbstractMultiModalDataset, i_modality::Integer, var_index::Integer
+    md::AbstractMultiModalDataset,
+    i_modality::Integer,
+    var_index::Integer;
+    silent = false,
 )
     @assert 1 ≤ i_modality ≤ nmodalities(md) "Index $(i_modality) does not correspond " *
         "to a modality (1:$(nmodalities(md)))"
@@ -676,10 +679,14 @@ function removevariable_frommodality!(
         "to an variable (1:$(nvariables(md)))"
 
     if !(var_index in grouped_variables(md)[i_modality])
-        @info "Variable $(var_index) is not part of modality $(i_modality)"
+        if !silent
+            @info "Variable $(var_index) is not part of modality $(i_modality)"
+        end
     elseif nvariables(md, i_modality) == 1
-        @info "Variable $(var_index) was last variable of modality $(i_modality): " *
-            "removing modality"
+        if !silent
+            @info "Variable $(var_index) was last variable of modality $(i_modality): " *
+                "removing modality"
+        end
         removemodality!(md, i_modality)
     else
         deleteat!(
@@ -693,27 +700,34 @@ end
 function removevariable_frommodality!(
     md::AbstractMultiModalDataset,
     i_modality::Integer,
-    var_indices::AbstractVector{<:Integer}
+    var_indices::AbstractVector{<:Integer};
+    kwargs...
 )
     for i in var_indices
-        removevariable_frommodality!(md, i_modality, i)
+        removevariable_frommodality!(md, i_modality, i; kwargs...)
     end
 
     return md
 end
 function removevariable_frommodality!(
-    md::AbstractMultiModalDataset, i_modality::Integer, var_name::Symbol
+    md::AbstractMultiModalDataset,
+    i_modality::Integer,
+    var_name::Symbol;
+    kwargs...
 )
     @assert hasvariables(md, var_name) "MultiModalDataset does not contain variable " *
         "$(var_name)"
 
-    return removevariable_frommodality!(md, i_modality, _name2index(md, var_name))
+    return removevariable_frommodality!(md, i_modality, _name2index(md, var_name); kwargs...)
 end
 function removevariable_frommodality!(
-    md::AbstractMultiModalDataset, i_modality::Integer, var_names::AbstractVector{Symbol}
+    md::AbstractMultiModalDataset,
+    i_modality::Integer,
+    var_names::AbstractVector{Symbol};
+    kwargs...
 )
     for var_name in var_names
-        removevariable_frommodality!(md, i_modality, var_name)
+        removevariable_frommodality!(md, i_modality, var_name; kwargs...)
     end
 
     return md
@@ -1102,7 +1116,7 @@ function dropmodalities!(md::AbstractMultiModalDataset, index::Integer)
     @assert 1 ≤ index ≤ nmodalities(md) "Index $(index) does not correspond to a modality " *
         "(1:$(nmodalities(md)))"
 
-    return dropvariables!(md, grouped_variables(md)[index])
+    return dropvariables!(md, grouped_variables(md)[index]; silent = true)
 end
 
 function dropmodalities!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
@@ -1113,7 +1127,7 @@ function dropmodalities!(md::AbstractMultiModalDataset, indices::AbstractVector{
 
     return dropvariables!(md, sort!(
         unique(vcat(grouped_variables(md)[indices]...)); rev = true
-    ))
+    ); silent = true)
 end
 
 """
