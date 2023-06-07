@@ -40,10 +40,13 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test isa(md, MultiModalDataset)
 
-        @test isa(modality(md, 1), SubDataFrame)
-        @test isa(modality(md, 2), SubDataFrame)
+        @test isa(first(eachmodality(md)), SubDataFrame)
+        @test length(eachmodality(md)) == nmodalities(md)
 
         @test modality(md, [1,2]) == [modality(md, 1), modality(md, 2)]
+
+        @test isa(modality(md, 1), SubDataFrame)
+        @test isa(modality(md, 2), SubDataFrame)
 
         @test nmodalities(md) == 2
 
@@ -51,9 +54,16 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test nvariables(md, 1) == 1
         @test nvariables(md, 2) == 1
 
-        @test ninstances(md) == 3
-        @test ninstances(md, 1) == 3
-        @test ninstances(md, 2) == 3
+        @test ninstances(md) == length(eachinstance(md)) == 3
+
+        @test_throws MethodError slicedataset(md, [])
+        @test_nowarn slicedataset(md, :)
+        @test_nowarn slicedataset(md, 1)
+        @test_nowarn slicedataset(md, [1])
+
+        @test ninstances(slicedataset(md, :)) == 3
+        @test ninstances(slicedataset(md, 1)) == 1
+        @test ninstances(slicedataset(md, [1])) == 1
 
         @test dimension(md) == (0, 1)
         @test dimension(md, 1) == 0
@@ -146,13 +156,23 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test nmodalities(md) == 3
         @test nvariables(md, 3) == 1
 
-        @test dropmodality!(md, 3) == md # test return
+        @test dropmodalities!(md, 3) == md # test return
         @test nmodalities(md) == 2
 
         insertmodality!(md, deepcopy(ages), [1])
         @test nmodalities(md) == 3
         @test nvariables(md, 3) == 2
         @test dimension(md, 3) == 0
+
+        @test_nowarn md[:,:]
+        @test_nowarn md[1,:]
+        @test_logs (:info,) md[:,1]
+        @test_logs (:info,) md[:,1:2]
+        @test_nowarn md[[1,2],:]
+        @test_logs (:info,) md[1,1]
+        @test_logs (:info,) md[[1,2],[1,2]]
+        @test_logs (:info,) md[1,[1,2]]
+        @test_logs (:info,) md[[1,2],1]
 
         # drop "inner" modality and multiple modalities in one operation
         insertmodality!(md, DataFrame(:t2 => [deepcopy(ts_sin), deepcopy(ts_cos), deepcopy(ts_sin)]))
@@ -164,12 +184,12 @@ const ages = DataFrame(:age => [35, 38, 37])
         # because the variable at index 1 is shared between them and will be
         # dropped but modality 1 has just the variable at index 1 in it, this
         # should result in dropping that modality too
-        dropmodality!(md, 3)
+        dropmodalities!(md, 3)
         @test nmodalities(md) == 2
         @test nvariables(md) == 2
         @test nvariables(md, nmodalities(md)) == 1
 
-        dropmodality!(md, 2)
+        dropmodalities!(md, 2)
         @test nmodalities(md) == 1
         @test nvariables(md) == 1
 
@@ -291,15 +311,25 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test modality(lmd, [1,2]) == [modality(lmd, 1), modality(lmd, 2)]
 
+        @test isa(first(eachmodality(lmd)), SubDataFrame)
+        @test length(eachmodality(lmd)) == nmodalities(lmd)
+
         @test nmodalities(lmd) == 2
 
         @test nvariables(lmd) == 3
         @test nvariables(lmd, 1) == 1
         @test nvariables(lmd, 2) == 1
 
-        @test ninstances(lmd) == 2
-        @test ninstances(lmd, 1) == 2
-        @test ninstances(lmd, 2) == 2
+        @test ninstances(lmd) == length(eachinstance(lmd)) == 2
+
+        @test_throws MethodError slicedataset(lmd, [])
+        @test_nowarn slicedataset(lmd, :)
+        @test_nowarn slicedataset(lmd, 1)
+        @test_nowarn slicedataset(lmd, [1])
+
+        @test ninstances(slicedataset(lmd, :)) == 2
+        @test ninstances(slicedataset(lmd, 1)) == 1
+        @test ninstances(slicedataset(lmd, [1])) == 1
 
         @test dimension(lmd) == (0, 1)
         @test dimension(lmd, 1) == 0

@@ -3,14 +3,9 @@
 # AbstractMultiModalDataset - instances manipulation
 
 """
-    ninstances(md[, i])
+    ninstances(md)
 
-Return the number of instances present in a multimodal dataset.
-
-Note: for consistency with other methods interface `ninstances` can be called specifying
-a modality index `i` even if `ninstances(md) != ninstances(md, i)` can't be `true`.
-
-This method can be called on a single modality directly.
+Return the number of instances in a multimodal dataset.
 
 ## EXAMPLES
 
@@ -43,13 +38,13 @@ julia> mod2 = modality(md, 2)
    1 │ M
    2 │ F
 
-julia> ninstances(md) == ninstances(md, 2) == ninstances(mod2) == 2
+julia> ninstances(md) == ninstances(mod2) == 2
 true
 ```
 """
 ninstances(df::AbstractDataFrame) = nrow(df)
 ninstances(md::AbstractMultiModalDataset) = nrow(data(md))
-ninstances(md::AbstractMultiModalDataset, i::Integer) = nrow(modality(md, i))
+# ninstances(md::AbstractMultiModalDataset, i::Integer) = nrow(modality(md, i))
 
 """
     pushinstances!(md, instance)
@@ -111,8 +106,7 @@ deleteinstances!(md::AbstractMultiModalDataset, i::Integer) = deleteinstances!(m
 """
     keeponlyinstances!(md, indices)
 
-Removes all instances that do not correspond to the indices present in `indices` from a
-multimodal dataset.
+Remove all instances from a multimodal dataset, which index does not appear `indices`.
 """
 function keeponlyinstances!(
     md::AbstractMultiModalDataset,
@@ -178,4 +172,9 @@ function instance(
         "modality number (1:$(nmodalities(md))"
 
     return instance(modality(md, i_modality), inst_indices)
+end
+
+function eachinstance(md::AbstractMultiModalDataset)
+    df = data(md)
+    Iterators.map(i->(@view df[i,:]), 1:ninstances(md))
 end

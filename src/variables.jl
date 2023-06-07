@@ -926,6 +926,8 @@ function keeponlyvariables!(
 )
     return dropvariables!(md, setdiff(collect(1:nvariables(md)), indices))
 end
+keeponlyvariables!(md::AbstractMultiModalDataset, index::Integer) = keeponlyvariables!(md, [index])
+
 function keeponlyvariables!(
     md::AbstractMultiModalDataset,
     variable_names::AbstractVector{Symbol}

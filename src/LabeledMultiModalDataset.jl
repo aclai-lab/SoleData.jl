@@ -118,6 +118,17 @@ end
 # -------------------------------------------------------------
 # LabeledMultiModalDataset - utils
 
+function SoleBase.instances(
+    lmd::LabeledMultiModalDataset,
+    inds::AbstractVector{<:Integer},
+    return_view::Union{Val{true},Val{false}} = Val(false)
+)
+    LabeledMultiModalDataset(
+        SoleBase.instances(unlabeleddataset(lmd), inds, return_view),
+        labeling_variables(lmd)
+    )
+end
+
 function _empty(lmd::LabeledMultiModalDataset)
     return LabeledMultiModalDataset(
         _empty(unlabeleddataset(lmd)),

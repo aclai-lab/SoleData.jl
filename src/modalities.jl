@@ -22,6 +22,16 @@ function modality(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integ
 end
 
 """
+    modality(md)
+
+Return a (lazy) iterator of the modalities of a multimodal dataset.
+"""
+function eachmodality(md::AbstractMultiModalDataset)
+    df = data(md)
+    Iterators.map(group->(@view df[:,group]), grouped_variables(md))
+end
+
+"""
     nmodalities(md)
 
 Return the number of modalities of a multimodal dataset.
@@ -184,7 +194,7 @@ end
 
 Remove `i`-th modality from a multimodal dataset, and return the dataset.
 
-Note: to completely remove a modality and all variables in it use [`dropmodality!`](@ref)
+Note: to completely remove a modality and all variables in it use [`dropmodalities!`](@ref)
 instead.
 
 ## PARAMETERS
@@ -987,8 +997,8 @@ function insertmodality!(
 end
 
 """
-    dropmodality!(md, indices)
-    dropmodality!(md, index)
+    dropmodalities!(md, indices)
+    dropmodalities!(md, index)
 
 Remove the `i`-th modality from a multimodal dataset while dropping all variables in it and
 return `md` without the dropped modalities.
@@ -1052,7 +1062,7 @@ julia> md = MultiModalDataset([[1, 2],[3,4],[5],[2,3]], df)
    1 │    25  M
    2 │    26  F
 
-julia> dropmodality!(md, [2,3])
+julia> dropmodalities!(md, [2,3])
 [ Info: Variable 3 was last variable of modality 2: removing modality
 [ Info: Variable 3 was last variable of modality 2: removing modality
 ● MultiModalDataset
@@ -1074,7 +1084,7 @@ julia> dropmodality!(md, [2,3])
    1 │    25
    2 │    26
 
-julia> dropmodality!(md, 2)
+julia> dropmodalities!(md, 2)
 [ Info: Variable 2 was last variable of modality 2: removing modality
 ● MultiModalDataset
    └─ dimensions: (0,)
@@ -1088,19 +1098,30 @@ julia> dropmodality!(md, 2)
    2 │ Julia
 ```
 """
-function dropmodality!(md::AbstractMultiModalDataset, index::Integer)
+function dropmodalities!(md::AbstractMultiModalDataset, index::Integer)
     @assert 1 ≤ index ≤ nmodalities(md) "Index $(index) does not correspond to a modality " *
         "(1:$(nmodalities(md)))"
 
     return dropvariables!(md, grouped_variables(md)[index])
 end
-function dropmodality!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
+
+function dropmodalities!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
     for i in indices
         @assert 1 ≤ i ≤ nmodalities(md) "Index $(i) does not correspond to a modality " *
             "(1:$(nmodalities(md)))"
     end
 
     return dropvariables!(md, sort!(
-        unique(vcat(grouped_variables(md)[indices])); rev = true
+        unique(vcat(grouped_variables(md)[indices]...)); rev = true
     ))
+end
+
+"""
+TODO
+"""
+function keeponlymodalities!(
+    md::AbstractMultiModalDataset,
+    indices::AbstractVector{<:Integer}
+)
+    return dropmodalities!(md, setdiff(collect(1:nmodalities(md)), indices))
 end

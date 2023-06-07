@@ -211,6 +211,15 @@ end
 # -------------------------------------------------------------
 # MultiModalDataset - utils
 
+function SoleBase.instances(
+    md::MultiModalDataset,
+    inds::AbstractVector{<:Integer},
+    return_view::Union{Val{true},Val{false}} = Val(false),
+)
+    @assert return_view == Val(false)
+    MultiModalDataset(grouped_variables(md), data(md)[inds,:])
+end
+
 """
     _empty(md)
 

@@ -11,7 +11,8 @@ using Catch22
 using CSV
 using Random
 using Reexport
-using SoleBase: AbstractDataset
+using SoleBase
+using SoleBase: AbstractDataset, slicedataset
 
 @reexport using DataFrames
 
@@ -23,7 +24,7 @@ import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersec
 import Base: ∈, ⊆, ∪, ∩
 import DataFrames: describe
 import ScientificTypes: show
-import SoleBase: ninstances
+import SoleBase: instances, ninstances
 
 # -------------------------------------------------------------
 # exports
@@ -42,6 +43,8 @@ export variableindex
 export isapproxeq, ≊
 export isapprox
 
+export eachinstance, eachmodality, slicedataset
+
 # filesystem
 export datasetinfo, loaddataset, savedataset
 
@@ -53,7 +56,7 @@ export insertvariables!, dropvariables!, keeponlyvariables!, dropsparevariables!
 
 # modality manipulation
 export addmodality!, removemodality!, addvariable_tomodality!, removevariable_frommodality!
-export insertmodality!, dropmodality!
+export insertmodality!, dropmodalities!
 
 # labels manipulation
 export nlabelingvariables, label, labels, labeldomain, setaslabelinging!, removefromlabels!, joinlabels!
@@ -111,8 +114,9 @@ See also [`data`](@ref), [`AbstractMultiModalDataset`](@ref).
 """
 function grouped_variables(amd::AbstractMultiModalDataset)::Vector{Vector{Int}}
     return error("`grouped_variables` accessor not implemented for type "
-        * string(typeof(amd)))
+        * string(typeof(amd))) * "."
 end
+
 """
     data(amd)::AbstractDataFrame
 
@@ -122,7 +126,7 @@ See also [`grouped_variables`](@ref), [`AbstractMultiModalDataset`](@ref).
 """
 function data(amd::AbstractMultiModalDataset)::AbstractDataFrame
     return error("`data` accessor not implemented for type "
-        * string(typeof(amd)))
+        * string(typeof(amd))) * "."
 end
 
 # -------------------------------------------------------------
@@ -163,7 +167,7 @@ include("filesystem.jl")
 
 include("dimensionality.jl")
 
-export get_instance, slice_dataset, concat_datasets, max_channel_size
+export get_instance, concat_datasets, max_channel_size
 
 include("dimensional-dataset.jl")
 
