@@ -100,7 +100,7 @@ instance(d::AbstractDimensionalDataset{T,4},     idx::Integer) where T = @views 
 # TODO remove? @ferdiu
 get_instance(args...) = instance(args...)
 
-instance_channel_size(d::AbstractDimensionalDataset, i_instance) = instance_channel_size(get_instance(d, i_instance))
+instance_channel_size(d::AbstractDimensionalDataset, i_instance::Integer) = instance_channel_size(get_instance(d, i_instance))
 instance_channel_size(inst::DimensionalInstance{T,MN}) where {T,MN} = size(inst)[1:end-1]
 
 channelvariable(inst::DimensionalInstance{T,1}, i_var::Integer) where T = @views inst[      i_var]::T                       # N=0
@@ -119,6 +119,6 @@ hasnans(X::UniformDimensionalDataset) = any(_isnan.(X))
 channel_size(d::UniformDimensionalDataset) = size(d)[1:end-2]
 max_channel_size(d::UniformDimensionalDataset) = channel_size(d)
 
-instance_channel_size(d::UniformDimensionalDataset, i_instance) = channel_size(d)
+instance_channel_size(d::UniformDimensionalDataset, i_instance::Integer) = channel_size(d)
 
 ############################################################################################
