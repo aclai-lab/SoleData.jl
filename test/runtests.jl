@@ -371,37 +371,38 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         # Dataset Metadata.txt
         @test isfile(joinpath(path, _ds_metadata))
+        println(readlines(joinpath(path, _ds_metadata)))
         @test "supervised=true" in readlines(joinpath(path, _ds_metadata))
         @test length(
                 filter(
-                    x -> occursin(_ds_modality_prefix, x),
+                    x -> startswith(x, _ds_modality_prefix),
                     readdir(joinpath(path, _ds_inst_prefix * "1"))
                 )) == 2
         @test parse.(Int64,
                 split(filter(
-                    (row) -> occursin("num_modalities", row),
+                    (row) -> startswith(row, "num_modalities"),
                     readlines(joinpath(path, _ds_metadata))
                 )[1], "=")[2]
             ) == 2
-        @test_broken length(
+        @test length(
                 filter(
-                    row -> occursin("modality", row),
+                    row -> startswith(row, "modality"),
                     readlines(joinpath(path, _ds_metadata))
-                )[2:end]) == 2
+                )) == 2
         modalities = filter(
-                row -> occursin("modality", row),
+                row -> startswith(row, "modality"),
                 readlines(joinpath(path, _ds_metadata))
-            )[2:end]
-        @test_broken all([parse.(Int64, split(string(modality), "=")[2]) ==
+            )
+        @test all([parse.(Int64, split(string(modality), "=")[2]) ==
             dimension(lmd[i_modality]) for (i_modality, modality) in enumerate(modalities)])
         @test parse(Int64, split(
             filter(
-                    row -> occursin("num_classes", row),
+                    row -> startswith(row, "num_classes"),
                     readlines(joinpath(path, _ds_metadata))
                 )[1], "=")[2]) == 1
         @test length(
             filter(
-                x -> occursin(_ds_inst_prefix, x),
+                x -> startswith(x, _ds_inst_prefix),
                 readdir(joinpath(path))
             )) == 2
 
@@ -410,7 +411,7 @@ const ages = DataFrame(:age => [35, 38, 37])
             for i in 1:nrow(lmd[1])])
         for i_inst in 1:ninstances(lmd)
             dim_modality_rows = filter(
-                    row -> occursin("dim_modality", row),
+                    row -> startswith(row, "dim_modality"),
                     readlines(joinpath(path, string(_ds_inst_prefix, i_inst), _ds_metadata))
                 )
             # for each modality check the proper dimension was saved
