@@ -44,7 +44,7 @@ end
 # Slice on modalities/variables
 function getindex(
     md::AbstractMultiModalDataset,
-    i::Colon,
+    ::Colon,
     j::Union{Integer,AbstractVector{<:Integer},Tuple{<:Integer}},
 )
     j = vec(collect(j))
@@ -55,7 +55,7 @@ end
 function getindex(
     md::AbstractMultiModalDataset,
     i::Union{Integer,AbstractVector{<:Integer},Tuple{<:Integer}},
-    j::Colon
+    ::Colon
 )
     i = vec(collect(i))
     return slicedataset(md, i; return_view = false)
