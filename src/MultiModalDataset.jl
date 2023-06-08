@@ -220,6 +220,10 @@ function SoleBase.instances(
     MultiModalDataset(grouped_variables(md), data(md)[inds,:])
 end
 
+function vcat(mds::MultiModalDataset...)
+    MultiModalDataset(grouped_variables(first(mds)), vcat((data.(mds)...)))
+end
+
 """
     _empty(md)
 

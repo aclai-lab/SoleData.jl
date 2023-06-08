@@ -18,13 +18,14 @@ using SoleBase: AbstractDataset, slicedataset
 
 import Base: eltype, isempty, iterate, map, getindex, length
 import Base: firstindex, lastindex, ndims, size, show, summary
+import Base: vcat
 import Base: isequal, isapprox
 import Base: ==, ≈
 import Base: in, issubset, setdiff, setdiff!, union, union!, intersect, intersect!
 import Base: ∈, ⊆, ∪, ∩
 import DataFrames: describe
 import ScientificTypes: show
-import SoleBase: instances, ninstances
+import SoleBase: instances, ninstances, concatdatasets
 
 # -------------------------------------------------------------
 # exports
@@ -36,14 +37,14 @@ export AbstractLabeledMultiModalDataset
 export LabeledMultiModalDataset
 
 # information gathering
-export instance, ninstances
+export instance, ninstances, slicedataset, concatdatasets
 export modality, nmodalities
 export variables, nvariables, dimension, sparevariables, hasvariables
 export variableindex
 export isapproxeq, ≊
 export isapprox
 
-export eachinstance, eachmodality, slicedataset
+export eachinstance, eachmodality
 
 # filesystem
 export datasetinfo, loaddataset, savedataset
@@ -129,20 +130,37 @@ function data(amd::AbstractMultiModalDataset)::AbstractDataFrame
         * string(typeof(amd))) * "."
 end
 
+function concatdatasets(amds::AbstractMultiModalDataset...)
+    @assert allequal(grouped_variables.(amds)) "Cannot concatenate datasets" *
+        " with different variable grouping." *
+        " $(@show grouped_variables.(amds))"
+    Base.vcat(amds...)
+end
+
 # -------------------------------------------------------------
 # AbstractLabeledMultiModalDataset - accessors
 
 """
-    labeling_variables(lmd)::Vector{Int}
+    labeling_variables(almd)::Vector{Int}
 
 Return the indices of the labelling variables, of the `AbstractLabeledMultiModalDataset`.
 with respect to the underlying `AbstractDataFrame` structure (see [`data`](@ref)).
 
 See also [`grouped_variables`](@ref), [`AbstractLabeledMultiModalDataset`](@ref).
 """
-function labeling_variables(lmd::AbstractLabeledMultiModalDataset)::Vector{Int}
+function labeling_variables(almd::AbstractLabeledMultiModalDataset)::Vector{Int}
     return error("`labeling_variables` accessor not implemented for type " *
-        string(typeof(lmd)))
+        string(typeof(almd)))
+end
+
+function concatdatasets(almds::AbstractLabeledMultiModalDataset...)
+    @assert allequal(grouped_variables.(almds)) "Cannot concatenate datasets" *
+        " with different variable grouping." *
+        " $(@show grouped_variables.(almds))"
+    @assert allequal(labeling_variables.(almds)) "Cannot concatenate datasets" *
+        " with different labeling variables." *
+        " $(@show labeling_variables.(almds))"
+    Base.vcat(almds...)
 end
 
 Base.summary(amd::AbstractMultiModalDataset) = string(length(amd), "-modality ", typeof(amd))
@@ -167,7 +185,7 @@ include("filesystem.jl")
 
 include("dimensionality.jl")
 
-export get_instance, concat_datasets, max_channel_size
+export get_instance, max_channel_size
 
 include("dimensional-dataset.jl")
 

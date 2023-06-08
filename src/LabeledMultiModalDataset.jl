@@ -129,6 +129,13 @@ function SoleBase.instances(
     )
 end
 
+function vcat(lmds::LabeledMultiModalDataset...)
+    LabeledMultiModalDataset(
+        vcat(unlabeleddataset.(lmds)...),
+        labeling_variables(first(lmds))
+    )
+end
+
 function _empty(lmd::LabeledMultiModalDataset)
     return LabeledMultiModalDataset(
         _empty(unlabeleddataset(lmd)),

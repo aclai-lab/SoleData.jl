@@ -65,6 +65,9 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test ninstances(slicedataset(md, 1)) == 1
         @test ninstances(slicedataset(md, [1])) == 1
 
+        @test_nowarn concatdatasets(md, md, md)
+        @test_nowarn vcat(md, md, md)
+
         @test dimension(md) == (0, 1)
         @test dimension(md, 1) == 0
         @test dimension(md, 2) == 1
@@ -330,6 +333,9 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test ninstances(slicedataset(lmd, :)) == 2
         @test ninstances(slicedataset(lmd, 1)) == 1
         @test ninstances(slicedataset(lmd, [1])) == 1
+
+        @test_nowarn concatdatasets(lmd, lmd, lmd)
+        @test_nowarn vcat(lmd, lmd, lmd)
 
         @test dimension(lmd) == (0, 1)
         @test dimension(lmd, 1) == 0
