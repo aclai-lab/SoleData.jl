@@ -407,7 +407,6 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         # Dataset Metadata.txt
         @test isfile(joinpath(path, _ds_metadata))
-        println(readlines(joinpath(path, _ds_metadata)))
         @test "supervised=true" in readlines(joinpath(path, _ds_metadata))
         @test length(
                 filter(
