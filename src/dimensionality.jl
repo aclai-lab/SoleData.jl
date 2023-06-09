@@ -3,20 +3,20 @@
 # AbstractMultiModalDataset - infos
 
 """
-    dimension(df)
+    dimensionality(df)
 
-Return the dimension of a dataframe `df`.
+Return the dimensionality of a dataframe `df`.
 
-If the dataframe has variables of various dimensions `:mixed` is returned.
+If the dataframe has variables of various dimensionalities `:mixed` is returned.
 
 If the dataframe is empty (no instances) `:empty` is returned.
-This behavior can be changed by setting the keyword argument `force`:
+This behavior can be controlled by setting the keyword argument `force`:
 
-- `:no` (default): return `:mixed` in case of mixed dimension
-- `:max`: return the greatest dimension
-- `:min`: return the lowest dimension
+- `:no` (default): return `:mixed` in case of mixed dimensionality
+- `:max`: return the greatest dimensionality
+- `:min`: return the lowest dimensionality
 """
-function dimension(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbol,Integer}
+function dimensionality(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbol,Integer}
     @assert force in [:no, :max, :min] "`force` can be either :no, :max or :min"
 
     if nrow(df) == 0
@@ -36,10 +36,10 @@ function dimension(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbol,Int
         return :mixed
     end
 end
-function dimension(md::AbstractMultiModalDataset, i::Integer; kwargs...)
-    return dimension(modality(md, i); kwargs...)
+function dimensionality(md::AbstractMultiModalDataset, i::Integer; kwargs...)
+    return dimensionality(modality(md, i); kwargs...)
 end
-function dimension(md::AbstractMultiModalDataset; kwargs...)
-    return Tuple([dimension(modality; kwargs...) for modality in md])
+function dimensionality(md::AbstractMultiModalDataset; kwargs...)
+    return Tuple([dimensionality(modality; kwargs...) for modality in md])
 end
-dimension(dfc::DF.DataFrameColumns; kwargs...) = dimension(DataFrame(dfc); kwargs...)
+dimensionality(dfc::DF.DataFrameColumns; kwargs...) = dimensionality(DataFrame(dfc); kwargs...)

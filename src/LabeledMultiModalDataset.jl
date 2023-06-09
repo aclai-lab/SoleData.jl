@@ -6,15 +6,15 @@
 """
     LabeledMultiModalDataset(md, labeling_variables)
 
-Create a `LabeledMultiModalDataset` by associating a `AbstractMultiModalDataset` with
-some labeling variables; the labeling_variables are specified as a column index (`Int`)
+Create a `LabeledMultiModalDataset` by associating an `AbstractMultiModalDataset` with
+some labeling variables, specified as a column index (`Int`)
 or a vector of column indices (`Vector{Int}`).
 
 ## PARAMETERS
 
-* `labeling_variables` is an `AbstractVector` of Integers indicating the indices of the
-    variables that will be set as labels;
-* `md` is the original `AbstractMultiModalDataset`.
+* `md` is the original `AbstractMultiModalDataset`;
+* `labeling_variables` is an `AbstractVector` of integers indicating the indices of the
+    variables that will be set as labels.
 
 ## EXAMPLES
 
@@ -29,9 +29,9 @@ julia> lmd = LabeledMultiModalDataset(MultiModalDataset([[2],[4]], DataFrame(
    ├─ labels
    │   ├─ id: Set([2, 1])
    │   └─ name: Set(["Julia", "Python"])
-   └─ dimensions: (0, 1)
+   └─ dimensionalities: (0, 1)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -39,7 +39,7 @@ julia> lmd = LabeledMultiModalDataset(MultiModalDataset([[2],[4]], DataFrame(
    1 │    30
    2 │     9
 - Modality 2 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat
      │ Array…
@@ -61,8 +61,8 @@ struct LabeledMultiModalDataset{MD} <: AbstractLabeledMultiModalDataset
         for i in labeling_variables
             if _is_variable_in_modalities(md, i)
                 # TODO: consider enforcing this instead of just warning
-                @warn "Setting as label an variable used in a modality: this is " *
-                    "discouraged and probably will not allowed in future versions"
+                @warn "Setting as label a variable used in a modality: this is " *
+                    "discouraged and probably will not be allowed in future versions"
             end
         end
 

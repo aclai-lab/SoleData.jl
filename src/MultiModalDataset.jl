@@ -3,15 +3,16 @@
 # MultiModalDataset
 
 """
-    MultiModalDataset(grouped_variables, df)
+    MultiModalDataset(df, grouped_variables)
 
-Create a `MultiModalDataset` from a `DataFrame`, `df`, initializing modalities accordingly to
+Create a `MultiModalDataset` from an `AbstractDataFrame` `df`,
+initializing modalities according to
 `grouped_variables` parameter.
 
-`grouped_variables` is an `AbstractVector` of modality descriptor which are `AbstractVector`s
+`grouped_variables` is an `AbstractVector` of variable grouping which are `AbstractVector`s
 of integers representing the index of the variables selected for that modality.
 
-The order matters for both the indices and the variables in them.
+Note that the order matters for both the modalities and the variables.
 
 ```julia-repl
 julia> df = DataFrame(
@@ -29,9 +30,9 @@ julia> df = DataFrame(
 
 julia> md = MultiModalDataset([[2]], df)
 ● MultiModalDataset
-   └─ dimensions: (0,)
+   └─ dimensionalities: (0,)
 - Modality 1 / 1
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -39,7 +40,7 @@ julia> md = MultiModalDataset([[2]], df)
    1 │ Python
    2 │ Julia
 - Spare variables
-   └─ dimension: mixed
+   └─ dimensionality: mixed
 2×3 SubDataFrame
  Row │ age    stat1                              stat2
      │ Int64  Array…                             Array…
@@ -50,13 +51,14 @@ julia> md = MultiModalDataset([[2]], df)
 
     MultiModalDataset(df; group = :none)
 
-Create a `MultiModalDataset` from a `DataFrame`, `df`, automatically selecting modalities.
+Create a `MultiModalDataset` from an `AbstractDataFrame` `df`,
+automatically selecting modalities.
 
-Selection of modalities can be controlled by the parameter `group` which can be:
+The selection of modalities can be controlled by the parameter `group` which can be:
 
 - `:none` (default): no modality will be created
-- `:all`: all variables will be grouped by their [`dimension`](@ref)
-- a list of dimensions which will be grouped.
+- `:all`: all variables will be grouped by their [`dimensionality`](@ref)
+- a list of dimensionalities which will be grouped.
 
 Note: `:all` and `:none` are the only `Symbol`s accepted by `group`.
 
@@ -80,9 +82,9 @@ julia> df = DataFrame(
 
 julia> md = MultiModalDataset(df)
 ● MultiModalDataset
-   └─ dimensions: ()
+   └─ dimensionalities: ()
 - Spare variables
-   └─ dimension: mixed
+   └─ dimensionality: mixed
 2×4 SubDataFrame
  Row │ age    name    stat1                              stat2                             ⋯
      │ Int64  String  Array…                             Array…                            ⋯
@@ -93,9 +95,9 @@ julia> md = MultiModalDataset(df)
 
 julia> md = MultiModalDataset(df; group = :all)
 ● MultiModalDataset
-   └─ dimensions: (0, 1)
+   └─ dimensionalities: (0, 1)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ age    name
      │ Int64  String
@@ -103,7 +105,7 @@ julia> md = MultiModalDataset(df; group = :all)
    1 │    30  Python
    2 │     9  Julia
 - Modality 2 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×2 SubDataFrame
  Row │ stat1                              stat2
      │ Array…                             Array…
@@ -114,9 +116,9 @@ julia> md = MultiModalDataset(df; group = :all)
 
 julia> md = MultiModalDataset(df; group = [0])
 ● MultiModalDataset
-   └─ dimensions: (0, 1, 1)
+   └─ dimensionalities: (0, 1, 1)
 - Modality 1 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ age    name
      │ Int64  String
@@ -124,7 +126,7 @@ julia> md = MultiModalDataset(df; group = [0])
    1 │    30  Python
    2 │     9  Julia
 - Modality 2 / 3
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -132,7 +134,7 @@ julia> md = MultiModalDataset(df; group = [0])
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 - Modality 3 / 3
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat2
      │ Array…
@@ -180,7 +182,7 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
         group::Union{Symbol,AbstractVector{<:Integer}} = :none
     ) where {DF<:AbstractDataFrame}
         @assert isa(group, AbstractVector) || group in [:all, :none] "group can be " *
-            "`:all`, `:none` or an AbstractVector of dimensions"
+            "`:all`, `:none` or an `AbstractVector` of dimensionalities"
 
         if group == :none
             return MultiModalDataset([], df)
@@ -190,7 +192,7 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
         spare = AbstractVector{Integer}[]
 
         for (i, c) in enumerate(eachcol(df))
-            dim = dimension(DataFrame(:curr => c))
+            dim = dimensionality(DataFrame(:curr => c))
             if isa(group, AbstractVector) && !(dim in group)
                 push!(spare, [i])
             elseif haskey(dimdict, dim)

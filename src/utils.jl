@@ -43,11 +43,14 @@ end
 """
     _same_variables(md1, md2)
 
-Determine whether two AbstractMultiModalDatasets have the same variables.
+Determine whether two `AbstractMultiModalDataset`s have the same variables.
 
 $(__note_about_utils)
 """
-function _same_variables(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+function _same_variables(
+    md1::AbstractMultiModalDataset,
+    md2::AbstractMultiModalDataset
+)
     return isequal(
         Dict{Symbol,DataType}(Symbol.(names(data(md1))) .=> eltype.(eachcol(data(md1)))),
         Dict{Symbol,DataType}(Symbol.(names(data(md2))) .=> eltype.(eachcol(data(md2))))
@@ -57,15 +60,18 @@ end
 """
     _same_dataset(md1, md2)
 
-Determine whether two AbstractMultiModalDatasets have the same inner DataFrame regardless of
-the positioning of their columns.
+Determine whether two `AbstractMultiModalDataset`s have the same underlying
+`AbstractDataFrame`, regardless of column order.
 
 Note: the check will be performed against the instances too; if the intent is to just check
 the presence of the same variables use [`_same_variables`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_dataset(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+function _same_dataset(
+    md1::AbstractMultiModalDataset,
+    md2::AbstractMultiModalDataset
+)
     if !_same_variables(md1, md2) || ninstances(md1) != ninstances(md2)
         return false
     end
@@ -80,15 +86,18 @@ end
 """
     _same_grouped_variables(md1, md2)
 
-Determine whether two AbstractMultiModalDatasets have the same modalities regardless of the
-positioning of their columns.
+Determine whether two `AbstractMultiModalDataset`s have the same modalities regardless of
+column order.
 
 Note: the check will be performed against the instances too; if the intent is to just check
 the presence of the same variables use [`_same_variables`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_grouped_variables(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+function _same_grouped_variables(
+    md1::AbstractMultiModalDataset,
+    md2::AbstractMultiModalDataset
+)
     if !_same_variables(md1, md2)
         return false
     end
@@ -113,45 +122,55 @@ function _same_grouped_variables(md1::AbstractMultiModalDataset, md2::AbstractMu
 end
 
 """
-    _same_label_descriptor(md1, md2)
+    _same_labeling_variables(md1, md2)
 
-Determine whether two AbstractMultiModalDatasets have the same labels regardless of the
-positioning of their columns.
+Determine whether two `AbstractMultiModalDataset`s have the same labels regardless of
+column order.
 
 Note: the check will be performed against the instances too; if the intent is to just check
 the presence of the same variables use [`_same_label_names`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_label_descriptor(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+function _same_labeling_variables(
+    md1::AbstractMultiModalDataset,
+    md2::AbstractMultiModalDataset
+)
     return true
 end
-function _same_label_descriptor(
+function _same_labeling_variables(
     lmd1::AbstractLabeledMultiModalDataset,
     lmd2::AbstractLabeledMultiModalDataset
 )
     !_same_label_names(lmd1, lmd2) && return false;
 
     lmd1_lbls = labels(lmd1)
-    lmd2_lbls = labels(lmd2)
+    lmd2_lbls = labels(lmd2) # TODO fix?
     unmixed_indices = [findfirst(x -> isequal(x, name), Symbol.(names(data(lmd2))))
         for name in lmd1_lbls]
 
-    return data(lmd1)[:,lmd1_lbls] == data(lmd2)[:,unmixed_indices]
+    if any(isnothing.(unmixed_indices))
+        return false
+    else
+        return data(lmd1)[:,lmd1_lbls] == data(lmd2)[:,unmixed_indices]
+    end
 end
 
 """
     _same_label_names(md1, md2)
 
-Determine whether two AbstractMultiModalDatasets have the same label names regardless of the
-positioning of their columns.
+Determine whether two `AbstractMultiModalDataset`s have the same label names regardless of
+column order.
 
 Note: the check will not be performed against the instances; if the intent is to check
-whether the two datasets have the same labels use [`_same_label_descriptor`](@ref) instead.
+whether the two datasets have the same labels use [`_same_labeling_variables`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_label_names(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+function _same_label_names(
+    md1::AbstractMultiModalDataset,
+    md2::AbstractMultiModalDataset
+)
     return true
 end
 function _same_label_names(
@@ -164,12 +183,15 @@ end
 """
     _same_instances(md1, md2)
 
-Determine whether two AbstractMultiModalDatasets have the same instances regardless of their
-order.
+Determine whether two `AbstractMultiModalDataset`s have the same instances,
+regardless of their order.
 
 $(__note_about_utils)
 """
-function _same_instances(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+function _same_instances(
+    md1::AbstractMultiModalDataset,
+    md2::AbstractMultiModalDataset
+)
     if !_same_variables(md1, md2) || ninstances(md1) != ninstances(md2)
         return false
     end
@@ -180,15 +202,19 @@ end
 """
     _same_md(md1, md2)
 
-Determine whether two AbstractMultiModalDatasets have the same inner DataFrame and modalities,
-regardless of the ordering of the columns of their DataFrames.
+Determine whether two `AbstractMultiModalDataset`s have the same underlying
+`AbstractDataFrame` and modalities,
+regardless of the column order of their `AbstractDataFrames`.
 
 Note: the check will be performed against the instances too; if the intent is to just check
 the presence of the same variables use [`_same_variables`](@ref) instead.
 
 $(__note_about_utils)
 """
-function _same_md(md1::AbstractMultiModalDataset, md2::AbstractMultiModalDataset)
+function _same_md(
+    md1::AbstractMultiModalDataset,
+    md2::AbstractMultiModalDataset
+)
     if !_same_variables(md1, md2) || ninstances(md1) != ninstances(md2)
         return false
     end
@@ -228,7 +254,6 @@ If the variable does not exist `0` is returned.
 
 Return the indices of the variables named `variable_names`.
 
-If an variable does not exist, the returned Vector contains `0`(-es).
 
 $(__note_about_utils)
 """
@@ -266,13 +291,13 @@ end
 
 function _prettyprint_header(io::IO, md::AbstractMultiModalDataset)
     println(io, "● $(typeof(md))")
-    println(io, "   └─ dimensions: $(dimension(md))")
+    println(io, "   └─ dimensionalities: $(dimensionality(md))")
 end
 
 function _prettyprint_modalities(io::IO, md::AbstractMultiModalDataset)
     for (i, modality) in enumerate(md)
         println(io, "- Modality $(i) / $(nmodalities(md))")
-        println(io, "   └─ dimension: $(dimension(modality))")
+        println(io, "   └─ dimensionality: $(dimensionality(modality))")
         println(io, modality)
     end
 end
@@ -282,7 +307,7 @@ function _prettyprint_sparevariables(io::IO, md::AbstractMultiModalDataset)
     if length(spare_vars) > 0
         spare_df = @view data(md)[:,spare_vars]
         println(io, "- Spare variables")
-        println(io, "   └─ dimension: $(dimension(spare_df))")
+        println(io, "   └─ dimensionality: $(dimensionality(spare_df))")
         println(io, spare_df)
     end
 end
@@ -316,7 +341,7 @@ function _prettyprint_labels(io::IO, lmd::AbstractMultiModalDataset)
     else
         println(io, "   │   └─ no label selected")
     end
-    println(io, "   └─ dimensions: $(dimension(lmd))")
+    println(io, "   └─ dimensionalities: $(dimensionality(lmd))")
 end
 
 """
@@ -324,7 +349,7 @@ end
 
 Piecewise Aggregate Approximation
 
-Apply `f` function to each dimension of `x` array divinding it in `t[1]` windows taking
+Apply `f` function to each dimensionality of `x` array divinding it in `t[1]` windows taking
 `t[2]` extra points left and `t[3]` extra points right.
 
 Note: first window will always consider `t[2] = 0` and last one will always consider
@@ -373,14 +398,14 @@ linearize_data(d::Any) = d
 linearize_data(d::AbstractVector) = d
 linearize_data(d::AbstractMatrix) = reshape(m', 1, :)[:]
 function linearize_data(d::AbstractArray)
-    return throw(ErrorExcpetion("Still can't linearize data of dimension > 2"))
+    return throw(ErrorExcpetion("Still cannot linearize data of dimensionality > 2"))
 end
 # TODO: more linearizations
 
 """
     unlinearize_data(d, dims)
 
-Unlinearize Vector `d` using dimensions `dims`.
+Unlinearize a vector `d` to a shape `dims`.
 """
 unlinearize_data(d::Any, dims::Tuple{}) = d
 function unlinearize_data(d::AbstractVector, dims::Tuple{})
