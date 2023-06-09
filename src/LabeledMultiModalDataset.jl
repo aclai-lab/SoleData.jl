@@ -75,6 +75,24 @@ struct LabeledMultiModalDataset{MD} <: AbstractLabeledMultiModalDataset
     ) where {MD<:AbstractMultiModalDataset}
         return LabeledMultiModalDataset{MD}(md, labeling_variables)
     end
+
+    # TODO
+    # function LabeledMultiModalDataset(
+    #     labeling_variables::AbstractVector{L},
+    #     dfs::Union{AbstractVector{DF},Tuple{DF}}
+    # ) where {DF<:AbstractDataFrame,L}
+
+    #     return LabeledMultiModalDataset(labeling_variables, MultiModalDataset(dfs))
+    # end
+
+    # # Helper
+    # function LabeledMultiModalDataset(
+    #     labeling_variables::AbstractVector{L},
+    #     dfs::AbstractDataFrame...
+    # ) where {L}
+    #     return LabeledMultiModalDataset(dfs)
+    # end
+
 end
 
 # -------------------------------------------------------------

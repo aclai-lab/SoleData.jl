@@ -35,6 +35,20 @@ const ages = DataFrame(:age => [35, 38, 37])
 @testset "SoleData.jl" begin
 
     @testset "dataset" begin
+
+        a = MultiModalDataset([deepcopy(df_langs), DataFrame(:id => [1, 2])])
+        b = MultiModalDataset([[2,3,4], [1]], df_data)
+
+        c = MultiModalDataset([[:age,:name,:stat], [:id]], df_data)
+        @test b == c
+        d = MultiModalDataset([[:age,:name,:stat], :id], df_data)
+        @test c == d
+
+        @test_throws AssertionError MultiModalDataset([[:age,:name,4], :id], df_data)
+
+        @test SoleData.data(a) != SoleData.data(b)
+        @test collect(eachmodality(a)) == collect(eachmodality(b))
+
         md = MultiModalDataset([[1],[2]], deepcopy(df))
         original_md = deepcopy(md)
 

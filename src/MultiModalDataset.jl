@@ -149,6 +149,19 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
         grouped_variables::AbstractVector,
         df::DF,
     ) where {DF<:AbstractDataFrame}
+        grouped_variables = map(group->begin
+            if !(group isa AbstractVector)
+                group = [group]
+            end
+            group = collect(group)
+            if group isa Vector{Symbol}
+                group = _name2index(df, group)
+            end
+            @assert group isa Vector{<:Integer} "Cannot mix different types of" *
+                " column identifiers; please, only use column indices (integers) or" *
+                " Symbols. Encountered: $(join(unique(typeof.(group)), ", "))."
+            group
+        end, grouped_variables)
         grouped_variables = collect(Vector{Int}.(collect.(grouped_variables)))
         grouped_variables = Vector{Vector{Int}}(grouped_variables)
         return new{DF}(grouped_variables, df)
@@ -191,6 +204,32 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
 
         return MultiModalDataset(append!(map(x -> x[2], desc), spare), df)
     end
+
+    function MultiModalDataset(
+        dfs::Union{AbstractVector{DF},Tuple{DF}}
+    ) where {DF<:AbstractDataFrame}
+        for (i, j) in Iterators.product(1:length(dfs), 1:length(dfs))
+            if i == j continue end
+            df1 = dfs[i]
+            df2 = dfs[j]
+            @assert length(
+                    intersect(names(df1), names(df2))
+                ) == 0 "Cannot build MultiModalDataset with clashing" *
+                " variable names across modalities: $(intersect(names(df1), names(df2)))"
+        end
+        grouped_variables = []
+        i = 1
+        for nvars in ncol.(dfs)
+            push!(grouped_variables, i:(nvars+i-1))
+            i += nvars
+        end
+        df = hcat(dfs...)
+        return MultiModalDataset(grouped_variables, df)
+    end
+
+    # Helper
+    MultiModalDataset(dfs::AbstractDataFrame...) = MultiModalDataset(dfs)
+
 end
 
 # -------------------------------------------------------------

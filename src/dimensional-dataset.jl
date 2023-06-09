@@ -53,11 +53,8 @@ function instances(d::AbstractDimensionalDataset{T,4}, inds::AbstractVector{<:In
     if return_view == Val(true) @views d[:, :, :, inds] else d[:, :, :, inds] end
 end
 
-function concatdatasets(
-    d1::AbstractDimensionalDataset{T,N},
-    d2::AbstractDimensionalDataset{T,N},
-) where {T,N}
-    cat(d1, d2; dims=N)
+function concatdatasets(ds::AbstractDimensionalDataset{T,N}...) where {T,N}
+    cat(ds...; dims=N)
 end
 
 instance(d::AbstractDimensionalDataset{T,2},     idx::Integer) where T = @views d[:, idx]         # N=0
