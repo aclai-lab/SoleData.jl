@@ -12,14 +12,14 @@ hasnans(n::Number) = _isnan(n)
 """
     AbstractDimensionalDataset{T<:Number,D}             = AbstractArray{T,D}
 
-An D-dimensional dataset is a multi-dimensional `Array` representing a set of
- (multivariate) D-dimensional instances (or samples):
-The size of the `Array` is {X × Y × ...} × nvariables × ninstances
-The dimensionality of the channel is denoted as N = D-1-1 (e.g. 1 for time series,
- 2 for images), and its dimensions are denoted as X, Y, Z, etc.
+An `D`-dimensional dataset is a multi-dimensional `Array` representing a set of
+ (multivariate) `D`-dimensional instances (or samples):
+The size of the `Array` is X × Y × ... × nvariables × ninstances
+The dimensionality of the channel is denoted as N = D-2 (e.g. 1 for time series,
+ 2 for images), and its dimensionalities are denoted as X, Y, Z, etc.
 
 Note: It'd be nice to define these with N being the dimensionality of the channel:
-  e.g. const AbstractDimensionalInstance{T,N} = AbstractArray{T,N+1+1}
+  e.g. const AbstractDimensionalInstance{T,N} = AbstractArray{T,N+2}
 Unfortunately, this is not currently allowed ( see https://github.com/JuliaLang/julia/issues/8322 )
 
 Note: This implementation assumes that all instances have uniform channel size (e.g. time
@@ -70,9 +70,6 @@ instance_channel_size(inst::DimensionalInstance{T,MN}) where {T,MN} = size(inst)
 channelvariable(inst::DimensionalInstance{T,1}, i_var::Integer) where T = @views inst[      i_var]::T                       # N=0
 channelvariable(inst::DimensionalInstance{T,2}, i_var::Integer) where T = @views inst[:,    i_var]::DimensionalChannel{T,1} # N=1
 channelvariable(inst::DimensionalInstance{T,3}, i_var::Integer) where T = @views inst[:, :, i_var]::DimensionalChannel{T,2} # N=2
-
-# TODO remove
-@deprecate get_instance_variable(inst, i_var) channelvariable(inst, i_var)
 
 ############################################################################################
 

@@ -28,13 +28,13 @@ The abstract representation of a multimodal dataset provided by this package is 
 AbstractMultiModalDataset
 grouped_variables
 data
-dimension
+dimensionality
 ```
 
 ## [Unlabeled Datasets](@id man-unlabeled-datasets)
 
 In *unlabeled datasets*
-there is no label variable, and all of the variables (also called *feature variables*,
+there is no labeling variable, and all of the variables (also called *feature variables*,
 or *features*) have equal role in the representation.
 These datasets are used in
 [unsupervised learning](https://en.wikipedia.org/wiki/Unsupervised_learning) contexts,

@@ -23,12 +23,12 @@ function _describeonm(
     cols::AbstractVector{<:Integer} = 1:ncol(df),
     t::AbstractVector{<:NTuple{3,Integer}} = [(1, 0, 0)]
 )
-    modality_dim = dimension(df)
+    modality_dim = dimensionality(df)
     @assert length(t) == 1 || length(t) == modality_dim "`t` length has to be `1` or the " *
-        "dimension of the modality ($(modality_dim))"
+        "dimensionality of the modality ($(modality_dim))"
 
     if modality_dim > 1 && length(t) == 1
-        # if dimension is > 1 but only 1 triple is passed use it for all dimensions
+        # if dimensionality is > 1 but only 1 triple is passed use it for all dimensionalities
         t = fill(t, modality_dim)
     end
 
@@ -76,8 +76,9 @@ Return descriptive statistics for an `AbstractMultiModalDataset` as a `Vector` o
 ## Arguments
 
 * `md`: the `AbstractMultiModalDataset`;
-* `t`: is a Vector `nmodalities` long where each element is a Vector as long as the dimension of
-	the data held by the i-th modality. Each element of the innermost Vector is a tuple
+* `t`: is a vector of `nmodalities` elements,
+    where each element is a vector as long as the dimensionality of
+	the i-th modality. Each element of the innermost Vector is a tuple
 	describing the parameters as described in [`paa`](@ref) algorithm documentation.
 
 For other see the documentation of [`DataFrames.describe`](@ref) function.
@@ -95,14 +96,14 @@ end
 
 # TODO: implement this
 # function DF.describe(md::MultiModalDataset, stats::Union{Symbol, Pair}...; cols=:)
-#     # TODO: select proper defaults stats based on `dimension` of each modality
+#     # TODO: select proper defaults stats based on `dimensionality` of each modality
 # end
 
 function DF.describe(md::AbstractMultiModalDataset, i::Integer; kwargs...)
-    modality_dim = dimension(modality(md, i))
+    modality_dim = dimensionality(modality(md, i))
     if modality_dim == :mixed || modality_dim == :empty
         # TODO: implement for mixed???
-        throw(ErrorException("Description for `:$(modality_dim)` dimension modality not implemented"))
+        throw(ErrorException("Description for `:$(modality_dim)` dimensionality modality not implemented"))
     elseif modality_dim == 0
         return DF.describe(modality(md, i))
     else

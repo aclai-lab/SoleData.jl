@@ -82,9 +82,9 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test_nowarn concatdatasets(md, md, md)
         @test_nowarn vcat(md, md, md)
 
-        @test dimension(md) == (0, 1)
-        @test dimension(md, 1) == 0
-        @test dimension(md, 2) == 1
+        @test dimensionality(md) == (0, 1)
+        @test dimensionality(md, 1) == 0
+        @test dimensionality(md, 2) == 1
 
         # test auto selection of modalities
         auto_md = MultiModalDataset(deepcopy(df))
@@ -93,18 +93,18 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         auto_md_all = MultiModalDataset(deepcopy(df); group = :all)
         @test auto_md_all == md
-        @test !(:mixed in dimension(auto_md_all))
+        @test !(:mixed in dimensionality(auto_md_all))
 
         lang_md1 = MultiModalDataset(df_langs; group = :all)
         @test nmodalities(lang_md1) == 2
-        @test !(:mixed in dimension(lang_md1))
+        @test !(:mixed in dimensionality(lang_md1))
 
         lang_md2 = MultiModalDataset(df_langs; group = [1])
         @test nmodalities(lang_md2) == 3
-        dims_md2 = dimension(lang_md2)
+        dims_md2 = dimensionality(lang_md2)
         @test length(filter(x -> isequal(x, 0), dims_md2)) == 2
         @test length(filter(x -> isequal(x, 1), dims_md2)) == 1
-        @test !(:mixed in dimension(lang_md2))
+        @test !(:mixed in dimensionality(lang_md2))
 
         # test equality between mixed-columns datasets
         md1_sim = MultiModalDataset([[1,2]], DataFrame(:b => [3,4], :a => [1,2]))
@@ -118,10 +118,10 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test nvariables(md) == 2
         @test nvariables(md, 3) == 2
 
-        @test dimension(md) == (0, 1, :mixed)
-        @test dimension(md, 3) == :mixed
-        @test dimension(md, 3; force = :min) == 0
-        @test dimension(md, 3; force = :max) == 1
+        @test dimensionality(md) == (0, 1, :mixed)
+        @test dimensionality(md, 3) == :mixed
+        @test dimensionality(md, 3; force = :min) == 0
+        @test dimensionality(md, 3; force = :max) == 1
 
         # removemodality!
         @test removemodality!(md, 3) == md # test return
@@ -162,11 +162,11 @@ const ages = DataFrame(:age => [35, 38, 37])
         # modality manipulation
         @test addvariable_tomodality!(md, 1, 2) === md # test return
         @test nvariables(md, 1) == 2
-        @test dimension(md, 1) == :mixed
+        @test dimensionality(md, 1) == :mixed
 
         @test removevariable_frommodality!(md, 1, 2) === md # test return
         @test nvariables(md, 1) == 1
-        @test dimension(md, 1) == 0
+        @test dimensionality(md, 1) == 0
 
         # variables manipulation
         @test insertmodality!(md, deepcopy(ages)) == md # test return
@@ -179,7 +179,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         insertmodality!(md, deepcopy(ages), [1])
         @test nmodalities(md) == 3
         @test nvariables(md, 3) == 2
-        @test dimension(md, 3) == 0
+        @test dimensionality(md, 3) == 0
 
         @test_nowarn md[:,:]
         @test_nowarn md[1,:]
@@ -351,9 +351,9 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test_nowarn concatdatasets(lmd, lmd, lmd)
         @test_nowarn vcat(lmd, lmd, lmd)
 
-        @test dimension(lmd) == (0, 1)
-        @test dimension(lmd, 1) == 0
-        @test dimension(lmd, 2) == 1
+        @test dimensionality(lmd) == (0, 1)
+        @test dimensionality(lmd, 1) == 0
+        @test dimensionality(lmd, 2) == 1
 
         # labels
         @test nlabelingvariables(lmd) == 1
@@ -364,10 +364,10 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test labeldomain(lmd, 1) == Set(df_langs[:,2])
 
         # remove label
-        removefromlabels!(lmd, 2)
+        unsetaslabeling!(lmd, 2)
         @test nlabelingvariables(lmd) == 0
 
-        setaslabelinging!(lmd, 2)
+        setaslabeling!(lmd, 2)
         @test nlabelingvariables(lmd) == 1
 
         # label
@@ -443,7 +443,7 @@ const ages = DataFrame(:age => [35, 38, 37])
                 readlines(joinpath(path, _ds_metadata))
             )
         @test all([parse.(Int64, split(string(modality), "=")[2]) ==
-            dimension(lmd[i_modality]) for (i_modality, modality) in enumerate(modalities)])
+            dimensionality(lmd[i_modality]) for (i_modality, modality) in enumerate(modalities)])
         @test parse(Int64, split(
             filter(
                     row -> startswith(row, "num_classes"),
@@ -463,7 +463,7 @@ const ages = DataFrame(:age => [35, 38, 37])
                     row -> startswith(row, "dim_modality"),
                     readlines(joinpath(path, string(_ds_inst_prefix, i_inst), _ds_metadata))
                 )
-            # for each modality check the proper dimension was saved
+            # for each modality check the proper dimensionality was saved
             for (i_modality, dim_modality) in enumerate(dim_modality_rows)
                 @test strip(split(dim_modality, "=")[2]) == string(
                         size(first(first(lmd[i_modality])))

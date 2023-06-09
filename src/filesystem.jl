@@ -98,17 +98,17 @@ end
 """
     datasetinfo(datasetpath; onlywithlabels = [], shufflelabels = [], rng = Random.GLOBAL_RNG)
 
-Show dataset size on disk and return a Touple with first element a Vector of selected IDs,
+Show dataset size on disk and return a Touple with first element a vector of selected IDs,
 second element the labels DataFrame or nothing and third element the total size in bytes.
 
 ## PARAMETERS
 
-* `onlywithlabels`, it's used to select which portion of the $(DATASET_ENC_NAME) to load, by specifying
+* `onlywithlabels` is used to select which portion of the $(DATASET_ENC_NAME) to load, by specifying
     labels and their values to use as filters. See [`loaddataset`](@ref) for more info.
-* `shufflelabels` is an AbstractVector of names of labels to shuffle (default = [], means
+* `shufflelabels` is an `AbstractVector` of names of labels to shuffle (default = [], means
     no shuffle).
-* `rng` the RandomNumberGenerator to be used when shuffling (for reproducibility); can be
-    either a Integer (used as seed for MersenneTwister) or an AbstractRNG.
+* `rng` is a random number generator to be used when shuffling (for reproducibility); can be
+    either a `Integer` (used as seed for `MersenneTwister`) or an `AbstractRNG`.
 
 """
 function datasetinfo(
@@ -143,13 +143,13 @@ function datasetinfo(
         there_are_missing = false
         if length(missing_in_labels) > 0
             there_are_missing = true
-            @warn "Following exmaples IDs are present in $(_ds_labels) but there isn't a " *
+            @warn "The following examples IDs are present in $(_ds_labels) but there is no " *
                 "directory for them: $(missing_in_labels)"
         end
         missing_in_dirs = setdiff(examples_ids, labels[:,:id])
         if length(missing_in_dirs) > 0
             there_are_missing = true
-            @warn "Following exmaples IDs are present on filsystem but arn't referenced by " *
+            @warn "The following examples IDs are present on filsystem but are not referenced by " *
                 "$(_ds_labels): $(missing_in_dirs)"
         end
         if there_are_missing
@@ -266,29 +266,30 @@ end
 """
     loaddataset(datasetpath; onlywithlabels = [], shufflelabels = [], rng = Random.GLOBAL_RNG)
 
-Create a MultiModalDataset or a LabeledMultiModalDataset from a $(DATASET_ENC_NAME), based on the
+Create a `MultiModalDataset` or a `LabeledMultiModalDataset`
+from a $(DATASET_ENC_NAME), based on the
 presence of file Labels.csv.
 
 ## PARAMETERS
 
-* `datasetpath` is an AbstractString that denote the $(DATASET_ENC_NAME)'s position;
+* `datasetpath` is an `AbstractString` that denote the $(DATASET_ENC_NAME)'s position;
 * `onlywithlabels` is an AbstractVector{AbstractVector{Pair{AbstractString,AbstractVector{Any}}}}
     and it's used to select which portion of the $(DATASET_ENC_NAME) to load, by specifying labels and
     their values.
     Beginning from the center, each Pair{AbstractString,AbstractVector{Any}} must contain,
-    as AbstractString the label's name, and, as AbstractVector{Any} the values of that label.
+    as AbstractString the label's name, and, as AbstractVector{Any} the values for that label.
     Each Pair in one Vector must refer to a different label, so if the $(DATASET_ENC_NAME) has in total
     n labels, this Vector of Pair can contain maximun n element. That's because the elements
     will combine with each other.
     Every Vector of Pair act as a filter.
-    Note that the same label can be used in different Vector of Pair as they don't combine
+    Note that the same label can be used in different Vector of Pair as they do not combine
     with each other.
     If `onlywithlabels` is an empty Vector (default) the function will load the entire
     $(DATASET_ENC_NAME).
-* `shufflelabels` is an AbstractVector of names of labels to shuffle (default = [], means
+* `shufflelabels` is an `AbstractVector` of names of labels to shuffle (default = [], means
     no shuffle).
-* `rng` the RandomNumberGenerator to be used when shuffling (for reproducibility); can be
-    either a Integer (used as seed for MersenneTwister) or an AbstractRNG.
+* `rng` is a random number generator to be used when shuffling (for reproducibility); can be
+    either a Integer (used as seed for `MersenneTwister`) or an `AbstractRNG`.
 
 ## EXAMPLES
 
@@ -317,9 +318,9 @@ julia> lmd = LabeledMultiModalDataset(
    ├─ labels
    │   ├─ age: Set([9, 30, 40])
    │   └─ name: Set(["C", "Julia", "Python", "Java", "R"])
-   └─ dimensions: (1,)
+   └─ dimensionalities: (1,)
 - Modality 1 / 1
-   └─ dimension: 1
+   └─ dimensionality: 1
 5×1 SubDataFrame
  Row │ stat
      │ Array…
@@ -330,7 +331,7 @@ julia> lmd = LabeledMultiModalDataset(
    4 │ [0.540302, -0.416147, -0.989992,…
    5 │ [0.841471, 0.909297, 0.14112, -0…
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 5×1 SubDataFrame
  Row │ id
      │ Int64
@@ -350,16 +351,16 @@ Total size: 981670 bytes
    ├─ labels
    │   ├─ age: Set(["9"])
    │   └─ name: Set(["Julia"])
-   └─ dimensions: (1,)
+   └─ dimensionalities: (1,)
 - Modality 1 / 1
-   └─ dimension: 1
+   └─ dimensionality: 1
 1×1 SubDataFrame
  Row │ stat
      │ Array…
 ─────┼───────────────────────────────────
    1 │ [0.540302, -0.416147, -0.989992,…
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 1×1 SubDataFrame
  Row │ id
      │ Int64
@@ -378,9 +379,9 @@ Total size: 1963537 bytes
    ├─ labels
    │   ├─ age: Set(["9"])
    │   └─ name: Set(["Julia", "R"])
-   └─ dimensions: (1,)
+   └─ dimensionalities: (1,)
 - Modality 1 / 1
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat
      │ Array…
@@ -388,7 +389,7 @@ Total size: 1963537 bytes
    1 │ [0.540302, -0.416147, -0.989992,…
    2 │ [0.841471, 0.909297, 0.14112, -0…
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ id
      │ Int64
@@ -403,9 +404,9 @@ Total size: 1963537 bytes
     ├─ labels
     │   ├─ age: Set(["9", "30"])
     │   └─ name: Set(["C", "Julia"])
-    └─ dimensions: (1,)
+    └─ dimensionalities: (1,)
 - Modality 1 / 1
-    └─ dimension: 1
+    └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat
      │ Array…
@@ -413,7 +414,7 @@ Total size: 1963537 bytes
    1 │ [0.540302, -0.416147, -0.989992,…
    2 │ [0.841471, 0.909297, 0.14112, -0…
 - Spare variables
-    └─ dimension: 0
+    └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ id
      │ Int64
@@ -496,15 +497,16 @@ datasetpath
 
 ## PARAMETERS
 
-* `instance_ids` is a AbstractVector{Integer} that denote the identifier of the instances,
-* `name` is an AbstractString and denote the name of the $(DATASET_ENC_NAME), that will be saved in the
+* `instance_ids` is an `AbstractVector{Integer}` that denote the identifier of the instances,
+* `name` is an `AbstractString` and denote the name of the $(DATASET_ENC_NAME), that will be saved in the
     Metadata of the $(DATASET_ENC_NAME),
-* `force` is a Bool, if it's set to `true`, then in case `datasetpath` already exists, it will
+* `force` is a `Bool`, if it's set to `true`, then in case `datasetpath` already exists, it will
     be overwritten otherwise the operation will be aborted. (default = `false`)
-* `labels_indices` is a AbstractVector{Integer} and contains the indices of the labels'
+* `labels_indices` is an `AbstractVector{Integer}` and contains the indices of the labels'
     column (allowed only when passing a MultiModalDataset)
 
-Alternatively to an AbstractMultiModalDataset a DataFrame can be passed as second argument.
+Alternatively to an `AbstractMultiModalDataset`, a `DataFrame`
+can be passed as second argument.
 If this is the case a third positional argument is required representing the
 `grouped_variables` of the dataset. See [`MultiModalDataset`](@ref) for syntax of
 `grouped_variables`.
@@ -611,7 +613,7 @@ function savedataset(
     println(ds_metadata_file, "num_modalities=", length(grouped_variables))
 
     for (i_modality, curr_modality_indices) in enumerate(grouped_variables)
-        println(ds_metadata_file, "modality", i_modality, "=", dimension(df[:,curr_modality_indices]))
+        println(ds_metadata_file, "modality", i_modality, "=", dimensionality(df[:,curr_modality_indices]))
     end
 
     close(ds_metadata_file)
