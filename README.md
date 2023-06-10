@@ -1,4 +1,6 @@
-# *SoleData.jl* – Unstructured and Multimodal datasets
+![Sole](logo.png)
+
+# SoleData.jl – Unstructured and Multimodal datasets
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aclai-lab.github.io/SoleData.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleData.jl/dev)
