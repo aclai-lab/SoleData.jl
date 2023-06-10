@@ -1,4 +1,6 @@
-![Sole](logo.png)
+<div align="center">
+    <img src="logo.png" alt="" width="200">
+</div>
 
 # SoleData.jl – Unstructured and Multimodal datasets
 
