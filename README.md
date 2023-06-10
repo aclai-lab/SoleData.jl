@@ -1,6 +1,4 @@
-<div align="center">
-    <img src="logo.png" alt="" width="200">
-</div>
+[<div align="center"><img src="logo.png" alt="" title="This package is part of Sole.jl" width="200"></div>](https://github.com/aclai-lab/Sole.jl)
 
 # SoleData.jl – Unstructured and Multimodal datasets
 
