@@ -127,7 +127,7 @@ indicating the name of the labeling variable.
 !!! note
     The resulting labeling variable will always be added as last column in the underlying `DataFrame`.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> lmd = LabeledMultiModalDataset(

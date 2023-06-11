@@ -51,7 +51,7 @@ Alternatively to the `indices` and the `index`, the variable name(s) can be used
 
 Note: to add a new modality with new variables see [`insertmodality!`](@ref).
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`;
 * `indices` is an `AbstractVector{Integer}` that indicates which indices of the multimodal
@@ -63,7 +63,7 @@ Note: to add a new modality with new variables see [`insertmodality!`](@ref).
 * `variable_name` is a `Symbol` that indicates the variable of the multimodal dataset's
     corresponding dataframe to add to the new modality;
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60])
@@ -196,14 +196,14 @@ Remove `i`-th modality from a multimodal dataset, and return the dataset.
 Note: to completely remove a modality and all variables in it use [`dropmodalities!`](@ref)
 instead.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`;
 * `index` is an `Integer` that indicates which modality to remove from the multimodal dataset;
 * `indices` is an `AbstractVector{Integer}` that indicates the modalities to remove from the
     multimodal dataset;
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"],
@@ -344,7 +344,7 @@ or `var_inames`.
 Note: The function does not allow you to add a variable to a new modality, but only to add it
 to an existing modality. To add a new modality use [`addmodality!`](@ref) instead.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`;
 * `i_modality` is an `Integer` indicating the modality in which the variable(s)
@@ -358,7 +358,7 @@ to an existing modality. To add a new modality use [`addmodality!`](@ref) instea
 * `var_names` is an `AbstractVector{Symbol}` indicating the name of the variables to
     add to a specific modality of the multimodal dataset;
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"],
@@ -498,11 +498,11 @@ multimodal dataset, and return the dataset itself.
 Alternatively to `var_index` the variable name can be used.
 Multiple variables can be dropped from the multimodal dataset at once,
 by passing a `Vector` of
-`Symbols` (for names), or a `Vector` of integens (for indices) as last parameter.
+`Symbols` (for names), or a `Vector` of integers (for indices) as a last argument.
 
 Note: when all variables are dropped from a modality, it will be removed.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`;
 * `i_modality` is an `Integer` indicating the modality in which the variable(s)
@@ -516,7 +516,7 @@ Note: when all variables are dropped from a modality, it will be removed.
 * `var_names` is an `AbstractVector{Symbol}` indicating the name of the variables to
     drop from a specific modality of the multimodal dataset;
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"],
@@ -743,7 +743,7 @@ by passing
 the corresponding indices as `existing_variables`.
 If `col` is specified then the variables will be inserted starting at index `col`.
 
-## PARAMETERS
+# Arguments
 * `md` is a `MultiModalDataset`;
 * `col` is an `Integer` indicating the column in which to insert the columns of
     `new_modality`;
@@ -753,7 +753,7 @@ If `col` is specified then the variables will be inserted starting at index `col
     indicates which variables of the multimodal dataset internal dataframe structure
     to insert in the new modality.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> df = DataFrame(
@@ -1025,13 +1025,13 @@ them. This can lead to the removal of additional modalities other than the `i`-t
 If the intention is to remove a modality without dropping the variables use
 [`removemodality!`](@ref) instead.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`;
 * `index` is an `Integer` indicating the index of the modality to drop;
 * `indices` is an `AbstractVector{Integer}` indicating the indices of the modalities to drop.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60])

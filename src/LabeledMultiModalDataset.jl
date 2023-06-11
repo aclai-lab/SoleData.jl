@@ -10,13 +10,13 @@ Create a `LabeledMultiModalDataset` by associating an `AbstractMultiModalDataset
 some labeling variables, specified as a column index (`Int`)
 or a vector of column indices (`Vector{Int}`).
 
-## PARAMETERS
+# Arguments
 
 * `md` is the original `AbstractMultiModalDataset`;
 * `labeling_variables` is an `AbstractVector` of integers indicating the indices of the
     variables that will be set as labels.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> lmd = LabeledMultiModalDataset(MultiModalDataset([[2],[4]], DataFrame(

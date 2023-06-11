@@ -13,13 +13,13 @@ of the `i`-th modality is returned.
 
 Alternatively, `nvariables` can be called on a single modality.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`;
 * `i` (optional) is an `Integer` indicating the modality of the multimodal dataset whose
     number of variables you want to know.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1],[2]], DataFrame(:age => [25, 26], :sex => ['M', 'F']))
@@ -118,22 +118,22 @@ Insert a variable in a multimodal dataset with a given index.
 !!! note
     Each inserted variable will be added in as a spare variables.
 
-## PARAMETERS
+# Arguments
 
 * `md` is an `AbstractMultiModalDataset`;
 * `col` is an `Integer` indicating in which position to insert the new variable.
     If no col is passed, the new variable will be placed
     last in the md's underlying dataframe structure;
 * `index` is a `Symbol` and denote the name of the variable to insert.
-    Duplicated variable names will be renamed to avoid conflicts: see `makeunique` parameter
-    of [`insertcols!`](https://dataframes.juliadata.org/stable/lib/functions/#DataFrames.insertcols!)
+    Duplicated variable names will be renamed to avoid conflicts: see `makeunique` argument
+    for [`insertcols!`](https://dataframes.juliadata.org/stable/lib/functions/#DataFrames.insertcols!)
     in DataFrames documentation;
 * `values` is an `AbstractVector` that indicates the values for the newly
     inserted variable. The length of `values` should match `ninstances(md)`;
-* `value` is a single value for the new variable. If a single `value` is passed as last
-    parameter this will be copied and used for each instance in the dataset.
+* `value` is a single value for the new variable. If a single `value` is passed as a last
+    argument this will be copied and used for each instance in the dataset.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
@@ -296,7 +296,7 @@ Check whether a multimodal dataset contains a variable named `variable_name`.
 Instead of a single variable name a `Vector` of names can be passed. If this is the case,
 this function will return `true` only if `md` contains all the specified variables.
 
-## PARAMETERS
+# Arguments
 
 * `df` is an `AbstractDataFrame`, which is one of the two structure in which you want to check
     the presence of the variable;
@@ -306,7 +306,7 @@ this function will return `true` only if `md` contains all the specified variabl
     verify;
 * `i_modality` is an `Integer` indicating in which modality to look for the variable.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
@@ -420,7 +420,7 @@ When `i_modality` is passed, the function
 modality identified by `i_modality`.
 It returns `0` when the variable is not contained in the modality identified by `i_modality`.
 
-## PARAMETERS
+# Arguments
 
 * `df` is an `AbstractDataFrame`;
 * `md` is an `AbstractMultiModalDataset`;
@@ -428,7 +428,7 @@ It returns `0` when the variable is not contained in the modality identified by 
 * `i_modality` is an `Integer` indicating of which modality you want to know the index of
     the variable.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
@@ -498,12 +498,12 @@ end
 Return the indices of all the variables that are not contained in any of the modalities of a
 multimodal dataset.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`, which is the structure whose indices of the sparevariables
     are to be known.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
@@ -567,13 +567,13 @@ of the `i`-th modality are returned as an `AbstractVector`.
 
 Alternatively, `nvariables` can be called on a single modality.
 
-## PARAMETERS
+# Arguments
 
 * `md` is an MultiModalDataset;
 * `i` is an `Integer` indicating from which modality of the multimodal dataset to get the
     names of the variables.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
@@ -657,7 +657,7 @@ end
 
 Drop the `i`-th variable from a multimodal dataset, and return the dataset itself.
 
-## PARAMETERS
+# Arguments
 
 * `md` is an MultiModalDataset;
 * `i` is an `Integer` that indicates the index of the variable to drop;
@@ -665,10 +665,10 @@ Drop the `i`-th variable from a multimodal dataset, and return the dataset itsel
 * `indices` is an `AbstractVector{Integer}` that indicates the indices of the variables to
     drop;
 * `variable_names` is an `AbstractVector{Symbol}` that indicates the variables to drop.
-* `i_modality`: index of the modality; if this parameter is specified `indices` are relative to the
-    `i_modality`-th modality
+* `i_modality`: index of the modality; if this argument is specified,
+    `indices` are considered as relative to the `i_modality`-th modality
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
@@ -841,7 +841,7 @@ multimodal dataset.
 Note: if the dropped variables are contained in some modality they will also be removed from
 them; as a side effect, this can lead to the removal of modalities.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`;
 * `indices` is an `AbstractVector{Integer}` that indicates which indices to keep in the
@@ -849,7 +849,7 @@ them; as a side effect, this can lead to the removal of modalities.
 * `variable_names` is an `AbstractVector{Symbol}` that indicates which variables to keep in
     the multimodal dataset.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3, 4, 5],[5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
@@ -968,12 +968,12 @@ end
 
 Drop all variables that are not contained in any of the modalities in a multimodal dataset.
 
-## PARAMETERS
+# Arguments
 
 * `md` is a `MultiModalDataset`, that is the structure at which sparevariables will be
     dropped.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1]], DataFrame(:age => [30, 9], :name => ["Python", "Julia"]))

@@ -7,7 +7,7 @@
 
 Return the number of instances in a multimodal dataset.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> md = MultiModalDataset([[1],[2]],DataFrame(:age => [25, 26], :sex => ['M', 'F']))
