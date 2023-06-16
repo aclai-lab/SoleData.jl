@@ -57,6 +57,22 @@ function concatdatasets(ds::AbstractDimensionalDataset{T,N}...) where {T,N}
     cat(ds...; dims=N)
 end
 
+function displaystructure(d::AbstractDimensionalDataset; indent_str = "", include_ninstances = true)
+    padattribute(l,r) = string(l) * lpad(r,32+length(string(r))-(length(indent_str)+2+length(l)))
+    pieces = []
+    push!(pieces, "AbstractDimensionalDataset")
+    push!(pieces, "$(padattribute("dimensionality:", dimensionality(d)))")
+    if include_ninstances
+        push!(pieces, "$(padattribute("# instances:", ninstances(d)))")
+    end
+    push!(pieces, "$(padattribute("# variables:", nvariables(d)))")
+    push!(pieces, "$(padattribute("channel_size:", channel_size(d)))")
+    push!(pieces, "$(padattribute("max_channel_size:", max_channel_size(d)))")
+    push!(pieces, "$(padattribute("size × eltype:", "$(size(d)) × $(eltype(d))"))")
+
+    return join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ") * "\n"
+end
+
 instance(d::AbstractDimensionalDataset{T,2},     idx::Integer) where T = @views d[:, idx]         # N=0
 instance(d::AbstractDimensionalDataset{T,3},     idx::Integer) where T = @views d[:, :, idx]      # N=1
 instance(d::AbstractDimensionalDataset{T,4},     idx::Integer) where T = @views d[:, :, :, idx]   # N=2
