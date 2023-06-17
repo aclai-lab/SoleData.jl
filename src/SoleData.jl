@@ -185,7 +185,7 @@ include("filesystem.jl")
 
 include("dimensionality.jl")
 
-export get_instance, max_channel_size
+export get_instance, maxchannelsize
 
 include("dimensional-dataset.jl")
 

@@ -66,8 +66,8 @@ function displaystructure(d::AbstractDimensionalDataset; indent_str = "", includ
         push!(pieces, "$(padattribute("# instances:", ninstances(d)))")
     end
     push!(pieces, "$(padattribute("# variables:", nvariables(d)))")
-    push!(pieces, "$(padattribute("channel_size:", channel_size(d)))")
-    push!(pieces, "$(padattribute("max_channel_size:", max_channel_size(d)))")
+    push!(pieces, "$(padattribute("channelsize:", channelsize(d)))")
+    push!(pieces, "$(padattribute("maxchannelsize:", maxchannelsize(d)))")
     push!(pieces, "$(padattribute("size × eltype:", "$(size(d)) × $(eltype(d))"))")
 
     return join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ") * "\n"
@@ -80,8 +80,8 @@ instance(d::AbstractDimensionalDataset{T,4},     idx::Integer) where T = @views 
 # TODO remove? @ferdiu
 get_instance(args...) = instance(args...)
 
-instance_channel_size(d::AbstractDimensionalDataset, i_instance::Integer) = instance_channel_size(get_instance(d, i_instance))
-instance_channel_size(inst::DimensionalInstance{T,MN}) where {T,MN} = size(inst)[1:end-1]
+instance_channelsize(d::AbstractDimensionalDataset, i_instance::Integer) = instance_channelsize(get_instance(d, i_instance))
+instance_channelsize(inst::DimensionalInstance{T,MN}) where {T,MN} = size(inst)[1:end-1]
 
 channelvariable(inst::DimensionalInstance{T,1}, i_var::Integer) where T = @views inst[      i_var]::T                       # N=0
 channelvariable(inst::DimensionalInstance{T,2}, i_var::Integer) where T = @views inst[:,    i_var]::DimensionalChannel{T,1} # N=1
@@ -93,9 +93,9 @@ const UniformDimensionalDataset{T<:Number,D}     = Union{Array{T,D},SubArray{T,D
 
 hasnans(X::UniformDimensionalDataset) = any(_isnan.(X))
 
-channel_size(d::UniformDimensionalDataset) = size(d)[1:end-2]
-max_channel_size(d::UniformDimensionalDataset) = channel_size(d)
+channelsize(d::UniformDimensionalDataset) = size(d)[1:end-2]
+maxchannelsize(d::UniformDimensionalDataset) = channelsize(d)
 
-instance_channel_size(d::UniformDimensionalDataset, i_instance::Integer) = channel_size(d)
+instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channelsize(d)
 
 ############################################################################################
