@@ -10,7 +10,7 @@ hasnans(n::Number) = _isnan(n)
 ############################################################################################
 
 """
-    AbstractDimensionalDataset{T<:Number,D}             = AbstractArray{T,D}
+    AbstractDimensionalDataset{T<:Number,D} = AbstractArray{T,D}
 
 An `D`-dimensional dataset is a multi-dimensional `Array` representing a set of
  (multivariate) `D`-dimensional instances (or samples):
@@ -26,8 +26,6 @@ Note: This implementation assumes that all instances have uniform channel size (
  series with same number of points, or images of same width and height)
 """
 const AbstractDimensionalDataset{T<:Number,D}     = AbstractArray{T,D}
-const AbstractDimensionalChannel{T<:Number,N}     = AbstractArray{T,N}
-const AbstractDimensionalInstance{T<:Number,MN}   = AbstractArray{T,MN}
 
 const DimensionalChannel{T<:Number,N}            = Union{Array{T,N},SubArray{T,N}}
 const DimensionalInstance{T<:Number,MN}          = Union{Array{T,MN},SubArray{T,MN}}
@@ -70,7 +68,7 @@ function displaystructure(d::AbstractDimensionalDataset; indent_str = "", includ
     push!(pieces, "$(padattribute("maxchannelsize:", maxchannelsize(d)))")
     push!(pieces, "$(padattribute("size × eltype:", "$(size(d)) × $(eltype(d))"))")
 
-    return join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ") * "\n"
+    return join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
 end
 
 instance(d::AbstractDimensionalDataset{T,2},     idx::Integer) where T = @views d[:, idx]         # N=0
@@ -99,3 +97,66 @@ maxchannelsize(d::UniformDimensionalDataset) = channelsize(d)
 instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channelsize(d)
 
 ############################################################################################
+############################################################################################
+############################################################################################
+
+function dataframe2cube(
+    df::AbstractDataFrame;
+    dry_run::Bool = false,
+)
+    coltypes = eltype.(eachcol(df))
+    wrong_coltypes = filter(t->!(t <: Union{Real,AbstractArray}), coltypes)
+
+    @assert length(wrong_coltypes) == 0 "Column types not allowed: " *
+        "$(join(wrong_coltypes, ", "))"
+
+    wrong_eltypes = filter(t->!(t <: Real), eltype.(coltypes))
+
+    @assert length(wrong_eltypes) == 0 "Column eltypes not allowed: " *
+        "$(join(wrong_eltypes, ", "))"
+
+    common_eltype = Union{eltype.(coltypes)...}
+    @assert common_eltype <: Real
+    if !isconcretetype(common_eltype)
+        @warn "Detected common eltype `$(common_eltype)` is not concrete. " *
+            "consider converting all values to $(promote_type(eltype.(coltypes)...))."
+    end
+
+    # _channelndims = (x)->ndims(x) # (hasmethod(ndims, (typeof(x),)) ? ndims(x) : missing)
+    # _channelsize = (x)->size(x) # (hasmethod(size, (typeof(x),)) ? size(x) : missing)
+
+    df_ndims = ndims.(df)
+    percol_channelndimss = [(colname => unique(df_ndims[:,colname])) for colname in names(df)]
+    wrong_percol_channelndimss = filter(((colname, ndimss),)->length((ndimss)) != 1, percol_channelndimss)
+    @assert length(wrong_percol_channelndimss) == 0 "All instances should have " *
+        "the same " *
+        "ndims for each variable. Got ndims's: $(wrong_percol_channelndimss)"
+
+    df_size = size.(df)
+    percol_channelsizess = [(colname => unique(df_size[:,colname])) for colname in names(df)]
+    wrong_percol_channelsizess = filter(((colname, channelsizess),)->length((channelsizess)) != 1, percol_channelsizess)
+    @assert length(wrong_percol_channelsizess) == 0 "All instances should have " *
+        "the same " *
+        "size for each variable. Got sizes: $(wrong_percol_channelsizess)"
+
+    channelsizes = first.(last.(percol_channelsizess))
+
+    @assert allequal(channelsizes) "All variables should have " *
+        "the same " *
+        "channel size. Got: $(utils._groupby(channelsizes, names(df))))"
+    __channelsize = first(channelsizes)
+
+    n_variables = ncol(df)
+    n_instances = nrow(df)
+
+    cube = Array{common_eltype}(undef, __channelsize..., n_variables, n_instances)
+    if !dry_run
+        for (i_col, colname) in enumerate(eachcol(df))
+            for (i_row, row) in enumerate(colname)
+                cube[[(:) for i in 1:length(size(row))]...,i_col,i_row] = row
+            end
+        end
+    end
+
+    return cube, names(df)
+end

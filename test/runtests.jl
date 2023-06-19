@@ -34,7 +34,7 @@ const ages = DataFrame(:age => [35, 38, 37])
 
 @testset "SoleData.jl" begin
 
-    @testset "dataset" begin
+    @testset "MultiModalDataset" begin
 
         a = MultiModalDataset([deepcopy(df_langs), DataFrame(:id => [1, 2])])
         b = MultiModalDataset([[2,3,4], [1]], df_data)
@@ -315,7 +315,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test md1 == md2
     end
 
-    @testset "labeled-dataset" begin
+    @testset "LabeledMultiModalDataset" begin
         lmd = LabeledMultiModalDataset(
             MultiModalDataset([[1], [3]], deepcopy(df_langs)),
             [2],
@@ -403,7 +403,7 @@ const ages = DataFrame(:age => [35, 38, 37])
         @test labels(lmd) == [Symbol(names(df_data)[3])]
     end
 
-    @testset "dataset filesystem operations" begin
+    @testset "Filesystem operations" begin
         lmd = LabeledMultiModalDataset(
             MultiModalDataset([[2], [4]], deepcopy(df_data)),
             [3],
@@ -517,4 +517,27 @@ const ages = DataFrame(:age => [35, 38, 37])
         savedataset(path, md, force = true)
         @test !isfile(joinpath(path, _ds_labels))
     end
+
+    @testset "Dimensional dataset" begin
+        ninstances = 4
+        for ((channel_size1, channel_size2), shouldfail) in [
+            ((),()) => false,
+            ((1),(1)) => false,
+            ((1,2),(1,2)) => false,
+            ((1,2),(1,)) => true,
+            ((1,),()) => true,
+            ((1,2),()) => true,
+        ]
+            df = DataFrame(
+                x=[rand(channel_size1...) for i_instance in 1:ninstances],
+                y=[rand(channel_size2...) for i_instance in 1:ninstances]
+            )
+            if shouldfail
+                @test_throws AssertionError dataframe2cube(df)
+            else
+                cube, varnames = @test_nowarn dataframe2cube(df)
+            end
+        end
+    end
+
 end
