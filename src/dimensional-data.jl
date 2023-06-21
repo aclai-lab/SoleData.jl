@@ -19,16 +19,13 @@ The dimensionality of the channel is denoted as N = D-2 (e.g. 1 for time series,
  2 for images), and its dimensionalities are denoted as X, Y, Z, etc.
 
 Note: It'd be nice to define these with N being the dimensionality of the channel:
-  e.g. const AbstractDimensionalInstance{T,N} = AbstractArray{T,N+2}
+  e.g. const AbstractDimensionalDataset{T<:Number,N} = AbstractArray{T,N+2}
 Unfortunately, this is not currently allowed ( see https://github.com/JuliaLang/julia/issues/8322 )
 
 Note: This implementation assumes that all instances have uniform channel size (e.g. time
  series with same number of points, or images of same width and height)
 """
 const AbstractDimensionalDataset{T<:Number,D}     = AbstractArray{T,D}
-
-const DimensionalChannel{T<:Number,N}            = Union{Array{T,N},SubArray{T,N}}
-const DimensionalInstance{T<:Number,MN}          = Union{Array{T,MN},SubArray{T,MN}}
 
 hasnans(n::AbstractDimensionalDataset{<:Union{Nothing, Number}}) = any(_isnan.(n))
 
@@ -79,11 +76,11 @@ instance(d::AbstractDimensionalDataset{T,4},     idx::Integer) where T = @views 
 get_instance(args...) = instance(args...)
 
 instance_channelsize(d::AbstractDimensionalDataset, i_instance::Integer) = instance_channelsize(get_instance(d, i_instance))
-instance_channelsize(inst::DimensionalInstance{T,MN}) where {T,MN} = size(inst)[1:end-1]
+instance_channelsize(instance::AbstractArray) = size(instance)[1:end-1]
 
-channelvariable(inst::DimensionalInstance{T,1}, i_var::Integer) where T = @views inst[      i_var]::T                       # N=0
-channelvariable(inst::DimensionalInstance{T,2}, i_var::Integer) where T = @views inst[:,    i_var]::DimensionalChannel{T,1} # N=1
-channelvariable(inst::DimensionalInstance{T,3}, i_var::Integer) where T = @views inst[:, :, i_var]::DimensionalChannel{T,2} # N=2
+channelvariable(instance::AbstractArray{T,1}, i_var::Integer) where T = @views instance[      i_var]::T                       # N=0
+channelvariable(instance::AbstractArray{T,2}, i_var::Integer) where T = @views instance[:,    i_var]::AbstractArray{T,1} # N=1
+channelvariable(instance::AbstractArray{T,3}, i_var::Integer) where T = @views instance[:, :, i_var]::AbstractArray{T,2} # N=2
 
 ############################################################################################
 
@@ -128,22 +125,19 @@ function dataframe2cube(
     df_ndims = ndims.(df)
     percol_channelndimss = [(colname => unique(df_ndims[:,colname])) for colname in names(df)]
     wrong_percol_channelndimss = filter(((colname, ndimss),)->length((ndimss)) != 1, percol_channelndimss)
-    @assert length(wrong_percol_channelndimss) == 0 "All instances should have " *
-        "the same " *
+    @assert length(wrong_percol_channelndimss) == 0 "All instances should have the same " *
         "ndims for each variable. Got ndims's: $(wrong_percol_channelndimss)"
 
     df_size = size.(df)
     percol_channelsizess = [(colname => unique(df_size[:,colname])) for colname in names(df)]
     wrong_percol_channelsizess = filter(((colname, channelsizess),)->length((channelsizess)) != 1, percol_channelsizess)
-    @assert length(wrong_percol_channelsizess) == 0 "All instances should have " *
-        "the same " *
+    @assert length(wrong_percol_channelsizess) == 0 "All instances should have the same " *
         "size for each variable. Got sizes: $(wrong_percol_channelsizess)"
 
     channelsizes = first.(last.(percol_channelsizess))
 
-    @assert allequal(channelsizes) "All variables should have " *
-        "the same " *
-        "channel size. Got: $(utils._groupby(channelsizes, names(df))))"
+    @assert allequal(channelsizes) "All variables should have the same " *
+        "channel size. Got: $(SoleBase._groupby(channelsizes, names(df))))"
     __channelsize = first(channelsizes)
 
     n_variables = ncol(df)
