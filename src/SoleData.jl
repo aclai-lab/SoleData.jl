@@ -39,7 +39,7 @@ export LabeledMultiModalDataset
 # information gathering
 export instance, ninstances, slicedataset, concatdatasets
 export modality, nmodalities
-export variables, nvariables, dimension, sparevariables, hasvariables
+export variables, nvariables, dimensionality, sparevariables, hasvariables
 export variableindex
 export isapproxeq, ≊
 export isapprox
@@ -60,7 +60,7 @@ export addmodality!, removemodality!, addvariable_tomodality!, removevariable_fr
 export insertmodality!, dropmodalities!
 
 # labels manipulation
-export nlabelingvariables, label, labels, labeldomain, setaslabelinging!, removefromlabels!, joinlabels!
+export nlabelingvariables, label, labels, labeldomain, setaslabeling!, unsetaslabeling!, joinlabels!
 
 # re-export from DataFrames
 export describe

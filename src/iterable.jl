@@ -81,7 +81,7 @@ end
 
 
 
-# # TODO: consider adding interfaces to access the inner dataframe
+# # TODO: consider adding interfaces to access the underlying AbstractDataFrame
 # function getindex(
 #     md::AbstractMultiModalDataset,
 #     i::Union{Integer,AbstractVector{<:Integer},Tuple{<:Integer}},

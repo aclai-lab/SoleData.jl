@@ -9,7 +9,7 @@ Return the `i`-th modality of a multimodal dataset.
 
     modality(md, indices)
 
-Return a Vector of modalities at `indices` of a multimodal dataset.
+Return a `Vector` of modalities at `indices` of a multimodal dataset.
 """
 function modality(md::AbstractMultiModalDataset, i::Integer)
     @assert 1 ≤ i ≤ nmodalities(md) "Index ($i) must be a valid modality number " *
@@ -45,23 +45,22 @@ nmodalities(md::AbstractMultiModalDataset) = length(grouped_variables(md))
     addmodality!(md, variable_name)
 
 Create a new modality in a multimodal dataset using variables at `indices`
-or `index`, and return`md`.
+or `index`, and return the dataset itself.
 
-Alternatively to the `indices` and the `index`, can be used respectively the variable_names
-and the variable_name.
+Alternatively to the `indices` and the `index`, the variable name(s) can be used.
 
 Note: to add a new modality with new variables see [`insertmodality!`](@ref).
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset;
-* `indices` is an AbstractVector{Integer} that indicates which indices of the multimodal
+* `md` is a `MultiModalDataset`;
+* `indices` is an `AbstractVector{Integer}` that indicates which indices of the multimodal
     dataset's corresponding dataframe to add to the new modality;
-* `index` is a Integer that indicates the index of the multimodal dataset's corresponding
+* `index` is an `Integer` that indicates the index of the multimodal dataset's corresponding
     dataframe to add to the new modality;
-* `variable_names` is an AbstractVector{Symbol} that indicates which variables of the
+* `variable_names` is an `AbstractVector{Symbol}` that indicates which variables of the
     multimodal dataset's corresponding dataframe to add to the new modality;
-* `variable_name` is a Symbol that indicates the variable of the multimodal dataset's
+* `variable_name` is a `Symbol` that indicates the variable of the multimodal dataset's
     corresponding dataframe to add to the new modality;
 
 ## EXAMPLES
@@ -77,9 +76,9 @@ julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['
 
 julia> md = MultiModalDataset([[1]], df)
 ● MultiModalDataset
-   └─ dimensions: (0,)
+   └─ dimensionalities: (0,)
 - Modality 1 / 1
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -87,7 +86,7 @@ julia> md = MultiModalDataset([[1]], df)
    1 │ Python
    2 │ Julia
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×4 SubDataFrame
  Row │ age    sex   height  weight
      │ Int64  Char  Int64   Int64
@@ -98,9 +97,9 @@ julia> md = MultiModalDataset([[1]], df)
 
 julia> addmodality!(md, [:age, :sex])
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -108,7 +107,7 @@ julia> addmodality!(md, [:age, :sex])
    1 │ Python
    2 │ Julia
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ age    sex
      │ Int64  Char
@@ -116,7 +115,7 @@ julia> addmodality!(md, [:age, :sex])
    1 │    25  M
    2 │    26  F
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ height  weight
      │ Int64   Int64
@@ -127,9 +126,9 @@ julia> addmodality!(md, [:age, :sex])
 
 julia> addmodality!(md, 5)
 ● MultiModalDataset
-   └─ dimensions: (0, 0, 0)
+   └─ dimensionalities: (0, 0, 0)
 - Modality 1 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -137,7 +136,7 @@ julia> addmodality!(md, 5)
    1 │ Python
    2 │ Julia
 - Modality 2 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ age    sex
      │ Int64  Char
@@ -145,7 +144,7 @@ julia> addmodality!(md, 5)
    1 │    25  M
    2 │    26  F
 - Modality 3 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -153,7 +152,7 @@ julia> addmodality!(md, 5)
    1 │     80
    2 │     60
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ height
      │ Int64
@@ -163,7 +162,7 @@ julia> addmodality!(md, 5)
 ```
 """
 function addmodality!(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integer})
-    @assert length(indices) > 0 "Can't add an empty modality to dataset"
+    @assert length(indices) > 0 "Cannot add an empty modality to dataset"
 
     for i in indices
         @assert i in 1:nvariables(md) "Index $(i) is out of range 1:nvariables " *
@@ -199,9 +198,9 @@ instead.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset;
-* `index` is a Integer that indicates which modality to remove from the multimodal dataset;
-* `indices` is a AbstractVector{Integer} that indicates the modalities to remove from the
+* `md` is a `MultiModalDataset`;
+* `index` is an `Integer` that indicates which modality to remove from the multimodal dataset;
+* `indices` is an `AbstractVector{Integer}` that indicates the modalities to remove from the
     multimodal dataset;
 
 ## EXAMPLES
@@ -222,9 +221,9 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
 
 julia> md = MultiModalDataset([[1, 2],[3],[4],[5]], df)
 ● MultiModalDataset
-   └─ dimensions: (0, 0, 0, 0)
+   └─ dimensionalities: (0, 0, 0, 0)
 - Modality 1 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -232,7 +231,7 @@ julia> md = MultiModalDataset([[1, 2],[3],[4],[5]], df)
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -240,7 +239,7 @@ julia> md = MultiModalDataset([[1, 2],[3],[4],[5]], df)
    1 │ M
    2 │ F
 - Modality 3 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ height
      │ Int64
@@ -248,7 +247,7 @@ julia> md = MultiModalDataset([[1, 2],[3],[4],[5]], df)
    1 │    180
    2 │    175
 - Modality 4 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -258,9 +257,9 @@ julia> md = MultiModalDataset([[1, 2],[3],[4],[5]], df)
 
 julia> removemodality!(md, [3])
 ● MultiModalDataset
-   └─ dimensions: (0, 0, 0)
+   └─ dimensionalities: (0, 0, 0)
 - Modality 1 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -268,7 +267,7 @@ julia> removemodality!(md, [3])
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -276,7 +275,7 @@ julia> removemodality!(md, [3])
    1 │ M
    2 │ F
 - Modality 3 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -284,7 +283,7 @@ julia> removemodality!(md, [3])
    1 │     80
    2 │     60
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ height
      │ Int64
@@ -294,9 +293,9 @@ julia> removemodality!(md, [3])
 
 julia> removemodality!(md, [1,2])
 ● MultiModalDataset
-   └─ dimensions: (0,)
+   └─ dimensionalities: (0,)
 - Modality 1 / 1
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -304,7 +303,7 @@ julia> removemodality!(md, [1,2])
    1 │     80
    2 │     60
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×4 SubDataFrame
  Row │ name    age    sex   height
      │ String  Int64  Char  Int64
@@ -342,21 +341,21 @@ Alternatively to `var_index` the variable name can be used.
 Multiple variables can be inserted into the multimodal dataset at once using `var_indices`
 or `var_inames`.
 
-Note: The function does not allow you to add an variable to a new modality, but only to add it
-to an existing modality in the md. To add a new modality use [`addmodality!`](@ref) instead.
+Note: The function does not allow you to add a variable to a new modality, but only to add it
+to an existing modality. To add a new modality use [`addmodality!`](@ref) instead.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset;
-* `i_modality` is a Integer which indicates the modality in which the variable(s)
+* `md` is a `MultiModalDataset`;
+* `i_modality` is an `Integer` indicating the modality in which the variable(s)
     will be added;
-* `var_index` is a Integer that indicates the index of the variable to add to a specific
+* `var_index` is an `Integer` that indicates the index of the variable to add to a specific
     modality of the multimodal dataset;
-* `var_indices` is a AbstractVector{Integer} which indicates the indices of the variables
+* `var_indices` is an `AbstractVector{Integer}` indicating the indices of the variables
     to add to a specific modality of the multimodal dataset;
-* `var_name` is a Symbol which indicates the name of the variable to add to a specific
+* `var_name` is a `Symbol` indicating the name of the variable to add to a specific
     modality of the multimodal dataset;
-* `var_names` is a AbstractVector{Symbol} which indicates the name of the variables to
+* `var_names` is an `AbstractVector{Symbol}` indicating the name of the variables to
     add to a specific modality of the multimodal dataset;
 
 ## EXAMPLES
@@ -377,9 +376,9 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
 
 julia> md = MultiModalDataset([[1, 2],[3]], df)
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -387,7 +386,7 @@ julia> md = MultiModalDataset([[1, 2],[3]], df)
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -395,7 +394,7 @@ julia> md = MultiModalDataset([[1, 2],[3]], df)
    1 │ M
    2 │ F
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ height  weight
      │ Int64   Int64
@@ -405,9 +404,9 @@ julia> md = MultiModalDataset([[1, 2],[3]], df)
 
 julia> addvariable_tomodality!(md, 1, [4,5])
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×4 SubDataFrame
  Row │ name    age    height  weight
      │ String  Int64  Int64   Int64
@@ -415,7 +414,7 @@ julia> addvariable_tomodality!(md, 1, [4,5])
    1 │ Python     25     180      80
    2 │ Julia      26     175      60
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -425,9 +424,9 @@ julia> addvariable_tomodality!(md, 1, [4,5])
 
 julia> addvariable_tomodality!(md, 2, [:name,:weight])
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×4 SubDataFrame
  Row │ name    age    height  weight
      │ String  Int64  Int64   Int64
@@ -435,7 +434,7 @@ julia> addvariable_tomodality!(md, 2, [:name,:weight])
    1 │ Python     25     180      80
    2 │ Julia      26     175      60
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ sex   name    weight
      │ Char  String  Int64
@@ -450,7 +449,7 @@ function addvariable_tomodality!(
     @assert 1 ≤ i_modality ≤ nmodalities(md) "Index $(i_modality) does not correspond " *
         "to a modality (1:$(nmodalities(md)))"
     @assert 1 ≤ var_index ≤ nvariables(md) "Index $(var_index) does not correspond " *
-        "to an variable (1:$(nvariables(md)))"
+        "to a variable (1:$(nvariables(md)))"
 
     if var_index in grouped_variables(md)[i_modality]
         @info "Variable $(var_index) is already part of modality $(i_modality)"
@@ -494,26 +493,27 @@ end
     removevariable_frommodality!(md, i_modality, var_names)
 
 Remove variable at index `var_index` from the modality at index `i_modality` in a
-multimodal dataset, and return `md`.
+multimodal dataset, and return the dataset itself.
 
 Alternatively to `var_index` the variable name can be used.
-Multiple variables can be dropped from the multimodal dataset at once passing a Vector of
-Symbols (for names) or a Vector of Integers (for indices) as last parameter.
+Multiple variables can be dropped from the multimodal dataset at once,
+by passing a `Vector` of
+`Symbols` (for names), or a `Vector` of integens (for indices) as last parameter.
 
-Note: when all variables are dropped to a modality, it will be removed.
+Note: when all variables are dropped from a modality, it will be removed.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset;
-* `i_modality` is a Integer which indicates the modality in which the variable(s)
+* `md` is a `MultiModalDataset`;
+* `i_modality` is an `Integer` indicating the modality in which the variable(s)
     will be dropped;
-* `var_index` is a Integer that indicates the index of the variable to drop from a
+* `var_index` is an `Integer` that indicates the index of the variable to drop from a
     specific modality of the multimodal dataset;
-* `var_indices` is a AbstractVector{Integer} which indicates the indices of the variables
+* `var_indices` is an `AbstractVector{Integer}` indicating the indices of the variables
     to drop from a specific modality of the multimodal dataset;
-* `var_name` is a Symbol which indicates the name of the variable to drop from a specific
+* `var_name` is a `Symbol` indicating the name of the variable to drop from a specific
     modality of the multimodal dataset;
-* `var_names` is a AbstractVector{Symbol} which indicates the name of the variables to
+* `var_names` is an `AbstractVector{Symbol}` indicating the name of the variables to
     drop from a specific modality of the multimodal dataset;
 
 ## EXAMPLES
@@ -534,9 +534,9 @@ julia> df = DataFrame(:name => ["Python", "Julia"],
 
 julia> md = MultiModalDataset([[1,2,4],[2,3,4],[5]], df)
 ● MultiModalDataset
-   └─ dimensions: (0, 0, 0)
+   └─ dimensionalities: (0, 0, 0)
 - Modality 1 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ name    age    height
      │ String  Int64  Int64
@@ -544,7 +544,7 @@ julia> md = MultiModalDataset([[1,2,4],[2,3,4],[5]], df)
    1 │ Python     25     180
    2 │ Julia      26     175
 - Modality 2 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ age    sex   height
      │ Int64  Char  Int64
@@ -552,7 +552,7 @@ julia> md = MultiModalDataset([[1,2,4],[2,3,4],[5]], df)
    1 │    25  M        180
    2 │    26  F        175
 - Modality 3 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -563,9 +563,9 @@ julia> md = MultiModalDataset([[1,2,4],[2,3,4],[5]], df)
 julia> removevariable_frommodality!(md, 3, 5)
 [ Info: Variable 5 was last variable of modality 3: removing modality
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ name    age    height
      │ String  Int64  Int64
@@ -573,7 +573,7 @@ julia> removevariable_frommodality!(md, 3, 5)
    1 │ Python     25     180
    2 │ Julia      26     175
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ age    sex   height
      │ Int64  Char  Int64
@@ -581,7 +581,7 @@ julia> removevariable_frommodality!(md, 3, 5)
    1 │    25  M        180
    2 │    26  F        175
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -591,9 +591,9 @@ julia> removevariable_frommodality!(md, 3, 5)
 
 julia> removevariable_frommodality!(md, 1, :age)
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    height
      │ String  Int64
@@ -601,7 +601,7 @@ julia> removevariable_frommodality!(md, 1, :age)
    1 │ Python     180
    2 │ Julia      175
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ age    sex   height
      │ Int64  Char  Int64
@@ -609,7 +609,7 @@ julia> removevariable_frommodality!(md, 1, :age)
    1 │    25  M        180
    2 │    26  F        175
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -619,9 +619,9 @@ julia> removevariable_frommodality!(md, 1, :age)
 
 julia> removevariable_frommodality!(md, 2, [3,4])
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    height
      │ String  Int64
@@ -629,7 +629,7 @@ julia> removevariable_frommodality!(md, 2, [3,4])
    1 │ Python     180
    2 │ Julia      175
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -637,7 +637,7 @@ julia> removevariable_frommodality!(md, 2, [3,4])
    1 │    25
    2 │    26
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ sex   weight
      │ Char  Int64
@@ -648,9 +648,9 @@ julia> removevariable_frommodality!(md, 2, [3,4])
 julia> removevariable_frommodality!(md, 1, [:name,:height])
 [ Info: Variable 4 was last variable of modality 1: removing modality
 ● MultiModalDataset
-   └─ dimensions: (0,)
+   └─ dimensionalities: (0,)
 - Modality 1 / 1
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -658,7 +658,7 @@ julia> removevariable_frommodality!(md, 1, [:name,:height])
    1 │    25
    2 │    26
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×4 SubDataFrame
  Row │ name    sex   height  weight
      │ String  Char  Int64   Int64
@@ -676,7 +676,7 @@ function removevariable_frommodality!(
     @assert 1 ≤ i_modality ≤ nmodalities(md) "Index $(i_modality) does not correspond " *
         "to a modality (1:$(nmodalities(md)))"
     @assert 1 ≤ var_index ≤ nvariables(md) "Index $(var_index) does not correspond " *
-        "to an variable (1:$(nvariables(md)))"
+        "to a variable (1:$(nvariables(md)))"
 
     if !(var_index in grouped_variables(md)[i_modality])
         if !silent
@@ -738,19 +738,20 @@ end
     insertmodality!(md, new_modality, existing_variables)
 
 Insert `new_modality` as new modality to multimodal dataset, and return the dataset.
-Existing variables can be added to the new modality while adding it to the dataset passing
-the corresponding inidices by `existing_variables`.
+Existing variables can be added to the new modality while adding it to the dataset
+by passing
+the corresponding indices as `existing_variables`.
 If `col` is specified then the variables will be inserted starting at index `col`.
 
 ## PARAMETERS
-* `md` is a MultiModalDataset;
-* `col` is a Integer which indicates the column in which to insert the columns of the new
-    modality `new_modality`;
-* `new_modality` is a AbstractDataFrame which will be added to the multimodal dataset as a
-    subdataframe of a new modality;
-* `existing_variables` is AbstractVector{Integer} and a AbstractVector{Symbol} also. It
-    indicates which variables of the multimodal dataset relative's dataframe to insert
-    in the new modality `new_modality`.
+* `md` is a `MultiModalDataset`;
+* `col` is an `Integer` indicating the column in which to insert the columns of
+    `new_modality`;
+* `new_modality` is an `AbstractDataFrame` which will be added to the multimodal dataset as a
+    sub-dataframe of a new modality;
+* `existing_variables` is an `AbstractVector{Integer}` or `AbstractVector{Symbol}`. It
+    indicates which variables of the multimodal dataset internal dataframe structure
+    to insert in the new modality.
 
 ## EXAMPLES
 
@@ -768,9 +769,9 @@ julia> df = DataFrame(
 
 julia> md = MultiModalDataset(df; group = :all)
 ● MultiModalDataset
-   └─ dimensions: (0, 1)
+   └─ dimensionalities: (0, 1)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -778,7 +779,7 @@ julia> md = MultiModalDataset(df; group = :all)
    1 │ Python
    2 │ Julia
 - Modality 2 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -788,9 +789,9 @@ julia> md = MultiModalDataset(df; group = :all)
 
 julia> insertmodality!(md, DataFrame(:age => [30, 9]))
 ● MultiModalDataset
-   └─ dimensions: (0, 1, 0)
+   └─ dimensionalities: (0, 1, 0)
 - Modality 1 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -798,7 +799,7 @@ julia> insertmodality!(md, DataFrame(:age => [30, 9]))
    1 │ Python
    2 │ Julia
 - Modality 2 / 3
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -806,7 +807,7 @@ julia> insertmodality!(md, DataFrame(:age => [30, 9]))
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 - Modality 3 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -838,9 +839,9 @@ julia> df = DataFrame(
 
 julia> md = MultiModalDataset(df; group = :all)
 ● MultiModalDataset
-   └─ dimensions: (0, 1)
+   └─ dimensionalities: (0, 1)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -848,7 +849,7 @@ julia> md = MultiModalDataset(df; group = :all)
    1 │ Python
    2 │ Julia
 - Modality 2 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -858,9 +859,9 @@ julia> md = MultiModalDataset(df; group = :all)
 
 julia> insertmodality!(md, 2, DataFrame(:age => [30, 9]))
 ● MultiModalDataset
-   └─ dimensions: (1, 0)
+   └─ dimensionalities: (1, 0)
 - Modality 1 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -868,7 +869,7 @@ julia> insertmodality!(md, 2, DataFrame(:age => [30, 9]))
     1 │ [0.841471, 0.909297, 0.14112, -0…
     2 │ [0.540302, -0.416147, -0.989992,…
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -876,7 +877,7 @@ julia> insertmodality!(md, 2, DataFrame(:age => [30, 9]))
    1 │    30
    2 │     9
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -908,9 +909,9 @@ julia> df = DataFrame(
 
 julia> md = MultiModalDataset([[2]], df)
 ● MultiModalDataset
-   └─ dimensions: (1,)
+   └─ dimensionalities: (1,)
 - Modality 1 / 1
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -918,7 +919,7 @@ julia> md = MultiModalDataset([[2]], df)
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -929,9 +930,9 @@ julia> md = MultiModalDataset([[2]], df)
 
 julia> insertmodality!(md, DataFrame(:age => [30, 9]); existing_variables = [1])
 ● MultiModalDataset
-   └─ dimensions: (1, 0)
+   └─ dimensionalities: (1, 0)
 - Modality 1 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat1
      │ Array…
@@ -939,7 +940,7 @@ julia> insertmodality!(md, DataFrame(:age => [30, 9]); existing_variables = [1])
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ age    name
      │ Int64  String
@@ -1014,20 +1015,21 @@ end
     dropmodalities!(md, indices)
     dropmodalities!(md, index)
 
-Remove the `i`-th modality from a multimodal dataset while dropping all variables in it and
-return `md` without the dropped modalities.
+Remove the `i`-th modality from a multimodal dataset while dropping all variables in it,
+and return the dataset itself.
 
-Note: if the dropped variables are present in other modalities they will also be removed from
+Note: if the dropped variables are contained in other modalities
+they will also be removed from
 them. This can lead to the removal of additional modalities other than the `i`-th.
 
-If the intection is to remove a modality without releasing the variables use
+If the intention is to remove a modality without dropping the variables use
 [`removemodality!`](@ref) instead.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset;
-* `index` is a Integer which indicates the index of the modality to drop;
-* `indices` is an AbstractVector{Integer} which indicates the indices of the modalities to drop.
+* `md` is a `MultiModalDataset`;
+* `index` is an `Integer` indicating the index of the modality to drop;
+* `indices` is an `AbstractVector{Integer}` indicating the indices of the modalities to drop.
 
 ## EXAMPLES
 
@@ -1042,9 +1044,9 @@ julia> df = DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['
 
 julia> md = MultiModalDataset([[1, 2],[3,4],[5],[2,3]], df)
 ● MultiModalDataset
-   └─ dimensions: (0, 0, 0, 0)
+   └─ dimensionalities: (0, 0, 0, 0)
 - Modality 1 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -1052,7 +1054,7 @@ julia> md = MultiModalDataset([[1, 2],[3,4],[5],[2,3]], df)
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ sex   height
      │ Char  Int64
@@ -1060,7 +1062,7 @@ julia> md = MultiModalDataset([[1, 2],[3,4],[5],[2,3]], df)
    1 │ M        180
    2 │ F        175
 - Modality 3 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -1068,7 +1070,7 @@ julia> md = MultiModalDataset([[1, 2],[3,4],[5],[2,3]], df)
    1 │     80
    2 │     60
 - Modality 4 / 4
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ age    sex
      │ Int64  Char
@@ -1080,9 +1082,9 @@ julia> dropmodalities!(md, [2,3])
 [ Info: Variable 3 was last variable of modality 2: removing modality
 [ Info: Variable 3 was last variable of modality 2: removing modality
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -1090,7 +1092,7 @@ julia> dropmodalities!(md, [2,3])
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -1101,9 +1103,9 @@ julia> dropmodalities!(md, [2,3])
 julia> dropmodalities!(md, 2)
 [ Info: Variable 2 was last variable of modality 2: removing modality
 ● MultiModalDataset
-   └─ dimensions: (0,)
+   └─ dimensionalities: (0,)
 - Modality 1 / 1
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String

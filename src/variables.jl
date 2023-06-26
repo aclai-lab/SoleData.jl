@@ -6,17 +6,17 @@
     nvariables(md)
     nvariables(md, i)
 
-Return the number of variables of a multimodal dataset.
+Return the number of variables in a multimodal dataset.
 
-If an index is passed as second argument then the number of variables of the modality at
-index `i` is returned.
+If an index `i` is passed as second argument, then the number of variables
+of the `i`-th modality is returned.
 
-Alternatively `nvariables` can be called on a single modality.
+Alternatively, `nvariables` can be called on a single modality.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset;
-* `i` (optional) is a Integer and indicating the modality of the multimodal dataset whose
+* `md` is a `MultiModalDataset`;
+* `i` (optional) is an `Integer` indicating the modality of the multimodal dataset whose
     number of variables you want to know.
 
 ## EXAMPLES
@@ -24,9 +24,9 @@ Alternatively `nvariables` can be called on a single modality.
 ```julia-repl
 julia> md = MultiModalDataset([[1],[2]], DataFrame(:age => [25, 26], :sex => ['M', 'F']))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -34,7 +34,7 @@ julia> md = MultiModalDataset([[1],[2]], DataFrame(:age => [25, 26], :sex => ['M
    1 │    25
    2 │    26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -62,9 +62,9 @@ julia> nvariables(mod2)
 
 julia> md = MultiModalDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -72,7 +72,7 @@ julia> md = MultiModalDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", 
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ sex   height  weight
      │ Char  Int64   Int64
@@ -108,28 +108,28 @@ function nvariables(md::AbstractMultiModalDataset, i::Integer)
 end
 
 """
-    insertvariables!(md, col, var_id, values)
-    insertvariables!(md, var_id, values)
-    insertvariables!(md, col, var_id, value)
-    insertvariables!(md, var_id, value)
+    insertvariables!(md, col, index, values)
+    insertvariables!(md, index, values)
+    insertvariables!(md, col, index, value)
+    insertvariables!(md, index, value)
 
-Insert an attibute in a multimodal dataset with id `var_id`.
+Insert a variable in a multimodal dataset with a given index.
 
 !!! note
-    Each variable inserted will be added in the md as a spare variables.
+    Each inserted variable will be added in as a spare variables.
 
 ## PARAMETERS
 
-* `md` is an AbstractMultiModalDataset;
-* `col` is an Integer and indicates in which position to insert the new variable.
-    If col isn't passed as a parameter to the function the new variable will be placed
-    last in the md's relative dataframe;
-* `var_id` is a Symbol and denote the name of the variable to insert.
+* `md` is an `AbstractMultiModalDataset`;
+* `col` is an `Integer` indicating in which position to insert the new variable.
+    If no col is passed, the new variable will be placed
+    last in the md's underlying dataframe structure;
+* `index` is a `Symbol` and denote the name of the variable to insert.
     Duplicated variable names will be renamed to avoid conflicts: see `makeunique` parameter
     of [`insertcols!`](https://dataframes.juliadata.org/stable/lib/functions/#DataFrames.insertcols!)
     in DataFrames documentation;
-* `values` is an AbstractVector that indicates the values ​​of the new variable inserted.
-    The length of `values` should match `ninstances(md)` or an exception is thrown;
+* `values` is an `AbstractVector` that indicates the values for the newly
+    inserted variable. The length of `values` should match `ninstances(md)`;
 * `value` is a single value for the new variable. If a single `value` is passed as last
     parameter this will be copied and used for each instance in the dataset.
 
@@ -138,9 +138,9 @@ Insert an attibute in a multimodal dataset with id `var_id`.
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -148,7 +148,7 @@ julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -166,9 +166,9 @@ julia> insertvariables!(md, :weight, [80, 75])
 
 julia> md
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -176,7 +176,7 @@ julia> md
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -184,7 +184,7 @@ julia> md
    1 │ M
    2 │ F
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -210,9 +210,9 @@ julia> insertvariables!(md, :hair, ["brown", "blonde"])
 
 julia> md
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -220,7 +220,7 @@ julia> md
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -228,7 +228,7 @@ julia> md
    1 │ M
    2 │ F
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ height  weight  hair
      │ Int64   Int64   String
@@ -240,14 +240,14 @@ julia> md
 function insertvariables!(
     md::AbstractMultiModalDataset,
     col::Integer,
-    var_id::Symbol,
+    index::Symbol,
     values::AbstractVector
 )
     @assert length(values) == ninstances(md) "value not specified for each instance " *
     "{length(values) != ninstances(md)}:{$(length(values)) != $(ninstances(md))}"
 
     if col != nvariables(md)+1
-        insertcols!(data(md), col, var_id => values, makeunique = true)
+        insertcols!(data(md), col, index => values, makeunique = true)
 
         for (i_modality, desc) in enumerate(grouped_variables(md))
             for (i_var, var) in enumerate(desc)
@@ -259,28 +259,28 @@ function insertvariables!(
 
         return md
     else
-        insertcols!(data(md), col, var_id => values, makeunique = true)
+        insertcols!(data(md), col, index => values, makeunique = true)
     end
 
     return md
 end
 function insertvariables!(
     md::AbstractMultiModalDataset,
-    var_id::Symbol,
+    index::Symbol,
     values::AbstractVector
 )
-    return insertvariables!(md, nvariables(md)+1, var_id, values)
+    return insertvariables!(md, nvariables(md)+1, index, values)
 end
 function insertvariables!(
     md::AbstractMultiModalDataset,
     col::Integer,
-    var_id::Symbol,
+    index::Symbol,
     value
 )
-    return insertvariables!(md, col, var_id, [deepcopy(value) for i in 1:ninstances(md)])
+    return insertvariables!(md, col, index, [deepcopy(value) for i in 1:ninstances(md)])
 end
-function insertvariables!(md::AbstractMultiModalDataset, var_id::Symbol, value)
-    return insertvariables!(md, nvariables(md)+1, var_id, value)
+function insertvariables!(md::AbstractMultiModalDataset, index::Symbol, value)
+    return insertvariables!(md, nvariables(md)+1, index, value)
 end
 
 """
@@ -291,29 +291,29 @@ end
     hasvariables(md, i_modality, variable_names)
     hasvariables(md, variable_names)
 
-Check whether a multimodal dataset contains an variable named `variable_name`.
+Check whether a multimodal dataset contains a variable named `variable_name`.
 
-Instead of a single variable name a Vector of names can be passed. It this is the case
-this function will return `true` only if `md` contains all the variable listed.
+Instead of a single variable name a `Vector` of names can be passed. If this is the case,
+this function will return `true` only if `md` contains all the specified variables.
 
 ## PARAMETERS
 
-* `df` is an AbstractDataFrame, which is one of the two structure in which you want to check
+* `df` is an `AbstractDataFrame`, which is one of the two structure in which you want to check
     the presence of the variable;
-* `md` is an AbstractMultiModalDataset, which is one of the two structure in which you want
+* `md` is an `AbstractMultiModalDataset`, which is one of the two structure in which you want
     to check the presence of the variable;
-* `variable_name` is a Symbol and indicates the variable, whose existence I want to
+* `variable_name` is a `Symbol` indicating the variable, whose existence I want to
     verify;
-* `i_modality` is and Integer and indicates in which modality to look for the variable.
+* `i_modality` is an `Integer` indicating in which modality to look for the variable.
 
 ## EXAMPLES
 
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -321,7 +321,7 @@ julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -348,9 +348,9 @@ true
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -358,7 +358,7 @@ julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -414,17 +414,18 @@ end
     variableindex(md, i_modality, variable_name)
     variableindex(md, variable_name)
 
-Return the index of the variable passed as a parameter to the function.
-When `i_modality` is given it return the index of the variable in the subdataframe of the
-modality specified by `i_modality`.
-It returns 0 when the variable isn't in the modality specified by `i_modality`.
+Return the index of the variable.
+When `i_modality` is passed, the function
+ returns the index of the variable in the sub-dataframe of the
+modality identified by `i_modality`.
+It returns `0` when the variable is not contained in the modality identified by `i_modality`.
 
 ## PARAMETERS
 
-* `df` is an AbstractDataFrame;
-* `md` is an AbstractMultiModalDataset;
-* `variable_name` is a Symbol and indicates the variable whose index you want to know;
-* `i_modality` is and Integer and indicates of which modality you want to know the index of
+* `df` is an `AbstractDataFrame`;
+* `md` is an `AbstractMultiModalDataset`;
+* `variable_name` is a `Symbol` indicating the variable whose index you want to know;
+* `i_modality` is an `Integer` indicating of which modality you want to know the index of
     the variable.
 
 ## EXAMPLES
@@ -432,9 +433,9 @@ It returns 0 when the variable isn't in the modality specified by `i_modality`.
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -442,7 +443,7 @@ julia> md = MultiModalDataset([[1, 2],[3]], DataFrame(:name => ["Python", "Julia
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -494,12 +495,12 @@ end
 """
     sparevariables(md)
 
-Return the indices of all the variables currently not present in any of the modalities of a
+Return the indices of all the variables that are not contained in any of the modalities of a
 multimodal dataset.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset, which is the structure whose indices of the sparevariables
+* `md` is a `MultiModalDataset`, which is the structure whose indices of the sparevariables
     are to be known.
 
 ## EXAMPLES
@@ -507,9 +508,9 @@ multimodal dataset.
 ```julia-repl
 julia> md = MultiModalDataset([[1],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -517,7 +518,7 @@ julia> md = MultiModalDataset([[1],[3]], DataFrame(:name => ["Python", "Julia"],
    1 │ Python
    2 │ Julia
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -525,7 +526,7 @@ julia> md = MultiModalDataset([[1],[3]], DataFrame(:name => ["Python", "Julia"],
    1 │ M
    2 │ F
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -553,23 +554,23 @@ end
 """
     variables(md, i)
 
-Return the names as `Symbol`s of the variables of a multimodal dataset.
+Return the names as `Symbol`s of the variables in a multimodal dataset.
 
 When called on a object of type `MultiModalDataset` a `Dict` is returned which will map the
-modality index to an `AbstractVector` of `Symbol`s.
+modality index to an `AbstractVector{Symbol}`.
 
 Note: the order of the variable names is granted to match the order of the variables
-inside the modality.
+in the modality.
 
-If an index is passed as second argument then the names of the variables of the modality at
-index `i` is returned in an `AbstractVector`.
+If an index `i` is passed as second argument, then the names of the variables
+of the `i`-th modality are returned as an `AbstractVector`.
 
-Alternatively `nvariables` can be called on a single modality.
+Alternatively, `nvariables` can be called on a single modality.
 
 ## PARAMETERS
 
 * `md` is an MultiModalDataset;
-* `i` is an Integer and indicates from which modality of the multimodal dataset to get the
+* `i` is an `Integer` indicating from which modality of the multimodal dataset to get the
     names of the variables.
 
 ## EXAMPLES
@@ -577,9 +578,9 @@ Alternatively `nvariables` can be called on a single modality.
 ```julia-repl
 julia> md = MultiModalDataset([[2],[3]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F']))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -587,7 +588,7 @@ julia> md = MultiModalDataset([[2],[3]], DataFrame(:name => ["Python", "Julia"],
    1 │    25
    2 │    26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -595,7 +596,7 @@ julia> md = MultiModalDataset([[2],[3]], DataFrame(:name => ["Python", "Julia"],
    1 │ M
    2 │ F
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -654,18 +655,17 @@ end
     dropvariables!(md, i_modality, indices)
     dropvariables!(md, i_modality, variable_names)
 
-Drop the `i`-th variable from a multimodal dataset and return the multimodal dataset
-without that variable.
+Drop the `i`-th variable from a multimodal dataset, and return the dataset itself.
 
 ## PARAMETERS
 
 * `md` is an MultiModalDataset;
-* `i` is an Integer that indicates the index of the variable to drop;
-* `variable_name` is a Symbol that idicates the variable to drop;
-* `indices` is an AbstractVector{Integer} that indicates the indices of the variable to
+* `i` is an `Integer` that indicates the index of the variable to drop;
+* `variable_name` is a `Symbol` that idicates the variable to drop;
+* `indices` is an `AbstractVector{Integer}` that indicates the indices of the variables to
     drop;
-* `variable_names` is an AbstractVector{Symbol} that indicates the variables to drop.
-* `i_modality`: index of the modality; if this parameter is specified `indcies` are relative to the
+* `variable_names` is an `AbstractVector{Symbol}` that indicates the variables to drop.
+* `i_modality`: index of the modality; if this parameter is specified `indices` are relative to the
     `i_modality`-th modality
 
 ## EXAMPLES
@@ -673,9 +673,9 @@ without that variable.
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -683,7 +683,7 @@ julia> md = MultiModalDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", 
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ sex   height  weight
      │ Char  Int64   Int64
@@ -693,9 +693,9 @@ julia> md = MultiModalDataset([[1, 2],[3, 4, 5]], DataFrame(:name => ["Python", 
 
 julia> dropvariables!(md, 4)
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -703,7 +703,7 @@ julia> dropvariables!(md, 4)
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ sex   weight
      │ Char  Int64
@@ -713,9 +713,9 @@ julia> dropvariables!(md, 4)
 
 julia> dropvariables!(md, :name)
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -723,7 +723,7 @@ julia> dropvariables!(md, :name)
    1 │    25
    2 │    26
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ sex   weight
      │ Char  Int64
@@ -734,9 +734,9 @@ julia> dropvariables!(md, :name)
 julia> dropvariables!(md, [1,3])
 [ Info: Variable 1 was last variable of modality 1: removing modality
 ● MultiModalDataset
-   └─ dimensions: (0,)
+   └─ dimensionalities: (0,)
 - Modality 1 / 1
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -747,7 +747,7 @@ julia> dropvariables!(md, [1,3])
 TODO: To be reviewed
 """
 function dropvariables!(md::AbstractMultiModalDataset, i::Integer; kwargs...)
-    @assert 1 ≤ i ≤ nvariables(md) "Variable $(i) is not a valid attibute index " *
+    @assert 1 ≤ i ≤ nvariables(md) "Variable $(i) is not a valid variable index " *
         "(1:$(nvariables(md)))"
 
     j = 1
@@ -810,10 +810,10 @@ function dropvariables!(
     indices::Union{Integer, AbstractVector{<:Integer}};
     kwargs...
 )
-    var_ids = [ indices... ]
+    indices = [ indices... ]
     !(1 <= i_modality <= nmodalities(md)) &&
         throw(DimensionMismatch("Index $(i_modality) does not correspond to a modality"))
-    varidx = grouped_variables(md)[i_modality][var_ids]
+    varidx = grouped_variables(md)[i_modality][indices]
     return dropvariables!(md, varidx; kwargs...)
 end
 function dropvariables!(
@@ -835,18 +835,18 @@ end
     keeponlyvariables!(md, indices)
     keeponlyvariables!(md, variable_names)
 
-Drop all variables that do not correspond to the indices present in `indices` from a
+Drop all variables that do not correspond to the indices in `indices` from a
 multimodal dataset.
 
-Note: if the dropped variables are present in some modality they will also be removed from
-them. This can lead to the removal of modalities as side effect.
+Note: if the dropped variables are contained in some modality they will also be removed from
+them; as a side effect, this can lead to the removal of modalities.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset;
-* `indices` is and AbstractVector{Integer} that indicates which indices to keep in the
+* `md` is a `MultiModalDataset`;
+* `indices` is an `AbstractVector{Integer}` that indicates which indices to keep in the
     multimodal dataset;
-* `variable_names` is a AbstractVector{Symbol} that indicates which variables to keep in
+* `variable_names` is an `AbstractVector{Symbol}` that indicates which variables to keep in
     the multimodal dataset.
 
 ## EXAMPLES
@@ -854,9 +854,9 @@ them. This can lead to the removal of modalities as side effect.
 ```julia-repl
 julia> md = MultiModalDataset([[1, 2],[3, 4, 5],[5]], DataFrame(:name => ["Python", "Julia"], :age => [25, 26], :sex => ['M', 'F'], :height => [180, 175], :weight => [80, 60]))
 ● MultiModalDataset
-   └─ dimensions: (0, 0, 0)
+   └─ dimensionalities: (0, 0, 0)
 - Modality 1 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ name    age
      │ String  Int64
@@ -864,7 +864,7 @@ julia> md = MultiModalDataset([[1, 2],[3, 4, 5],[5]], DataFrame(:name => ["Pytho
    1 │ Python     25
    2 │ Julia      26
 - Modality 2 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×3 SubDataFrame
  Row │ sex   height  weight
      │ Char  Int64   Int64
@@ -872,7 +872,7 @@ julia> md = MultiModalDataset([[1, 2],[3, 4, 5],[5]], DataFrame(:name => ["Pytho
    1 │ M        180      80
    2 │ F        175      60
 - Modality 3 / 3
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ weight
      │ Int64
@@ -883,9 +883,9 @@ julia> md = MultiModalDataset([[1, 2],[3, 4, 5],[5]], DataFrame(:name => ["Pytho
 julia> keeponlyvariables!(md, [1,3,4])
 [ Info: Variable 5 was last variable of modality 3: removing modality
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -893,7 +893,7 @@ julia> keeponlyvariables!(md, [1,3,4])
    1 │ Python
    2 │ Julia
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ sex   height
      │ Char  Int64
@@ -903,9 +903,9 @@ julia> keeponlyvariables!(md, [1,3,4])
 
 julia> keeponlyvariables!(md, [:name, :sex])
 ● MultiModalDataset
-   └─ dimensions: (0, 0)
+   └─ dimensionalities: (0, 0)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String
@@ -913,7 +913,7 @@ julia> keeponlyvariables!(md, [:name, :sex])
    1 │ Python
    2 │ Julia
 - Modality 2 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ sex
      │ Char
@@ -966,11 +966,11 @@ end
 """
     dropsparevariables!(md)
 
-Drop all variables that are not present in any of the modalities in a multimodal dataset.
+Drop all variables that are not contained in any of the modalities in a multimodal dataset.
 
 ## PARAMETERS
 
-* `md` is a MultiModalDataset, that is the structure at which sparevariables will be
+* `md` is a `MultiModalDataset`, that is the structure at which sparevariables will be
     dropped.
 
 ## EXAMPLES
@@ -978,9 +978,9 @@ Drop all variables that are not present in any of the modalities in a multimodal
 ```julia-repl
 julia> md = MultiModalDataset([[1]], DataFrame(:age => [30, 9], :name => ["Python", "Julia"]))
 ● MultiModalDataset
-   └─ dimensions: (0,)
+   └─ dimensionalities: (0,)
 - Modality 1 / 1
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -988,7 +988,7 @@ julia> md = MultiModalDataset([[1]], DataFrame(:age => [30, 9], :name => ["Pytho
    1 │    30
    2 │     9
 - Spare variables
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ name
      │ String

@@ -5,40 +5,40 @@
 """
     nlabelingvariables(lmd)
 
-Return the number of labels of a labeled multimodal dataset.
+Return the number of labeling variables of a labeled multimodal dataset.
 """
 function nlabelingvariables(lmd::AbstractLabeledMultiModalDataset)
     return length(labeling_variables(lmd))
 end
 
 """
-    labels(lmd, instance)
+    labels(lmd, i_instance)
     labels(lmd)
 
-Return the labels of instance at index `instance` in a labeled multimodal dataset.
+Return the labels of instance at index `i_instance` in a labeled multimodal dataset.
 A dictionary of type `labelname => value` is returned.
 
-If only the first argument is passed then the names of all labels are returned.
+If only the first argument is passed then the labels for all instances are returned.
 """
 function labels(lmd::AbstractLabeledMultiModalDataset)
     return Symbol.(names(data(lmd)))[labeling_variables(lmd)]
 end
-function labels(lmd::AbstractLabeledMultiModalDataset, instance::Integer)
-    return Dict{Symbol,Any}([var => data(lmd)[instance,var] for var in labels(lmd)]...)
+function labels(lmd::AbstractLabeledMultiModalDataset, i_instance::Integer)
+    return Dict{Symbol,Any}([var => data(lmd)[i_instance,var] for var in labels(lmd)]...)
 end
 
 """
-    label(lmd, instance, i)
+    label(lmd, j, i)
 
 Return the value of the `i`-th labeling variable for instance
-at index `instance` in a labeled multimodal dataset.
+at index `i_instance` in a labeled multimodal dataset.
 """
 function label(
     lmd::AbstractLabeledMultiModalDataset,
-    instance::Integer,
+    i_instance::Integer,
     i::Integer
 )
-    return labels(lmd, instance)[
+    return labels(lmd, i_instance)[
         variables(data(lmd))[labeling_variables(lmd)[i]]
     ]
 end
@@ -60,14 +60,14 @@ function labeldomain(lmd::AbstractLabeledMultiModalDataset, i::Integer)
 end
 
 """
-    setaslabelinging!(lmd, i)
-    setaslabelinging!(lmd, var_name)
+    setaslabeling!(lmd, i)
+    setaslabeling!(lmd, var_name)
 
 Set `i`-th variable as label.
 
 The variable name can be passed as second argument instead of its index.
 """
-function setaslabelinging!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
+function setaslabeling!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
     @assert 1 ≤ i ≤ nvariables(lmd) "Index ($i) must be a valid variable number " *
         "(1:$(nvariables(lmd)))"
 
@@ -77,22 +77,22 @@ function setaslabelinging!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
 
     return lmd
 end
-function setaslabelinging!(lmd::AbstractLabeledMultiModalDataset, var_name::Symbol)
+function setaslabeling!(lmd::AbstractLabeledMultiModalDataset, var_name::Symbol)
     @assert hasvariables(lmd, var_name) "LabeldMultiModalDataset does not contain " *
         "variable $(var_name)"
 
-    return setaslabelinging!(lmd, _name2index(lmd, var_name))
+    return setaslabeling!(lmd, _name2index(lmd, var_name))
 end
 
 """
-    removefromlabels!(lmd, i)
-    removefromlabels!(lmd, var_name)
+    unsetaslabeling!(lmd, i)
+    unsetaslabeling!(lmd, var_name)
 
 Remove `i`-th labeling variable from labels list.
 
 The variable name can be passed as second argument instead of its index.
 """
-function removefromlabels!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
+function unsetaslabeling!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
     @assert 1 ≤ i ≤ nvariables(lmd) "Index ($i) must be a valid variable number " *
         "(1:$(nvariables(lmd)))"
 
@@ -102,30 +102,30 @@ function removefromlabels!(lmd::AbstractLabeledMultiModalDataset, i::Integer)
 
     return lmd
 end
-function removefromlabels!(lmd::AbstractLabeledMultiModalDataset, var_name::Symbol)
+function unsetaslabeling!(lmd::AbstractLabeledMultiModalDataset, var_name::Symbol)
     @assert hasvariables(lmd, var_name) "LabeledMultiModalDataset does not contain " *
         "variable $(var_name)"
 
-    return removefromlabels!(lmd, _name2index(lmd, var_name))
+    return unsetaslabeling!(lmd, _name2index(lmd, var_name))
 end
 
 """
     joinlabels!(lmd, [lbls...]; delim = "_")
 
-With a labeled multimodal dataset, collapse the label variables identified by `lbls`
-into a single label variable of type `String`, by means of a `join` that uses `delim`
+On a labeled multimodal dataset, collapse the labeling variables identified by `lbls`
+into a single labeling variable of type `String`, by means of a `join` that uses `delim`
 for string delimiter.
 
 If not specified differently this function will join all labels.
 
-`lbls` can be of type Integer (indicating the index of the label) or the name of the
-label.
+`lbls` can be an `Integer` indicating the index of the label, or a `Symbol`
+indicating the name of the labeling variable.
 
 # !!! note
-#     The resulting label will always be of type String.
+#     The resulting labels will always be of type `String`.
 
 !!! note
-    The resulting label will always be added as last column in the underlying `DataFrame`.
+    The resulting labeling variable will always be added as last column in the underlying `DataFrame`.
 
 ## EXAMPLES
 
@@ -146,9 +146,9 @@ julia> lmd = LabeledMultiModalDataset(
    ├─ labels
    │   ├─ id: Set([2, 1])
    │   └─ name: Set(["Julia", "Python"])
-   └─ dimensions: (0, 1)
+   └─ dimensionalities: (0, 1)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -156,7 +156,7 @@ julia> lmd = LabeledMultiModalDataset(
    1 │    30
    2 │     9
 - Modality 2 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat
      │ Array…
@@ -169,9 +169,9 @@ julia> joinlabels!(lmd)
 ● LabeledMultiModalDataset
    ├─ labels
    │   └─ id_name: Set(["1_Python", "2_Julia"])
-   └─ dimensions: (0, 1)
+   └─ dimensionalities: (0, 1)
 - Modality 1 / 2
-   └─ dimension: 0
+   └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ age
      │ Int64
@@ -179,7 +179,7 @@ julia> joinlabels!(lmd)
    1 │    30
    2 │     9
 - Modality 2 / 2
-   └─ dimension: 1
+   └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat
      │ Array…
@@ -194,7 +194,7 @@ function joinlabels!(
     delim::Union{<:AbstractString,<:AbstractChar} = '_'
 )
     for l in lbls
-        removefromlabels!(lmd, l)
+        unsetaslabeling!(lmd, l)
     end
 
     new_col_name = Symbol(join(lbls, delim))
@@ -202,7 +202,7 @@ function joinlabels!(
 
     dropvariables!(lmd, collect(lbls))
     insertvariables!(lmd, new_col_name, new_vals)
-    setaslabelinging!(lmd, nvariables(lmd))
+    setaslabeling!(lmd, nvariables(lmd))
 
     return lmd
 end

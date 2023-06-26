@@ -68,9 +68,9 @@ julia> grouped_variables = [[2,3], [4]]; # group 2nd and 3rd variables in the fi
 
 julia> md = MultiModalDataset(grouped_variables, df_data)
 ● MultiModalDataset
-  └─ dimensions: (0, 1)
+  └─ dimensionalities: (0, 1)
 - Modality 1 / 2
-  └─ dimension: 0
+  └─ dimensionality: 0
 2×2 SubDataFrame
  Row │ age    name   
      │ Int64  String
@@ -78,7 +78,7 @@ julia> md = MultiModalDataset(grouped_variables, df_data)
    1 │    30  Python
    2 │     9  Julia
 - Modality 2 / 2
-  └─ dimension: 1
+  └─ dimensionality: 1
 2×1 SubDataFrame
  Row │ stat                              
      │ Array…                            
@@ -86,7 +86,7 @@ julia> md = MultiModalDataset(grouped_variables, df_data)
    1 │ [0.841471, 0.909297, 0.14112, -0…
    2 │ [0.540302, -0.416147, -0.989992,…
 - Spare variables
-  └─ dimension: 0
+  └─ dimensionality: 0
 2×1 SubDataFrame
  Row │ id    
      │ Int64
