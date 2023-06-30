@@ -155,12 +155,10 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
                 group = [group]
             end
             group = collect(group)
-            if group isa Vector{Symbol}
-                group = _name2index(df, group)
-            end
+            group = [var_name isa Symbol ? _name2index(df, var_name) : var_name for var_name in group]
             @assert group isa Vector{<:Integer} "Cannot mix different types of " *
                 "column identifiers; please, only use column indices (integers) or " *
-                "Symbols. Encountered: $(join(unique(typeof.(group)), ", "))."
+                "Symbols. Encountered: $(group), $(join(unique(typeof.(group)), ", "))."
             group
         end, grouped_variables)
         grouped_variables = collect(Vector{Int}.(collect.(grouped_variables)))

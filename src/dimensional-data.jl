@@ -97,6 +97,33 @@ instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channe
 ############################################################################################
 ############################################################################################
 
+# import Tables: subset
+
+# function Tables.subset(X::AbstractDimensionalDataset, inds; viewhint = nothing)
+#     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
+# end
+
+# using MLJBase
+# using MLJModelInterface
+# import MLJModelInterface: selectrows, _selectrows
+
+# # From MLJModelInferface.jl/src/data_utils.jl
+# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,3}, r) where {T}
+#     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
+# end
+# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,4}, r) where {T}
+#     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
+# end
+# function MLJModelInterface.selectrows(::MLJBase.FI, ::Val{:table}, X::AbstractDimensionalDataset, r)
+#     r = r isa Integer ? (r:r) : r
+#     return Tables.subset(X, r)
+# end
+
+function cube2dataframe(X::AbstractArray, colnames = :auto)
+   varslices = eachslice(X; dims=ndims(X)-1)
+   DataFrame(eachslice.(varslices; dims=ndims(X)-1), colnames)
+end
+
 function dataframe2cube(
     df::AbstractDataFrame;
     dry_run::Bool = false,
