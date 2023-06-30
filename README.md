@@ -12,7 +12,7 @@
 
 ## In a nutshell
 
-*SoleData* provides a **machine learning oriented** data layer on top of DataFrames.jl/Tables.jl for:
+*SoleData* provides a **machine learning oriented** data layer on top of DataFrames.jl for:
 - Instantiating and manipulating [*multimodal*](https://en.wikipedia.org/wiki/Multimodal_learning) datasets for (un)supervised machine learning;
 - Dealing with [*(un)structured* data](https://en.wikipedia.org/wiki/Unstructured_data) (e.g., graphs, images, time-series, etc.);
 - Describing datasets via basic statistical measures;
