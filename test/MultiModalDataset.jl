@@ -7,7 +7,7 @@ c = MultiModalDataset([[:age,:name,:stat], [:id]], df_data)
 d = MultiModalDataset([[:age,:name,:stat], :id], df_data)
 @test c == d
 
-@test_throws AssertionError MultiModalDataset([[:age,:name,4], :id], df_data)
+@test_throws ErrorException MultiModalDataset([[:age,:name,4], :id], df_data)
 
 @test SoleData.data(a) != SoleData.data(b)
 @test collect(eachmodality(a)) == collect(eachmodality(b))
@@ -33,7 +33,7 @@ original_md = deepcopy(md)
 
 @test ninstances(md) == length(eachinstance(md)) == 3
 
-@test_throws AssertionError slicedataset(md, [])
+@test_throws ErrorException slicedataset(md, [])
 @test_nowarn slicedataset(md, :)
 @test_nowarn slicedataset(md, 1)
 @test_nowarn slicedataset(md, [1])

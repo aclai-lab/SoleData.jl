@@ -21,7 +21,7 @@ commands in a Julia REPL to install it:
 
 ```julia
 import Pkg
-Pkg.add("https://aclai-lab.github.io/SoleData.jl")
+Pkg.add("SoleData")
 ```
 
 To install the developement version, run:
@@ -34,12 +34,12 @@ Pkg.add("https://aclai-lab.github.io/SoleData.jl#dev")
 
 ## Usage
 
-To instantiate a multimodal dataset, instantiate a [`MultiModalDataset`](@ref) by providing:
-*a)* a
+To instantiate a multimodal dataset, use the [`MultiModalDataset`](@ref)
+constructor by providing: *a)* a
 `DataFrame` containing all variables from different modalities, and 
 *b)* a
-`Vector{Vector{Union{Symbol,String,Int64}}}`,
-grouping variables (identified by column index or name)
+`Vector{Vector{Union{Symbol,String,Int64}}}` object representing a
+grouping of some of the variables (identified by column index or name)
 into different modalities.
 
 ```julia-repl
@@ -66,7 +66,7 @@ julia> grouped_variables = [[2,3], [4]]; # group 2nd and 3rd variables in the fi
                                          # the 4th variable in the second modality and
                                          # leave the first variable as a "spare variable"
 
-julia> md = MultiModalDataset(grouped_variables, df_data)
+julia> md = MultiModalDataset(df_data, grouped_variables)
 ● MultiModalDataset
   └─ dimensionalities: (0, 1)
 - Modality 1 / 2

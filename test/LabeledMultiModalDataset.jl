@@ -21,7 +21,7 @@ lmd = LabeledMultiModalDataset(
 
 @test ninstances(lmd) == length(eachinstance(lmd)) == 2
 
-@test_throws AssertionError slicedataset(lmd, [])
+@test_throws ErrorException slicedataset(lmd, [])
 @test_nowarn slicedataset(lmd, :)
 @test_nowarn slicedataset(lmd, 1)
 @test_nowarn slicedataset(lmd, [1])

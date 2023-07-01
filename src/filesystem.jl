@@ -457,7 +457,7 @@ function loaddataset(
         push!(grouped_variables, [findfirst(x -> x == k, df_names) for k in modality])
     end
 
-    md = MultiModalDataset(grouped_variables, df)
+    md = MultiModalDataset(df, grouped_variables)
 
     if !isnothing(labels)
         orig_length = nvariables(md)
