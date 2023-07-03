@@ -24,7 +24,8 @@ makedocs(;
 
 deploydocs(;
     repo = "github.com/aclai-lab/SoleData.jl",
+    devbranch = "main",
     target = "build",
     branch = "gh-pages",
-    versions = ["main" => "main", "stable" => "v^", "v#.#", "dev" => "dev"],
+    versions = ["stable" => "v^", "v#.#"],
 )
