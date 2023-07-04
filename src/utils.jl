@@ -22,8 +22,8 @@ Note: since the returned AbstractMultiModalDataset will be empty its columns typ
 $(__note_about_utils)
 """
 function _empty(md::AbstractMultiModalDataset)
-    warn("This method for `_empty` is extremely not efficent especially for " *
-        "large datasets: consider providing a custom method for _empty(::$(typeof(md))).")
+    @warn "This method for `_empty` is extremely not efficent especially for " *
+        "large datasets: consider providing a custom method for _empty(::$(typeof(md)))."
     return _empty!(deepcopy(md))
 end
 """
