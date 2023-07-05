@@ -119,9 +119,12 @@ instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channe
 #     return Tables.subset(X, r)
 # end
 
-function cube2dataframe(X::AbstractArray, colnames = :auto)
-   varslices = eachslice(X; dims=ndims(X)-1)
-   DataFrame(eachslice.(varslices; dims=ndims(X)-1), colnames)
+function cube2dataframe(X::AbstractArray, colnames = nothing) # colnames = :auto
+    varslices = eachslice(X; dims=ndims(X)-1)
+    if isnothing(colnames)
+        colnames = ["V$(i_var)" for i_var in 1:length(varslices)]
+    end
+    DataFrame(eachslice.(varslices; dims=ndims(X)-1), colnames)
 end
 
 function dataframe2cube(
