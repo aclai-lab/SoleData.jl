@@ -22,7 +22,7 @@ function modality(md::AbstractMultiModalDataset, indices::AbstractVector{<:Integ
 end
 
 """
-    modality(md)
+    eachmodality(md)
 
 Return a (lazy) iterator of the modalities of a multimodal dataset.
 """

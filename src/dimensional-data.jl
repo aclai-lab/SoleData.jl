@@ -2,6 +2,7 @@
 # Dimensional dataset: a simple dataset structure (basically, an hypercube)
 
 import Base: eltype
+import SoleBase: dimensionality
 
 _isnan(n::Number) = isnan(n)
 _isnan(n::Nothing) = false

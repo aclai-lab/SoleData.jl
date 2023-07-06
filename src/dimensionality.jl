@@ -1,3 +1,4 @@
+import SoleBase: dimensionality
 
 # -------------------------------------------------------------
 # AbstractMultiModalDataset - infos
