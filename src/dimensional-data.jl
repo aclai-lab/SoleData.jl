@@ -2,7 +2,7 @@
 # Dimensional dataset: a simple dataset structure (basically, an hypercube)
 
 import Base: eltype
-import SoleBase: dimensionality
+import SoleBase: dimensionality, channelsize
 
 _isnan(n::Number) = isnan(n)
 _isnan(n::Nothing) = false
@@ -146,7 +146,7 @@ function dataframe2cube(
     common_eltype = Union{eltype.(coltypes)...}
     @assert common_eltype <: Real
     if !isconcretetype(common_eltype)
-        @warn "Detected common eltype `$(common_eltype)` is not concrete. " *
+        @warn "Common variable eltype `$(common_eltype)` is not concrete. " *
             "consider converting all values to $(promote_type(eltype.(coltypes)...))."
     end
 
