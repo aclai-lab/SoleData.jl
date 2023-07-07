@@ -70,7 +70,7 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test ninstances(md) == length(eachinstance(md)) == 3
 
-        @test_throws AssertionError slicedataset(md, [])
+        @test_throws ErrorException slicedataset(md, [])
         @test_nowarn slicedataset(md, :)
         @test_nowarn slicedataset(md, 1)
         @test_nowarn slicedataset(md, [1])
@@ -339,7 +339,7 @@ const ages = DataFrame(:age => [35, 38, 37])
 
         @test ninstances(lmd) == length(eachinstance(lmd)) == 2
 
-        @test_throws AssertionError slicedataset(lmd, [])
+        @test_throws ErrorException slicedataset(lmd, [])
         @test_nowarn slicedataset(lmd, :)
         @test_nowarn slicedataset(lmd, 1)
         @test_nowarn slicedataset(lmd, [1])
