@@ -49,7 +49,7 @@ end
 
 # TODO: describeonm should have the same interface as the `describe` function from DataFrames
 # describe(df::AbstractDataFrame; cols=:)
-# describe(df::AbstractDataFrame, stats::Union{Symbol, Pair}...; cols=:)
+# describe(df::AbstractDataFrame, stats::Union{Symbol,Pair}...; cols=:)
 function describeonm(
     df::AbstractDataFrame;
     desc::AbstractVector{Symbol} = Symbol[],
@@ -95,7 +95,7 @@ function DF.describe(
 end
 
 # TODO: implement this
-# function DF.describe(md::MultiModalDataset, stats::Union{Symbol, Pair}...; cols=:)
+# function DF.describe(md::MultiModalDataset, stats::Union{Symbol,Pair}...; cols=:)
 #     # TODO: select proper defaults stats based on `dimensionality` of each modality
 # end
 

@@ -359,7 +359,7 @@ function paa(
     x::AbstractArray{T};
     f::Function = identity,
     t::AbstractVector{<:NTuple{3,Integer}} = [(1, 0, 0)]
-) where {T <: Real}
+) where {T<:Real}
     @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)): " *
         "length(t) has to be equal to ndims(x)"
 

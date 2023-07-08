@@ -28,7 +28,7 @@ Note: This implementation assumes that all instances have uniform channel size (
 """
 const AbstractDimensionalDataset{T<:Number,D}     = AbstractArray{T,D}
 
-hasnans(n::AbstractDimensionalDataset{<:Union{Nothing, Number}}) = any(_isnan.(n))
+hasnans(n::AbstractDimensionalDataset{<:Union{Nothing,Number}}) = any(_isnan.(n))
 
 dimensionality(::Type{<:AbstractDimensionalDataset{T,D}}) where {T,D} = D-1-1
 dimensionality(d::AbstractDimensionalDataset) = dimensionality(typeof(d))
