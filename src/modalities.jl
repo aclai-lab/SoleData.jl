@@ -187,7 +187,6 @@ function addmodality!(md::AbstractMultiModalDataset, variable_name::Symbol)
 end
 
 """
-
     removemodality!(md, indices)
     removemodality!(md, index)
 
