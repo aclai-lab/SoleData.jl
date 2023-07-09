@@ -132,7 +132,7 @@ end
 
 function concatdatasets(amds::AbstractMultiModalDataset...)
     @assert allequal(grouped_variables.(amds)) "Cannot concatenate datasets " *
-        "with different variable grouping. " *
+        "with different variable groupings. " *
         "$(@show grouped_variables.(amds))"
     Base.vcat(amds...)
 end
