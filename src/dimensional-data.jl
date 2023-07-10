@@ -20,8 +20,8 @@ The dimensionality of the channel is denoted as N = D-2 (e.g. 1 for time series,
  2 for images), and its dimensionalities are denoted as X, Y, Z, etc.
 
 Note: It'd be nice to define these with N being the dimensionality of the channel:
-  e.g. const AbstractDimensionalDataset{T<:Number,N} = AbstractArray{T,N+2}
-Unfortunately, this is not currently allowed ( see https://github.com/JuliaLang/julia/issues/8322 )
+  e.g. `const AbstractDimensionalDataset{T<:Number,N} = AbstractArray{T,N+2}`
+Unfortunately, this is not currently allowed (see https://github.com/JuliaLang/julia/issues/8322 )
 
 Note: This implementation assumes that all instances have uniform channel size (e.g. time
  series with same number of points, or images of same width and height)
