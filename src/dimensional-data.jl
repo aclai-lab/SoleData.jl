@@ -178,6 +178,9 @@ function dataframe2cube(
     if !dry_run
         for (i_col, colname) in enumerate(eachcol(df))
             for (i_row, row) in enumerate(colname)
+                if ndims(row) == 0
+                    row = first(row)
+                end
                 cube[[(:) for i in 1:length(size(row))]...,i_col,i_row] = row
             end
         end
