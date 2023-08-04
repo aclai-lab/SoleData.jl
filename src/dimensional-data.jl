@@ -30,26 +30,26 @@ const AbstractDimensionalDataset{T<:Number,D}     = AbstractArray{T,D}
 
 hasnans(n::AbstractDimensionalDataset{<:Union{Nothing,Number}}) = any(_isnan.(n))
 
-dimensionality(::Type{<:AbstractDimensionalDataset{T,D}}) where {T,D} = D-1-1
+dimensionality(::Type{<:AbstractDimensionalDataset{T,D}}) where {T<:Number,D} = D-1-1
 dimensionality(d::AbstractDimensionalDataset) = dimensionality(typeof(d))
 
-ninstances(d::AbstractDimensionalDataset{T,D})        where {T,D} = size(d, D)
-nvariables(d::AbstractDimensionalDataset{T,D})     where {T,D} = size(d, D-1)
+ninstances(d::AbstractDimensionalDataset{T,D})        where {T<:Number,D} = size(d, D)
+nvariables(d::AbstractDimensionalDataset{T,D})     where {T<:Number,D} = size(d, D-1)
 
 function instances(d::AbstractVector, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false))
     if return_view == Val(true) @views d[inds]       else d[inds]    end
 end
-function instances(d::AbstractDimensionalDataset{T,2}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T}
+function instances(d::AbstractDimensionalDataset{T,2}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T<:Number}
     if return_view == Val(true) @views d[:, inds]       else d[:, inds]    end
 end
-function instances(d::AbstractDimensionalDataset{T,3}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T}
+function instances(d::AbstractDimensionalDataset{T,3}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T<:Number}
     if return_view == Val(true) @views d[:, :, inds]    else d[:, :, inds] end
 end
-function instances(d::AbstractDimensionalDataset{T,4}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T}
+function instances(d::AbstractDimensionalDataset{T,4}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T<:Number}
     if return_view == Val(true) @views d[:, :, :, inds] else d[:, :, :, inds] end
 end
 
-function concatdatasets(ds::AbstractDimensionalDataset{T,N}...) where {T,N}
+function concatdatasets(ds::AbstractDimensionalDataset{T,N}...) where {T<:Number,N}
     cat(ds...; dims=N)
 end
 
@@ -109,10 +109,10 @@ instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channe
 # import MLJModelInterface: selectrows, _selectrows
 
 # # From MLJModelInferface.jl/src/data_utils.jl
-# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,3}, r) where {T}
+# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,3}, r) where {T<:Number}
 #     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
 # end
-# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,4}, r) where {T}
+# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,4}, r) where {T<:Number}
 #     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
 # end
 # function MLJModelInterface.selectrows(::MLJBase.FI, ::Val{:table}, X::AbstractDimensionalDataset, r)
