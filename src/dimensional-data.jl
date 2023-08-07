@@ -36,9 +36,10 @@ dimensionality(d::AbstractDimensionalDataset) = dimensionality(typeof(d))
 ninstances(d::AbstractDimensionalDataset{T,D})        where {T<:Number,D} = size(d, D)
 nvariables(d::AbstractDimensionalDataset{T,D})     where {T<:Number,D} = size(d, D-1)
 
-function instances(d::AbstractVector, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false))
-    if return_view == Val(true) @views d[inds]       else d[inds]    end
-end
+# TODO remove: it conflicts with multilogiseed AbstractVector
+# function instances(d::AbstractVector, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false))
+#     if return_view == Val(true) @views d[inds]       else d[inds]    end
+# end
 function instances(d::AbstractDimensionalDataset{T,2}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T<:Number}
     if return_view == Val(true) @views d[:, inds]       else d[:, inds]    end
 end
