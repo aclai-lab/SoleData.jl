@@ -52,7 +52,7 @@ function labeldomain(lmd::AbstractLabeledMultiModalDataset, i::Integer)
     @assert 1 ≤ i ≤ nlabelingvariables(lmd) "Index ($i) must be a valid label number " *
         "(1:$(nlabelingvariables(lmd)))"
 
-    if eltype(scitype(data(lmd)[:,labeling_variables(lmd)[i]])) <: Continuous
+    if eltype(ScientificTypes.scitype(data(lmd)[:,labeling_variables(lmd)[i]])) <: Continuous
         return extrema(data(lmd)[:,labeling_variables(lmd)[i]])
     else
         return Set(data(lmd)[:,labeling_variables(lmd)[i]])
