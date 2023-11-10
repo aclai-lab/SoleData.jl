@@ -167,7 +167,6 @@ Base.summary(amd::AbstractMultiModalDataset) = string(length(amd), "-modality ",
 Base.summary(io::IO, amd::AbstractMultiModalDataset) = print(stdout, summary(amd))
 
 include("utils.jl")
-include("schema.jl")
 include("describe.jl")
 include("iterable.jl")
 include("comparison.jl")
