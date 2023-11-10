@@ -175,6 +175,7 @@ include("set.jl")
 include("variables.jl")
 include("instances.jl")
 include("modalities.jl")
+include("interfaces.jl")
 
 include("MultiModalDataset.jl")
 

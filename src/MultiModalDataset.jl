@@ -178,13 +178,14 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
     end
 
     function MultiModalDataset(
-        df::DF;
+        df::AbstractDataFrame;
         group::Union{Symbol,AbstractVector{<:Integer}} = :none
-    ) where {DF<:AbstractDataFrame}
+    )
         @assert isa(group, AbstractVector) || group in [:all, :none] "group can be " *
             "`:all`, `:none` or an `AbstractVector` of dimensionalities"
 
         if group == :none
+            @warn "Creating MultiModalDataset with no modalities"
             return MultiModalDataset([], df)
         end
 
