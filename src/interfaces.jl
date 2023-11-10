@@ -38,7 +38,7 @@ end
 
 
 using MLJModelInterface: Table
-import MLJModelInterface: selectrows, scitype, nrows
+import MLJModelInterface: selectrows, nrows
 
 function nrows(X::AbstractMultiModalDataset)
     collect(Tables.rows(X))
