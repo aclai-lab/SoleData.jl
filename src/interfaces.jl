@@ -1,6 +1,6 @@
 using ScientificTypes
 
-function ScientificTypes.schema(md::AbstractAbstractMultiModalDataset, i::Integer; kwargs...)
+function ScientificTypes.schema(md::AbstractMultiModalDataset, i::Integer; kwargs...)
     ScientificTypes.schema(modality(md, i); kwargs...)
 end
 
