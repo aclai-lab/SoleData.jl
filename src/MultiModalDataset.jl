@@ -6,8 +6,7 @@
     MultiModalDataset(df, grouped_variables)
 
 Create a `MultiModalDataset` from an `AbstractDataFrame` `df`,
-initializing modalities according to
-`grouped_variables` parameter.
+initializing its modalities according to the grouping in `grouped_variables`.
 
 `grouped_variables` is an `AbstractVector` of variable grouping which are `AbstractVector`s
 of integers representing the index of the variables selected for that modality.
@@ -54,7 +53,7 @@ julia> md = MultiModalDataset([[2]], df)
 Create a `MultiModalDataset` from an `AbstractDataFrame` `df`,
 automatically selecting modalities.
 
-The selection of modalities can be controlled by the parameter `group` which can be:
+The selection of modalities can be controlled by the `group` argument which can be:
 
 - `:none` (default): no modality will be created
 - `:all`: all variables will be grouped by their [`dimensionality`](@ref)
@@ -62,10 +61,10 @@ The selection of modalities can be controlled by the parameter `group` which can
 
 Note: `:all` and `:none` are the only `Symbol`s accepted by `group`.
 
-# TODO: `:all` should be default parameter value for `group`
-# TODO: fix passing a vector of Integer to `group` parameter
+# TODO: `:all` should be default argument value for `group`
+# TODO: fix passing a vector of Integer to `group`
 # TODO: rewrite examples
-## EXAMPLES
+# Examples
 ```julia-repl
 julia> df = DataFrame(
                   :age => [30, 9],
@@ -148,20 +147,22 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
     data::DF
 
     function MultiModalDataset(
-        grouped_variables::AbstractVector,
         df::DF,
+        grouped_variables::AbstractVector,
     ) where {DF<:AbstractDataFrame}
         grouped_variables = map(group->begin
             if !(group isa AbstractVector)
                 group = [group]
             end
             group = collect(group)
-            if group isa Vector{Symbol}
-                group = _name2index(df, group)
+            if any(var_name->var_name isa Symbol, group) &&
+               any(var_name->var_name isa Integer, group)
+                return error("Cannot mix different types of " *
+                    "column identifiers; please, only use column indices (integers) or " *
+                    "Symbols. Encountered: $(group), $(join(unique(typeof.(group)), ", ")).")
             end
-            @assert group isa Vector{<:Integer} "Cannot mix different types of" *
-                " column identifiers; please, only use column indices (integers) or" *
-                " Symbols. Encountered: $(join(unique(typeof.(group)), ", "))."
+            group = [var_name isa Symbol ? _name2index(df, var_name) : var_name for var_name in group]
+            @assert group isa Vector{<:Integer}
             group
         end, grouped_variables)
         grouped_variables = collect(Vector{Int}.(collect.(grouped_variables)))
@@ -171,10 +172,10 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
 
     # Helper
     function MultiModalDataset(
-        df::DF,
         grouped_variables::AbstractVector,
+        df::DF,
     ) where {DF<:AbstractDataFrame}
-        return MultiModalDataset(grouped_variables, df)
+        return MultiModalDataset(df, grouped_variables)
     end
 
     function MultiModalDataset(
@@ -217,8 +218,8 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
             df2 = dfs[j]
             @assert length(
                     intersect(names(df1), names(df2))
-                ) == 0 "Cannot build MultiModalDataset with clashing" *
-                " variable names across modalities: $(intersect(names(df1), names(df2)))"
+                ) == 0 "Cannot build MultiModalDataset with clashing " *
+                "variable names across modalities: $(intersect(names(df1), names(df2)))"
         end
         grouped_variables = []
         i = 1
@@ -227,7 +228,7 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
             i += nvars
         end
         df = hcat(dfs...)
-        return MultiModalDataset(grouped_variables, df)
+        return MultiModalDataset(df, grouped_variables)
     end
 
     # Helper
@@ -259,11 +260,11 @@ function SoleBase.instances(
     return_view::Union{Val{true},Val{false}} = Val(false),
 )
     @assert return_view == Val(false)
-    MultiModalDataset(grouped_variables(md), data(md)[inds,:])
+    MultiModalDataset(data(md)[inds,:], grouped_variables(md))
 end
 
 function vcat(mds::MultiModalDataset...)
-    MultiModalDataset(grouped_variables(first(mds)), vcat((data.(mds)...)))
+    MultiModalDataset(vcat((data.(mds)...)), grouped_variables(first(mds)))
 end
 
 """

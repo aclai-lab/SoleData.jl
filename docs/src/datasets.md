@@ -8,12 +8,12 @@ CurrentModule = SoleData
 Pages = ["datasets.md"]
 ```
 
-Machine learning datasets are a collection of instances (or samples),
+A machine learning dataset are a collection of instances (or samples),
 each one described by a number of variables.
 In the case of *tabular* data, a dataset looks like
 a database table, where every column is a variable,
 and each row corresponds to a given instance. However, a dataset can also be *non-tabular*
-(or *unstructured*); for example, each instance can consist of a multivariate time-series, or
+(also referred to as *unstructured*); for example, each instance can consist of a multivariate time-series, or
 an image.
 
 When data is composed of different

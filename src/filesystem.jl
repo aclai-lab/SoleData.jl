@@ -101,7 +101,7 @@ end
 Show dataset size on disk and return a Touple with first element a vector of selected IDs,
 second element the labels DataFrame or nothing and third element the total size in bytes.
 
-## PARAMETERS
+# Arguments
 
 * `onlywithlabels` is used to select which portion of the $(DATASET_ENC_NAME) to load, by specifying
     labels and their values to use as filters. See [`loaddataset`](@ref) for more info.
@@ -270,7 +270,7 @@ Create a `MultiModalDataset` or a `LabeledMultiModalDataset`
 from a $(DATASET_ENC_NAME), based on the
 presence of file Labels.csv.
 
-## PARAMETERS
+# Arguments
 
 * `datasetpath` is an `AbstractString` that denote the $(DATASET_ENC_NAME)'s position;
 * `onlywithlabels` is an AbstractVector{AbstractVector{Pair{AbstractString,AbstractVector{Any}}}}
@@ -278,20 +278,20 @@ presence of file Labels.csv.
     their values.
     Beginning from the center, each Pair{AbstractString,AbstractVector{Any}} must contain,
     as AbstractString the label's name, and, as AbstractVector{Any} the values for that label.
-    Each Pair in one Vector must refer to a different label, so if the $(DATASET_ENC_NAME) has in total
-    n labels, this Vector of Pair can contain maximun n element. That's because the elements
+    Each Pair in one vector must refer to a different label, so if the $(DATASET_ENC_NAME) has in total
+    n labels, this vector of Pair can contain maximun n element. That's because the elements
     will combine with each other.
-    Every Vector of Pair act as a filter.
-    Note that the same label can be used in different Vector of Pair as they do not combine
+    Every vector of Pair act as a filter.
+    Note that the same label can be used in different vector of Pair as they do not combine
     with each other.
-    If `onlywithlabels` is an empty Vector (default) the function will load the entire
+    If `onlywithlabels` is an empty vector (default) the function will load the entire
     $(DATASET_ENC_NAME).
 * `shufflelabels` is an `AbstractVector` of names of labels to shuffle (default = [], means
     no shuffle).
 * `rng` is a random number generator to be used when shuffling (for reproducibility); can be
     either a Integer (used as seed for `MersenneTwister`) or an `AbstractRNG`.
 
-## EXAMPLES
+# Examples
 
 ```julia-repl
 julia> df_data = DataFrame(
@@ -457,7 +457,7 @@ function loaddataset(
         push!(grouped_variables, [findfirst(x -> x == k, df_names) for k in modality])
     end
 
-    md = MultiModalDataset(grouped_variables, df)
+    md = MultiModalDataset(df, grouped_variables)
 
     if !isnothing(labels)
         orig_length = nvariables(md)
@@ -495,7 +495,7 @@ datasetpath
     ├─ Metadata.txt
     └─ Labels.csv
 
-## PARAMETERS
+# Arguments
 
 * `instance_ids` is an `AbstractVector{Integer}` that denote the identifier of the instances,
 * `name` is an `AbstractString` and denote the name of the $(DATASET_ENC_NAME), that will be saved in the

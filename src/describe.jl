@@ -49,7 +49,7 @@ end
 
 # TODO: describeonm should have the same interface as the `describe` function from DataFrames
 # describe(df::AbstractDataFrame; cols=:)
-# describe(df::AbstractDataFrame, stats::Union{Symbol, Pair}...; cols=:)
+# describe(df::AbstractDataFrame, stats::Union{Symbol,Pair}...; cols=:)
 function describeonm(
     df::AbstractDataFrame;
     desc::AbstractVector{Symbol} = Symbol[],
@@ -73,17 +73,17 @@ end
 Return descriptive statistics for an `AbstractMultiModalDataset` as a `Vector` of new
 `DataFrame`s where each row represents a variable and each column a summary statistic.
 
-## Arguments
+# Arguments
 
 * `md`: the `AbstractMultiModalDataset`;
 * `t`: is a vector of `nmodalities` elements,
     where each element is a vector as long as the dimensionality of
-	the i-th modality. Each element of the innermost Vector is a tuple
-	describing the parameters as described in [`paa`](@ref) algorithm documentation.
+	the i-th modality. Each element of the innermost vector is a tuple
+	of arguments for [`paa`](@ref).
 
 For other see the documentation of [`DataFrames.describe`](@ref) function.
 
-## Examples
+# Examples
 TODO: examples
 """
 function DF.describe(
@@ -95,7 +95,7 @@ function DF.describe(
 end
 
 # TODO: implement this
-# function DF.describe(md::MultiModalDataset, stats::Union{Symbol, Pair}...; cols=:)
+# function DF.describe(md::MultiModalDataset, stats::Union{Symbol,Pair}...; cols=:)
 #     # TODO: select proper defaults stats based on `dimensionality` of each modality
 # end
 

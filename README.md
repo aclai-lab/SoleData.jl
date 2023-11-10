@@ -1,18 +1,18 @@
-![Sole](logo.png)
+<div align="center"><a href="https://github.com/aclai-lab/Sole.jl"><img src="logo.png" alt="" title="This package is part of Sole.jl" width="200"></a></div>
 
 # SoleData.jl – Unstructured and Multimodal datasets
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aclai-lab.github.io/SoleData.jl/stable)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aclai-lab.github.io/SoleData.jl)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleData.jl/dev)
 [![Build Status](https://api.cirrus-ci.com/github/aclai-lab/SoleData.jl.svg?branch=main)](https://cirrus-ci.com/github/aclai-lab/SoleData.jl)
 [![Coverage](https://codecov.io/gh/aclai-lab/SoleData.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/aclai-lab/SoleData.jl)
-[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
+<!-- [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) -->
 
 <!-- [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleData.jl/dev) -->
 
 ## In a nutshell
 
-*SoleData* provides a **machine learning oriented** data layer on top of DataFrames.jl/Tables.jl for:
+*SoleData* provides a **machine learning oriented** data layer on top of DataFrames.jl for:
 - Instantiating and manipulating [*multimodal*](https://en.wikipedia.org/wiki/Multimodal_learning) datasets for (un)supervised machine learning;
 - Dealing with [*(un)structured* data](https://en.wikipedia.org/wiki/Unstructured_data) (e.g., graphs, images, time-series, etc.);
 - Describing datasets via basic statistical measures;

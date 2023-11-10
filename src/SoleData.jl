@@ -131,9 +131,9 @@ function data(amd::AbstractMultiModalDataset)::AbstractDataFrame
 end
 
 function concatdatasets(amds::AbstractMultiModalDataset...)
-    @assert allequal(grouped_variables.(amds)) "Cannot concatenate datasets" *
-        " with different variable grouping." *
-        " $(@show grouped_variables.(amds))"
+    @assert allequal(grouped_variables.(amds)) "Cannot concatenate datasets " *
+        "with different variable groupings. " *
+        "$(@show grouped_variables.(amds))"
     Base.vcat(amds...)
 end
 
@@ -154,12 +154,12 @@ function labeling_variables(almd::AbstractLabeledMultiModalDataset)::Vector{Int}
 end
 
 function concatdatasets(almds::AbstractLabeledMultiModalDataset...)
-    @assert allequal(grouped_variables.(almds)) "Cannot concatenate datasets" *
-        " with different variable grouping." *
-        " $(@show grouped_variables.(almds))"
-    @assert allequal(labeling_variables.(almds)) "Cannot concatenate datasets" *
-        " with different labeling variables." *
-        " $(@show labeling_variables.(almds))"
+    @assert allequal(grouped_variables.(almds)) "Cannot concatenate datasets " *
+        "with different variable grouping. " *
+        "$(@show grouped_variables.(almds))"
+    @assert allequal(labeling_variables.(almds)) "Cannot concatenate datasets " *
+        "with different labeling variables. " *
+        "$(@show labeling_variables.(almds))"
     Base.vcat(almds...)
 end
 
@@ -186,8 +186,8 @@ include("filesystem.jl")
 
 include("dimensionality.jl")
 
-export get_instance, max_channel_size
+export get_instance, maxchannelsize
 
-include("dimensional-dataset.jl")
+include("dimensional-data.jl")
 
 end # module

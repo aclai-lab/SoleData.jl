@@ -22,8 +22,8 @@ Note: since the returned AbstractMultiModalDataset will be empty its columns typ
 $(__note_about_utils)
 """
 function _empty(md::AbstractMultiModalDataset)
-    warn("This method for `_empty` is extremely not efficent especially for " *
-        "large datasets: consider providing a custom method for _empty(::$(typeof(md))).")
+    @warn "This method for `_empty` is extremely not efficent especially for " *
+        "large datasets: consider providing a custom method for _empty(::$(typeof(md)))."
     return _empty!(deepcopy(md))
 end
 """
@@ -359,7 +359,7 @@ function paa(
     x::AbstractArray{T};
     f::Function = identity,
     t::AbstractVector{<:NTuple{3,Integer}} = [(1, 0, 0)]
-) where {T <: Real}
+) where {T<:Real}
     @assert ndims(x) == length(t) "Mismatching dims $(ndims(x)) != $(length(t)): " *
         "length(t) has to be equal to ndims(x)"
 

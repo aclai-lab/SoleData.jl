@@ -1,3 +1,4 @@
+import SoleBase: dimensionality
 
 # -------------------------------------------------------------
 # AbstractMultiModalDataset - infos
@@ -23,7 +24,7 @@ function dimensionality(df::AbstractDataFrame; force::Symbol = :no)::Union{Symbo
         return :empty
     end
 
-    dims = [maximum(x -> isa(x, AbstractVector) ? ndims(x) : 0, [inst for inst in c])
+    dims = [maximum(x -> isa(x, AbstractArray) ? ndims(x) : 0, [inst for inst in c])
         for c in eachcol(df)]
 
     if all(y -> y == dims[1], dims)
