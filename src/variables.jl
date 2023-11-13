@@ -126,7 +126,7 @@ Insert a variable in a multimodal dataset with a given index.
     last in the md's underlying dataframe structure;
 * `index` is a `Symbol` and denote the name of the variable to insert.
     Duplicated variable names will be renamed to avoid conflicts: see `makeunique` argument
-    for [`insertcols!`](https://dataframes.juliadata.org/stable/lib/functions/#DataFrames.insertcols!)
+    for [insertcols!](https://dataframes.juliadata.org/stable/lib/functions/#DataFrames.insertcols!)
     in DataFrames documentation;
 * `values` is an `AbstractVector` that indicates the values for the newly
     inserted variable. The length of `values` should match `ninstances(md)`;

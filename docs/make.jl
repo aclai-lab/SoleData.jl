@@ -6,9 +6,10 @@ DocMeta.setdocmeta!(SoleData, :DocTestSetup, :(using SoleData); recursive=true)
 makedocs(;
     modules=[SoleData],
     authors="Lorenzo Balboni, Federico Manzella, Giovanni Pagliarini, Eduard I. Stan",
-    repo="https://github.com/aclai-lab/SoleData.jl/blob/{commit}{path}#{line}",
+    repo=Documenter.Remotes.GitHub("aclai-lab", "SoleData.jl"),
     sitename="SoleData.jl",
     format=Documenter.HTML(;
+        size_threshold = 4000000,
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://aclai-lab.github.io/SoleData.jl",
         assets=String[],
@@ -24,8 +25,7 @@ makedocs(;
 
 deploydocs(;
     repo = "github.com/aclai-lab/SoleData.jl",
-    devbranch = "main",
     target = "build",
     branch = "gh-pages",
-    versions = ["stable" => "v^", "v#.#"],
+    versions = ["main" => "main", "stable" => "v^", "v#.#", "dev" => "dev"],
 )
