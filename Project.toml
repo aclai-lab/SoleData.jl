@@ -1,7 +1,7 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
 authors = ["Lorenzo Balboni", "Federico Manzella", "Giovanni Pagliarini", "Eduard I. Stan"]
-version = "0.11"
+version = "0.11.1"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
