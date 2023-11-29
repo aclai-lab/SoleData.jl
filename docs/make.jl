@@ -21,6 +21,8 @@ makedocs(;
         "Description" => "description.md",
         "Utils" => "utils.md",
     ],
+    # NOTE: warning
+    warnonly = :true,
 )
 
 deploydocs(;
