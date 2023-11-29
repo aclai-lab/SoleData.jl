@@ -1,57 +1,58 @@
 # -------------------------------------------------------------
 # Dimensional dataset: a simple dataset structure (basically, an hypercube)
 
+using StatsBase
 import Base: eltype
 import SoleBase: dimensionality, channelsize
 
 _isnan(n::Number) = isnan(n)
 _isnan(n::Nothing) = false
 hasnans(n::Number) = _isnan(n)
+hasnans(a::AbstractArray) = any(_isnan.(a))
 
 ############################################################################################
 
 """
-    AbstractDimensionalDataset{T<:Number,D} = AbstractArray{T,D}
+    AbstractDimensionalDataset{T<:Number,D} = AbstractVector{<:AbstractArray{T,D}}
 
-An `D`-dimensional dataset is a multi-dimensional `Array` representing a set of
+A `D`-dimensional dataset is a vector of
  (multivariate) `D`-dimensional instances (or samples):
-The size of the `Array` is X × Y × ... × nvariables × ninstances
-The dimensionality of the channel is denoted as N = D-2 (e.g. 1 for time series,
+Each instance is an `Array` with size X × Y × ... × nvariables
+The dimensionality of the channel is denoted as N = D-1 (e.g. 1 for time series,
  2 for images), and its dimensionalities are denoted as X, Y, Z, etc.
 
 Note: It'd be nice to define these with N being the dimensionality of the channel:
-  e.g. `const AbstractDimensionalDataset{T<:Number,N} = AbstractArray{T,N+2}`
+  e.g. `const AbstractDimensionalDataset{T<:Number,N} = AbstractVector{<:AbstractArray{T,N+1}}`
 Unfortunately, this is not currently allowed (see https://github.com/JuliaLang/julia/issues/8322 )
-
-Note: This implementation assumes that all instances have uniform channel size (e.g. time
- series with same number of points, or images of same width and height)
 """
-const AbstractDimensionalDataset{T<:Number,D}     = AbstractArray{T,D}
+const AbstractDimensionalDataset{T<:Number,D} = AbstractVector{<:AbstractArray{T,D}}
 
-hasnans(n::AbstractDimensionalDataset{<:Union{Nothing,Number}}) = any(_isnan.(n))
+function eachinstance(X::AbstractDimensionalDataset)
+    X
+end
 
-dimensionality(::Type{<:AbstractDimensionalDataset{T,D}}) where {T<:Number,D} = D-1-1
+hasnans(d::AbstractDimensionalDataset{<:Union{Nothing,Number}}) = any(hasnans, eachinstance(d))
+
+dimensionality(::Type{<:AbstractDimensionalDataset{T,D}}) where {T<:Number,D} = D-1
 dimensionality(d::AbstractDimensionalDataset) = dimensionality(typeof(d))
 
-ninstances(d::AbstractDimensionalDataset{T,D})        where {T<:Number,D} = size(d, D)
-nvariables(d::AbstractDimensionalDataset{T,D})     where {T<:Number,D} = size(d, D-1)
+ninstances(d::AbstractDimensionalDataset{T,D}) where {T<:Number,D} = length(d)
+function checknvariables(d::AbstractDimensionalDataset{T,D}) where {T<:Number,D}
+    if !allequal(map(instance->size(instance, D), eachinstance(d)))
+        error("Non-uniform nvariables in dimensional dataset:" *
+            " $(countmap(map(instance->size(instance, D), eachinstance(d))))")
+    else
+        true
+    end
+end
+nvariables(d::AbstractDimensionalDataset{T,D}) where {T<:Number,D} = size(first(eachinstance(d)), D)
 
-# TODO remove: it conflicts with multilogiseed AbstractVector
-# function instances(d::AbstractVector, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false))
-#     if return_view == Val(true) @views d[inds]       else d[inds]    end
-# end
-function instances(d::AbstractDimensionalDataset{T,2}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T<:Number}
-    if return_view == Val(true) @views d[:, inds]       else d[:, inds]    end
-end
-function instances(d::AbstractDimensionalDataset{T,3}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T<:Number}
-    if return_view == Val(true) @views d[:, :, inds]    else d[:, :, inds] end
-end
-function instances(d::AbstractDimensionalDataset{T,4}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {T<:Number}
-    if return_view == Val(true) @views d[:, :, :, inds] else d[:, :, :, inds] end
+function instances(d::AbstractDimensionalDataset, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false))
+    if return_view == Val(true) @views d[inds] else d[inds]    end
 end
 
-function concatdatasets(ds::AbstractDimensionalDataset{T,N}...) where {T<:Number,N}
-    cat(ds...; dims=N)
+function concatdatasets(ds::AbstractDimensionalDataset{T}...) where {T<:Number}
+    vcat(ds...)
 end
 
 function displaystructure(d::AbstractDimensionalDataset; indent_str = "", include_ninstances = true)
@@ -63,37 +64,26 @@ function displaystructure(d::AbstractDimensionalDataset; indent_str = "", includ
         push!(pieces, "$(padattribute("# instances:", ninstances(d)))")
     end
     push!(pieces, "$(padattribute("# variables:", nvariables(d)))")
-    push!(pieces, "$(padattribute("channelsize:", channelsize(d)))")
+    push!(pieces, "$(padattribute("channelsize countmap:", StatsBase.countmap(map(i_instance->channelsize(d, i_instance), 1:ninstances(d)))))")
     push!(pieces, "$(padattribute("maxchannelsize:", maxchannelsize(d)))")
     push!(pieces, "$(padattribute("size × eltype:", "$(size(d)) × $(eltype(d))"))")
 
     return join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
 end
 
-instance(d::AbstractDimensionalDataset{T,2},     idx::Integer) where T = @views d[:, idx]         # N=0
-instance(d::AbstractDimensionalDataset{T,3},     idx::Integer) where T = @views d[:, :, idx]      # N=1
-instance(d::AbstractDimensionalDataset{T,4},     idx::Integer) where T = @views d[:, :, :, idx]   # N=2
-
-# TODO remove? @ferdiu
+# TODO remove one of the two. @ferdiu
+instance(d::AbstractDimensionalDataset, idx::Integer) = @views d[idx]
 get_instance(args...) = instance(args...)
 
-instance_channelsize(d::AbstractDimensionalDataset, i_instance::Integer) = instance_channelsize(get_instance(d, i_instance))
+channelsize(d::AbstractDimensionalDataset, i_instance::Integer) = instance_channelsize(d[i_instance])
+maxchannelsize(d::AbstractDimensionalDataset) = maximum(i_instance->channelsize(d, i_instance), 1:ninstances(d))
+
+instance_channel(instance::AbstractArray{T,1}, i_var::Integer) where T = @views instance[      i_var]::T                       # N=0
+instance_channel(instance::AbstractArray{T,2}, i_var::Integer) where T = @views instance[:,    i_var]::AbstractArray{T,1} # N=1
+instance_channel(instance::AbstractArray{T,3}, i_var::Integer) where T = @views instance[:, :, i_var]::AbstractArray{T,2} # N=2
+
 instance_channelsize(instance::AbstractArray) = size(instance)[1:end-1]
-
-channelvariable(instance::AbstractArray{T,1}, i_var::Integer) where T = @views instance[      i_var]::T                       # N=0
-channelvariable(instance::AbstractArray{T,2}, i_var::Integer) where T = @views instance[:,    i_var]::AbstractArray{T,1} # N=1
-channelvariable(instance::AbstractArray{T,3}, i_var::Integer) where T = @views instance[:, :, i_var]::AbstractArray{T,2} # N=2
-
-############################################################################################
-
-const UniformDimensionalDataset{T<:Number,D}     = Union{Array{T,D},SubArray{T,D}}
-
-hasnans(X::UniformDimensionalDataset) = any(_isnan.(X))
-
-channelsize(d::UniformDimensionalDataset) = size(d)[1:end-2]
-maxchannelsize(d::UniformDimensionalDataset) = channelsize(d)
-
-instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channelsize(d)
+instance_nvariables(instance::AbstractArray) = size(instance, ndims(instance))
 
 ############################################################################################
 ############################################################################################
@@ -110,10 +100,10 @@ instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channe
 # import MLJModelInterface: selectrows, _selectrows
 
 # # From MLJModelInferface.jl/src/data_utils.jl
-# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,3}, r) where {T<:Number}
+# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,4}, r) where {T<:Number}
 #     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
 # end
-# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,4}, r) where {T<:Number}
+# function MLJModelInterface._selectrows(X::AbstractDimensionalDataset{T,5}, r) where {T<:Number}
 #     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
 # end
 # function MLJModelInterface.selectrows(::MLJBase.FI, ::Val{:table}, X::AbstractDimensionalDataset, r)
@@ -121,18 +111,8 @@ instance_channelsize(d::UniformDimensionalDataset, i_instance::Integer) = channe
 #     return Tables.subset(X, r)
 # end
 
-function cube2dataframe(X::AbstractArray, colnames = nothing) # colnames = :auto
-    varslices = eachslice(X; dims=ndims(X)-1)
-    if isnothing(colnames)
-        colnames = ["V$(i_var)" for i_var in 1:length(varslices)]
-    end
-    DataFrame(eachslice.(varslices; dims=ndims(X)-1), colnames)
-end
 
-function dataframe2cube(
-    df::AbstractDataFrame;
-    dry_run::Bool = false,
-)
+function _check_dataframe(df::AbstractDataFrame)
     coltypes = eltype.(eachcol(df))
     wrong_coltypes = filter(t->!(t <: Union{Real,AbstractArray}), coltypes)
 
@@ -150,6 +130,62 @@ function dataframe2cube(
         @warn "Common variable eltype `$(common_eltype)` is not concrete. " *
             "consider converting all values to $(promote_type(eltype.(coltypes)...))."
     end
+end
+
+
+function dimensional2dataframe(X::AbstractDimensionalDataset, colnames = nothing) # colnames = :auto
+    SoleData.checknvariables(X)
+    varslices = [begin
+        map(instance->SoleData.instance_channel(instance, i_variable), eachinstance(X))
+    end for i_variable in 1:nvariables(X)]
+    if isnothing(colnames)
+        colnames = ["V$(i_var)" for i_var in 1:length(varslices)]
+    end
+    DataFrame(varslices, colnames)
+end
+
+function dataframe2dimensional(
+    df::AbstractDataFrame;
+    dry_run::Bool = false,
+)
+    SoleData,_check_dataframe(df)
+
+    coltypes = eltype.(eachcol(df))
+    common_eltype = Union{eltype.(coltypes)...}
+
+    n_variables = ncol(df)
+
+    dataset = [begin
+        instance = begin
+            # if !dry_run
+            cat(collect(row)...; dims=ndims(row[1])+1)
+            # else
+            #     Array{common_eltype}(undef, __channelsize..., n_variables)
+            # end
+        end
+        instance
+    end for row in eachrow(df)]
+
+    return dataset, names(df)
+end
+
+
+function cube2dataframe(X::AbstractArray, colnames = nothing) # colnames = :auto
+    varslices = eachslice(X; dims=ndims(X)-1)
+    if isnothing(colnames)
+        colnames = ["V$(i_var)" for i_var in 1:length(varslices)]
+    end
+    DataFrame(eachslice.(varslices; dims=ndims(X)-1), colnames)
+end
+
+function dataframe2cube(
+    df::AbstractDataFrame;
+    dry_run::Bool = false,
+)
+    _check_dataframe(df)
+
+    coltypes = eltype.(eachcol(df))
+    common_eltype = Union{eltype.(coltypes)...}
 
     # _channelndims = (x)->ndims(x) # (hasmethod(ndims, (typeof(x),)) ? ndims(x) : missing)
     # _channelsize = (x)->size(x) # (hasmethod(size, (typeof(x),)) ? size(x) : missing)

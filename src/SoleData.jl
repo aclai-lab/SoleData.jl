@@ -4,6 +4,7 @@ __precompile__()
 module SoleData
 
 using DataFrames
+using StatsBase
 using ScientificTypes
 using DataStructures
 using Statistics
