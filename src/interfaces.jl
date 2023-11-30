@@ -41,7 +41,7 @@ using MLJModelInterface: Table
 import MLJModelInterface: selectrows, nrows
 
 function nrows(X::AbstractMultiModalDataset)
-    collect(Tables.rows(X))
+    length(Tables.rows(X))
 end
 
 function selectrows(X::AbstractMultiModalDataset, r)
