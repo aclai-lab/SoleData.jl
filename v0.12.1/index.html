@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · SoleData.jl</title><meta name="title" content="Home · SoleData.jl"/><meta property="og:title" content="Home · SoleData.jl"/><meta property="twitter:title" content="Home · SoleData.jl"/><meta name="description" content="Documentation for SoleData.jl."/><meta property="og:description" content="Documentation for SoleData.jl."/><meta property="twitter:description" content="Documentation for SoleData.jl."/><meta property="og:url" content="https://aclai-lab.github.io/SoleData.jl/"/><meta property="twitter:url" content="https://aclai-lab.github.io/SoleData.jl/"/><link rel="canonical" href="https://aclai-lab.github.io/SoleData.jl/"/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>SoleData.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Usage"><span>Usage</span></a></li></ul></li><li><a class="tocitem" href="datasets/">Datasets</a></li><li><a class="tocitem" href="manipulation/">Manipulation</a></li><li><a class="tocitem" href="description/">Description</a></li><li><a class="tocitem" href="utils/">Utils</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/aclai-lab/SoleData.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/aclai-lab/SoleData.jl/blob/main/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="SoleData"><a class="docs-heading-anchor" href="#SoleData">SoleData</a><a id="SoleData-1"></a><a class="docs-heading-anchor-permalink" href="#SoleData" title="Permalink"></a></h1><p>The aim of this package is to provide a simple and comfortable interface for managing multimodal data. It is built  on top of <a href="https://github.com/JuliaData/DataFrames.jl/">DataFrames.jl</a> with Machine learning applications in mind.</p><ul><li><a href="datasets/#man-datasets">Datasets</a></li><li class="no-marker"><ul><li><a href="datasets/#man-unlabeled-datasets">Unlabeled Datasets</a></li><li><a href="datasets/#man-supervised-datasets">Labeled Datasets</a></li></ul></li><li><a href="description/#man-description">Description</a></li><li><a href="filesystem/#man-filesystem">Filesystem</a></li><li><a href="#SoleData">SoleData</a></li><li class="no-marker"><ul><li><a href="#Installation">Installation</a></li><li><a href="#Usage">Usage</a></li></ul></li><li><a href="manipulation/#man-manipulation">Manipulation</a></li><li class="no-marker"><ul><li><a href="manipulation/#man-modalities">Modalities</a></li><li><a href="manipulation/#man-variables">Variables</a></li><li><a href="manipulation/#man-instances">Instances</a></li></ul></li><li><a href="utils/#man-utils">Utils</a></li></ul><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>Currently this packages is still not registered so you need to run the following commands in a Julia REPL to install it:</p><pre><code class="language-julia hljs">import Pkg
+Pkg.add(&quot;SoleData&quot;)</code></pre><p>To install the developement version, run:</p><pre><code class="language-julia hljs">import Pkg
+Pkg.add(&quot;https://github.com/aclai-lab/SoleData.jl#dev&quot;)</code></pre><h2 id="Usage"><a class="docs-heading-anchor" href="#Usage">Usage</a><a id="Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Usage" title="Permalink"></a></h2><p>To instantiate a multimodal dataset, use the <a href="datasets/#SoleData.MultiModalDataset"><code>MultiModalDataset</code></a> constructor by providing: <em>a)</em> a <code>DataFrame</code> containing all variables from different modalities, and  <em>b)</em> a <code>Vector{Vector{Union{Symbol,String,Int64}}}</code> object representing a grouping of some of the variables (identified by column index or name) into different modalities.</p><pre><code class="language-julia-repl hljs">julia&gt; using SoleData
+
+julia&gt; ts_cos = [cos(i) for i in 1:50000];
+
+julia&gt; ts_sin = [sin(i) for i in 1:50000];
+
+julia&gt; df_data = DataFrame(
+                  :id =&gt; [1, 2],
+                  :age =&gt; [30, 9],
+                  :name =&gt; [&quot;Python&quot;, &quot;Julia&quot;],
+                  :stat =&gt; [deepcopy(ts_sin), deepcopy(ts_cos)]
+              )
+2×4 DataFrame
+ Row │ id     age    name    stat                              
+     │ Int64  Int64  String  Array…                            
+─────┼─────────────────────────────────────────────────────────
+   1 │     1     30  Python  [0.841471, 0.909297, 0.14112, -0…
+   2 │     2      9  Julia   [0.540302, -0.416147, -0.989992,…
+
+julia&gt; grouped_variables = [[2,3], [4]]; # group 2nd and 3rd variables in the first modality
+                                         # the 4th variable in the second modality and
+                                         # leave the first variable as a &quot;spare variable&quot;
+
+julia&gt; md = MultiModalDataset(df_data, grouped_variables)
+● MultiModalDataset
+  └─ dimensionalities: (0, 1)
+- Modality 1 / 2
+  └─ dimensionality: 0
+2×2 SubDataFrame
+ Row │ age    name   
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+- Modality 2 / 2
+  └─ dimensionality: 1
+2×1 SubDataFrame
+ Row │ stat                              
+     │ Array…                            
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…
+- Spare variables
+  └─ dimensionality: 0
+2×1 SubDataFrame
+ Row │ id    
+     │ Int64
+─────┼───────
+   1 │     1
+   2 │     2
+</code></pre><p>Now <code>md</code> holds a <code>MultiModalDataset</code> and all of its modalities can be conveniently iterated as elements of a <code>Vector</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; for (i, f) in enumerate(md)
+           println(&quot;Modality: &quot;, i)
+           println(f)
+           println()
+       end
+Modality: 1
+2×2 SubDataFrame
+ Row │ age    name   
+     │ Int64  String
+─────┼───────────────
+   1 │    30  Python
+   2 │     9  Julia
+
+Modality: 2
+2×1 SubDataFrame
+ Row │ stat                              
+     │ Array…                            
+─────┼───────────────────────────────────
+   1 │ [0.841471, 0.909297, 0.14112, -0…
+   2 │ [0.540302, -0.416147, -0.989992,…</code></pre><p>Note that each element of a <code>MultiModalDataset</code> is a <code>SubDataFrame</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; eltype(md)
+SubDataFrame
+</code></pre><div class="admonition is-info"><header class="admonition-header">Spare variables</header><div class="admonition-body"><p>Spare variables will never be seen when accessing a <code>MultiModalDataset</code> through its iterator interface. To access them see <a href="manipulation/#SoleData.sparevariables-Tuple{AbstractMultiModalDataset}"><code>sparevariables</code></a>.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="datasets/">Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.0 on <span class="colophon-date" title="Thursday 30 November 2023 05:59">Thursday 30 November 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
