@@ -61,7 +61,6 @@ The selection of modalities can be controlled by the `group` argument which can 
 
 Note: `:all` and `:none` are the only `Symbol`s accepted by `group`.
 
-# TODO: `:all` should be default argument value for `group`
 # TODO: fix passing a vector of Integer to `group`
 # TODO: rewrite examples
 # Examples
@@ -180,7 +179,7 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
 
     function MultiModalDataset(
         df::AbstractDataFrame;
-        group::Union{Symbol,AbstractVector{<:Integer}} = :none
+        group::Union{Symbol,AbstractVector{<:Integer}} = :all
     )
         @assert isa(group, AbstractVector) || group in [:all, :none] "group can be " *
             "`:all`, `:none` or an `AbstractVector` of dimensionalities"
@@ -232,7 +231,7 @@ struct MultiModalDataset{DF<:AbstractDataFrame} <: AbstractMultiModalDataset
     end
 
     # Helper
-    MultiModalDataset(dfs::AbstractDataFrame...) = MultiModalDataset(dfs)
+    MultiModalDataset(dfs::AbstractDataFrame...) = MultiModalDataset(collect(dfs))
 
 end
 

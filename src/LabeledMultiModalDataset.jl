@@ -90,7 +90,7 @@ struct LabeledMultiModalDataset{MD} <: AbstractLabeledMultiModalDataset
     #     labeling_variables::AbstractVector{L},
     #     dfs::AbstractDataFrame...
     # ) where {L}
-    #     return LabeledMultiModalDataset(dfs)
+    #     return LabeledMultiModalDataset(labeling_variables, collect(dfs))
     # end
 
 end
