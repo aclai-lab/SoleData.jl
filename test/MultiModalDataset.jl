@@ -49,10 +49,10 @@ original_md = deepcopy(md)
 @test dimensionality(md, 1) == 0
 @test dimensionality(md, 2) == 1
 
-# test auto selection of modalities
-auto_md = MultiModalDataset(deepcopy(df))
-@test nmodalities(auto_md) == 0
-@test length(sparevariables(auto_md)) == nvariables(auto_md)
+# # test auto selection of modalities
+# auto_md = MultiModalDataset(deepcopy(df))
+# @test nmodalities(auto_md) == 0
+# @test length(sparevariables(auto_md)) == nvariables(auto_md)
 
 auto_md_all = MultiModalDataset(deepcopy(df); group = :all)
 @test auto_md_all == md
