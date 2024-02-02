@@ -1,5 +1,5 @@
 # -------------------------------------------------------------
-# Dimensional dataset: a simple dataset structure (basically, an hypercube)
+# Dimensional dataset: a simple dataset structure (basically, a hypercube)
 
 using StatsBase
 import Base: eltype
