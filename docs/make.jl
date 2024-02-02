@@ -16,13 +16,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Datasets" => "datasets.md",
-        "Manipulation" => "manipulation.md",
-        "Description" => "description.md",
-        "Utils" => "utils.md",
     ],
-    # NOTE: warning
-    warnonly = :true,
 )
 
 deploydocs(;

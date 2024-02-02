@@ -1,7 +1,7 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-authors = ["Lorenzo Balboni", "Federico Manzella", "Giovanni Pagliarini", "Eduard I. Stan"]
-version = "0.12.2"
+authors = ["Giovanni Pagliarini"]
+version = "0.13.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -10,6 +10,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MLJModelInterface = "e80e1ace-859a-464e-9ed9-23947d8ae3ea"
+MultiData = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
