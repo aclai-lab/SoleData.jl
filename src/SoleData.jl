@@ -7,8 +7,8 @@ using Reexport
 using SoleBase
 using SoleBase: AbstractDataset, slicedataset
 
-@reexport using DataFrames
-@reexport using MultiData
+using DataFrames
+using MultiData
 
 const DF = DataFrames
 const MD = MultiData

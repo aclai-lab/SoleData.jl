@@ -1,6 +1,7 @@
 using HTTP
 using ZipFile
 using DataFrames
+using CategoricalArrays
 
 using DataStructures: OrderedDict
 

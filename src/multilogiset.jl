@@ -312,11 +312,12 @@ end
 
 function check(
     φ::MultiFormula,
-    X::MultiLogiset,
-    i_instance::Integer,
+    i::SoleLogics.LogicalInstance{<:MultiLogiset},
     args...;
     kwargs...,
 )
+    X, i_instance = SoleLogics.splat(i)
+
     # TODO in the fuzzy case: use collatetruth(∧, fuzzy truth values...)
     all([check(f, X, i_modality, i_instance, args...; kwargs...)
         for (i_modality, f) in modforms(φ)])
