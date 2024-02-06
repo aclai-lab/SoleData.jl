@@ -9,6 +9,7 @@ using SoleBase: AbstractDataset, slicedataset
 
 using DataFrames
 using MultiData
+using MultiData: AbstractDimensionalDataset
 
 const DF = DataFrames
 const MD = MultiData
