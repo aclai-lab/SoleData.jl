@@ -62,7 +62,7 @@ function initlogiset(
         # @warn "Different frames encountered for different dataset instances." *
         #     "A generic logiset structure will be used, but be advised that it may be very slow."
         # # SoleData.frame(dataset, i_instance)
-        # return ExplicitLogiset([begin
+        # return ExplicitModalLogiset([begin
         #     fr = SoleData.frame(dataset, i_instance)
         #     (Dict{W,Dict{FT,U}}([w => Dict{FT,U}() for w in allworlds(fr)]), fr)
         #     end for i_instance in 1:ninstances(dataset)])

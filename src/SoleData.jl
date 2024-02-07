@@ -34,8 +34,8 @@ export slicedataset, concatdatasets
 
 export World, Feature, featvalue
 export SupportedLogiset, nmemoizedvalues
-export ExplicitBooleanLogiset, checkcondition
-export ExplicitLogiset, ScalarCondition
+export ExplicitBooleanModalLogiset, checkcondition
+export ExplicitModalLogiset, ScalarCondition
 
 export ninstances
 export MultiLogiset, modality, nmodalities, modalities
@@ -118,6 +118,8 @@ export ninstances, featvalue, displaystructure, isminifiable, minify
 
 # Logical datasets, where the instances are Kripke structures with conditional alphabets
 include("logiset.jl")
+include("propositional-logisets.jl")
+include("modal-logisets.jl")
 
 include("memosets.jl")
 
