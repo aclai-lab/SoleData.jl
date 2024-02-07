@@ -4,7 +4,7 @@
         U,
         FT<:AbstractFeature,
         FR<:AbstractFrame,
-    } <: AbstractLogiset{W,U,FT,FR} end
+    } <: AbstractModalLogiset{W,U,FT,FR} end
 
 Abstract type for memoization structures to be used when checking
 formulas on logisets.
@@ -12,14 +12,14 @@ formulas on logisets.
 See also
 [`FullMemoset`](@ref),
 [`SupportedLogiset`](@ref),
-[`AbstractLogiset`](@ref).
+[`AbstractModalLogiset`](@ref).
 """
 abstract type AbstractMemoset{
     W<:AbstractWorld,
     U,
     FT<:AbstractFeature,
     FR<:AbstractFrame,
-} <: AbstractLogiset{W,U,FT,FR} end
+} <: AbstractModalLogiset{W,U,FT,FR} end
 
 function capacity(Xm::AbstractMemoset)
     return error("Please, provide method capacity(::$(typeof(Xm))).")
@@ -111,7 +111,7 @@ well-known model checking algorithm for CTL*.
 See also
 [`SupportedLogiset`](@ref),
 [`AbstractMemoset`](@ref),
-[`AbstractLogiset`](@ref).
+[`AbstractModalLogiset`](@ref).
 """
 struct FullMemoset{
     W<:AbstractWorld,
@@ -133,7 +133,7 @@ struct FullMemoset{
     end
 
     function FullMemoset(
-        X::AbstractLogiset{W,U,FT,FR},
+        X::AbstractModalLogiset{W,U,FT,FR},
         perform_initialization = false,
     ) where {W,U,FT<:AbstractFeature,FR<:AbstractFrame{W}}
         d = [ThreadSafeDict{SyntaxTree,Worlds{W}}() for i_instance in 1:ninstances(X)]

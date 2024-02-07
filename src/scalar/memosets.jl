@@ -28,7 +28,7 @@ but with scalar features some important optimizations can be done.
 See also
 [`FullMemoset`](@ref),
 [`SupportedLogiset`](@ref),
-[`AbstractLogiset`](@ref).
+[`AbstractModalLogiset`](@ref).
 """
 struct ScalarChainedMemoset{
     W<:AbstractWorld,
@@ -46,7 +46,7 @@ struct ScalarChainedMemoset{
     end
 
     function ScalarChainedMemoset(
-        X::AbstractLogiset{W,U,FT,FR},
+        X::AbstractModalLogiset{W,U,FT,FR},
         # perform_initialization = false,
     ) where {W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame{W}}
         d = [ThreadSafeDict{SyntaxTree,Worlds{W}}() for i_instance in 1:ninstances(X)]

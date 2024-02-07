@@ -9,9 +9,9 @@ all instances have the same frame, and "full" refers to the fact that
 See also
 [`UniformFullDimensionalLogiset`](@ref),
 [`SoleLogics.FullDimensionalFrame](@ref),
-[`AbstractLogiset`](@ref).
+[`AbstractModalLogiset`](@ref).
 """
-abstract type AbstractUniformFullDimensionalLogiset{U,N,W<:AbstractWorld,FT<:AbstractFeature,FR<:FullDimensionalFrame{N,W}} <: AbstractLogiset{W,U,FT,FR} end
+abstract type AbstractUniformFullDimensionalLogiset{U,N,W<:AbstractWorld,FT<:AbstractFeature,FR<:FullDimensionalFrame{N,W}} <: AbstractModalLogiset{W,U,FT,FR} end
 
 function maxchannelsize(X::AbstractUniformFullDimensionalLogiset)
     return error("Please, provide method maxchannelsize(::$(typeof(X))).")
@@ -39,7 +39,7 @@ dimensions, ultimately resulting in a `(N*2+2)`-dimensional array.
 See also
 [`AbstractUniformFullDimensionalLogiset`](@ref),
 [`SoleLogics.FullDimensionalFrame](@ref),
-[`AbstractLogiset`](@ref).
+[`AbstractModalLogiset`](@ref).
 """
 struct UniformFullDimensionalLogiset{
     U,

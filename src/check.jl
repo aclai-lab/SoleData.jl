@@ -2,7 +2,7 @@
 # TODO docstring
 function check(
     φ::SoleLogics.SyntaxTree,
-    i::SoleLogics.LogicalInstance{<:AbstractLogiset{W,<:U}},
+    i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
     w::Union{Nothing,<:AbstractWorld} = nothing; # TODO remove defaulting
     use_memo::Union{Nothing,AbstractMemoset{<:AbstractWorld},AbstractVector{<:AbstractDict{<:FT,<:AbstractWorlds}}} = nothing,
     perform_normalization::Bool = true,

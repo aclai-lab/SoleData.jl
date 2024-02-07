@@ -146,7 +146,7 @@ while its modalities (iterated via `eachmodality`) should provide the methods ab
 ```
 
 See also
-[`AbstractLogiset`](@ref),
+[`AbstractModalLogiset`](@ref),
 [`VarFeature`](@ref),
 [`ScalarCondition`](@ref).
 """

@@ -8,17 +8,17 @@ See also
 [`SupportedLogiset`](@ref),
 [`AbstractFullMemoset`](@ref),
 [`AbstractOneStepMemoset`](@ref),
-[`AbstractLogiset`](@ref).
+[`AbstractModalLogiset`](@ref).
 """
 struct SupportedLogiset{
     W<:AbstractWorld,
     U,
     FT<:AbstractFeature,
     FR<:AbstractFrame{W},
-    L<:AbstractLogiset{W,U,FT,FR},
+    L<:AbstractModalLogiset{W,U,FT,FR},
     N,
     MS<:NTuple{N,Union{AbstractOneStepMemoset,AbstractFullMemoset}},
-} <: AbstractLogiset{W,U,FT,FR}
+} <: AbstractModalLogiset{W,U,FT,FR}
 
     # Core dataset
     base                 :: L
@@ -28,7 +28,7 @@ struct SupportedLogiset{
     function SupportedLogiset(
         base::L,
         supports::_MS
-    ) where {W,U,FT,FR,L<:AbstractLogiset{W,U,FT,FR},_MS<:Tuple}
+    ) where {W,U,FT,FR,L<:AbstractModalLogiset{W,U,FT,FR},_MS<:Tuple}
 
         wrong_supports = filter(supp->!(supp isa Union{<:AbstractVector{<:AbstractDict{<:Formula,<:Worlds}},<:Union{AbstractOneStepMemoset,AbstractFullMemoset},<:SupportedLogiset}), supports)
 
@@ -99,7 +99,7 @@ struct SupportedLogiset{
     end
 
     function SupportedLogiset(
-        base::AbstractLogiset,
+        base::AbstractModalLogiset,
         supports::AbstractVector
     )
         SupportedLogiset(base, Tuple(supports))
@@ -107,7 +107,7 @@ struct SupportedLogiset{
 
     # Helper (avoids ambiguities)
     function SupportedLogiset(
-        base::AbstractLogiset,
+        base::AbstractModalLogiset,
         firstsupport::Union{<:AbstractVector{<:AbstractDict{<:Formula,<:Worlds}},<:Union{AbstractOneStepMemoset,AbstractFullMemoset},<:SupportedLogiset},
         supports::Union{<:AbstractVector{<:AbstractDict{<:Formula,<:Worlds}},<:Union{AbstractOneStepMemoset,AbstractFullMemoset},<:SupportedLogiset}...
     )
@@ -115,7 +115,7 @@ struct SupportedLogiset{
     end
 
     function SupportedLogiset(
-        base                             :: AbstractLogiset;
+        base                             :: AbstractModalLogiset;
         use_full_memoization             :: Union{Bool,Type{<:Union{AbstractOneStepMemoset,AbstractFullMemoset}}} = true,
         #
         conditions                       :: Union{Nothing,AbstractVector{<:AbstractCondition}} = nothing,
@@ -168,7 +168,7 @@ base(X::SupportedLogiset)     = X.base
 supports(X::SupportedLogiset) = X.supports
 
 # Helper
-base(X::AbstractLogiset)      = X
+base(X::AbstractModalLogiset)      = X
 
 basetype(X::SupportedLogiset{W,U,FT,FR,L,N,MS}) where {W,U,FT,FR,L,N,MS} = L
 supporttypes(X::SupportedLogiset{W,U,FT,FR,L,N,MS}) where {W,U,FT,FR,L,N,MS} = MS

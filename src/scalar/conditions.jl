@@ -355,6 +355,27 @@ struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabe
     end
 end
 
+# TODO specify test_operator type 
+function getconditionset( pl::PropositionalLogiset, test_operators)::Vector{BoundedScalarConditions}
+
+    scalarconditions = []
+    for test_op ∈ test_operators 
+        
+        features = getfeatures(pl)
+        scalarmetacond = ScalarMetaCondition.(features,  test_op)
+        newconditions = BoundedScalarConditions{ScalarCondition}(
+            map( i -> (scalarmetacond[i], pl[:, varname.(features)[i]]), 1:length(features))
+        )
+        push!(scalarconditions, newconditions)
+    end
+
+    return scalarconditions
+end
+
+function getconditionset( pl::PropositionalLogiset, test_operator::TestOperator)::Vector{BoundedScalarConditions}
+    return getconditionset(pl, [test_operator])
+end
+
 function atoms(a::BoundedScalarConditions)
     Iterators.flatten(
         map(

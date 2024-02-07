@@ -29,7 +29,7 @@ end
 
 # function checkcondition(
 #     c::AbstractCondition,
-#     X::AbstractLogiset{W,U,FT},
+#     X::AbstractModalLogiset{W,U,FT},
 #     i_instance::Integer,
 #     w::W,
 # ) where {W<:AbstractWorld,U,FT<:AbstractFeature}

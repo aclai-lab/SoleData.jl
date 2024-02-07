@@ -1,6 +1,6 @@
 
 @inline function onestep_aggregation(
-    X::AbstractLogiset{W},
+    X::AbstractModalLogiset{W},
     i_instance::Integer,
     w::W,
     r::AbstractRelation,
@@ -25,7 +25,7 @@ function featchannel_onestep_aggregation(X::SupportedLogiset, args...)
 end
 
 function featchannel_onestep_aggregation(
-    X::AbstractLogiset,
+    X::AbstractModalLogiset,
     featchannel,
     i_instance,
     r::GlobalRel,
@@ -38,7 +38,7 @@ function featchannel_onestep_aggregation(
 end
 
 function featchannel_onestep_aggregation(
-    X::AbstractLogiset,
+    X::AbstractModalLogiset,
     featchannel,
     i_instance,
     w,
@@ -52,7 +52,7 @@ function featchannel_onestep_aggregation(
 end
 
 function apply_aggregator(
-    X::AbstractLogiset{W,U},
+    X::AbstractModalLogiset{W,U},
     featchannel,
     worlds, # ::AbstractWorlds but iterators are also accepted.
     f::AbstractFeature,
@@ -202,7 +202,7 @@ and it holds both a *relational* and a *global* memoset. It can be instantiated 
 
 ```julia
 ScalarOneStepMemoset(
-    X                       :: AbstractLogiset{W,U},
+    X                       :: AbstractModalLogiset{W,U},
     metaconditions          :: AbstractVector{<:ScalarMetaCondition},
     relations               :: AbstractVector{<:AbstractRelation};
     precompute_globmemoset  :: Bool = true,
@@ -284,7 +284,7 @@ struct ScalarOneStepMemoset{
     end
 
     Base.@propagate_inbounds function ScalarOneStepMemoset(
-        X                       :: AbstractLogiset{W,U},
+        X                       :: AbstractModalLogiset{W,U},
         metaconditions          :: AbstractVector{<:ScalarMetaCondition},
         relations               :: AbstractVector{<:AbstractRelation},
         # relational_memoset_type :: Type{<:AbstractScalarOneStepRelationalMemoset} = default_relmemoset_type(X);
@@ -412,7 +412,7 @@ function grouped_metaconditions(
 end
 
 function featchannel_onestep_aggregation(
-    X::AbstractLogiset{W,U},
+    X::AbstractModalLogiset{W,U},
     Xm::ScalarOneStepMemoset,
     featchannel,
     i_instance::Integer,
@@ -619,7 +619,7 @@ struct ScalarOneStepRelationalMemoset{
     end
 
     function ScalarOneStepRelationalMemoset(
-        X::AbstractLogiset{W,U,FT,FR},
+        X::AbstractModalLogiset{W,U,FT,FR},
         metaconditions::AbstractVector{<:ScalarMetaCondition},
         relations::AbstractVector{<:AbstractRelation},
         perform_initialization::Bool = true
@@ -745,7 +745,7 @@ struct ScalarOneStepGlobalMemoset{
     end
 
     function ScalarOneStepGlobalMemoset(
-        X::AbstractLogiset{W,U},
+        X::AbstractModalLogiset{W,U},
         metaconditions::AbstractVector{<:ScalarMetaCondition},
         perform_initialization::Bool = true
     ) where {W<:AbstractWorld,U}

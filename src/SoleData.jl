@@ -148,7 +148,7 @@ export nvariables
 
 include("dimensional-structures/main.jl")
 
-function default_relmemoset_type(X::AbstractLogiset)
+function default_relmemoset_type(X::AbstractModalLogiset)
     # if X isa DimensionalDatasets.UniformFullDimensionalLogiset
     frames = [SoleLogics.frame(X, i_instance) for i_instance in 1:ninstances(X)]
     if allequal(frames) # Uniform logiset
@@ -164,14 +164,14 @@ function default_relmemoset_type(X::AbstractLogiset)
     end
 end
 
-function default_onestep_memoset_type(X::AbstractLogiset)
+function default_onestep_memoset_type(X::AbstractModalLogiset)
     if featvaltype(X) <: Real
         ScalarOneStepMemoset
     else
         OneStepMemoset
     end
 end
-function default_full_memoset_type(X::AbstractLogiset)
+function default_full_memoset_type(X::AbstractModalLogiset)
     # if ...
     #     ScalarChainedMemoset TODO
     # else

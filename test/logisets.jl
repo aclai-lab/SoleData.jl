@@ -43,9 +43,9 @@ nonscalar_condition = SoleData.FunctionalCondition(features[1], (vals)->length(v
 multilogiset = MultiLogiset([bool_logiset, scalar_logiset, nonscalar_logiset])
 
 @test SoleData.modalitytype(multilogiset) <:
-SoleData.AbstractLogiset{SoleLogics.World{Int64}, U, SoleData.Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U
+SoleData.AbstractModalLogiset{SoleLogics.World{Int64}, U, SoleData.Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U
 
-SoleData.AbstractLogiset{SoleLogics.World{Int64}, U, Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U <: SoleData.AbstractLogiset{SoleLogics.World{Int64}, U, Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U
+SoleData.AbstractModalLogiset{SoleLogics.World{Int64}, U, Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U <: SoleData.AbstractModalLogiset{SoleLogics.World{Int64}, U, Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U
 
 
 @test_nowarn displaystructure(bool_logiset)

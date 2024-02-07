@@ -33,8 +33,8 @@ using SoleBase
 
 using SoleData: Aggregator, AbstractCondition
 using SoleData: BoundedScalarConditions
-using SoleData: AbstractLogiset, AbstractMultiModalFrame
-using SoleData: MultiLogiset, AbstractLogiset
+using SoleData: AbstractModalLogiset, AbstractMultiModalFrame
+using SoleData: MultiLogiset, AbstractModalLogiset
 using SoleData: apply_test_operator, existential_aggregator, aggregator_bottom, aggregator_to_binary
 
 import SoleData: features, nfeatures

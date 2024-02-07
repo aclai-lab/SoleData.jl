@@ -1,6 +1,6 @@
 using Tables
 
-function eachinstance(X::AbstractLogiset)
+function eachinstance(X::AbstractModalLogiset)
     map(i_instance->(X,i_instance), 1:ninstances(X))
 end
 
@@ -11,7 +11,7 @@ end
 
 
 function featchannel(
-    X::AbstractLogiset{W},
+    X::AbstractModalLogiset{W},
     i_instance::Integer,
     i_feature::Integer,
 ) where {W<:AbstractWorld}
@@ -19,7 +19,7 @@ function featchannel(
 end
 
 function readfeature(
-    X::AbstractLogiset{W},
+    X::AbstractModalLogiset{W},
     featchannel::Any,
     w::W,
     i_feature::Integer,
@@ -29,7 +29,7 @@ end
 
 
 function featvalue(
-    X::AbstractLogiset{W},
+    X::AbstractModalLogiset{W},
     i_instance::Integer,
     w::W,
     i_feature::Integer,
@@ -38,7 +38,7 @@ function featvalue(
 end
 
 function featvalue!(
-    X::AbstractLogiset{W},
+    X::AbstractModalLogiset{W},
     featval,
     i_instance::Integer,
     w::W,
@@ -48,23 +48,23 @@ function featvalue!(
 end
 
 function featvalues!(
-    X::AbstractLogiset{W},
+    X::AbstractModalLogiset{W},
     featslice,
     i_feature::Integer,
 ) where {W<:AbstractWorld}
     featvalues(X, featslice, features(X)[i_feature])
 end
 
-Tables.istable(X::AbstractLogiset) = true
+Tables.istable(X::AbstractModalLogiset) = true
 Tables.istable(X::MultiLogiset) = true
 
-Tables.rowaccess(X::AbstractLogiset) = true
+Tables.rowaccess(X::AbstractModalLogiset) = true
 Tables.rowaccess(X::MultiLogiset) = true
 
-Tables.rows(X::AbstractLogiset) = eachinstance(X)
+Tables.rows(X::AbstractModalLogiset) = eachinstance(X)
 Tables.rows(X::MultiLogiset) = eachinstance(X)
 
-function Tables.subset(X::AbstractLogiset, inds; viewhint = nothing)
+function Tables.subset(X::AbstractModalLogiset, inds; viewhint = nothing)
     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
 end
 
@@ -72,11 +72,11 @@ function Tables.subset(X::MultiLogiset, inds; viewhint = nothing)
     slicedataset(X, inds; return_view = (isnothing(viewhint) || viewhint == true))
 end
 
-function Tables.getcolumn(row::Tuple{AbstractLogiset,Integer}, i::Int)
+function Tables.getcolumn(row::Tuple{AbstractModalLogiset,Integer}, i::Int)
     (features(row[1])[i],featchannel(row[1], row[2], i))
 end
 
-function Tables.columnnames(row::Tuple{AbstractLogiset,Integer})
+function Tables.columnnames(row::Tuple{AbstractModalLogiset,Integer})
     1:nfeatures(row[1])
 end
 
@@ -101,13 +101,13 @@ end
 using MLJBase: Table
 import MLJBase: selectrows, scitype
 
-function selectrows(X::Union{AbstractLogiset,MultiLogiset}, r)
+function selectrows(X::Union{AbstractModalLogiset,MultiLogiset}, r)
     r = r isa Integer ? (r:r) : r
     # return slicedataset(X, r; return_view = true)
     return Tables.subset(X, r)
 end
 
-function scitype(X::Union{AbstractLogiset,MultiLogiset})
+function scitype(X::Union{AbstractModalLogiset,MultiLogiset})
     Table{
         if featvaltype(X) <: AbstractFloat
             scitype(1.0)
@@ -124,6 +124,6 @@ end
 
 import Base: vcat
 
-Base.vcat(Xs::AbstractLogiset...) = concatdatasets(Xs...)
+Base.vcat(Xs::AbstractModalLogiset...) = concatdatasets(Xs...)
 Base.vcat(Xs::MultiLogiset...) = concatdatasets(Xs...)
 
