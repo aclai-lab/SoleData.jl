@@ -1,11 +1,10 @@
-using SoleLogics: AbstractKripkeStructure, AbstractInterpretationSet, AbstractFrame
-using SoleLogics: Truth
+using SoleLogics: AbstractKripkeStructure, AbstractAssignment, AbstractInterpretationSet, AbstractFrame, AbstractWorld
+using SoleLogics: Truth, LogicalInstance
 import SoleLogics: alphabet, frame, check
 import SoleLogics: accessibles, allworlds, nworlds
 import SoleLogics: worldtype, frametype
 import SoleLogics: interpret
 import Tables: columnnames, rows, getcolumn, columns
-
 
 abstract type AbstractLogiset{M} <: AbstractInterpretationSet{M} end
 abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
@@ -13,7 +12,6 @@ abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment
 # TODO change from DataFrame to Table
 struct PropositionalLogiset <: AbstractPropositionalLogiset
     dataset
-
     function PropositionalLogiset(dataset)
         if istable(dataset)
             new(dataset)
@@ -50,8 +48,8 @@ end
 function alphabetlogiset(P::PropositionalLogiset)
     conditions = getconditionset(P, [≤, ≥])
     return atoms.(conditions)
-function interpret(
 end
+function interpret(
 
 
     φ::Atom,
@@ -73,7 +71,6 @@ end
 end
 
 ############################################################################################
-
 """
     abstract type AbstractModalLogiset{
         W<:AbstractWorld,
@@ -96,7 +93,7 @@ See also
 [`SoleLogics.AbstractInterpretationSet`](@ref).
 """
 abstract type AbstractModalLogiset{
-    W<:AbstractWorld,
+    W<:SoleLogics.AbstractWorld,
     U,
     FT<:AbstractFeature,
     FR<:AbstractFrame{W},
