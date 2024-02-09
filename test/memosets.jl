@@ -23,7 +23,7 @@ i_instance = 1
 
 # Boolean
 rng = Random.MersenneTwister(1)
-bool_logiset = SoleData.ExplicitBooleanLogiset([(Dict([w => sample(rng, features, 2, replace = false) for w in worlds]), fr)])
+bool_logiset = SoleData.ExplicitBooleanModalLogiset([(Dict([w => sample(rng, features, 2, replace = false) for w in worlds]), fr)])
 
 # metaconditions = [ScalarMetaCondition(features[1], >)]
 metaconditions = [ScalarMetaCondition(f, test_op) for f in features for test_op in [>,<]]

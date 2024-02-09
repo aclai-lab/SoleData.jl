@@ -14,7 +14,7 @@ i_instance = 1
 
 # Boolean
 rng = Random.MersenneTwister(1)
-bool_logiset = SoleData.ExplicitBooleanLogiset([(Dict([w => sample(rng, features, 2, replace = false) for w in worlds]), fr)])
+bool_logiset = SoleData.ExplicitBooleanModalLogiset([(Dict([w => sample(rng, features, 2, replace = false) for w in worlds]), fr)])
 bool_condition = SoleData.ValueCondition(features[1])
 
 @test [SoleData.checkcondition(bool_condition, bool_logiset, i_instance, w)
@@ -22,7 +22,7 @@ bool_condition = SoleData.ValueCondition(features[1])
 
 # Scalar (Float)
 rng = Random.MersenneTwister(1)
-scalar_logiset = SoleData.ExplicitLogiset([(Dict([w => Dict([f => rand(rng) for f in features]) for w in worlds]), fr)])
+scalar_logiset = SoleData.ExplicitModalLogiset([(Dict([w => Dict([f => rand(rng) for f in features]) for w in worlds]), fr)])
 scalar_condition = SoleData.ScalarCondition(features[1], >, 0.5)
 
 @test [SoleData.checkcondition(scalar_condition, scalar_logiset, i_instance, w)
@@ -30,7 +30,7 @@ scalar_condition = SoleData.ScalarCondition(features[1], >, 0.5)
 
 # Non-scalar (Vector{Float})
 rng = Random.MersenneTwister(2)
-nonscalar_logiset = SoleData.ExplicitLogiset([(Dict([w => Dict([f => rand(rng, rand(rng, 1:3)) for f in features]) for w in worlds]), fr)])
+nonscalar_logiset = SoleData.ExplicitModalLogiset([(Dict([w => Dict([f => rand(rng, rand(rng, 1:3)) for f in features]) for w in worlds]), fr)])
 
 @test SoleData.featvalue(nonscalar_logiset, 1, worlds[1], features[1]) == SoleData.featvalue(features[1], nonscalar_logiset, 1, worlds[1])
 
