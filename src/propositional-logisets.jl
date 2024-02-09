@@ -4,10 +4,11 @@ import SoleLogics: interpret
 ############################################################################################
 
 
-abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
+abstract type AbstractPropositionalLogiset <: AbstractLogiset{SoleLogics.AbstractAssignment} end
 
 struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
     dataset::T
+
     function PropositionalLogiset(dataset::T) where {T}
         if istable(dataset)
             # TODO: eltype(dataset)<:Real
