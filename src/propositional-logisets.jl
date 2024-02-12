@@ -3,8 +3,7 @@ import SoleLogics: interpret
 
 ############################################################################################
 
-
-abstract type AbstractPropositionalLogiset <: AbstractLogiset{SoleLogics.AbstractAssignment} end
+abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
 
 struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
     dataset::T
@@ -23,31 +22,23 @@ ninstances(X::PropositionalLogiset) = nrow(X.dataset)
 nvariables(X::PropositionalLogiset) = ncol(X.dataset)
 gettable(M::PropositionalLogiset) = M.dataset
 
-function getfeatures(M::PropositionalLogiset)
-    colnames = columnnames(gettable(M))
+function getfeatures(X::PropositionalLogiset)
+    colnames = columnnames(gettable(X))
     return UnivariateSymbolFeature.(Symbol.(colnames))
 end
 
-
-# A retrieved column is a 1-based indexable object that has a known
-# length, i.e. supports length(col) and col[i].
-# Note that if x is an object in which columns are stored as vectors, the 
-# check that these vectors use 1-based indexing is not performed (it 
-# should be ensured when x is constructed).
-# function Base.getindex(X::PropositionalLogiset, ::Colon, col::Symbol)
-#     return columns(X.dataset)[col]
-# end
-# function Base.getindex(X::PropositionalLogiset, row::Int64, col::Symbol)
-#     return X.dataset[row,col]
-# end
-
-
-
-# TODO ok ? 
-function alphabetlogiset(P::PropositionalLogiset)
-    conditions = getconditionset(P, [≤, ≥])
-    return atoms.(conditions)
+function displaystructure(X::PropositionalLogiset)
+    X.dataset
 end
+
+# TODO correct ? 
+function Base.getindex(X::PropositionalLogiset, ::Colon, col::Symbol)
+    return getcolumn(X.dataset, col)
+end
+function Base.getindex(X::PropositionalLogiset, row::Int64, col::Symbol)
+    return X[:, col][row]
+end
+
 
 function interpret(
     φ::Atom,

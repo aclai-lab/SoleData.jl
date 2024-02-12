@@ -1,5 +1,6 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
+/src/temp.jl
 /Manifest.toml
 /docs/build/

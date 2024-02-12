@@ -355,25 +355,24 @@ struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabe
     end
 end
 
-# TODO specify test_operator type 
-function getconditionset( pl::PropositionalLogiset, test_operators)::Vector{BoundedScalarConditions}
+################################################################################################
 
-    scalarconditions = []
-    for test_op ∈ test_operators 
-        
-        features = getfeatures(pl)
-        scalarmetacond = ScalarMetaCondition.(features,  test_op)
-        newconditions = BoundedScalarConditions{ScalarCondition}(
-            map( i -> (scalarmetacond[i], pl[:, varname.(features)[i]]), 1:length(features))
-        )
-        push!(scalarconditions, newconditions)
-    end
+# TODO correct? 
+function getconditionset( pl::PropositionalLogiset, test_operators)::BoundedScalarConditions
 
-    return scalarconditions
+    scalarmetaconds = []
+    features = getfeatures(pl)
+    map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(features,  test_op)),   test_operators) 
+    boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
+        map( i -> ( scalarmetaconds[i], pl[:, varname(feature(scalarmetaconds[i]))] ), 1:length(scalarmetaconds))
+    )
+    return boundedscalarconds
 end
 
-function getconditionset( pl::PropositionalLogiset, test_operator::TestOperator)::Vector{BoundedScalarConditions}
-    return getconditionset(pl, [test_operator])
+# TODO correct ? 
+function alphabetlogiset(X::PropositionalLogiset)
+    conditions = getconditionset(X, [≤, ≥])
+    return atoms(conditions)
 end
 
 function atoms(a::BoundedScalarConditions)

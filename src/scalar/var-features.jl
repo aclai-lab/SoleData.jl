@@ -243,7 +243,22 @@ function featvaltype(dataset, f::UnivariateNamedFeature{U}) where {U}
     return U
 end
 
+
 ############################################################################################
+
+# TODO docstring
+struct UnivariateSymbolFeature <: AbstractUnivariateFeature
+    varname::Symbol
+end
+
+varname(f::UnivariateSymbolFeature) = f.varname
+
+function syntaxstring(f::UnivariateSymbolFeature; kwargs...)
+    repr(f.varname)
+end
+
+############################################################################################
+
 
 """
     struct UnivariateValue <: AbstractUnivariateFeature
