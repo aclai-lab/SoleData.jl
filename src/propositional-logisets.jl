@@ -1,4 +1,4 @@
-using SoleLogics: AbstractAssignment
+using SoleLogics: AbstractAssignment, LogicalInstance
 import SoleLogics: interpret
 
 ############################################################################################
@@ -39,10 +39,25 @@ function Base.getindex(X::PropositionalLogiset, row::Int64, col::Symbol)
     return X[:, col][row]
 end
 
+# TODO correct? 
+function alphabet( 
+    pl::PropositionalLogiset, 
+    test_operators
+)::BoundedScalarConditions
+
+    scalarmetaconds = []
+    features = getfeatures(pl)
+    map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(features,  test_op)),   test_operators) 
+    boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
+        map( i -> ( scalarmetaconds[i], pl[:, varname(feature(scalarmetaconds[i]))] ), 1:length(scalarmetaconds))
+    )
+    return boundedscalarconds
+end
+
 
 function interpret(
     φ::Atom,
-    i::SoleLogics.LogicalInstance{<:PropositionalLogiset},
+    i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...,
 )::Formula

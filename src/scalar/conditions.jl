@@ -357,24 +357,6 @@ end
 
 ################################################################################################
 
-# TODO correct? 
-function getconditionset( pl::PropositionalLogiset, test_operators)::BoundedScalarConditions
-
-    scalarmetaconds = []
-    features = getfeatures(pl)
-    map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(features,  test_op)),   test_operators) 
-    boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
-        map( i -> ( scalarmetaconds[i], pl[:, varname(feature(scalarmetaconds[i]))] ), 1:length(scalarmetaconds))
-    )
-    return boundedscalarconds
-end
-
-# TODO correct ? 
-function alphabetlogiset(X::PropositionalLogiset)
-    conditions = getconditionset(X, [≤, ≥])
-    return atoms(conditions)
-end
-
 function atoms(a::BoundedScalarConditions)
     Iterators.flatten(
         map(
