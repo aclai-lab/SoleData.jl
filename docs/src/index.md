@@ -17,7 +17,6 @@ SoleLogics.Atom
 SoleLogics.AbstractWorld
 SoleLogics.Interval
 SoleLogics.Interval2D
-SoleLogics.scalarlogiset
 SoleLogics.syntaxstring
 SoleLogics.IA_L
 SoleLogics.AbstractFrame

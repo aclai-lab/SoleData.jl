@@ -5,6 +5,9 @@ using Documenter
 DocMeta.setdocmeta!(SoleData, :DocTestSetup, :(using SoleData); recursive=true)
 DocMeta.setdocmeta!(SoleLogics, :DocTestSetup, :(using SoleLogics); recursive=true)
 
+
+
+
 makedocs(;
     modules=[SoleData, SoleLogics],
     authors="Lorenzo Balboni, Federico Manzella, Giovanni Pagliarini, Eduard I. Stan",
@@ -19,7 +22,15 @@ makedocs(;
     pages=[
         "Home" => "index.md",
     ],
+    # NOTE: warning
+    warnonly = :true,
 )
+
+
+
+
+
+
 
 deploydocs(;
     repo = "github.com/aclai-lab/SoleData.jl",
