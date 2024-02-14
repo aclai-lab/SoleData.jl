@@ -1,10 +1,12 @@
+using SoleLogics
 using SoleData
 using Documenter
 
 DocMeta.setdocmeta!(SoleData, :DocTestSetup, :(using SoleData); recursive=true)
+DocMeta.setdocmeta!(SoleLogics, :DocTestSetup, :(using SoleLogics); recursive=true)
 
 makedocs(;
-    modules=[SoleData],
+    modules=[SoleData, SoleLogics],
     authors="Lorenzo Balboni, Federico Manzella, Giovanni Pagliarini, Eduard I. Stan",
     repo=Documenter.Remotes.GitHub("aclai-lab", "SoleData.jl"),
     sitename="SoleData.jl",

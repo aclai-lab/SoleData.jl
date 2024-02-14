@@ -53,6 +53,7 @@ import SoleData: worldtype, allworlds, featvalue, featvalue!
 import SoleData: featchannel, readfeature, featvalues!, allfeatvalues
 import SoleData: get_instance, ninstances, nvariables, eltype
 
+using SoleData: scalarlogiset
 ############################################################################################
 
 export UniformFullDimensionalLogiset
