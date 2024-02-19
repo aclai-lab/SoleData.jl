@@ -77,7 +77,8 @@ import Tables: istable, rows, subset, getcolumn, columnnames, rowaccess
 export AbstractFeature, Feature
 
 export UnivariateNamedFeature,
-        UnivariateFeature
+        UnivariateFeature,
+        UnivariateSymbolFeature
 
 export computefeature
 

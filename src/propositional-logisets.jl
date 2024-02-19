@@ -6,7 +6,7 @@ import SoleLogics: interpret
 abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
 
 struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
-    dataset::T
+    tabulardataset::T
 
     function PropositionalLogiset(dataset::T) where {T}
         if istable(dataset)
@@ -39,31 +39,34 @@ function Base.getindex(X::PropositionalLogiset, row::Int64, col::Symbol)
     return X[:, col][row]
 end
 
-# TODO correct? 
-function alphabet( 
-    pl::PropositionalLogiset, 
+# TODO correct?, type for test_operators ?  
+function propositionalalphabet( 
+    X::PropositionalLogiset, 
     test_operators
 )::BoundedScalarConditions
 
     scalarmetaconds = []
-    features = getfeatures(pl)
+    features = getfeatures(X)
     map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(features,  test_op)),   test_operators) 
     boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
-        map( i -> ( scalarmetaconds[i], pl[:, varname(feature(scalarmetaconds[i]))] ), 1:length(scalarmetaconds))
+        map( i -> ( scalarmetaconds[i], X[:, varname(feature(scalarmetaconds[i]))] ), 1:length(scalarmetaconds))
     )
     return boundedscalarconds
 end
 
+# TODO correct ? 
+propositionalalphabet(X::PropositionalLogiset) = propositionalalphabet(X, [≤, ≥])
 
-function interpret(
+
+# Old interpret
+function check(
     φ::Atom,
-    i::LogicalInstance{<:PropositionalLogiset},
+    i::LogicalInstance{PropositionalLogiset{DataFrame}},
     args...;
     kwargs...,
 )::Formula
 
     cond = value(φ)
-
     cond_threshold = threshold(cond)
     cond_operator = test_operator(cond)
     cond_feature = feature(cond)
