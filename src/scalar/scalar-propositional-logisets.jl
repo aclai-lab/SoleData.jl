@@ -5,24 +5,26 @@ using SoleLogics: LogicalInstance
 import SoleLogics: interpret
 ############################################################################################
 
+# TODO aggiungere controllo Nan
 struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
     tabulardataset::T
 
-    function PropositionalLogiset(dataset::T) where {T}
-        if Tables.istable(dataset)
-            # TODO: eltype(dataset)<:Real
+    function PropositionalLogiset(tabulardataset::T) where {T}
+        if Tables.istable(tabulardataset)
+            # TODO: eltype(tabulardataset)<:Real
             # eltype.(eachcol(SoleData.gettable(X)))
-            @assert all(t->t<:Real, eltype.(Tables.columns(dataset))) "Could not " *
+            @assert all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) "Could not " *
                 "initialize PropositionalLogiset with non-real values: " *
-                "$(Union{eltype.(Tables.columns(dataset))...})"
-            new{T}(dataset)
+                "$(Union{eltype.(Tables.columns(tabulardataset))...})"
+            new{T}(tabulardataset)
         else
-            error("Table interface not implemented for $(typeof(dataset)) type")
+            error("Table interface not implemented for $(typeof(tabulardataset)) type")
         end
     end
 end
 
-gettable(M::PropositionalLogiset) = M.dataset
+
+gettable(M::PropositionalLogiset) = M.tabulardataset
 
 Tables.istable(::Type{<:PropositionalLogiset}) = true
 Tables.rowaccess(::Type{PropositionalLogiset{T}}) where {T} = Tables.rowaccess(T)
@@ -30,10 +32,12 @@ Tables.columnaccess(::Type{PropositionalLogiset{T}}) where {T} = Tables.columnac
 Tables.materializer(::Type{PropositionalLogiset{T}}) where {T} = Tables.materializer(T)
 # Tables.rows(X::PropositionalLogiset{T}) where {T} = Tables.rows(gettable(X))
 # Tables.columns(X::PropositionalLogiset{T}) where {T} = Tables.columns(gettable(X))
+# TODO correct ? 
+# propositionalalphabet(X::PropositionalLogiset) = propositionalalphabet(X, [≤, ≥])
 
 # Helpers
-@forward PropositionalLogiset.dataset (Base.getindex, Base.setindex!)
-@forward PropositionalLogiset.dataset (Tables.rows, Tables.columns, Tables.subset, Tables.schema, DataAPI.nrow, DataAPI.ncol)
+@forward PropositionalLogiset.tabulardataset (Base.getindex, Base.setindex!)
+@forward PropositionalLogiset.tabulardataset (Tables.rows, Tables.columns, Tables.subset, Tables.schema, DataAPI.nrow, DataAPI.ncol)
 
 ninstances(X::PropositionalLogiset) = DataAPI.nrow(gettable(X))
 nfeatures(X::PropositionalLogiset) = DataAPI.ncol(gettable(X))
