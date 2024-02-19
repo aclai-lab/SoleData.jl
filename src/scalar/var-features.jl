@@ -246,17 +246,31 @@ end
 
 ############################################################################################
 
-# TODO docstring
-struct UnivariateSymbolFeature <: AbstractUnivariateFeature
+
+"""
+    struct UnivariateSymbolValue <: AbstractUnivariateFeature
+        varname::Symbol
+    end
+
+A univariate feature solely identified by its name and reference variable.
+
+See also [`SoleLogics.Interval`](@ref),
+[`SoleLogics.Interval2D`](@ref),
+[`AbstractUnivariateFeature`](@ref),
+[`VarFeature`](@ref), [`AbstractFeature`](@ref).
+"""
+struct UnivariateSymbolValue <: AbstractUnivariateFeature
     varname::Symbol
 end
 
-varname(f::UnivariateSymbolFeature) = f.varname
+varname(f::UnivariateSymbolValue) = f.varname
 
-function syntaxstring(f::UnivariateSymbolFeature; kwargs...)
-    repr(f.varname)
+function syntaxstring(f::UnivariateSymbolValue; show_colon = true, kwargs...)
+    show_colon ? repr(f.varname) : string(f.varname)
 end
 
+# TODO @Edo rename everywhere and remove this patch
+const UnivariateSymbolFeature = UnivariateSymbolValue
 ############################################################################################
 
 
