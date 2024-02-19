@@ -48,7 +48,7 @@ export FullDimensionalFrame
 
 using ThreadSafeDicts
 
-using SoleLogics
+@reexport using SoleLogics
 import SoleLogics: frame
 
 using SoleLogics: OneWorld, Interval, Interval2D
@@ -115,10 +115,14 @@ export accessibles, allworlds, representatives
 include("representatives.jl")
 
 export ninstances, featvalue, displaystructure, isminifiable, minify
+export alphabet
 
 # Logical datasets, where the instances are Kripke structures with conditional alphabets
 include("logiset.jl")
-include("propositional-logisets.jl")
+
+using SoleLogics: AbstractAssignment
+abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
+
 include("modal-logisets.jl")
 
 include("memosets.jl")
