@@ -43,8 +43,7 @@ ninstances(X::PropositionalLogiset) = DataAPI.nrow(gettable(X))
 nfeatures(X::PropositionalLogiset) = DataAPI.ncol(gettable(X))
 nvariables(X::PropositionalLogiset) = nfeatures(X)
 
-# TODO rename to `features` to adhere to interface (see src/logiset.jl)
-function getfeatures(X::PropositionalLogiset)
+function features(X::PropositionalLogiset)
     colnames = Tables.columnnames(gettable(X))
     return UnivariateSymbolValue.(Symbol.(colnames))
 end
@@ -81,9 +80,14 @@ function displaystructure(X::PropositionalLogiset;
 end
 
 # Patch getindex so that vector-based slicings return PropositionalLogisets ;)
+# function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
+#     return (Base.getindex(gettable(X), rows, cols) |> PropositionalLogiset)
+#     # return X[:, col][row]
+# end
+
 function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
-    return (Base.getindex(gettable(X), rows, cols) |> PropositionalLogiset)
-    # return X[:, col][row]
+    cols = Tables.columns(gettable(X))[cols]
+    return (cols[rows] |> PropositionalLogiset)
 end
 
 # TODO optimize...?
@@ -93,8 +97,8 @@ function alphabet(
 )::BoundedScalarConditions where {T<:TestOperator}
 
     scalarmetaconds = ScalarMetaCondition[]
-    features = getfeatures(X)
-    map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(features,  test_op)), test_operators)
+    feats = features(X)
+    map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(feats,  test_op)), test_operators)
     boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
         map( mc -> ( mc, X[:, varname(feature(mc))] ), scalarmetaconds)
     )
@@ -115,7 +119,8 @@ function interpret(
     cond_operator = test_operator(cond)
     cond_feature = feature(cond)
 
-    colname = varname(cond_feature)
-    return cond_operator(i.s[i.i_instance,colname], cond_threshold) ? ⊤ : ⊥   
+    col = varname(cond_feature)
+    X, i_instance = SoleLogics.splat(i)
+    return cond_operator(X[i_instance ,col],  cond_threshold) ? ⊤ : ⊥   
      
 end

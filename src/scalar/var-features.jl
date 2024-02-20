@@ -269,10 +269,7 @@ function syntaxstring(f::UnivariateSymbolValue; show_colon = true, kwargs...)
     show_colon ? repr(f.varname) : string(f.varname)
 end
 
-# TODO @Edo rename everywhere and remove this patch
-const UnivariateSymbolFeature = UnivariateSymbolValue
 ############################################################################################
-
 
 """
     struct UnivariateValue <: AbstractUnivariateFeature

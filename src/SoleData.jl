@@ -78,7 +78,7 @@ export AbstractFeature, Feature
 
 export UnivariateNamedFeature,
         UnivariateFeature,
-        UnivariateSymbolFeature
+        UnivariateSymbolValue
 
 export computefeature
 
