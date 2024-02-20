@@ -20,7 +20,7 @@ X = PropositionalLogiset(df)
 alphabet(X, [≥]) |> atoms .|> syntaxstring
 alphabet(X, [≥, <]) |> atoms .|> x->syntaxstring(x; show_colon = false)
 
-a,b,c,d = (alphabet(X, [≥, <]) |> atoms)
+a,b,c,d = (alphabet(X, [≥, <]) |> atoms)[1:4]
 
 @test value(a) isa SoleData.ScalarCondition
 @test SoleData.feature(value(a)) isa SoleData.UnivariateSymbolValue
@@ -33,15 +33,31 @@ end
 # test interpret - Atom
 @test_nowarn interpret(a, X)                        
 @test_nowarn interpret(a, SoleLogics.LogicalInstance(X, 1))    
-@test_nowarn interpret(a, X, 1)                     
+@test_nowarn interpret(a, X, 1)
 
 sb = randformula(3, [a,b,c,d], [NEGATION, CONJUNCTION])
 # test interpret - SyntaxtBranch 
 @test_nowarn interpret(sb, X)                        
 @test_nowarn interpret(sb, SoleLogics.LogicalInstance(X, 1))    
-@test_nowarn interpret(sb, X, 1)                     
+@test_nowarn interpret(sb, X, 1)
 
 # test interpret - Thruth
 @test_nowarn interpret(TOP, X)                        
 @test_nowarn interpret(TOP, SoleLogics.LogicalInstance(X, 1))    
 @test_nowarn interpret(TOP, X, 1)  
+
+# test check - Atom
+@test_nowarn check(a, X)                        
+@test_nowarn check(a, SoleLogics.LogicalInstance(X, 1))    
+@test_nowarn check(a, X, 1)
+
+sb = randformula(3, [a,b,c,d], [NEGATION, CONJUNCTION])
+# test check - SyntaxtBranch 
+@test_nowarn check(sb, X)                        
+@test_nowarn check(sb, SoleLogics.LogicalInstance(X, 1))    
+@test_nowarn check(sb, X, 1)
+
+# test check - Thruth
+@test_nowarn check(TOP, X)                        
+@test_nowarn check(TOP, SoleLogics.LogicalInstance(X, 1))    
+@test_nowarn check(TOP, X, 1)  
