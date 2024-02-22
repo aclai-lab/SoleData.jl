@@ -355,6 +355,13 @@ struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabe
     end
 end
 
+function Base.show(io::IO, a::BoundedScalarConditions)
+    println(io, "$(typeof(a)):")
+    for (mc, domain) in a.grouped_featconditions
+        println(io, "\t$(syntaxstring(mc)) ⇒ $domain")
+    end
+end
+
 ################################################################################################
 
 function atoms(a::BoundedScalarConditions)

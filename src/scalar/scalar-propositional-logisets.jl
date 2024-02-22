@@ -32,8 +32,6 @@ Tables.columnaccess(::Type{PropositionalLogiset{T}}) where {T} = Tables.columnac
 Tables.materializer(::Type{PropositionalLogiset{T}}) where {T} = Tables.materializer(T)
 # Tables.rows(X::PropositionalLogiset{T}) where {T} = Tables.rows(gettable(X))
 # Tables.columns(X::PropositionalLogiset{T}) where {T} = Tables.columns(gettable(X))
-# TODO correct ? 
-# propositionalalphabet(X::PropositionalLogiset) = propositionalalphabet(X, [≤, ≥])
 
 # Helpers
 @forward PropositionalLogiset.tabulardataset (Base.getindex, Base.setindex!)
@@ -59,6 +57,7 @@ function displaystructure(X::PropositionalLogiset;
     indent_str = "",
     include_ninstances = true,
     include_nfeatures = true,
+    include_features = false,
     include_worldtype = missing,
     include_featvaltype = missing,
     include_featuretype = missing,
@@ -71,8 +70,11 @@ function displaystructure(X::PropositionalLogiset;
     if include_ninstances
         push!(pieces, "$(padattribute("# instances:", ninstances(X)))")
     end
-    if include_nfeatures
+    if !include_features && include_nfeatures
         push!(pieces, "$(padattribute("# features:", nfeatures(X)))")
+    end
+    if include_features
+        push!(pieces, "$(padattribute("features:", "$(nfeatures(X)) -> $(SoleLogics.displaysyntaxvector(features(X)))"))")
     end
     push!(pieces, "Table: $(gettable(X))")
     return "$(nameof(typeof(X))) ($(humansize(X)))" *
@@ -90,15 +92,13 @@ function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector
     return (cols[rows] |> PropositionalLogiset)
 end
 
-# TODO optimize...?
 function alphabet( 
     X::PropositionalLogiset,
     test_operators::AbstractVector{<:T} # TODO is it okay to receive test_operators as second argument? What's the interface for this `alphabet` function?
 )::BoundedScalarConditions where {T<:TestOperator}
-
-    scalarmetaconds = ScalarMetaCondition[]
     feats = features(X)
-    map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(feats,  test_op)), test_operators)
+    # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
+    scalarmetaconds = (ScalarMetaCondition(feat, test_op) for feat in feats for test_op in test_operators)
     boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
         map( mc -> ( mc, X[:, varname(feature(mc))] ), scalarmetaconds)
     )
