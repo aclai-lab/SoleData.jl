@@ -1,7 +1,8 @@
 module MLJUtils
 
 using CategoricalArrays
-using MLJModelInterface: scitype, classes
+using MLJModelInterface: classes
+using ScientificTypes: scitype
 
 export fix_y
 
@@ -9,7 +10,7 @@ function fix_y(y)
     if isnothing(y)
         return nothing, nothing
     end
-    is_classification = (eltype(scitype(y)) != Continuous)
+    is_classification = (eltype(scitype(y)) != MLJModelInterface.Continuous)
     classes_seen = begin
         if is_classification
             y isa CategoricalArray ? filter(in(unique(y)), classes(y)) : unique(y)
@@ -28,7 +29,7 @@ function fix_y(y)
 end
 
 # function is_classification(y)
-#     !isnothing(y) && eltype(scitype(y)) != Continuous
+#     !isnothing(y) && eltype(scitype(y)) != MLJModelInterface.Continuous
 # end
 
 end
