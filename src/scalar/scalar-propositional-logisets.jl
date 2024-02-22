@@ -74,7 +74,7 @@ function displaystructure(X::PropositionalLogiset;
         push!(pieces, "$(padattribute("# features:", nfeatures(X)))")
     end
     if include_features
-        push!(pieces, "$(padattribute("features:", "$(nfeatures(X)) -> $(SoleLogics.displaysyntaxvector(features(X)))"))")
+        push!(pieces, "$(padattribute("features:", "$(nfeatures(X)) -> $(SoleLogics.displaysyntaxvector(features(X); quotes = false))"))")
     end
     push!(pieces, "Table: $(gettable(X))")
     return "$(nameof(typeof(X))) ($(humansize(X)))" *
