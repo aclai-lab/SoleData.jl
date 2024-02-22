@@ -98,8 +98,8 @@ function Tables.columnnames(row::Tuple{MultiLogiset,Integer})
     1:length(_columntruenames(row))
 end
 
-using MLJBase: Table
-import MLJBase: selectrows, scitype
+using MLJModelInterface: Table
+import MLJModelInterface: selectrows, scitype
 
 function selectrows(X::Union{AbstractModalLogiset,MultiLogiset}, r)
     r = r isa Integer ? (r:r) : r
