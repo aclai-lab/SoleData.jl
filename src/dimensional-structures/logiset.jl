@@ -441,7 +441,7 @@ function displaystructure(
     # push!(pieces, "$(padattribute("dimensionality:", dimensionality(X)))")
     # push!(pieces, "$(padattribute("maxchannelsize:", maxchannelsize(X)))")
     # push!(pieces, "$(padattribute("# features:", nfeatures(X)))")
-    push!(pieces, "$(padattribute("features:", "$(nfeatures(X)) -> $(SoleLogics.displaysyntaxvector(features(X)))"))")
+    push!(pieces, "$(padattribute("features:", "$(nfeatures(X)) -> $(SoleLogics.displaysyntaxvector(features(X); quotes = false))"))")
 
     return join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
 end
