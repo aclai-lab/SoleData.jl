@@ -87,9 +87,9 @@ end
 #     # return X[:, col][row]
 # end
 
-function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
-    cols = Tables.columns(gettable(X))[cols]
-    return (cols[rows] |> PropositionalLogiset)
+function Base.getindex(X::PropositionalLogiset, i_rows::Union{Colon,AbstractVector}, i_cols::Union{Colon,AbstractVector})
+    cols = Tables.columns(gettable(X))[i_cols]
+    return (cols[i_rows] |> PropositionalLogiset)
 end
 
 function alphabet( 
