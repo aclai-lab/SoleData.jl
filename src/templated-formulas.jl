@@ -4,15 +4,21 @@ import SoleLogics: tree, dual
 """
 Templated formula for ⟨R⟩⊤.
 """
-struct ExistentialTopFormula{R<:AbstractRelation} <: SoleLogics.Formula end
-tree(::ExistentialTopFormula{R}) where {R<:AbstractRelation} = DiamondRelationalConnective{R}(⊤)
+struct ExistentialTopFormula{R<:AbstractRelation} <: SoleLogics.Formula
+    rel::R
+end
+relation(φ::ExistentialTopFormula) = φ.rel
+tree(φ::ExistentialTopFormula) = (SoleLogics.diamond(φ.rel))(⊤)
 hasdual(::ExistentialTopFormula) = true
-dual(::ExistentialTopFormula{R}) where {R<:AbstractRelation} = UniversalBotFormula{R}()
+dual(φ::ExistentialTopFormula) = UniversalBotFormula(φ.rel)
 
 """
 Templated formula for [R]⊥.
 """
-struct UniversalBotFormula{R<:AbstractRelation} <: SoleLogics.Formula end
-tree(::UniversalBotFormula{R}) where {R<:AbstractRelation} = BoxRelationalConnective{R}(⊥)
+struct UniversalBotFormula{R<:AbstractRelation} <: SoleLogics.Formula
+    rel::R
+end
+relation(φ::UniversalBotFormula) = φ.rel
+tree(φ::UniversalBotFormula) = (SoleLogics.box(φ.rel))(⊥)
 hasdual(::UniversalBotFormula) = true
-dual(::UniversalBotFormula{R}) where {R<:AbstractRelation} = ExistentialTopFormula{R}()
+dual(φ::UniversalBotFormula) = ExistentialTopFormula(φ.rel)
