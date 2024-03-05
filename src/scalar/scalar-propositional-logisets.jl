@@ -85,10 +85,29 @@ end
 #     # return X[:, col][row]
 # end
 
-function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
-    cols = Tables.columns(gettable(X))[cols]
-    return (cols[rows] |> PropositionalLogiset)
+function instances(
+    X::PropositionalLogiset,
+    inds::AbstractVector{<:Integer},
+    return_view::Union{Val{true},Val{false}} = Val(false)
+)
+    return PropositionalLogiset(if return_view == Val(true) @view X.tabulardataset[inds, :] else X.tabulardataset[inds, :] end)
 end
+
+function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
+    
+    if Tables.columnaccess(X)
+        coliter = Tables.columns(gettable(X))[cols]
+        return (Tables.rows(coliter)[rows] |> PropositionalLogiset)
+    else
+        rowiter = Tables.rows(gettable(X))[rows]
+        return (Tables.columns(rowiter)[cols] |> PropositionalLogiset)        
+    end
+end
+
+function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer,Symbol})
+    return Tables.getcolumn(Tables.columns(gettable(X)), col)[row]
+end
+
 
 # TODO optimize...?
 function alphabet( 
@@ -100,14 +119,14 @@ function alphabet(
     feats = features(X)
     map(test_op -> append!(scalarmetaconds, ScalarMetaCondition.(feats,  test_op)), test_operators)
     boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
-        map( mc -> ( mc, X[:, varname(feature(mc))] ), scalarmetaconds)
+        map( mc -> ( mc, unique(X[:, varname(feature(mc))] )), scalarmetaconds)
     )
     return boundedscalarconds
 end
 
 
 function interpret(
-    φ::Atom,
+    φ::Atom{<:ScalarCondition},
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...,
@@ -121,6 +140,6 @@ function interpret(
 
     col = varname(cond_feature)
     X, i_instance = SoleLogics.splat(i)
-    return cond_operator(X[i_instance ,col],  cond_threshold) ? ⊤ : ⊥   
+    return cond_operator(X[i_instance, col],  cond_threshold) ? ⊤ : ⊥   
      
 end
