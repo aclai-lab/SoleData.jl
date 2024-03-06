@@ -49,6 +49,8 @@ struct ScalarExistentialFormula{V,R<:AbstractRelation} <: ScalarOneStepFormula{V
     p         :: V
 
     function ScalarExistentialFormula{V,R}(relation::R, p::V) where {V,R<:AbstractRelation}
+        @assert !(V <: SoleLogics.Formula) "Cannot instantiate ScalarExistentialFormula " *
+            "with atom value $V."
         new{V,R}(relation, p)
     end
 
