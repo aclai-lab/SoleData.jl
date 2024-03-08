@@ -1,6 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 SoleData = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
+SoleLogics = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
 
 [compat]
 Documenter = "1"

@@ -1,4 +1,3 @@
-using Tables
 
 function eachinstance(X::AbstractModalLogiset)
     map(i_instance->(X,i_instance), 1:ninstances(X))
@@ -55,6 +54,8 @@ function featvalues!(
     featvalues(X, featslice, features(X)[i_feature])
 end
 
+using Tables
+
 Tables.istable(X::AbstractModalLogiset) = true
 Tables.istable(X::MultiLogiset) = true
 
@@ -98,8 +99,9 @@ function Tables.columnnames(row::Tuple{MultiLogiset,Integer})
     1:length(_columntruenames(row))
 end
 
-using MLJBase: Table
-import MLJBase: selectrows, scitype
+using MLJModelInterface: Table
+import MLJModelInterface: selectrows
+import ScientificTypes: scitype
 
 function selectrows(X::Union{AbstractModalLogiset,MultiLogiset}, r)
     r = r isa Integer ? (r:r) : r
