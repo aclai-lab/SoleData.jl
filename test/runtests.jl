@@ -23,6 +23,7 @@ test_suites = [
     ("MultiLogisets", [ "multilogisets.jl", ]),
     ("MLJ", [ "MLJ.jl", ]),
     ("Minify", ["minify.jl"]),
+    ("Parse", ["parse.jl"]),
 ]
 
 @testset "SoleData.jl" begin
