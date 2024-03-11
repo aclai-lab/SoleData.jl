@@ -125,7 +125,7 @@ function alphabet(
     get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
 
     coltypes = eltype.(Tables.columns(gettable(X)))
-    colnames = Tables.columnnames(gettable(X))
+    colnames = Tables.columnnames(gettable(X)) # features(X)
     feats = UnivariateSymbolValue.(Symbol.(colnames))
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
     scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
