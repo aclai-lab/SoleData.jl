@@ -119,7 +119,7 @@ function alphabet(
     X::PropositionalLogiset;
     test_operators::Union{Nothing,AbstractVector{<:T},Base.Callable} = nothing # TODO is it okay to receive test_operators as second argument? What's the interface for this `alphabet` function?
 )::BoundedScalarConditions where {T<:TestOperator}
-    get_test_operators(::Nothing, ::Type{<:Any}) = [=, ≠]
+    get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(::Nothing, ::Type{<:Number}) = [≥, ≤]
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
     get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
