@@ -99,7 +99,6 @@ function instances(
 end
 
 function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
-
     if Tables.columnaccess(X)
         coliter = Tables.columns(gettable(X))[cols]
         return (Tables.rows(coliter)[rows] |> PropositionalLogiset)
@@ -117,10 +116,11 @@ end
 # TODO optimize...?
 function alphabet(
     X::PropositionalLogiset;
-    test_operators::Union{Nothing,AbstractVector{<:T},Base.Callable} = nothing # TODO is it okay to receive test_operators as second argument? What's the interface for this `alphabet` function?
+    # TODO is it okay to receive test_operators as second argument? What's the interface for this `alphabet` function?
+    test_operators::Union{Nothing,AbstractVector{<:T},Base.Callable} = nothing
 )::BoundedScalarConditions where {T<:TestOperator}
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
-    get_test_operators(::Nothing, ::Type{<:Number}) = [≥, ≤]
+    get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
     get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
 
@@ -130,8 +130,8 @@ function alphabet(
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
     scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
     boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
-        map( mc -> ( mc, unique(X[:, varname(feature(mc))])), scalarmetaconds)
-    )
+         map( mc -> ( mc, sort(unique(X[:, varname(feature(mc))]))), scalarmetaconds)
+        )
     return boundedscalarconds
 end
 
