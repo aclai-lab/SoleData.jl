@@ -34,6 +34,5 @@ include("memosets.jl")
 
 include("onestep-memoset.jl")
 export PropositionalLogiset
-export instances
 
 include("scalar-propositional-logisets.jl")
