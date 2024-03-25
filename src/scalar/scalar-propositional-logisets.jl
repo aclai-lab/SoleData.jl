@@ -135,8 +135,7 @@ function alphabet(
     return boundedscalarconds
 end
 
-
-function interpret(
+function check(
     φ::Atom{<:ScalarCondition},
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
@@ -151,6 +150,14 @@ function interpret(
 
     col = varname(cond_feature)
     X, i_instance = SoleLogics.splat(i)
-    return cond_operator(X[i_instance, col],  cond_threshold) ? ⊤ : ⊥
+    return cond_operator(X[i_instance, col], cond_threshold)
+end
 
+function interpret(
+    φ::Atom{<:ScalarCondition},
+    i::LogicalInstance{<:PropositionalLogiset},
+    args...;
+    kwargs...,
+)::Formula
+    return check(φ, i, args...; kwargs...) ? ⊤ : ⊥
 end
