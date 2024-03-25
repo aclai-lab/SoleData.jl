@@ -140,7 +140,7 @@ function check(
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...,
-)::Formula
+)::Bool
 
     cond = value(φ)
 
