@@ -366,27 +366,17 @@ end
 
 ################################################################################################
 
+function _atoms(c::Tuple{<:ScalarMetaCondition,Vector})
+    mc, thresholds = c
+    Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
+end
+
 function atoms(a::BoundedScalarConditions)
     Iterators.flatten(
-        map(
-            ((mc,thresholds),)->map(
-                threshold->Atom(ScalarCondition(mc, threshold)),
-                thresholds),
-            a.grouped_featconditions
-        )
-    ) |> collect
+        Iterators.map(_atoms, a.grouped_featconditions_atoms)
+    )
 end
 
-featconditions(a::BoundedScalarConditions) = a.grouped_featconditions
-
-function atoms(c::Tuple{<:ScalarMetaCondition,Vector})
-
-    mc, thresholds = c
-        map(
-            threshold->Atom(ScalarCondition(mc, threshold)),
-            thresholds
-        )
-end
 
 function Base.in(p::Atom{<:ScalarCondition}, a::BoundedScalarConditions)
     fc = value(p)
