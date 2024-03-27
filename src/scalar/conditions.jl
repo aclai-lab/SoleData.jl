@@ -375,6 +375,17 @@ function atoms(a::BoundedScalarConditions)
     ) |> collect
 end
 
+featconditions(a::BoundedScalarConditions) = a.grouped_featconditions
+
+function atoms(c::Tuple{<:ScalarMetaCondition,Vector})
+
+    mc, thresholds = c
+        map(
+            threshold->Atom(ScalarCondition(mc, threshold)),
+            thresholds
+        )
+end
+
 function Base.in(p::Atom{<:ScalarCondition}, a::BoundedScalarConditions)
     fc = value(p)
     grouped_featconditions = a.grouped_featconditions
