@@ -355,6 +355,8 @@ struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabe
     end
 end
 
+grouped_featconditions(a::BoundedScalarConditions) = a.grouped_featconditions
+
 function Base.show(io::IO, a::BoundedScalarConditions)
     println(io, "$(typeof(a)):")
     for (mc, domain) in a.grouped_featconditions
