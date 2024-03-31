@@ -366,14 +366,14 @@ end
 
 ################################################################################################
 
-function _atoms(c::Tuple{<:ScalarMetaCondition,Vector})
+function turnatoms(c::Tuple{<:ScalarMetaCondition,Vector})
     mc, thresholds = c
     Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
-function atoms(a::BoundedScalarConditions)
+function turnatoms(a::BoundedScalarConditions)
     Iterators.flatten(
-        Iterators.map(_atoms, a.grouped_featconditions_atoms)
+        Iterators.map(turnatoms, a.grouped_featconditions)
     )
 end
 
