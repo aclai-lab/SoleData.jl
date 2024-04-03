@@ -311,7 +311,7 @@ function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarConditions)
 end
 
 """
-    struct BoundedScalarConditions{C<:ScalarCondition,UnivariateBoundedScalarConditions{C}} <: AbstractConditionalAlphabet{C}
+    struct UnivariateBoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
         grouped_featconditions::Vector{UnivariateBoundedScalarConditions}
     end
 
@@ -321,15 +321,19 @@ See also
 [`UnboundedScalarConditions`](@ref),
 [`ScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
-"""struct UnivariateBoundedScalarConditions{C <: ScalarCondition} <: AbstractConditionalAlphabet{C}
-    grouped_featconditions::Tuple{<:ScalarMetaCondition, Vector}
+"""
+struct UnivariateBoundedScalarConditions{C <: ScalarCondition} <: AbstractConditionalAlphabet{C}
+    featcondition::Tuple{<:ScalarMetaCondition, Vector}
 end
 
-function atoms(c::Tuple{ScalarMetaCondition, AbstractVector})
-    mc, thresholds = c
-    Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
+function atoms(c::UnivariateBoundedScalarConditions)
+    mc, thresholds = c.featcondition
+    return Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
+function Base.show(io::IO, c::UnivariateBoundedScalarConditions)
+    println(io, "$(c.featcondition)")
+end
 
 # Finite alphabet of conditions induced from a set of metaconditions
 """
@@ -339,62 +343,57 @@ See also
 [`ScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
 """
-struct UnionAlphabet{A <: AbstractAlphabet} <: AbstractAlphabet
-    grouped_featconditions::Vector{A}
+struct UnionAlphabet{C <: AbstractConditionalAlphabet} <: AbstractAlphabet{C}
+    conditional_alphabets::Vector{C}
 
-    function BoundedScalarConditions{C}(
-        grouped_featconditions::Vector{UnivariateBoundedScalarConditions}
-    ) where {C<:ScalarCondition}
-        new{C}(grouped_featconditions)
+    function UnionAlphabet{C}(
+        conditional_alphabets::Vector{C}
+    ) where {C<:AbstractConditionalAlphabet{<: ScalarCondition}}
+        new{C}(conditional_alphabets)
     end
 
-    function BoundedScalarConditions{C}(
+    function UnionAlphabet{C}(
         metaconditions::Vector{<:ScalarMetaCondition},
         thresholds::Vector{<:Vector},
-    ) where {C<:ScalarCondition}
+    ) where {C<:AbstractConditionalAlphabet{<: ScalarCondition}}
         length(metaconditions) != length(thresholds) &&
-            error("Cannot instantiate BoundedScalarConditions with mismatching " *
+            error("Cannot instantiate UnionAlphabet with mismatching " *
                 "number of `metaconditions` and `thresholds` " *
                 "($(metaconditions) != $(thresholds)).")
-        grouped_featconditions = collect(zip(metaconditions, thresholds))
-        BoundedScalarConditions{C}(grouped_featconditions)
+        conditional_alphabets = collect(zip(metaconditions, thresholds))
+        UnionAlphabet{C}(conditional_alphabets)
     end
 
-    function BoundedScalarConditions(
+    function UnionAlphabet(
         features       :: AbstractVector{C},
         test_operators :: AbstractVector,
         thresholds     :: Vector
-    ) where {C<:ScalarCondition}
+    ) where {C<:AbstractConditionalAlphabet{<: ScalarCondition}}
         metaconditions =
             [ScalarMetaCondition(f, t) for f in features for t in test_operators]
-        BoundedScalarConditions{C}(metaconditions, thresholds)
+        UnionAlphabet{C}(metaconditions, thresholds)
     end
 end
 
-################################################################################################
+############################################################################################
 
-grouped_featconditions(a::BoundedScalarConditions) = a.grouped_featconditions
+conditional_alphabets(a::UnionAlphabet) = a.conditional_alphabets
 
-function Base.show(io::IO, a::BoundedScalarConditions)
+function Base.show(io::IO, a::UnionAlphabet)
     println(io, "$(typeof(a)):")
-    for (mc, domain) in a.grouped_featconditions
-        println(io, "\t$(syntaxstring(mc)) ⇒ $domain")
+    for cond in a.conditional_alphabets
+        println(cond)
     end
 end
+############################################################################################
 
-################################################################################################
-
-function _atoms(c::Tuple{<:ScalarMetaCondition,Vector})
-    mc, thresholds = c
-    Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
-end
-
-function atoms(a::BoundedScalarConditions)
-    Iterators.flatten(
-        Iterators.map(_atoms, a.grouped_featconditions)
+function atoms(a::UnionAlphabet)
+    return Iterators.flatten(
+        Iterators.map(atoms, a.grouped_featconditions)
     )
 end
 
+# TODO working ?
 function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet)
     fc = value(p)
     grouped_featconditions = a.grouped_featconditions

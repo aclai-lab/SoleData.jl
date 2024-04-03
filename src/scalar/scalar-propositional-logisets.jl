@@ -16,6 +16,8 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
 
     function PropositionalLogiset(tabulardataset::T) where {T}
         if Tables.istable(tabulardataset)
+            @assert Tables.rowcount(tabulardataset) > 0 "Coult not initialize " *
+                "PropositionalLogiset with empty rows"
             @assert all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) "Could not " *
                 "initialize PropositionalLogiset with non-real values: " *
                 "$(Union{eltype.(Tables.columns(tabulardataset))...})"
@@ -25,7 +27,6 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
         end
     end
 end
-
 
 gettable(M::PropositionalLogiset) = M.tabulardataset
 
@@ -118,7 +119,7 @@ function alphabet(
     X::PropositionalLogiset;
     # TODO is it okay to receive test_operators as second argument? What's the interface for this `alphabet` function?
     test_operators::Union{Nothing,AbstractVector{<:T},Base.Callable} = nothing
-)::BoundedScalarConditions where {T<:TestOperator}
+)::UnionAlphabet where {T<:TestOperator}
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
@@ -129,10 +130,13 @@ function alphabet(
     feats = UnivariateSymbolValue.(Symbol.(colnames))
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
     scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
-    boundedscalarconds = BoundedScalarConditions{ScalarCondition}(
-         map( mc -> ( mc, sort(unique(X[:, varname(feature(mc))]))), scalarmetaconds)
-        )
-    return boundedscalarconds
+
+    unionalphabet = UnionAlphabet{UnivariateBoundedScalarConditions{ScalarCondition}}(
+                            map(mc -> UnivariateBoundedScalarConditions{ScalarCondition}(
+                                    (mc, sort(unique(X[:, varname(feature(mc))])))
+                                ),scalarmetaconds)
+                    )
+    return unionalphabet
 end
 
 function check(

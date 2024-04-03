@@ -4,7 +4,7 @@ import Base: rand
 """
     Base.rand(
         rng::AbstractRNG,
-        a::BoundedScalarConditions;
+        a::UnionAlphabet;
         metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
         feature::Union{Nothing,AbstractFeature,AbstractVector{<:AbstractFeature}} = nothing,
         test_operator::Union{Nothing,TestOperator,AbstractVector{<:TestOperator}} = nothing,
@@ -20,14 +20,14 @@ is limited to those with `feature`;
 is limited to those with `test_operator`.
 
 See also
-[`BoundedScalarConditions`](@ref),
+[`UnionAlphabet`](@ref),
 [`ScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref),
 [`SoleLogics.AbstractAlphabet`](@ref).
 """
 function Base.rand(
     rng::AbstractRNG,
-    a::BoundedScalarConditions;
+    a::UnionAlphabet;
     metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
     features::Union{Nothing,AbstractFeature,AbstractVector{<:AbstractFeature}} = nothing,
     test_operators::Union{Nothing,TestOperator,AbstractVector{<:TestOperator}} = nothing,
