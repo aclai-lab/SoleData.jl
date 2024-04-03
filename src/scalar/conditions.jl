@@ -310,10 +310,9 @@ function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarConditions)
     return !isnothing(idx)
 end
 
-# Finite alphabet of conditions induced from a set of metaconditions
 """
-    struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-        grouped_featconditions::Vector{Tuple{<:ScalarMetaCondition,Vector}}
+    struct BoundedScalarConditions{C<:ScalarCondition,UnivariateBoundedScalarConditions{C}} <: AbstractConditionalAlphabet{C}
+        grouped_featconditions::Vector{UnivariateBoundedScalarConditions}
     end
 
 A finite alphabet of conditions, grouped by (a finite set of) metaconditions.
@@ -322,12 +321,29 @@ See also
 [`UnboundedScalarConditions`](@ref),
 [`ScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
+"""struct UnivariateBoundedScalarConditions{C <: ScalarCondition} <: AbstractConditionalAlphabet{C}
+    grouped_featconditions::Tuple{<:ScalarMetaCondition, Vector}
+end
+
+function atoms(c::Tuple{ScalarMetaCondition, AbstractVector})
+    mc, thresholds = c
+    Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
+end
+
+
+# Finite alphabet of conditions induced from a set of metaconditions
 """
-struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-    grouped_featconditions::Vector{<:Tuple{ScalarMetaCondition,Vector}}
+A
+See also
+[`UnboundedScalarConditions`](@ref),
+[`ScalarCondition`](@ref),
+[`ScalarMetaCondition`](@ref).
+"""
+struct UnionAlphabet{A <: AbstractAlphabet} <: AbstractAlphabet
+    grouped_featconditions::Vector{A}
 
     function BoundedScalarConditions{C}(
-        grouped_featconditions::Vector{<:Tuple{ScalarMetaCondition,Vector}}
+        grouped_featconditions::Vector{UnivariateBoundedScalarConditions}
     ) where {C<:ScalarCondition}
         new{C}(grouped_featconditions)
     end
@@ -355,6 +371,8 @@ struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabe
     end
 end
 
+################################################################################################
+
 grouped_featconditions(a::BoundedScalarConditions) = a.grouped_featconditions
 
 function Base.show(io::IO, a::BoundedScalarConditions)
@@ -364,21 +382,13 @@ function Base.show(io::IO, a::BoundedScalarConditions)
     end
 end
 
-################################################################################################
-
-function turnatoms(c::Tuple{<:ScalarMetaCondition,Vector})
-    mc, thresholds = c
-    Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
-end
-
-function turnatoms(a::BoundedScalarConditions)
+function atoms(a::BoundedScalarConditions)
     Iterators.flatten(
-        Iterators.map(turnatoms, a.grouped_featconditions)
+        Iterators.map(atoms, a.grouped_featconditions)
     )
 end
 
-
-function Base.in(p::Atom{<:ScalarCondition}, a::BoundedScalarConditions)
+function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet)
     fc = value(p)
     grouped_featconditions = a.grouped_featconditions
     idx = findfirst(((mc,thresholds),)->mc == metacond(fc), grouped_featconditions)
