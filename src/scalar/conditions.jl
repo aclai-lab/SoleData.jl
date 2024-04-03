@@ -382,9 +382,16 @@ function Base.show(io::IO, a::BoundedScalarConditions)
     end
 end
 
+################################################################################################
+
+function _atoms(c::Tuple{<:ScalarMetaCondition,Vector})
+    mc, thresholds = c
+    Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
+end
+
 function atoms(a::BoundedScalarConditions)
     Iterators.flatten(
-        Iterators.map(atoms, a.grouped_featconditions)
+        Iterators.map(_atoms, a.grouped_featconditions)
     )
 end
 
