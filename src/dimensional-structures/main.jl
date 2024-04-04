@@ -32,7 +32,7 @@ using SoleData
 using SoleBase
 
 using SoleData: Aggregator, AbstractCondition
-using SoleData: UnivariateBoundedScalarConditions, UnionAlphabet
+using SoleData: UnivariateScalarAlphabet, UnionAlphabet
 using SoleData: AbstractModalLogiset, AbstractMultiModalFrame
 using SoleData: MultiLogiset, AbstractModalLogiset
 using SoleData: apply_test_operator, existential_aggregator, aggregator_bottom, aggregator_to_binary

@@ -15,7 +15,7 @@ of an instance of a logical dataset.
 A test operator is a binary mathematical relation, comparing the computed feature value
 and an external threshold value (see `ScalarCondition`). A metacondition can also be used
 for representing the infinite set of conditions that arise with a free threshold
-(see `UnboundedScalarConditions`): \${min[V1] ≥ a, a ∈ ℝ}\$.
+(see `UnboundedScalarAlphabet`): \${min[V1] ≥ a, a ∈ ℝ}\$.
 
 See also
 [`AbstractCondition`](@ref),
@@ -258,145 +258,117 @@ end
 ############################################################################################
 ############################################################################################
 
-"""
-    abstract type AbstractConditionalAlphabet{C<:ScalarCondition} <: SoleLogics.AbstractAlphabet{C} end
+# """
+#     struct UnboundedScalarAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C}
+#         metaconditions::Vector{<:ScalarMetaCondition}
+#     end
 
-Abstract type for alphabets of conditions.
+# An infinite alphabet of conditions induced from a finite set of metaconditions.
+# For example, if `metaconditions = [ScalarMetaCondition(UnivariateMin(1), ≥)]`,
+# the alphabet represents the (infinite) set: \${min[V1] ≥ a, a ∈ ℝ}\$.
+
+# See also
+# [`UnivariateScalarAlphabet`](@ref),
+# [`ScalarCondition`](@ref),
+# [`ScalarMetaCondition`](@ref).
+# """
+# struct UnboundedScalarAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C}
+#     metaconditions::Vector{<:ScalarMetaCondition}
+
+#     function UnboundedScalarAlphabet{C}(
+#         metaconditions::Vector{<:ScalarMetaCondition}
+#     ) where {C<:ScalarCondition}
+#         new{C}(metaconditions)
+#     end
+
+#     function UnboundedScalarAlphabet(
+#         features       :: AbstractVector{C},
+#         test_operators :: AbstractVector,
+#     ) where {C<:ScalarCondition}
+#         metaconditions =
+#             [ScalarMetaCondition(f, t) for f in features for t in test_operators]
+#         UnboundedScalarAlphabet{C}(metaconditions)
+#     end
+# end
+
+# Base.isfinite(::Type{<:UnboundedScalarAlphabet}) = false
+
+# function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarAlphabet)
+#     fc = value(p)
+#     idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
+#     return !isnothing(idx)
+# end
+
+############################################################################################
+############################################################################################
+############################################################################################
+
+# TODO @Edo move UnionAlphabet to SoleLogics and export UnionAlphabet e alphabets!
+# Finite alphabet of conditions induced from a set of metaconditions
+"""
+Alphabet given by the union of many alphabets.
 
 See also
+[`UnboundedScalarAlphabet`](@ref),
 [`ScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
 """
-abstract type AbstractConditionalAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C} end
+struct UnionAlphabet{C,A<:AbstractAlphabet{C}} <: AbstractAlphabet{C}
+    alphabets::Vector{A}
+end
 
-"""
-    struct UnboundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-        metaconditions::Vector{<:ScalarMetaCondition}
-    end
+alphabets(a::UnionAlphabet) = a.alphabets
 
-An infinite alphabet of conditions induced from a finite set of metaconditions.
-For example, if `metaconditions = [ScalarMetaCondition(UnivariateMin(1), ≥)]`,
-the alphabet represents the (infinite) set: \${min[V1] ≥ a, a ∈ ℝ}\$.
-
-See also
-[`BoundedScalarConditions`](@ref),
-[`ScalarCondition`](@ref),
-[`ScalarMetaCondition`](@ref).
-"""
-struct UnboundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-    metaconditions::Vector{<:ScalarMetaCondition}
-
-    function UnboundedScalarConditions{C}(
-        metaconditions::Vector{<:ScalarMetaCondition}
-    ) where {C<:ScalarCondition}
-        new{C}(metaconditions)
-    end
-
-    function UnboundedScalarConditions(
-        features       :: AbstractVector{C},
-        test_operators :: AbstractVector,
-    ) where {C<:ScalarCondition}
-        metaconditions =
-            [ScalarMetaCondition(f, t) for f in features for t in test_operators]
-        UnboundedScalarConditions{C}(metaconditions)
+function Base.show(io::IO, a::UnionAlphabet)
+    println(io, "$(typeof(a)):")
+    for cha in alphabets(a)
+        Base.show(io, cha)
     end
 end
 
-Base.isfinite(::Type{<:UnboundedScalarConditions}) = false
-
-function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarConditions)
-    fc = value(p)
-    idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
-    return !isnothing(idx)
+function atoms(a::UnionAlphabet)
+    return Iterators.flatten(Iterators.map(atoms, alphabets(a)))
 end
 
+function Base.in(p::Atom, a::UnionAlphabet)
+    return any(cha -> Base.in(p, cha), alphabets(a))
+end
+
+############################################################################################
+############################################################################################
+############################################################################################
+
 """
-    struct UnivariateBoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-        grouped_featconditions::Vector{UnivariateBoundedScalarConditions}
+    struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
+        featcondition::Vector{UnivariateScalarAlphabet}
     end
 
 A finite alphabet of conditions, grouped by (a finite set of) metaconditions.
 
 See also
-[`UnboundedScalarConditions`](@ref),
+[`UnboundedScalarAlphabet`](@ref),
 [`ScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
 """
-struct UnivariateBoundedScalarConditions{C <: ScalarCondition} <: AbstractConditionalAlphabet{C}
-    featcondition::Tuple{<:ScalarMetaCondition, Vector}
+struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
+    featcondition::Tuple{ScalarMetaCondition,Vector}
 end
 
-function atoms(c::UnivariateBoundedScalarConditions)
+
+function atoms(c::UnivariateScalarAlphabet)
     mc, thresholds = c.featcondition
     return Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
-function Base.show(io::IO, c::UnivariateBoundedScalarConditions)
-    println(io, "$(c.featcondition)")
+function Base.show(io::IO, c::UnivariateScalarAlphabet)
+    mc, thresholds = c.featcondition
+    println(io, "\t$(syntaxstring(mc)) ⇒ $(thresholds)")
 end
 
-# Finite alphabet of conditions induced from a set of metaconditions
-"""
-A
-See also
-[`UnboundedScalarConditions`](@ref),
-[`ScalarCondition`](@ref),
-[`ScalarMetaCondition`](@ref).
-"""
-struct UnionAlphabet{C <: AbstractConditionalAlphabet} <: AbstractAlphabet{C}
-    conditional_alphabets::Vector{C}
-
-    function UnionAlphabet{C}(
-        conditional_alphabets::Vector{C}
-    ) where {C<:AbstractConditionalAlphabet{<: ScalarCondition}}
-        new{C}(conditional_alphabets)
-    end
-
-    function UnionAlphabet{C}(
-        metaconditions::Vector{<:ScalarMetaCondition},
-        thresholds::Vector{<:Vector},
-    ) where {C<:AbstractConditionalAlphabet{<: ScalarCondition}}
-        length(metaconditions) != length(thresholds) &&
-            error("Cannot instantiate UnionAlphabet with mismatching " *
-                "number of `metaconditions` and `thresholds` " *
-                "($(metaconditions) != $(thresholds)).")
-        conditional_alphabets = collect(zip(metaconditions, thresholds))
-        UnionAlphabet{C}(conditional_alphabets)
-    end
-
-    function UnionAlphabet(
-        features       :: AbstractVector{C},
-        test_operators :: AbstractVector,
-        thresholds     :: Vector
-    ) where {C<:AbstractConditionalAlphabet{<: ScalarCondition}}
-        metaconditions =
-            [ScalarMetaCondition(f, t) for f in features for t in test_operators]
-        UnionAlphabet{C}(metaconditions, thresholds)
-    end
-end
-
-############################################################################################
-
-conditional_alphabets(a::UnionAlphabet) = a.conditional_alphabets
-
-function Base.show(io::IO, a::UnionAlphabet)
-    println(io, "$(typeof(a)):")
-    for cond in a.conditional_alphabets
-        println(cond)
-    end
-end
-############################################################################################
-
-function atoms(a::UnionAlphabet)
-    return Iterators.flatten(
-        Iterators.map(atoms, a.grouped_featconditions)
-    )
-end
-
-# TODO working ?
-function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet)
+# Optimized lookup for alphabet union
+function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet})
     fc = value(p)
-    grouped_featconditions = a.grouped_featconditions
-    idx = findfirst(((mc,thresholds),)->mc == metacond(fc), grouped_featconditions)
-    return !isnothing(idx) && Base.in(threshold(fc), last(grouped_featconditions[idx]))
+    chas = alphabets(a)
+    idx = findfirst((chas) -> chas.featcondition[1] == metacond(fc), chas)
+    return !isnothing(idx) && Base.in(threshold(fc), chas[idx].featcondition[2])
 end

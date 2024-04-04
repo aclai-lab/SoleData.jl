@@ -17,10 +17,13 @@ X = PropositionalLogiset(df)
 @test X[:, [:y]] isa PropositionalLogiset
 @test X[:, :] isa PropositionalLogiset
 
-alphabet(X, [≥]) |> atoms .|> syntaxstring
-alphabet(X, [≥, <]) |> atoms .|> x->syntaxstring(x; show_colon = false)
+alphabet(X) |> atoms .|> syntaxstring
+alphabet(X; test_operators = [≥]) |> atoms .|> syntaxstring
+alphabet(X, false; test_operators = [≥]) |> atoms .|> syntaxstring
+alphabet(X, true; test_operators = [≥]) |> atoms .|> syntaxstring
+alphabet(X; test_operators = [≥, <]) |> atoms .|> x->syntaxstring(x; show_colon = false)
 
-a,b,c,d = (alphabet(X, [≥, <]) |> atoms)[1:4]
+a,b,c,d = (alphabet(X; test_operators = [≥, <]) |> atoms)[1:4]
 
 @test value(a) isa SoleData.ScalarCondition
 @test SoleData.feature(value(a)) isa SoleData.UnivariateSymbolValue

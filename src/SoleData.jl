@@ -118,7 +118,7 @@ include("representatives.jl")
 export ninstances, featvalue, displaystructure, isminifiable, minify
 export alphabet
 
-# Logical datasets, where the instances are Kripke structures with conditional alphabets
+# Logical datasets, where the instances are Kripke structures with scalar alphabets
 include("logiset.jl")
 
 using SoleLogics: AbstractAssignment
