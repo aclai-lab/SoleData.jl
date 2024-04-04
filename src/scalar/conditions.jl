@@ -303,41 +303,6 @@ end
 ############################################################################################
 ############################################################################################
 
-# TODO @Edo move UnionAlphabet to SoleLogics and export UnionAlphabet e alphabets!
-# Finite alphabet of conditions induced from a set of metaconditions
-"""
-Alphabet given by the union of many alphabets.
-
-See also
-[`UnboundedScalarAlphabet`](@ref),
-[`ScalarCondition`](@ref),
-[`ScalarMetaCondition`](@ref).
-"""
-struct UnionAlphabet{C,A<:AbstractAlphabet{C}} <: AbstractAlphabet{C}
-    alphabets::Vector{A}
-end
-
-alphabets(a::UnionAlphabet) = a.alphabets
-
-function Base.show(io::IO, a::UnionAlphabet)
-    println(io, "$(typeof(a)):")
-    for cha in alphabets(a)
-        Base.show(io, cha)
-    end
-end
-
-function atoms(a::UnionAlphabet)
-    return Iterators.flatten(Iterators.map(atoms, alphabets(a)))
-end
-
-function Base.in(p::Atom, a::UnionAlphabet)
-    return any(cha -> Base.in(p, cha), alphabets(a))
-end
-
-############################################################################################
-############################################################################################
-############################################################################################
-
 """
     struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
         featcondition::Vector{UnivariateScalarAlphabet}
