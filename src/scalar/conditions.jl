@@ -325,6 +325,8 @@ function atoms(c::UnivariateScalarAlphabet)
     return Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
+test_operator(c::UnivariateScalarAlphabet) = test_operator(c.featcondition[1])
+
 function Base.show(io::IO, c::UnivariateScalarAlphabet)
     mc, thresholds = c.featcondition
     println(io, "\t$(syntaxstring(mc)) ⇒ $(thresholds)")
