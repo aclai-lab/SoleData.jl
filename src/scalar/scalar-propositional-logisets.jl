@@ -132,25 +132,21 @@ function alphabet(
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
     scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
 
+    # Old version
+    # alphabets = map(mc ->begin
+    #         thresholds = unique(X[:, varname(feature(mc))])
+    #         sorted && (thresholds = sort(thresholds))
+    #         UnivariateScalarAlphabet((mc, thresholds))
+    #     end, scalarmetaconds)
+    # return UnionAlphabet(alphabets)
+
     alphabets = map(mc ->begin
             thresholds = unique(X[:, varname(feature(mc))])
-            sorted && (thresholds = sort(thresholds))
+            sorted && (thresholds = sort(thresholds, rev=(test_operator(mc) ∈ [≤, <])))
             UnivariateScalarAlphabet((mc, thresholds))
         end, scalarmetaconds)
     return UnionAlphabet(alphabets)
 
-#=
-    alphabets = map(mc ->begin
-            thresholds = unique(X[:, varname(feature(mc))])
-            sorted && (thresholds = begin
-                    sortreverse = false
-                    test_operator(mc) ∈ [≤, <] && (sortreverse=true)
-                    sort(thresholds, rev=sortreverse)
-                end)
-            UnivariateScalarAlphabet((mc, thresholds))
-        end, scalarmetaconds)
-    return UnionAlphabet(alphabets)
-=#
 end
 
 function check(
