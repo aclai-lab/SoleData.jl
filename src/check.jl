@@ -1,9 +1,10 @@
+using SoleLogics: AnyWorld
 
 # TODO docstring
 function check(
     φ::SoleLogics.SyntaxTree,
     i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
-    w::Union{Nothing,<:AbstractWorld} = nothing; # TODO remove defaulting
+    w::Union{Nothing,AnyWorld,<:AbstractWorld} = nothing;
     use_memo::Union{Nothing,AbstractMemoset{<:AbstractWorld},AbstractVector{<:AbstractDict{<:FT,<:AbstractWorlds}}} = nothing,
     perform_normalization::Bool = true,
     memo_max_height::Union{Nothing,Int} = nothing,
@@ -117,7 +118,7 @@ function check(
     end
 
     ret = begin
-        if isnothing(w)
+        if isnothing(w) || w isa AnyWorld
             length(readformula(memo_structure, φ)) > 0
         else
             w in readformula(memo_structure, φ)
