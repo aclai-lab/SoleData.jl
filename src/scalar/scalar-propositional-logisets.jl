@@ -120,6 +120,7 @@ function alphabet(
     X::PropositionalLogiset,
     sorted = true;
     test_operators::Union{Nothing,AbstractVector{<:T},Base.Callable} = nothing,
+    revsort::Bool = false
 )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet} where {T <: TestOperator}
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
@@ -139,10 +140,11 @@ function alphabet(
     #         UnivariateScalarAlphabet((mc, thresholds))
     #     end, scalarmetaconds)
     # return UnionAlphabet(alphabets)
-
     alphabets = map(mc ->begin
             thresholds = unique(X[:, varname(feature(mc))])
-            sorted && (thresholds = sort(thresholds, rev=(test_operator(mc) ∈ [≤, <])))
+            sorted && (thresholds = sort(thresholds,
+                                        rev=(revsort & (test_operator(mc) ∈ [≤, <]))
+                                    ))
             UnivariateScalarAlphabet((mc, thresholds))
         end, scalarmetaconds)
     return UnionAlphabet(alphabets)
