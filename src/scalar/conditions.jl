@@ -325,7 +325,9 @@ function atoms(c::UnivariateScalarAlphabet)
     return Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
-test_operator(c::UnivariateScalarAlphabet) = test_operator(c.featcondition[1])
+metacond(c::UnivariateScalarAlphabet) = c.featcondition[1]
+test_operator(c::UnivariateScalarAlphabet) = test_operator(metacond(c))
+feature(c::UnivariateScalarAlphabet) = feature(metacond(c))
 
 function Base.show(io::IO, c::UnivariateScalarAlphabet)
     mc, thresholds = c.featcondition

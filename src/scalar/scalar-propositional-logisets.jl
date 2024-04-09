@@ -16,7 +16,7 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
 
     function PropositionalLogiset(tabulardataset::T) where {T}
         if Tables.istable(tabulardataset)
-            @assert DataAPI.nrow(tabulardataset) > 0 "Coult not initialize " *
+            @assert DataAPI.nrow(tabulardataset) > 0 "Could not initialize " *
                 "PropositionalLogiset with a table with no rows."
             @assert all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) "Could not " *
                 "initialize PropositionalLogiset with a table of non-real values: " *
@@ -113,14 +113,15 @@ function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer
     return Tables.getcolumn(Tables.columns(gettable(X)), col)[row]
 end
 
-
-# TODO optimize...?
-# TODO is it okay to receive test_operators as second argument? What's the interface for this `alphabet` function?
+# TODO: @test_nowarn alphabet(X, false)
+# TODO: @test_broken alphabet(X, false; skipextremes = true)
+# TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
 function alphabet(
     X::PropositionalLogiset,
     sorted = true;
     test_operators::Union{Nothing,AbstractVector{<:T},Base.Callable} = nothing,
-    revsort::Bool = false
+    truerfirst::Bool = false,
+    skipextremes::Bool = true,
 )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet} where {T <: TestOperator}
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
@@ -143,8 +144,8 @@ function alphabet(
     alphabets = map(mc ->begin
             thresholds = unique(X[:, varname(feature(mc))])
             sorted && (thresholds = sort(thresholds,
-                                        rev=(revsort & (test_operator(mc) ∈ [≤, <]))
-                                    ))
+                    rev=(truerfirst & (polarity(test_operator(mc)) == false))
+                ))
             UnivariateScalarAlphabet((mc, thresholds))
         end, scalarmetaconds)
     return UnionAlphabet(alphabets)

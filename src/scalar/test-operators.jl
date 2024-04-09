@@ -55,6 +55,11 @@ polarity(::typeof(≤)) = false
 polarity(::typeof(<)) = false
 polarity(::typeof(>)) = true
 
+isstrict(::typeof(≥)) = false
+isstrict(::typeof(≤)) = false
+isstrict(::typeof(<)) = true
+isstrict(::typeof(>)) = true
+
 
 dual_test_operator(::typeof(≥)) = ≤
 dual_test_operator(::typeof(≤)) = ≥
