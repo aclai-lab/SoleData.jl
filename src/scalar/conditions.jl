@@ -23,11 +23,11 @@ See also
 """
 struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
 
-  # Feature: a scalar function that can be computed on a world
-  feature::FT
+    # Feature: a scalar function that can be computed on a world
+    feature::FT
 
-  # Test operator (e.g. ≥)
-  test_operator::O
+    # Test operator (e.g. ≥)
+    test_operator::O
 
 end
 
