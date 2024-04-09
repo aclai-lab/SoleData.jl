@@ -154,6 +154,22 @@ end
 
 function check(
     φ::Atom{<:ScalarCondition},
+    X::PropositionalLogiset;
+    kwargs...,
+)::BitVector
+
+    cond = value(φ)
+
+    cond_threshold = threshold(cond)
+    cond_operator = test_operator(cond)
+    cond_feature = feature(cond)
+
+    col = varname(cond_feature)
+    return @fastmath cond_operator.(X[:, col], cond_threshold)
+end
+
+function check(
+    φ::Atom{<:ScalarCondition},
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...,
