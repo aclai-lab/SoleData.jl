@@ -3,6 +3,8 @@ using Tables
 using Tables: DataAPI
 using SoleLogics: LogicalInstance
 import SoleLogics: interpret
+
+include("discretization.jl")
 ############################################################################################
 
 # TODO aggiungere controllo Nan
@@ -118,11 +120,13 @@ end
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
 function alphabet(
     X::PropositionalLogiset,
+    y::AbstractVector,
     sorted = true;
-    test_operators::Union{Nothing,AbstractVector{<:T},Base.Callable} = nothing,
+    test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
     truerfirst::Bool = false,
     skipextremes::Bool = true,
-)::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet} where {T <: TestOperator}
+    discretizedomain::Bool = nothing
+)::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
@@ -134,18 +138,27 @@ function alphabet(
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
     scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
 
-    # Old version
-    # alphabets = map(mc ->begin
-    #         thresholds = unique(X[:, varname(feature(mc))])
-    #         sorted && (thresholds = sort(thresholds))
-    #         UnivariateScalarAlphabet((mc, thresholds))
-    #     end, scalarmetaconds)
-    # return UnionAlphabet(alphabets)
+    # TODO Possibile ottimizzazione
+    # Qui calcola due volte le stesse thresholds, (una volt per ≤ e l' altra per ≥)
     alphabets = map(mc ->begin
-            thresholds = unique(X[:, varname(feature(mc))])
-            sorted && (thresholds = sort(thresholds,
-                    rev=(truerfirst & (polarity(test_operator(mc)) == false))
-                ))
+
+            Xcol_values = X[:, varname(feature(mc))]
+            if discretizedomain
+                # TODO @Gio
+                println("To-discretize:")
+                println(Xcol_values)
+                thresholds = discretize(Xcol_values, y)
+                println("Discretized:")
+                println(thresholds)
+            else
+                thresholds = unique(Xcol_values)
+                sorted && (thresholds = sort(thresholds,
+                            rev=(truerfirst & (polarity(test_operator(mc)) == false))
+                    ))
+            end
+            #
+            # readline()
+            #
             UnivariateScalarAlphabet((mc, thresholds))
         end, scalarmetaconds)
     return UnionAlphabet(alphabets)
