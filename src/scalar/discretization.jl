@@ -90,13 +90,16 @@ function contingency(
 end
 
 
-function _entropy_discretize_sorted(C)
+function _entropy_discretize_sorted(
+        C;
+        force=false
+)
 
 	E, ES1, ES2 = entropy_cut_sorted(C)
 
 	length(E) == 0 && return []
 
-	cut_index = argmin(E[:]) + 1
+	cut_index = argmin(E[:])
 
 	# Distribution of the classes in S1, S2 and S
 
@@ -109,11 +112,12 @@ function _entropy_discretize_sorted(C)
 
 
 	ES = _entropy1(sum(C, dims=1))
-	ES1 = ES1[cut_index-1]
-	ES2 = ES2[cut_index-1]
-	# Information gain of the best split
+	ES1 = ES1[cut_index]
+	ES2 = ES2[cut_index]
 
-	Gain = ES - E[cut_index-1]
+	# Information gain of the best split
+	Gain = ES - E[cut_index]
+
 	# # Number of different classes in S, S1 and S2
 	k  = sum(S_c .> 0)
 	k1 = sum(S1_c .> 0)
@@ -125,17 +129,17 @@ function _entropy_discretize_sorted(C)
 	N = sum(S_c)
 
 	#COMMENT
+    @show E
 	println("========================================")
-	# @show C
-	# @show E
-	println("________________________________________")
-    println("S1_c  = $(S2_c)")
+
+    println("S1_c  = $(S1_c)")
 	println("S2_c  = $(S2_c)")
-	println("S_c  = $(S2_c)")
+	println("S_c  = $(S_c)")
 	println("________________________________________")
 
 	println("cut_index  = $(cut_index)")
 	println("sum(C, dims=1) = $(sum(C, dims=1))")
+	println("\tE[cut_index] = $(E[cut_index])")
 	println("\tES = $(ES)")
 	println("\t\tES1 = $(ES1)")
 	println("\t\tES2 = $(ES2)")
@@ -149,29 +153,39 @@ function _entropy_discretize_sorted(C)
 	println("========================================")
 	readline()
 
+    # The procedure stops when further splits would
+    # decrease the entropy for less than the corresponding increase of minimal
+    # description length (MDL). [FayyadIrani93].
+
+    #   Gain    -> Entropy decrease
+    #
+
+    # ( (log2(N - 1)/N) + (delta/N) )   -> increase of MDL
+    #
 	if N > 1 && Gain > ( (log2(N - 1)/N) + (delta/N) )
 
 		# Accept the cut point and recursively split the subsets.
 		left, right = [], []
 		if k1 > 1 && cut_index > 1
-			# println("-- LEFT -- ")
-			left = _entropy_discretize_sorted(C[1:(cut_index-1), :])
+			println("-- LEFT -- ")
+			left = _entropy_discretize_sorted(C[1:(cut_index), :])
 		end
 
 		if k2 > 1 && cut_index < nncols(C) - 1
-			# println("-- RIGTH -- ")
-			right = _entropy_discretize_sorted(C[cut_index:end, :])
+			println("-- RIGTH -- ")
+			right = _entropy_discretize_sorted(C[cut_index+1:end, :])
 		end
 		#COMMENT
-		# println("cut_index = $(cut_index)")
-		# println("right = $(right)")
-		# println("left = $(left)")
-		# println("ret = $(union(left, [cut_index], [i + cut_index for i in right]))")
-		# println("===========================")
+		println("cut_index = $(cut_index)")
+		println("right = $(right)")
+		println("left = $(left)")
+		println("ret = $(union(left, [cut_index +1], [(i + cut_index ) for i in right]))")
+		println("===========================")
 
-		return union(left, [cut_index], [(i + cut_index - 1) for i in right])
-	# elseif force
-	# 	return [cut_index]
+		return union(left, [cut_index + 1], [(i + cut_index) for i in right])
+	elseif force
+        print("QUIIIIIIIIIIIIIIIIIIIIi")
+		return [cut_index + 1]
 	else
 		return []
 	end
@@ -183,6 +197,7 @@ function discretize(
 	y::AbstractVector
 )
 	vals, counts_ = contingency(X,y)
-	cut_ind = _entropy_discretize_sorted(counts_)
+    println("values = ",vals)
+	cut_ind = _entropy_discretize_sorted(counts_, force=true)
 	return [vals[ind] for ind in cut_ind]
 end

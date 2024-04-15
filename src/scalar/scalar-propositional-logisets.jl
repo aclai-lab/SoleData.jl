@@ -145,20 +145,13 @@ function alphabet(
             Xcol_values = X[:, varname(feature(mc))]
             if discretizedomain
                 # TODO @Gio
-                println("To-discretize:")
-                println(Xcol_values)
                 thresholds = discretize(Xcol_values, y)
-                println("Discretized:")
-                println(thresholds)
             else
                 thresholds = unique(Xcol_values)
                 sorted && (thresholds = sort(thresholds,
                             rev=(truerfirst & (polarity(test_operator(mc)) == false))
                     ))
             end
-            #
-            # readline()
-            #
             UnivariateScalarAlphabet((mc, thresholds))
         end, scalarmetaconds)
     return UnionAlphabet(alphabets)
