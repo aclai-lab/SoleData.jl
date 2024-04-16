@@ -120,12 +120,12 @@ end
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
 function alphabet(
     X::PropositionalLogiset,
-    y::AbstractVector,
     sorted = true;
     test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
     truerfirst::Bool = false,
     skipextremes::Bool = true,
-    discretizedomain::Bool = nothing
+    discretizedomain::Bool = nothing,
+    y::Union{Nothing, AbstractVector} = nothing,
 )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
@@ -145,6 +145,7 @@ function alphabet(
             Xcol_values = X[:, varname(feature(mc))]
             if discretizedomain
                 # TODO @Gio
+                @assert !isnothing(y)
                 thresholds = discretize(Xcol_values, y)
             else
                 thresholds = unique(Xcol_values)
