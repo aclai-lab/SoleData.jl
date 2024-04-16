@@ -20,7 +20,8 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
         if Tables.istable(tabulardataset)
             @assert DataAPI.nrow(tabulardataset) > 0 "Could not initialize " *
                 "PropositionalLogiset with a table with no rows."
-            @assert all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) "Could not " *
+            # !all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) && @show tabulardataset
+            @assert all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) "Could not "
                 "initialize PropositionalLogiset with a table of non-real values: " *
                 "$(Union{eltype.(Tables.columns(tabulardataset))...})"
             new{T}(tabulardataset)
