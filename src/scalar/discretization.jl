@@ -1,6 +1,7 @@
 using StatsBase: addcounts!
 ############################################################################################
-############################## Discretization Fayyad Irani #################################
+######################### Fayyad Discretization Algorithm ##################################
+# Reference: Multi-interval discretization of continuous-valued attributes for classification learning, Fayyad, 1993
 ############################################################################################
 
 nncols(M::Matrix) = size(M)[1]
