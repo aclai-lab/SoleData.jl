@@ -21,8 +21,8 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
             @assert DataAPI.nrow(tabulardataset) > 0 "Could not initialize " *
                 "PropositionalLogiset with a table with no rows."
             # !all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) && @show tabulardataset
-            @assert all(t->t<:Real, eltype.(Tables.columns(tabulardataset))) "Could not "
-                "initialize PropositionalLogiset with a table of non-real values: " *
+            @assert all(t->t<:Union{Real,AbstractString}, eltype.(Tables.columns(tabulardataset))) "Could not "
+                "initialize PropositionalLogiset with a table of not acceptable values: " *
                 "$(Union{eltype.(Tables.columns(tabulardataset))...})"
             new{T}(tabulardataset)
         else
@@ -143,15 +143,20 @@ function alphabet(
     # Qui calcola due volte le stesse thresholds, (una volt per ≤ e l' altra per ≥)
     alphabets = map(mc ->begin
             Xcol_values = X[:, varname(feature(mc))]
-            if discretizedomain
-                # TODO @Gio
-                @assert !isnothing(y)
-                thresholds = discretize(Xcol_values, y)
+            if isordered(test_operator(mc))
+                if discretizedomain
+                    # TODO @Gio
+                    @assert !isnothing(y)
+                    thresholds = discretize(Xcol_values, y)
+                else
+                    thresholds = unique(Xcol_values)
+                    sorted && (thresholds = sort(thresholds,
+                                rev=(truerfirst & (polarity(test_operator(mc)) == false))
+                        ))
+                end
+            # Categorical values
             else
                 thresholds = unique(Xcol_values)
-                sorted && (thresholds = sort(thresholds,
-                            rev=(truerfirst & (polarity(test_operator(mc)) == false))
-                    ))
             end
             UnivariateScalarAlphabet((mc, thresholds))
         end, scalarmetaconds)

@@ -118,7 +118,7 @@ function discretize(
 	threshold_domain::AbstractVector,
 	y::AbstractVector
 )
-	vals, counts_ = contingency(X,y)
+	vals, counts_ = contingency(threshold_domain,y)
 	cut_ind = _entropy_discretize_sorted(counts_, force=true)
 	return [vals[ind] for ind in cut_ind]
 end
