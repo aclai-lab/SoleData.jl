@@ -319,15 +319,18 @@ struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
     featcondition::Tuple{ScalarMetaCondition,Vector}
 end
 
-
 function atoms(c::UnivariateScalarAlphabet)
     mc, thresholds = c.featcondition
     return Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
-metacond(c::UnivariateScalarAlphabet) = c.featcondition[1]
-test_operator(c::UnivariateScalarAlphabet) = test_operator(metacond(c))
-feature(c::UnivariateScalarAlphabet) = feature(metacond(c))
+metacond(c::UnivariateScalarAlphabet)   = c.featcondition[1]
+thresholds(c::UnivariateScalarAlphabet) = c.featcondition[2]
+
+feature(c::UnivariateScalarAlphabet)        = feature(metacond(c))
+test_operator(c::UnivariateScalarAlphabet)  = test_operator(metacond(c))
+
+natoms(c::UnivariateScalarAlphabet) = length(thresholds(c))
 
 function Base.show(io::IO, c::UnivariateScalarAlphabet)
     mc, thresholds = c.featcondition
@@ -341,3 +344,14 @@ function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:
     idx = findfirst((chas) -> chas.featcondition[1] == metacond(fc), chas)
     return !isnothing(idx) && Base.in(threshold(fc), chas[idx].featcondition[2])
 end
+
+function randatom(
+    rng::AbstractRNG,
+    a::UnivariateScalarAlphabet
+)::Atom
+    @assert all(x->isfinite(x), alphs) "alphabet must be finite"
+    (mc, thresholds) = c.featcondition
+    return Atom(ScalarCondition(mc, rand(rng, thresholds)))
+end
+
+randatom(c::UnivariateScalarAlphabet) = randatom(Random.GLOBAL_RNG, c)

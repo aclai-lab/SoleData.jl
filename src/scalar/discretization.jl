@@ -1,5 +1,7 @@
+using StatsBase: addcounts!
 ############################################################################################
-############################## Discretization Fayyad Irani #################################
+######################### Fayyad Discretization Algorithm ##################################
+# Reference: Multi-interval discretization of continuous-valued attributes for classification learning, Fayyad, 1993
 ############################################################################################
 
 nncols(M::Matrix) = size(M)[1]
@@ -93,6 +95,8 @@ function _entropy_discretize_sorted(
     k = sum(S_c .> 0)
     k1 = sum(S1_c .> 0)
     k2 = sum(S2_c .> 0)
+
+    @assert k < 80 "Too many classes"
 
     # asserty k > 0
     delta = log2(3^k - 2) - (k * ES - k1 * ES1 - k2 * ES2)
