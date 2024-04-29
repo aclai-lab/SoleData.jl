@@ -1,4 +1,4 @@
-
+import SoleLogics: randatom
 ############################################################################################
 
 const DEFAULT_SCALARCOND_FEATTYPE = SoleData.VarFeature
@@ -238,7 +238,8 @@ function _parsecondition(
     slices = match(r, expr)
 
     @assert !isnothing(slices) && length(slices) == 3 "Could not parse ScalarCondition from " *
-        "expression $(repr(expr))."
+        "expression # TODO va in Sole Logics ? @EdoToGio
+        $(repr(expr))."
 
     slices = string.(slices)
 
@@ -349,8 +350,7 @@ function randatom(
     rng::AbstractRNG,
     a::UnivariateScalarAlphabet
 )::Atom
-    @assert all(x->isfinite(x), alphs) "alphabet must be finite"
-    (mc, thresholds) = c.featcondition
+    (mc, thresholds) = a.featcondition
     return Atom(ScalarCondition(mc, rand(rng, thresholds)))
 end
 
