@@ -22,9 +22,10 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
         if Tables.istable(tabulardataset)
             @assert DataAPI.nrow(tabulardataset) > 0 "Could not initialize " *
                 "PropositionalLogiset with a table with no rows."
-            @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(Tables.columns(tabulardataset))) "Could not " *
-                "initialize PropositionalLogiset with a table of not acceptable values: " *
-                "$(Union{eltype.(Tables.columns(tabulardataset))...})"
+            @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(Tables.columns(tabulardataset))) "" *
+                "Unexpected eltypes for some columns. `Union{Real,AbstractString,CategoricalValue}`` is expected, but " *
+                "`$(Union{eltype.(Tables.columns(tabulardataset))...})`` " *
+                "encountered." *
             new{T}(tabulardataset)
         else
             error("Table interface not implemented for $(typeof(tabulardataset)) type")
