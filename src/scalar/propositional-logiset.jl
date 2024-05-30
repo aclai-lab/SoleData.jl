@@ -177,6 +177,7 @@ end
 function check(
     φ::Atom{<:ScalarCondition},
     X::PropositionalLogiset;
+    _fastmath = Val(true), # TODO warning!!!
     kwargs...,
 )::BitVector
 
@@ -187,7 +188,11 @@ function check(
     cond_feature = feature(cond)
 
     col = varname(cond_feature)
-    return @fastmath cond_operator.(X[:, col], cond_threshold)
+    if _fastmath == Val(true)
+        return @fastmath cond_operator.(X[:, col], cond_threshold)
+    else
+        return cond_operator.(X[:, col], cond_threshold)
+    end
 end
 
 function check(

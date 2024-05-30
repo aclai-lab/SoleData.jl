@@ -358,6 +358,8 @@ end
 
 ############################################################################################
 
+using LinearAlgebra
+
 """
     ObliqueScalarCondition(features, b, u, test_operator)
 
@@ -387,3 +389,9 @@ hasdual(::ObliqueScalarCondition) = true
 dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))
 
 syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] ⋈ 0"
+
+function checkcondition(c::ObliqueScalarCondition, args...; kwargs...)
+    f = [featvalue(f, args...; kwargs...) for f in c.features]
+    val = LinearAlgebra.dot((f .- c.b), c.u)
+    apply_test_operator(test_operator(c), val, 0)
+end
