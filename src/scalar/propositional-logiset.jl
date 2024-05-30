@@ -7,13 +7,23 @@ import SoleLogics: interpret
 
 
 include("discretization.jl")
+
 ############################################################################################
 
-# TODO aggiungere controllo Nan
+using SoleLogics: AbstractAssignment
+abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
+
+############################################################################################
+
+# TODO Add NaN checks.
+# TODOO @Edo Add examples to docstring, showing different ways of slicing it.
 """
-TODO add docstring.
-- Si comporta come la table che ha dentro,
-- e se accedi a più valori, ritorni PropositionalLogiset
+    PropositionalLogiset(table)
+A logiset of propositional interpretations, wrapping a Tables' table of real/string/categorical values.
+
+See also
+[`AbstractLogiset`](@ref),
+[`AbstractAssignment`](@ref).
 """
 struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
     tabulardataset::T
@@ -56,11 +66,9 @@ function features(X::PropositionalLogiset)
 end
 
 
-# function Base.show(io::IO, X::PropositionalLogiset; kwargs...)
-#     println(io, displaystructure(X; kwargs...))
-#     println(io, "Table:")
-#     println(io, gettable(X))
-# end
+function Base.show(io::IO, X::PropositionalLogiset; kwargs...)
+    println(io, displaystructure(X; kwargs...))
+end
 
 function displaystructure(X::PropositionalLogiset;
     indent_str = "",
@@ -118,6 +126,7 @@ function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer
     return Tables.getcolumn(Tables.columns(gettable(X)), col)[row]
 end
 
+# TODO @Edo: add thorough description of this function
 # TODO: @test_nowarn alphabet(X, false)
 # TODO: @test_broken alphabet(X, false; skipextremes = true)
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
@@ -141,14 +150,12 @@ function alphabet(
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
     scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
 
-    # TODO Possibile ottimizzazione
-    # Qui calcola due volte le stesse thresholds, (una volt per ≤ e l' altra per ≥)
+    # TODO @Edo. Optimization opportunity, since for ≤ and ≥ the same thresholds are computed!
     alphabets = map(mc ->begin
             Xcol_values = X[:, varname(feature(mc))]
             if isordered(test_operator(mc))
                 if discretizedomain
-                    # TODO @Gio
-                    @assert !isnothing(y)
+                    @assert !isnothing(y) "Please, provide `y` keyword argument to apply Fayyad's discretization algorithm."
                     thresholds = discretize(Xcol_values, y)
                 else
                     thresholds = unique(Xcol_values)
@@ -166,6 +173,7 @@ function alphabet(
 
 end
 
+# Note that this method is important and very fast!
 function check(
     φ::Atom{<:ScalarCondition},
     X::PropositionalLogiset;
@@ -200,6 +208,8 @@ function check(
     return cond_operator(X[i_instance, col], cond_threshold)
 end
 
+# Note: differently from other parts of the framework, where the opposite is true,
+#  here `interpret` depends on `check`,
 function interpret(
     φ::Atom{<:ScalarCondition},
     i::LogicalInstance{<:PropositionalLogiset},

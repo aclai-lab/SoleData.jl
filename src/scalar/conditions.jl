@@ -239,8 +239,7 @@ function _parsecondition(
     slices = match(r, expr)
 
     @assert !isnothing(slices) && length(slices) == 3 "Could not parse ScalarCondition from " *
-        "expression # TODO va in Sole Logics ? @EdoToGio
-        $(repr(expr))."
+        "expression $(repr(expr))."
 
     slices = string.(slices)
 
@@ -260,6 +259,7 @@ end
 ############################################################################################
 ############################################################################################
 
+# TODO remove in favor of UnionAlphabet{UnboundedUnivariateScalarAlphabet}
 # """
 #     struct UnboundedScalarAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C}
 #         metaconditions::Vector{<:ScalarMetaCondition}
@@ -359,9 +359,12 @@ end
 ############################################################################################
 
 """
-TODO
+    ObliqueScalarCondition(features, b, u, test_operator)
 
-((features - b) * u) ⋈ 0
+An oblique scalar condition (see *oblique decision trees*),
+such as \$((features - b) ⋅ u) ≥ 0\$, where `features` is
+a set of \$m\$ features, and \$b,u ∈ ℝ^m\$.
+
 See also
 [`AbstractCondition`](@ref),
 [`ScalarCondition`](@ref).
@@ -378,11 +381,7 @@ struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCo
 
 end
 
-# TODO
-# featuretype(::Type{<:ObliqueScalarCondition{FT}}) where {FT<:AbstractFeature} = FT
-# featuretype(c::ObliqueScalarCondition) = featuretype(typeof(FT))
-
-test_operator(m::ScalarMetaCondition) = m.test_operator
+test_operator(m::ObliqueScalarCondition) = m.test_operator
 
 hasdual(::ObliqueScalarCondition) = true
 dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))

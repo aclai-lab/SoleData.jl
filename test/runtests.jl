@@ -23,6 +23,7 @@ test_suites = [
     ("MultiLogisets", [ "multilogisets.jl", ]),
     ("MLJ", [ "MLJ.jl", ]),
     ("Minify", ["minify.jl"]),
+    ("Discretization", ["discretization.jl"]),
     ("Parse", ["parse.jl"]),
 ]
 
