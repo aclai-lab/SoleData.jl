@@ -3,6 +3,7 @@ import SoleLogics: randatom
 
 const DEFAULT_SCALARCOND_FEATTYPE = SoleData.VarFeature
 
+# TODO ScalarMetaCondition is more like... an Alphabet, than a Condition.
 """
     struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
         feature::FT
@@ -351,10 +352,9 @@ function randatom(
     a::UnivariateScalarAlphabet
 )::Atom
     (mc, thresholds) = a.featcondition
-    return Atom(ScalarCondition(mc, rand(rng, thresholds)))
+    threshold = rand(rng, thresholds)
+    return Atom(ScalarCondition(mc, threshold))
 end
-
-randatom(c::UnivariateScalarAlphabet) = randatom(Random.GLOBAL_RNG, c)
 
 ############################################################################################
 
