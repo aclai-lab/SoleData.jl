@@ -58,7 +58,7 @@ _formulas = [randformula(rngcube, 3, alph, [SoleLogics.BASE_PROPOSITIONAL_CONNEC
 # syntaxstring.(_formulas) .|> println;
 
 i_instance = 1
-@test_nowarn checkcondition(value(alph.atoms[1]), logiset, i_instance, first(allworlds(logiset, i_instance)))
+@test_nowarn checkcondition(SoleLogics.value(alph.atoms[1]), logiset, i_instance, first(allworlds(logiset, i_instance)))
 
 c1 = @test_nowarn [
         [check(φ, logiset, i_instance, w) for φ in _formulas]

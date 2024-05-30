@@ -295,7 +295,7 @@ end
 # Base.isfinite(::Type{<:UnboundedScalarAlphabet}) = false
 
 # function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarAlphabet)
-#     fc = value(p)
+#     fc = SoleLogics.value(p)
 #     idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
 #     return !isnothing(idx)
 # end
@@ -340,7 +340,7 @@ end
 
 # Optimized lookup for alphabet union
 function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet})
-    fc = value(p)
+    fc = SoleLogics.value(p)
     chas = alphabets(a)
     idx = findfirst((chas) -> chas.featcondition[1] == metacond(fc), chas)
     return !isnothing(idx) && Base.in(threshold(fc), chas[idx].featcondition[2])
@@ -355,3 +355,36 @@ function randatom(
 end
 
 randatom(c::UnivariateScalarAlphabet) = randatom(Random.GLOBAL_RNG, c)
+
+############################################################################################
+
+"""
+TODO
+
+((features - b) * u) ⋈ 0
+See also
+[`AbstractCondition`](@ref),
+[`ScalarCondition`](@ref).
+"""
+struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
+
+    # Feature: a scalar function that can be computed on a world
+    features::Vector{<:FT}
+    b::Vector{<:Real}
+    u::Vector{<:Real}
+
+    # Test operator (e.g. ≥)
+    test_operator::O
+
+end
+
+# TODO
+# featuretype(::Type{<:ObliqueScalarCondition{FT}}) where {FT<:AbstractFeature} = FT
+# featuretype(c::ObliqueScalarCondition) = featuretype(typeof(FT))
+
+test_operator(m::ScalarMetaCondition) = m.test_operator
+
+hasdual(::ObliqueScalarCondition) = true
+dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))
+
+syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] ⋈ 0"

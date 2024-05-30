@@ -32,10 +32,10 @@ abstract type ScalarOneStepFormula{V} <: ScalarFormula end
 
 relation(f::ScalarOneStepFormula) = f.relation
 atom(f::ScalarOneStepFormula) = Atom(f.p)
-metacond(f::ScalarOneStepFormula{<:ScalarCondition}) = metacond(value(atom(f)))
-feature(f::ScalarOneStepFormula{<:ScalarCondition}) = feature(value(atom(f)))
-test_operator(f::ScalarOneStepFormula{<:ScalarCondition}) = test_operator(value(atom(f)))
-threshold(f::ScalarOneStepFormula{<:ScalarCondition}) = threshold(value(atom(f)))
+metacond(f::ScalarOneStepFormula{<:ScalarCondition}) = metacond(SoleLogics.value(atom(f)))
+feature(f::ScalarOneStepFormula{<:ScalarCondition}) = feature(SoleLogics.value(atom(f)))
+test_operator(f::ScalarOneStepFormula{<:ScalarCondition}) = test_operator(SoleLogics.value(atom(f)))
+threshold(f::ScalarOneStepFormula{<:ScalarCondition}) = threshold(SoleLogics.value(atom(f)))
 
 """
 Templated formula for ⟨R⟩ f ⋈ t.

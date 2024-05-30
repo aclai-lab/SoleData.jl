@@ -172,7 +172,7 @@ function check(
     kwargs...,
 )::BitVector
 
-    cond = value(φ)
+    cond = SoleLogics.value(φ)
 
     cond_threshold = threshold(cond)
     cond_operator = test_operator(cond)
@@ -189,7 +189,7 @@ function check(
     kwargs...,
 )::Bool
 
-    cond = value(φ)
+    cond = SoleLogics.value(φ)
 
     cond_threshold = threshold(cond)
     cond_operator = test_operator(cond)

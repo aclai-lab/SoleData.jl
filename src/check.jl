@@ -82,11 +82,11 @@ function check(
                             SoleLogics.ismodal(tok) && SoleLogics.isunary(tok) && SoleLogics.isdiamond(tok) &&
                             token(first(children(ψ))) isa Atom &&
                             # Note: metacond with same aggregator also works. TODO maybe use Conditions with aggregators inside and look those up.
-                            (onestep_memoset_is_complete || (metacond(value(token(first(children(ψ))))) in metaconditions(onestep_memoset))) &&
+                            (onestep_memoset_is_complete || (metacond(SoleLogics.value(token(first(children(ψ))))) in metaconditions(onestep_memoset))) &&
                             true
                         # println("ONESTEP!")
                         # println(syntaxstring(ψ))
-                        condition = value(token(first(children(ψ))))
+                        condition = SoleLogics.value(token(first(children(ψ))))
                         _metacond = metacond(condition)
                         _rel = SoleLogics.relation(tok)
                         _feature = feature(condition)
@@ -98,7 +98,7 @@ function check(
                     elseif tok isa Connective
                         _c(SoleLogics.collateworlds(fr, tok, map(f->readformula(memo_structure, f), children(ψ))))
                     elseif tok isa SyntaxLeaf
-                        condition = value(tok) # TODO write check(tok, X, i_instance, _w) and use it here instead of checkcondition.
+                        condition = SoleLogics.value(tok) # TODO write check(tok, X, i_instance, _w) and use it here instead of checkcondition.
                         _f(_w->checkcondition(condition, X, i_instance, _w), _c(allworlds(fr)))
                     else
                         error("Unexpected token encountered in check: $(typeof(tok))")

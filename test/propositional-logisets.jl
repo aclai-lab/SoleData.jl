@@ -25,8 +25,8 @@ X = PropositionalLogiset(df)
 
 a,b,c,d = collect((alphabet(X; test_operators = [≥, <]) |> atoms))[1:4]
 
-@test value(a) isa SoleData.ScalarCondition
-@test SoleData.feature(value(a)) isa SoleData.UnivariateSymbolValue
+@test SoleLogics.value(a) isa SoleData.ScalarCondition
+@test SoleData.feature(SoleLogics.value(a)) isa SoleData.UnivariateSymbolValue
 
 @test_broken begin
     f = parsefeature(SoleData.UnivariateSymbolValue, "x < 0.03425152849651658")
