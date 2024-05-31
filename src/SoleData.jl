@@ -51,6 +51,8 @@ using ThreadSafeDicts
 @reexport using SoleLogics
 import SoleLogics: frame
 
+using SoleLogics: value
+
 using SoleLogics: OneWorld, Interval, Interval2D
 using SoleLogics: Full0DFrame, Full1DFrame, Full2DFrame
 using SoleLogics: X, Y, Z
@@ -120,9 +122,6 @@ export alphabet
 
 # Logical datasets, where the instances are Kripke structures with scalar alphabets
 include("logiset.jl")
-
-using SoleLogics: AbstractAssignment
-abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
 
 include("modal-logisets.jl")
 

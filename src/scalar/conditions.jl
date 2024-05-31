@@ -3,6 +3,7 @@ import SoleLogics: randatom
 
 const DEFAULT_SCALARCOND_FEATTYPE = SoleData.VarFeature
 
+# TODO ScalarMetaCondition is more like... an Alphabet, than a Condition.
 """
     struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
         feature::FT
@@ -238,8 +239,7 @@ function _parsecondition(
     slices = match(r, expr)
 
     @assert !isnothing(slices) && length(slices) == 3 "Could not parse ScalarCondition from " *
-        "expression # TODO va in Sole Logics ? @EdoToGio
-        $(repr(expr))."
+        "expression $(repr(expr))."
 
     slices = string.(slices)
 
@@ -259,6 +259,7 @@ end
 ############################################################################################
 ############################################################################################
 
+# TODO remove in favor of UnionAlphabet{UnboundedUnivariateScalarAlphabet}
 # """
 #     struct UnboundedScalarAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C}
 #         metaconditions::Vector{<:ScalarMetaCondition}
@@ -295,7 +296,7 @@ end
 # Base.isfinite(::Type{<:UnboundedScalarAlphabet}) = false
 
 # function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarAlphabet)
-#     fc = value(p)
+#     fc = SoleLogics.value(p)
 #     idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
 #     return !isnothing(idx)
 # end
@@ -340,7 +341,7 @@ end
 
 # Optimized lookup for alphabet union
 function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet})
-    fc = value(p)
+    fc = SoleLogics.value(p)
     chas = alphabets(a)
     idx = findfirst((chas) -> chas.featcondition[1] == metacond(fc), chas)
     return !isnothing(idx) && Base.in(threshold(fc), chas[idx].featcondition[2])
@@ -351,7 +352,46 @@ function randatom(
     a::UnivariateScalarAlphabet
 )::Atom
     (mc, thresholds) = a.featcondition
-    return Atom(ScalarCondition(mc, rand(rng, thresholds)))
+    threshold = rand(rng, thresholds)
+    return Atom(ScalarCondition(mc, threshold))
 end
 
-randatom(c::UnivariateScalarAlphabet) = randatom(Random.GLOBAL_RNG, c)
+############################################################################################
+
+using LinearAlgebra
+
+"""
+    ObliqueScalarCondition(features, b, u, test_operator)
+
+An oblique scalar condition (see *oblique decision trees*),
+such as \$((features - b) ⋅ u) ≥ 0\$, where `features` is
+a set of \$m\$ features, and \$b,u ∈ ℝ^m\$.
+
+See also
+[`AbstractCondition`](@ref),
+[`ScalarCondition`](@ref).
+"""
+struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
+
+    # Feature: a scalar function that can be computed on a world
+    features::Vector{<:FT}
+    b::Vector{<:Real}
+    u::Vector{<:Real}
+
+    # Test operator (e.g. ≥)
+    test_operator::O
+
+end
+
+test_operator(m::ObliqueScalarCondition) = m.test_operator
+
+hasdual(::ObliqueScalarCondition) = true
+dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))
+
+syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] ⋈ 0"
+
+function checkcondition(c::ObliqueScalarCondition, args...; kwargs...)
+    f = [featvalue(f, args...; kwargs...) for f in c.features]
+    val = LinearAlgebra.dot((f .- c.b), c.u)
+    apply_test_operator(test_operator(c), val, 0)
+end

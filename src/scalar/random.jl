@@ -1,7 +1,7 @@
 import Base: rand
 using SoleLogics
 
-# # TODO @Michele Examples
+# Author: @Michele21
 # """
 #     Base.rand(
 #         rng::AbstractRNG,

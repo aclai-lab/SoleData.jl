@@ -252,7 +252,7 @@ end
         varname::Symbol
     end
 
-A univariate feature solely identified by its name and reference variable.
+A univariate feature solely identified by its symbol name.
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),

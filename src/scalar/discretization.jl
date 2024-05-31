@@ -2,9 +2,10 @@ using StatsBase: addcounts!
 ############################################################################################
 ######################### Fayyad Discretization Algorithm ##################################
 # Reference: Multi-interval discretization of continuous-valued attributes for classification learning, Fayyad, 1993
+# Author: @edo-007
 ############################################################################################
 
-nncols(M::Matrix) = size(M)[1]
+nncols(M::Matrix) = size(M, 1)
 
 function entropy_normalized2(D)
     rows = eachrow(D)
