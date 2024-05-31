@@ -2,6 +2,7 @@ using Test
 using SoleData
 using Tables
 using DataFrames
+
 df = DataFrame(x=[rand(10,10) for i in 1:4], y=[4:5, 3:4, 2:3, 1:2])
 @test_throws AssertionError PropositionalLogiset(df)
 
