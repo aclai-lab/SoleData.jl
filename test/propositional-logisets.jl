@@ -25,8 +25,8 @@ X = PropositionalLogiset(df)
 
 a,b,c,d = collect((alphabet(X; test_operators = [≥, <]) |> atoms))[1:4]
 
-@test value(a) isa SoleData.ScalarCondition
-@test SoleData.feature(value(a)) isa SoleData.UnivariateSymbolValue
+@test SoleLogics.value(a) isa SoleData.ScalarCondition
+@test SoleData.feature(SoleLogics.value(a)) isa SoleData.UnivariateSymbolValue
 
 @test_broken begin
     f = parsefeature(SoleData.UnivariateSymbolValue, "x < 0.03425152849651658")
@@ -34,33 +34,33 @@ a,b,c,d = collect((alphabet(X; test_operators = [≥, <]) |> atoms))[1:4]
 end
 
 # test interpret - Atom
-@test_nowarn interpret(a, X)                        
-@test_nowarn interpret(a, SoleLogics.LogicalInstance(X, 1))    
+@test_nowarn interpret(a, X)
+@test_nowarn interpret(a, SoleLogics.LogicalInstance(X, 1))
 @test_nowarn interpret(a, X, 1)
 
 sb = randformula(3, [a,b,c,d], [NEGATION, CONJUNCTION])
 # test interpret - SyntaxBranch
-@test_nowarn interpret(sb, X)                        
-@test_nowarn interpret(sb, SoleLogics.LogicalInstance(X, 1))    
+@test_nowarn interpret(sb, X)
+@test_nowarn interpret(sb, SoleLogics.LogicalInstance(X, 1))
 @test_nowarn interpret(sb, X, 1)
 
 # test interpret - Truth
-@test_nowarn interpret(TOP, X)                        
-@test_nowarn interpret(TOP, SoleLogics.LogicalInstance(X, 1))    
-@test_nowarn interpret(TOP, X, 1)  
+@test_nowarn interpret(TOP, X)
+@test_nowarn interpret(TOP, SoleLogics.LogicalInstance(X, 1))
+@test_nowarn interpret(TOP, X, 1)
 
 # test check - Atom
-@test_nowarn check(a, X)                        
-@test_nowarn check(a, SoleLogics.LogicalInstance(X, 1))    
+@test_nowarn check(a, X)
+@test_nowarn check(a, SoleLogics.LogicalInstance(X, 1))
 @test_nowarn check(a, X, 1)
 
 sb = randformula(3, [a,b,c,d], [NEGATION, CONJUNCTION])
 # test check - SyntaxBranch
-@test_nowarn check(sb, X)                        
-@test_nowarn check(sb, SoleLogics.LogicalInstance(X, 1))    
+@test_nowarn check(sb, X)
+@test_nowarn check(sb, SoleLogics.LogicalInstance(X, 1))
 @test_nowarn check(sb, X, 1)
 
 # test check - Truth
-@test_nowarn check(TOP, X)                        
-@test_nowarn check(TOP, SoleLogics.LogicalInstance(X, 1))    
-@test_nowarn check(TOP, X, 1)  
+@test_nowarn check(TOP, X)
+@test_nowarn check(TOP, SoleLogics.LogicalInstance(X, 1))
+@test_nowarn check(TOP, X, 1)
