@@ -342,9 +342,9 @@ end
 # Optimized lookup for alphabet union
 function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet})
     fc = SoleLogics.value(p)
-    chas = alphabets(a)
-    idx = findfirst((chas) -> chas.featcondition[1] == metacond(fc), chas)
-    return !isnothing(idx) && Base.in(threshold(fc), chas[idx].featcondition[2])
+    sas = subalphabets(a)
+    idx = findfirst((sa) -> sa.featcondition[1] == metacond(fc), sas)
+    return !isnothing(idx) && Base.in(threshold(fc), sas[idx].featcondition[2])
 end
 
 function randatom(

@@ -48,7 +48,7 @@ function Base.rand(
             "feature: $(feature)\n" *
             "test operator: $(test_operator)\n"
 
-    grouped_featconditions = map(cha -> cha.featcondition, alphabets(a))
+    grouped_featconditions = map(sa -> sa.featcondition, subalphabets(a))
 
     filtered_featconds = begin
         if !isnothing(metaconditions)

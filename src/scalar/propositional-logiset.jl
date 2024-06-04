@@ -151,7 +151,7 @@ function alphabet(
     scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
 
     # TODO @Edo. Optimization opportunity, since for ≤ and ≥ the same thresholds are computed!
-    alphabets = map(mc ->begin
+    sas = map(mc ->begin
             Xcol_values = X[:, varname(feature(mc))]
             if isordered(test_operator(mc))
                 if discretizedomain
@@ -169,7 +169,7 @@ function alphabet(
             end
             UnivariateScalarAlphabet((mc, thresholds))
         end, scalarmetaconds)
-    return UnionAlphabet(alphabets)
+    return UnionAlphabet(sas)
 
 end
 
