@@ -19,7 +19,26 @@ abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment
 # TODOO @Edo Add examples to docstring, showing different ways of slicing it.
 """
     PropositionalLogiset(table)
-A logiset of propositional interpretations, wrapping a Tables' table of real/string/categorical values.
+A logiset of propositional interpretations, wrapping a [Tables](https://github.com/JuliaData/Tables.jl)'
+table of real/string/categorical values.
+
+# Examples
+
+This structure can be used to check propositional formulas:
+```julia
+using SoleData, MLJBase
+
+X = PropositionalLogiset(MLJBase.load_iris())
+
+φ = parseformula(
+    "sepal_length > 5.8 ∧ sepal_width < 3.0 ∨ target == \"setosa\"";
+    atom_parser = a->Atom(parsecondition(SoleData.ScalarCondition, a; featuretype = SoleData.UnivariateSymbolValue))
+)
+
+check(φ, X) # Check the formula on the whole dataset
+
+check(φ, X, 10) # Check the formula on a single instance
+```
 
 See also
 [`AbstractLogiset`](@ref),
@@ -32,9 +51,9 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
         if Tables.istable(tabulardataset)
             @assert DataAPI.nrow(tabulardataset) > 0 "Could not initialize " *
                 "PropositionalLogiset with a table with no rows."
-            @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(Tables.columns(tabulardataset))) "" *
+            @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(collect(Tables.columns(tabulardataset)))) "" *
                 "Unexpected eltypes for some columns. `Union{Real,AbstractString,CategoricalValue}` is expected, but " *
-                "`$(Union{eltype.(Tables.columns(tabulardataset))...})`" *
+                "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})`" *
                 "encountered."
             new{T}(tabulardataset)
         else
@@ -49,12 +68,11 @@ Tables.istable(::Type{<:PropositionalLogiset}) = true
 Tables.rowaccess(::Type{PropositionalLogiset{T}}) where {T} = Tables.rowaccess(T)
 Tables.columnaccess(::Type{PropositionalLogiset{T}}) where {T} = Tables.columnaccess(T)
 Tables.materializer(::Type{PropositionalLogiset{T}}) where {T} = Tables.materializer(T)
-# Tables.rows(X::PropositionalLogiset{T}) where {T} = Tables.rows(gettable(X))
-# Tables.columns(X::PropositionalLogiset{T}) where {T} = Tables.columns(gettable(X))
 
 # Helpers
 @forward PropositionalLogiset.tabulardataset (Base.getindex, Base.setindex!)
 @forward PropositionalLogiset.tabulardataset (Tables.rows, Tables.columns, Tables.subset, Tables.schema, DataAPI.nrow, DataAPI.ncol)
+@forward PropositionalLogiset.tabulardataset (Tables.getcolumns,)
 
 ninstances(X::PropositionalLogiset) = DataAPI.nrow(gettable(X))
 nfeatures(X::PropositionalLogiset) = DataAPI.ncol(gettable(X))
@@ -101,7 +119,7 @@ end
 # Patch getindex so that vector-based slicings return PropositionalLogisets ;)
 # function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
 #     return (Base.getindex(gettable(X), rows, cols) |> PropositionalLogiset)
-#     # return X[:, col][row]
+#     # return Tables.getcolumn(gettable(X), col)[row]
 # end
 
 function instances(
@@ -123,7 +141,7 @@ function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector
 end
 
 function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer,Symbol})
-    return Tables.getcolumn(Tables.columns(gettable(X)), col)[row]
+    return Tables.getcolumn(gettable(X), col)[row]
 end
 
 # TODO @Edo: add thorough description of this function
@@ -144,7 +162,7 @@ function alphabet(
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
     get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
 
-    coltypes = eltype.(Tables.columns(gettable(X)))
+    coltypes = eltype.(collect(Tables.columns(gettable(X))))
     colnames = Tables.columnnames(gettable(X)) # features(X)
     feats = UnivariateSymbolValue.(Symbol.(colnames))
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
@@ -152,7 +170,8 @@ function alphabet(
 
     # TODO @Edo. Optimization opportunity, since for ≤ and ≥ the same thresholds are computed!
     sas = map(mc ->begin
-            Xcol_values = X[:, varname(feature(mc))]
+            feat = feature(mc)
+            Xcol_values = Tables.getcolumn(gettable(X), varname(feat))
             if isordered(test_operator(mc))
                 if discretizedomain
                     @assert !isnothing(y) "Please, provide `y` keyword argument to apply Fayyad's discretization algorithm."
@@ -189,9 +208,9 @@ function check(
 
     col = varname(cond_feature)
     if _fastmath == Val(true)
-        return @fastmath cond_operator.(X[:, col], cond_threshold)
+        return @fastmath cond_operator.(Tables.getcolumn(gettable(X), col), cond_threshold)
     else
-        return cond_operator.(X[:, col], cond_threshold)
+        return cond_operator.(Tables.getcolumn(gettable(X), col), cond_threshold)
     end
 end
 

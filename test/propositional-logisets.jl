@@ -1,3 +1,33 @@
+
+
+using SoleData
+using MLJBase
+
+X = MLJBase.load_iris()
+X = PropositionalLogiset(X)
+alphabet(X) |> atoms .|> syntaxstring
+
+φ =
+Atom(parsecondition(SoleData.ScalarCondition, "sepal_length > 5.8"; featuretype = SoleData.UnivariateSymbolValue)) ∧
+Atom(parsecondition(SoleData.ScalarCondition, "sepal_width < 3.0";  featuretype = SoleData.UnivariateSymbolValue)) ∨
+Atom(parsecondition(SoleData.ScalarCondition, "target == \"setosa\"";      featuretype = SoleData.UnivariateSymbolValue))
+
+c1 = check(φ, X)
+
+φ =
+parseformula("sepal_length > 5.8 ∧ sepal_width < 3.0 ∨ target == \"setosa\"";
+    atom_parser = a->Atom(parsecondition(SoleData.ScalarCondition, a; featuretype = SoleData.UnivariateSymbolValue))
+)
+
+c2 = check(φ, X)
+
+@test c1 == c2
+
+
+############################################################################################
+############################################################################################
+############################################################################################
+
 using Test
 using SoleData
 using Tables
@@ -30,7 +60,8 @@ a,b,c,d = collect((alphabet(X; test_operators = [≥, <]) |> atoms))[1:4]
 @test SoleData.feature(SoleLogics.value(a)) isa SoleData.UnivariateSymbolValue
 
 @test_broken begin
-    f = parsefeature(SoleData.UnivariateSymbolValue, "x < 0.03425152849651658")
+    f = parsefeature(SoleData.UnivariateSymbolValue, ":x")
+    c = parsecondition(SoleData.ScalarCondition, "x < 0.03425152849651658"; featuretype = SoleData.UnivariateSymbolValue)
     f isa SoleData.UnivariateSymbolValue && isapprox(SoleData.threshold(f), 0.03425152849651658)
 end
 
