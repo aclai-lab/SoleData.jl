@@ -3,7 +3,7 @@ using SoleLogics
 
 # Author: @Michele21
 # """
-#     Base.rand(
+#     randatom(
 #         rng::AbstractRNG,
 #         a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet};
 #         metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
@@ -26,7 +26,7 @@ using SoleLogics
 # [`ScalarCondition`](@ref),
 # [`ScalarMetaCondition`](@ref).
 # """
-function Base.rand(
+function randatom(
     rng::AbstractRNG,
     a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet};
     metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
