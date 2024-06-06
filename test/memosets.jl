@@ -28,7 +28,7 @@ bool_logiset = SoleData.ExplicitBooleanModalLogiset([(Dict([w => sample(rng, fea
 # metaconditions = [ScalarMetaCondition(features[1], >)]
 metaconditions = [ScalarMetaCondition(f, test_op) for f in features for test_op in [>,<]]
 
-@test_nowarn ScalarOneStepGlobalMemoset{Interval,Float64}(rand(1,22))
+@test_nowarn ScalarOneStepGlobalMemoset{SoleLogics.Interval,Float64}(rand(1,22))
 
 perform_initialization = true
 bool_relationalmemoset = @test_nowarn ScalarOneStepRelationalMemoset(bool_logiset, metaconditions, [globalrel], perform_initialization)

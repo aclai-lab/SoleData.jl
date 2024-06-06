@@ -40,7 +40,7 @@ using SoleData: apply_test_operator, existential_aggregator, aggregator_bottom, 
 import SoleData: features, nfeatures
 using SoleData: worldtype, featvaltype, featuretype, frametype
 
-import SoleData: representatives, ScalarMetaCondition, ScalarCondition, featvaltype
+import SoleData: representatives, ScalarMetaCondition, ScalarCondition, ObliqueScalarCondition, featvaltype
 import SoleData: ninstances, nrelations, nfeatures, check, instances, minify
 import SoleData: displaystructure, frame
 import SoleData: alphabet, isminifiable

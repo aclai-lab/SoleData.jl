@@ -103,6 +103,7 @@ end
 
 ############################################################################################
 
+# TODO remove and harmonize
 function featvalue(
     feature::AbstractFeature,
     X,
@@ -110,6 +111,15 @@ function featvalue(
     w::W,
 ) where {W<:AbstractWorld}
     featvalue(X, i_instance, w, feature)
+end
+
+function featvalue(
+    feature::AbstractFeature,
+    X::AbstractLogiset,
+    i_instance::Integer,
+    args...
+) where {W<:AbstractWorld}
+    featvalue(X, i_instance, feature, args...)
 end
 
 ############################################################################################

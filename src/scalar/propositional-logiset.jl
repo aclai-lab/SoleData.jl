@@ -4,6 +4,7 @@ using Tables: DataAPI
 using SoleLogics: LogicalInstance
 using CategoricalArrays: CategoricalValue
 import SoleLogics: interpret
+import SoleData: UnivariateSymbolValue, UnivariateValue, featvalue
 
 
 include("discretization.jl")
@@ -83,6 +84,23 @@ function features(X::PropositionalLogiset)
     return UnivariateSymbolValue.(Symbol.(colnames))
 end
 
+function featvalue(
+    f::UnivariateSymbolValue,
+    X::PropositionalLogiset,
+    i_instance::Integer,
+    args...
+)
+    X[i_instance, varname(f)]
+end
+
+function featvalue(
+    f::UnivariateValue,
+    X::PropositionalLogiset,
+    i_instance::Integer,
+    args...
+)
+    X[i_instance, f.i_variable]
+end
 
 function Base.show(io::IO, X::PropositionalLogiset; kwargs...)
     println(io, displaystructure(X; kwargs...))
@@ -127,7 +145,11 @@ function instances(
     inds::AbstractVector{<:Integer},
     return_view::Union{Val{true},Val{false}} = Val(false)
 )
-    return PropositionalLogiset(if return_view == Val(true) @view X.tabulardataset[inds, :] else X.tabulardataset[inds, :] end)
+    return PropositionalLogiset(if return_view == Val(true)
+        Tables.subset(gettable(X), inds; viewhint = true)
+    else
+        Tables.subset(gettable(X), inds; viewhint = false)
+    end)
 end
 
 function Base.getindex(X::PropositionalLogiset, rows::Union{Colon}, cols::Union{Colon})
@@ -248,10 +270,20 @@ function check(
     return cond_operator(X[i_instance, col], cond_threshold)
 end
 
+
+function check(
+    φ::Atom{<:AbstractCondition},
+    i::LogicalInstance{<:PropositionalLogiset},
+    args...;
+    kwargs...
+)
+    return checkcondition(SoleLogics.value(φ), i, args...; kwargs...)
+end
+
 # Note: differently from other parts of the framework, where the opposite is true,
 #  here `interpret` depends on `check`,
 function interpret(
-    φ::Atom{<:ScalarCondition},
+    φ::Atom{<:Union{ScalarCondition,ObliqueScalarCondition}},
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...,
