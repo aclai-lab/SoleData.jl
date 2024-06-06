@@ -70,7 +70,7 @@ Tables.columnaccess(::Type{PropositionalLogiset{T}}) where {T} = Tables.columnac
 Tables.materializer(::Type{PropositionalLogiset{T}}) where {T} = Tables.materializer(T)
 
 # Helpers
-@forward PropositionalLogiset.tabulardataset (Base.getindex, Base.setindex!)
+@forward PropositionalLogiset.tabulardataset (Base.setindex!)
 @forward PropositionalLogiset.tabulardataset (Tables.rows, Tables.columns, Tables.subset, Tables.schema, DataAPI.nrow, DataAPI.ncol)
 @forward PropositionalLogiset.tabulardataset (Tables.getcolumns,)
 
@@ -130,7 +130,19 @@ function instances(
     return PropositionalLogiset(if return_view == Val(true) @view X.tabulardataset[inds, :] else X.tabulardataset[inds, :] end)
 end
 
-function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
+function Base.getindex(X::PropositionalLogiset, rows::Union{Colon}, cols::Union{Colon})
+    __getindex(X, rows, cols)
+end
+function Base.getindex(X::PropositionalLogiset, rows::Union{Colon}, cols::Union{AbstractVector})
+    __getindex(X, rows, cols)
+end
+function Base.getindex(X::PropositionalLogiset, rows::Union{AbstractVector}, cols::Union{Colon})
+    __getindex(X, rows, cols)
+end
+function Base.getindex(X::PropositionalLogiset, rows::Union{AbstractVector}, cols::Union{AbstractVector})
+    __getindex(X, rows, cols)
+end
+function __getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
     if Tables.columnaccess(X)
         coliter = Tables.columns(gettable(X))[cols]
         return (Tables.rows(coliter)[rows] |> PropositionalLogiset)
@@ -138,6 +150,10 @@ function Base.getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector
         rowiter = Tables.rows(gettable(X))[rows]
         return (Tables.columns(rowiter)[cols] |> PropositionalLogiset)
     end
+end
+
+function Base.getindex(X::PropositionalLogiset, args...)
+    Base.getindex(gettable(X), args...)
 end
 
 function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer,Symbol})
