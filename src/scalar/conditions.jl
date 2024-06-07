@@ -295,7 +295,7 @@ end
 
 # Base.isfinite(::Type{<:UnboundedScalarAlphabet}) = false
 
-# function Base.in(p::Atom{<:Union{ScalarCondition,ObliqueScalarCondition}}, a::UnboundedScalarAlphabet)
+# function Base.in(p::Atom{<:AbstractCondition}, a::UnboundedScalarAlphabet)
 #     fc = SoleLogics.value(p)
 #     idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
 #     return !isnothing(idx)

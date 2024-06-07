@@ -50,11 +50,12 @@ end
 # TODO docstring
 function featvalue(
     feature::AbstractFeature,
-    X::AbstractModalLogiset{W},
+    X::AbstractModalLogiset,
     i_instance::Integer,
-    w::W,
+    args...;
+    kwargs...
 ) where {W<:AbstractWorld}
-    readfeature(feature, X, featchannel(X, i_instance, feature), w)
+    readfeature(feature, X, featchannel(X, i_instance, feature), args...; kwargs...)
 end
 
 function featvalue!(

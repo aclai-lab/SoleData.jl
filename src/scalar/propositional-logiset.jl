@@ -186,13 +186,14 @@ end
 # TODO: @test_nowarn alphabet(X, false)
 # TODO: @test_broken alphabet(X, false; skipextremes = true)
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
+# TODO join discretize and y parameter into a single parameter.
+# TODO join sorted and y truerfirst into a single parameter.
 function alphabet(
     X::PropositionalLogiset,
     sorted = true;
     test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
-    truerfirst::Bool = false,
-    skipextremes::Bool = true,
-    discretizedomain::Bool = false,
+    # skipextremes::Bool = true,
+    discretizedomain::Bool = false, # TODO default behavior depends on test_operator
     y::Union{Nothing, AbstractVector} = nothing,
 )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
@@ -204,41 +205,57 @@ function alphabet(
     colnames = Tables.columnnames(gettable(X)) # features(X)
     feats = UnivariateSymbolValue.(Symbol.(colnames))
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
-    scalarmetaconds = (ScalarMetaCondition(feat, test_op) for (feat,coltype) in zip(feats,coltypes) for test_op in get_test_operators(test_operators, coltype))
+    
+    if discretizedomain && isnothing(y)
+        error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
+    end
 
-    # TODO @Edo. Optimization opportunity, since for ≤ and ≥ the same thresholds are computed!
-    sas = map(mc ->begin
-            feat = feature(mc)
-            Xcol_values = Tables.getcolumn(gettable(X), varname(feat))
-            if isordered(test_operator(mc))
-                if discretizedomain
-                    @assert !isnothing(y) "Please, provide `y` keyword argument to apply Fayyad's discretization algorithm."
-                    thresholds = discretize(Xcol_values, y)
-                else
-                    thresholds = unique(Xcol_values)
-                    sorted && (thresholds = sort(thresholds,
-                                rev=(truerfirst & (polarity(test_operator(mc)) == false))
-                        ))
-                end
-            # Categorical values
-            else
-                thresholds = unique(Xcol_values)
+    grouped_sas = map((feat,coltype) ->begin
+            domain = Tables.getcolumn(gettable(X), varname(feat))
+            domain = unique(domain)
+
+            if discretizedomain
+                domain = discretize(domain, y)
             end
-            UnivariateScalarAlphabet((mc, thresholds))
-        end, scalarmetaconds)
+
+            # if sorted
+            #     # Heuristic ?
+            #     domain = sort(domain)
+            # end
+            
+            sub_alphabets = begin
+                test_ops = get_test_operators(test_operators, coltype)
+                
+                if sorted && !allequal(polarity, test_ops) # Different domain
+                    [begin
+                        mc = ScalarMetaCondition(feat, test_op)
+                        this_domain = sort(domain, rev = (truerfirst == !polarity(test_op)))
+                        UnivariateScalarAlphabet((mc, this_domain))
+                    end for test_op in test_ops]
+                else
+                    this_domain = sorted ? sort(domain, rev = (truerfirst == !polarity(test_ops[1]))) : domain
+                    [begin
+                        mc = ScalarMetaCondition(feat, test_op)
+                        UnivariateScalarAlphabet((mc, this_domain))
+                    end for test_op in test_ops]
+                end    
+            end
+
+            sub_alphabets
+        end, zip(feats,coltypes))
+    sas = vcat(grouped_sas...)
     return UnionAlphabet(sas)
 
 end
 
 # Note that this method is important and very fast!
-function check(
-    φ::Atom{<:ScalarCondition},
+function checkcondition(
+    cond::ScalarCondition,
     X::PropositionalLogiset;
     _fastmath = Val(true), # TODO warning!!!
     kwargs...,
 )::BitVector
 
-    cond = SoleLogics.value(φ)
 
     cond_threshold = threshold(cond)
     cond_operator = test_operator(cond)
@@ -252,15 +269,14 @@ function check(
     end
 end
 
-function check(
-    φ::Atom{<:ScalarCondition},
+function checkcondition(
+    cond::ScalarCondition,
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...,
 )::Bool
     @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
-    cond = SoleLogics.value(φ)
 
     cond_threshold = threshold(cond)
     cond_operator = test_operator(cond)
@@ -271,14 +287,13 @@ function check(
 end
 
 # Note that this method is important and very fast!
-function check(
-    φ::Atom{<:ObliqueScalarCondition},
+function checkcondition(
+    cond::ObliqueScalarCondition,
     X::PropositionalLogiset;
     _fastmath = Val(true), # TODO warning!!!
     kwargs...
 )::BitVector
 
-    cond = SoleLogics.value(φ)
 
     testop = test_operator(cond)
     # TODO: features
@@ -286,39 +301,17 @@ function check(
     return testop.(((Tables.matrix(gettable(X)) .- p') * n), 0)
 end
 
-function check(
-    φ::Atom{<:ObliqueScalarCondition},
+function checkcondition(
+    cond::ObliqueScalarCondition,
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...
 )::Bool
     @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
-    cond = SoleLogics.value(φ)
     
     testop = test_operator(cond)
     # TODO: features
     p, n = cond.b, cond.u
     return testop(dot(([col[i_instance] for col in Tables.columns(X)] .- p), n), 0)
-end
-
-
-# function check(
-#     φ::Atom{<:AbstractCondition},
-#     i::LogicalInstance{<:PropositionalLogiset},
-#     args...;
-#     kwargs...
-# )
-#     return checkcondition(SoleLogics.value(φ), i, args...; kwargs...)
-# end
-
-# Note: differently from other parts of the framework, where the opposite is true,
-#  here `interpret` depends on `check`,
-function interpret(
-    φ::Atom{<:Union{ScalarCondition,ObliqueScalarCondition}},
-    i::LogicalInstance{<:PropositionalLogiset},
-    args...;
-    kwargs...,
-)::Formula
-    return check(φ, i, args...; kwargs...) ? ⊤ : ⊥
 end

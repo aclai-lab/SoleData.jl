@@ -27,15 +27,6 @@ function checkcondition(c::AbstractCondition, args...; kwargs...)
         "Note that this value must be unique.")
 end
 
-# function checkcondition(
-#     c::AbstractCondition,
-#     X::AbstractModalLogiset{W,U,FT},
-#     i_instance::Integer,
-#     w::W,
-# ) where {W<:AbstractWorld,U,FT<:AbstractFeature}
-#     error("Please, provide method checkcondition(c::$(typeof(c)), X::$(typeof(X)), i_instance::$(typeof(i_instance)), w::$(typeof(w))).")
-# end
-
 function syntaxstring(c::AbstractCondition; kwargs...)
     return error("Please, provide method syntaxstring(::$(typeof(c)); kwargs...). " *
         "Note that this value must be unique.")
@@ -71,6 +62,39 @@ function parsecondition(
     kwargs...
 )
     return error("Please, provide method parsecondition(::$(Type{C}), expr::$(typeof(expr)); kwargs...).")
+end
+
+function check(
+    φ::Atom{<:AbstractCondition},
+    X::AbstractLogiset;
+    kwargs...
+)::BitVector
+    cond = SoleLogics.value(φ)
+    return checkcondition(cond, X; kwargs...)
+end
+
+function check(
+    φ::Atom{<:AbstractCondition},
+    i::LogicalInstance{<:AbstractLogiset},
+    args...;
+    kwargs...
+)::Bool
+    @warn "Attempting single-instance check. This is not optimal."
+    X, i_instance = SoleLogics.splat(i)
+    cond = SoleLogics.value(φ)
+    return checkcondition(cond, X, i_instance, args...; kwargs...)
+end
+
+# Note: differently from other parts of the framework, where the opposite is true,
+#  here `interpret` depends on `check`,
+function interpret(
+    φ::Atom{<:AbstractCondition},
+    i::LogicalInstance{<:PropositionalLogiset},
+    args...;
+    kwargs...
+)::Formula
+    @warn "Please use `check instead of `interpret` for crisp formulas."
+    return check(φ, i, args...; kwargs...) ? ⊤ : ⊥
 end
 
 ############################################################################################
