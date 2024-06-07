@@ -33,7 +33,7 @@ function featvalue(
     w::W,
     i_feature::Integer,
 ) where {W<:AbstractWorld}
-    featvalue(X, i_instance, w, features(X)[i_feature])
+    featvalue(features(X)[i_feature], X, i_instance, w)
 end
 
 function featvalue!(
@@ -43,7 +43,7 @@ function featvalue!(
     w::W,
     i_feature::Integer,
 ) where {W<:AbstractWorld}
-    featvalue(X, featval, i_instance, w, features(X)[i_feature])
+    featvalue!(features(X)[i_feature], X, featval, i_instance, w)
 end
 
 function featvalues!(
@@ -51,7 +51,7 @@ function featvalues!(
     featslice,
     i_feature::Integer,
 ) where {W<:AbstractWorld}
-    featvalues(X, featslice, features(X)[i_feature])
+    featvalues!(features(X)[i_feature], X, featslice)
 end
 
 using Tables

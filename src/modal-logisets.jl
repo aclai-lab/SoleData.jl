@@ -49,30 +49,30 @@ end
 
 # TODO docstring
 function featvalue(
+    feature::AbstractFeature,
     X::AbstractModalLogiset{W},
     i_instance::Integer,
     w::W,
-    feature::AbstractFeature,
 ) where {W<:AbstractWorld}
-    readfeature(X, featchannel(X, i_instance, feature), w, feature)
+    readfeature(feature, X, featchannel(X, i_instance, feature), w)
 end
 
 function featvalue!(
+    feature::AbstractFeature,
     X::AbstractModalLogiset{W},
     featval,
     i_instance::Integer,
     w::W,
-    feature::AbstractFeature,
 ) where {W<:AbstractWorld}
-    return error("Please, provide method featvalue!(::$(typeof(X)), featval::$(typeof(featval)), i_instance::$(typeof(i_instance)), w::$(typeof(w)), feature::$(typeof(feature))).")
+    return error("Please, provide method featvalue!(feature::$(typeof(feature)), X::$(typeof(X)), featval::$(typeof(featval)), i_instance::$(typeof(i_instance)), w::$(typeof(w))).")
 end
 
 function featvalues!(
+    feature::AbstractFeature,
     X::AbstractModalLogiset{W},
     featslice,
-    feature::AbstractFeature,
 ) where {W<:AbstractWorld}
-    return error("Please, provide method featvalues!(::$(typeof(X)), featslice::$(typeof(featslice)), feature::$(typeof(feature))).")
+    return error("Please, provide method featvalues!(feature::$(typeof(feature)), X::$(typeof(X)), featslice::$(typeof(featslice))).")
 end
 
 function frame(X::AbstractModalLogiset, i_instance::Integer)
@@ -178,7 +178,7 @@ function featvalue!(
     feature::AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing,
 ) where {W<:AbstractWorld}
-    cur_featval = featvalue(X, featval, i_instance, w, feature)
+    cur_featval = featvalue(feature, X, featval, i_instance, w)
     if featval && !cur_featval
         push!(X.d[i_instance][1][w], feature)
     elseif !featval && cur_featval
@@ -314,11 +314,11 @@ function readfeature(
 end
 
 function featvalue!(
+    feature::AbstractFeature,
     X::ExplicitModalLogiset{W},
     featval,
     i_instance::Integer,
     w::W,
-    feature::AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing,
 ) where {W<:AbstractWorld}
     X.d[i_instance][1][w][feature] = featval

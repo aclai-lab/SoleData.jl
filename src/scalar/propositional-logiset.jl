@@ -48,10 +48,10 @@ See also
 struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
     tabulardataset::T
 
-    function PropositionalLogiset(tabulardataset::T) where {T}
+    function PropositionalLogiset(tabulardataset::T; allow_no_instances = true) where {T}
         if Tables.istable(tabulardataset)
-            @assert DataAPI.nrow(tabulardataset) > 0 "Could not initialize " *
-                "PropositionalLogiset with a table with no rows."
+            # @assert !allow_no_instances && DataAPI.nrow(tabulardataset)>0 "Could not initialize "*
+            #     "PropositionalLogiset with a table with no rows."
             @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(collect(Tables.columns(tabulardataset)))) "" *
                 "Unexpected eltypes for some columns. `Union{Real,AbstractString,CategoricalValue}` is expected, but " *
                 "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})`" *
@@ -258,7 +258,8 @@ function check(
     args...;
     kwargs...,
 )::Bool
-
+    @warn "Attempting single-instance check. This is not optimal."
+    X, i_instance = SoleLogics.splat(i)
     cond = SoleLogics.value(φ)
 
     cond_threshold = threshold(cond)
@@ -266,19 +267,50 @@ function check(
     cond_feature = feature(cond)
 
     col = varname(cond_feature)
-    X, i_instance = SoleLogics.splat(i)
     return cond_operator(X[i_instance, col], cond_threshold)
 end
 
+# Note that this method is important and very fast!
+function check(
+    φ::Atom{<:ObliqueScalarCondition},
+    X::PropositionalLogiset;
+    _fastmath = Val(true), # TODO warning!!!
+    kwargs...
+)::BitVector
+
+    cond = SoleLogics.value(φ)
+
+    testop = test_operator(cond)
+    # TODO: features
+    p, n = cond.b, cond.u
+    return testop.(((Tables.matrix(gettable(X)) .- p') * n), 0)
+end
 
 function check(
-    φ::Atom{<:AbstractCondition},
+    φ::Atom{<:ObliqueScalarCondition},
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
     kwargs...
-)
-    return checkcondition(SoleLogics.value(φ), i, args...; kwargs...)
+)::Bool
+    @warn "Attempting single-instance check. This is not optimal."
+    X, i_instance = SoleLogics.splat(i)
+    cond = SoleLogics.value(φ)
+    
+    testop = test_operator(cond)
+    # TODO: features
+    p, n = cond.b, cond.u
+    return testop(dot(([col[i_instance] for col in Tables.columns(X)] .- p), n), 0)
 end
+
+
+# function check(
+#     φ::Atom{<:AbstractCondition},
+#     i::LogicalInstance{<:PropositionalLogiset},
+#     args...;
+#     kwargs...
+# )
+#     return checkcondition(SoleLogics.value(φ), i, args...; kwargs...)
+# end
 
 # Note: differently from other parts of the framework, where the opposite is true,
 #  here `interpret` depends on `check`,

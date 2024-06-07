@@ -16,17 +16,17 @@ end
 function nvariables(dataset)
     return error("Please, provide method nvariables(dataset::$(typeof(dataset))).")
 end
-function frame(dataset, i_instance)
+function frame(dataset, i_instance::Integer)
     return error("Please, provide method frame(dataset::$(typeof(dataset)), i_instance::Integer).")
 end
-function featvalue(dataset, i_instance, w, feature)
-    return error("Please, provide method featvalue(dataset::$(typeof(dataset)), i_instance::Integer, w::$(typeof(w)), feature::$(typeof(feature))).")
+function featvalue(feature::AbstractFeature, dataset, i_instance::Integer, w)
+    return error("Please, provide method featvalue(feature::$(typeof(feature)), dataset::$(typeof(dataset)), i_instance::Integer, w::$(typeof(w))).")
 end
 function vareltype(dataset, i_variable)
     return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::Integer).")
 end
 
-function allworlds(dataset, i_instance)
+function allworlds(dataset, i_instance::Integer)
     allworlds(frame(dataset, i_instance))
 end
 
@@ -132,7 +132,7 @@ TODO explain
     ninstances(dataset)
     nvariables(dataset)
     frame(dataset, i_instance::Integer)
-    featvalue(dataset, i_instance::Integer, w::AbstractWorld, feature::VarFeature)
+    featvalue(feature::VarFeature, dataset, i_instance::Integer, w::AbstractWorld)
     vareltype(dataset, i_variable::Integer)
 ```
 
@@ -358,8 +358,8 @@ function scalarlogiset(
     @inbounds Threads.@threads for i_instance in 1:_ninstances
         for w in allworlds(dataset, i_instance)
             for (i_feature,feature) in enum_features
-                featval = featvalue(dataset, i_instance, w, feature)
-                featvalue!(X, featval, i_instance, w, feature, i_feature)
+                featval = featvalue(feature, dataset, i_instance, w)
+                featvalue!(feature, X, featval, i_instance, w, i_feature)
             end
         end
         if print_progress

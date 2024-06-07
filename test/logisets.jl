@@ -32,8 +32,6 @@ scalar_condition = SoleData.ScalarCondition(features[1], >, 0.5)
 rng = Random.MersenneTwister(2)
 nonscalar_logiset = SoleData.ExplicitModalLogiset([(Dict([w => Dict([f => rand(rng, rand(rng, 1:3)) for f in features]) for w in worlds]), fr)])
 
-@test SoleData.featvalue(nonscalar_logiset, 1, worlds[1], features[1]) == SoleData.featvalue(features[1], nonscalar_logiset, 1, worlds[1])
-
 nonscalar_condition = SoleData.FunctionalCondition(features[1], (vals)->length(vals) >= 2)
 
 @test [SoleData.checkcondition(nonscalar_condition, nonscalar_logiset, i_instance, w)
@@ -64,28 +62,28 @@ cond1 = SoleData.ScalarCondition(features[1], >, 0.9)
 cond2 = SoleData.ScalarCondition(features[2], >, 0.3)
 
 for w in worlds
-    @test (featvalue(scalar_logiset, 1, w, features[1]) > 0.9) == check(Atom(cond1) ∧ ⊤, scalar_logiset, 1, w)
-    @test (featvalue(scalar_logiset, 1, w, features[2]) > 0.3) == check(Atom(cond2) ∧ ⊤, scalar_logiset, 1, w)
+    @test (featvalue(features[1], scalar_logiset, 1, w) > 0.9) == check(Atom(cond1) ∧ ⊤, scalar_logiset, 1, w)
+    @test (featvalue(features[2], scalar_logiset, 1, w) > 0.3) == check(Atom(cond2) ∧ ⊤, scalar_logiset, 1, w)
 end
 
 # Propositional formula
 φ = ⊤ → Atom(cond1) ∧ Atom(cond2)
 for w in worlds
-    @test ((featvalue(scalar_logiset, 1, w, features[1]) > 0.9) && (featvalue(scalar_logiset, 1, w, features[2]) > 0.3)) == check(φ, scalar_logiset, 1, w)
+    @test ((featvalue(features[1], scalar_logiset, 1, w) > 0.9) && (featvalue(features[2], scalar_logiset, 1, w) > 0.3)) == check(φ, scalar_logiset, 1, w)
 end
 
 # Modal formula
 φ = ◊(⊤ → Atom(cond1) ∧ Atom(cond2))
 for w in worlds
     @test check(φ, scalar_logiset, 1, w) == (length(accessibles(fr, w)) > 0 && any([
-        ((featvalue(scalar_logiset, 1, v, features[1]) > 0.9) && (featvalue(scalar_logiset, 1, v, features[2]) > 0.3))
+        ((featvalue(features[1], scalar_logiset, 1, v) > 0.9) && (featvalue(features[2], scalar_logiset, 1, v) > 0.3))
     for v in accessibles(fr, w)]))
 end
 
 # Modal formula on multilogiset
 for w in worlds
     @test check(φ, multilogiset, 2, 1, w) == (length(accessibles(fr, w)) > 0 && any([
-        ((featvalue(multilogiset, 2, 1, v, features[1]) > 0.9) && (featvalue(multilogiset, 2, 1, v, features[2]) > 0.3))
+        ((featvalue(features[1], multilogiset, 2, 1, v) > 0.9) && (featvalue(features[2], multilogiset, 2, 1, v) > 0.3))
     for v in accessibles(fr, w)]))
 end
 
@@ -99,7 +97,7 @@ bool_supported_logiset = @test_nowarn SupportedLogiset(bool_logiset)
 scalar_supported_logiset = @test_nowarn SupportedLogiset(scalar_logiset)
 nonscalar_supported_logiset = @test_nowarn SupportedLogiset(nonscalar_logiset)
 
-@test SoleData.featvalue(nonscalar_logiset, 1, worlds[1], features[1]) == SoleData.featvalue(nonscalar_supported_logiset, 1, worlds[1], features[1])
+@test SoleData.featvalue(features[1], nonscalar_logiset, 1, worlds[1]) == SoleData.featvalue(features[1], nonscalar_supported_logiset, 1, worlds[1])
 
 @test_nowarn displaystructure(bool_supported_logiset)
 @test_nowarn displaystructure(scalar_supported_logiset)

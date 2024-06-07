@@ -113,14 +113,14 @@ end
 
 
 function featvalue(
+    feature::AbstractFeature,
     X::MultiLogiset,
     i_modality::Integer,
     i_instance::Integer,
-    w::W,
-    f::AbstractFeature;
+    args...;
     kwargs...
-) where {W<:AbstractWorld}
-    featvalue(modality(X, i_modality), i_instance, w, f)
+)
+    featvalue(feature, modality(X, i_modality), i_instance, args...; kwargs...)
 end
 
 
@@ -145,17 +145,6 @@ function minify(X::MultiLogiset)
 end
 
 ############################################################################################
-
-function featvalue(
-    f::AbstractFeature,
-    X::MultiLogiset,
-    i_modality::Integer,
-    i_instance::Integer,
-    w::W;
-    kwargs...
-) where {W<:AbstractWorld}
-    featvalue(X, i_modality, i_instance, w, f)
-end
 
 # TODO remove:
 

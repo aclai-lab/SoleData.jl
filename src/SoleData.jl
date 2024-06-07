@@ -6,6 +6,7 @@ module SoleData
 using Reexport
 using SoleBase
 using SoleBase: AbstractDataset, slicedataset
+import SoleBase: eachinstance
 
 using DataFrames
 using MultiData
@@ -71,8 +72,6 @@ import MultiData: _isnan
 import MultiData: hasnans, instances, concatdatasets
 import MultiData: displaystructure
 
-# TODO fix
-import MultiData: eachinstance
 import Tables: istable, rows, subset, getcolumn, columnnames, rowaccess
 
 
@@ -117,7 +116,8 @@ export accessibles, allworlds, representatives
 # Interface for representative accessibles, for optimized model checking on specific frames
 include("representatives.jl")
 
-export ninstances, featvalue, displaystructure, isminifiable, minify
+export ninstances, eachinstance
+export featvalue, displaystructure, isminifiable, minify
 export alphabet
 
 # Logical datasets, where the instances are Kripke structures with scalar alphabets

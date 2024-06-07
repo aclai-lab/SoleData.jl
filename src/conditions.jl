@@ -103,27 +103,6 @@ end
 
 ############################################################################################
 
-# TODO remove and harmonize
-function featvalue(
-    feature::AbstractFeature,
-    X,
-    i_instance::Integer,
-    w::W,
-) where {W<:AbstractWorld}
-    featvalue(X, i_instance, w, feature)
-end
-
-function featvalue(
-    feature::AbstractFeature,
-    X::AbstractLogiset,
-    i_instance::Integer,
-    args...
-) where {W<:AbstractWorld}
-    featvalue(X, i_instance, feature, args...)
-end
-
-############################################################################################
-
 """
     struct FunctionalCondition{FT<:AbstractFeature} <: AbstractCondition{FT}
         feature::FT
