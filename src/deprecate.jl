@@ -23,6 +23,9 @@ function BoundedScalarConditions(
     UnionAlphabet(metaconditions, thresholds)
 end
 
+const UnivariateSymbolValue = VariableValue
+const UnivariateValue = VariableValue
+
 # # https://github.com/garrison/UniqueVectors.jl/issues/24
 # function Base.in(item, uv::UniqueVector)
 #     @warn "Base.in(::$(typeof(item)), ::$(typeof(uv))) is defined by type piracy from UniqueVectors.jl. This method is deprecating."

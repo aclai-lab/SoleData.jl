@@ -54,8 +54,8 @@ function featvalue(
     i_instance::Integer,
     args...;
     kwargs...
-) where {W<:AbstractWorld}
-    readfeature(feature, X, featchannel(X, i_instance, feature), args...; kwargs...)
+)
+    readfeature(X, featchannel(X, i_instance, feature), args..., feature; kwargs...)
 end
 
 function featvalue!(

@@ -50,6 +50,7 @@ inverse_test_operator(::typeof(==)) = !=
 inverse_test_operator(::typeof(!=)) = ==
 
 isordered(op::TestOperator) = op in [≥, ≤, <, >]
+polarity(::Any) = nothing
 polarity(::typeof(≥)) = true
 polarity(::typeof(≤)) = false
 polarity(::typeof(<)) = false

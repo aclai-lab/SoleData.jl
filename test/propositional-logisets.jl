@@ -1,5 +1,6 @@
 
 
+using Test
 using SoleData
 using MLJBase
 
@@ -8,15 +9,15 @@ X = PropositionalLogiset(X)
 alphabet(X) |> atoms .|> syntaxstring
 
 φ =
-Atom(parsecondition(SoleData.ScalarCondition, "sepal_length > 5.8"; featuretype = SoleData.UnivariateSymbolValue)) ∧
-Atom(parsecondition(SoleData.ScalarCondition, "sepal_width < 3.0";  featuretype = SoleData.UnivariateSymbolValue)) ∨
-Atom(parsecondition(SoleData.ScalarCondition, "target == \"setosa\"";      featuretype = SoleData.UnivariateSymbolValue))
+Atom(parsecondition(SoleData.ScalarCondition, "sepal_length > 5.8"; featuretype = SoleData.VariableValue)) ∧
+Atom(parsecondition(SoleData.ScalarCondition, "sepal_width < 3.0";  featuretype = SoleData.VariableValue)) ∨
+Atom(parsecondition(SoleData.ScalarCondition, "target == \"setosa\"";      featuretype = SoleData.VariableValue))
 
 c1 = check(φ, X)
 
 φ =
 parseformula("sepal_length > 5.8 ∧ sepal_width < 3.0 ∨ target == \"setosa\"";
-    atom_parser = a->Atom(parsecondition(SoleData.ScalarCondition, a; featuretype = SoleData.UnivariateSymbolValue))
+    atom_parser = a->Atom(parsecondition(SoleData.ScalarCondition, a; featuretype = SoleData.VariableValue))
 )
 
 c2 = check(φ, X)
@@ -53,16 +54,19 @@ X = PropositionalLogiset(df)
 @test_nowarn alphabet(X, false; test_operators = [≥]) |> atoms .|> syntaxstring
 @test_nowarn alphabet(X, true; test_operators = [≥]) |> atoms .|> syntaxstring
 @test_nowarn alphabet(X; test_operators = [≥, <]) |> atoms .|> x->syntaxstring(x; show_colon = false)
+@test_nowarn alphabet(X, false)
+@test_throws ErrorException alphabet(X, false; discretizedomain = true)
+@test_nowarn alphabet(X, false; discretizedomain = true, y = [rand() for i in 1:4])
 
 a,b,c,d = collect((alphabet(X; test_operators = [≥, <]) |> atoms))[1:4]
 
 @test SoleLogics.value(a) isa SoleData.ScalarCondition
-@test SoleData.feature(SoleLogics.value(a)) isa SoleData.UnivariateSymbolValue
+@test SoleData.feature(SoleLogics.value(a)) isa SoleData.VariableValue
 
 @test_broken begin
-    f = parsefeature(SoleData.UnivariateSymbolValue, ":x")
-    c = parsecondition(SoleData.ScalarCondition, "x < 0.03425152849651658"; featuretype = SoleData.UnivariateSymbolValue)
-    f isa SoleData.UnivariateSymbolValue && isapprox(SoleData.threshold(f), 0.03425152849651658)
+    f = parsefeature(SoleData.VariableValue, ":x")
+    c = parsecondition(SoleData.ScalarCondition, "x < 0.03425152849651658"; featuretype = SoleData.VariableValue)
+    f isa SoleData.VariableValue && isapprox(SoleData.threshold(f), 0.03425152849651658)
 end
 
 # test interpret - Atom

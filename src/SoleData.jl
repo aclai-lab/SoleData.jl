@@ -79,15 +79,15 @@ export AbstractFeature, Feature
 
 export UnivariateNamedFeature,
         UnivariateFeature,
-        UnivariateSymbolValue
+        VariableValue
 
 export computefeature
 
 export parsefeature
 
 export VarFeature,
-        UnivariateMin, UnivariateMax,
-        UnivariateSoftMin, UnivariateSoftMax,
+        VariableMin, VariableMax,
+        VariableSoftMin, VariableSoftMax,
         MultivariateFeature
 
 # Features to be computed on worlds of dataset instances

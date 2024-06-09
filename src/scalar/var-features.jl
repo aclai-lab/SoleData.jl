@@ -243,74 +243,47 @@ function featvaltype(dataset, f::UnivariateNamedFeature{U}) where {U}
     return U
 end
 
-
 ############################################################################################
 
-
 """
-    struct UnivariateSymbolValue <: AbstractUnivariateFeature
-        varname::Symbol
+    struct VariableValue <: AbstractUnivariateFeature
+        i_variable::Union{Integer,Symbol}
     end
 
-A univariate feature solely identified by its symbol name.
+A simple feature, equal the value of a scalar variable.
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateSymbolValue <: AbstractUnivariateFeature
-    varname::Symbol
-end
-
-varname(f::UnivariateSymbolValue) = f.varname
-
-function syntaxstring(f::UnivariateSymbolValue; show_colon = false, kwargs...)
-    show_colon ? repr(f.varname) : string(f.varname)
-end
-
-############################################################################################
-
-"""
-    struct UnivariateValue <: AbstractUnivariateFeature
-        i_variable::Integer
-    end
-
-Simply the value of a scalar variable
-(propositional case, when the frame has a single world).
-
-See also [`SoleLogics.Interval`](@ref),
-[`SoleLogics.Interval2D`](@ref),
-[`AbstractUnivariateFeature`](@ref),
-[`UnivariateMax`](@ref),
-[`VarFeature`](@ref), [`AbstractFeature`](@ref).
-"""
-struct UnivariateValue <: AbstractUnivariateFeature
-    i_variable::Integer
-    function UnivariateValue(f::UnivariateValue)
+struct VariableValue <: AbstractUnivariateFeature
+    i_variable::Union{Integer,Symbol}
+    function VariableValue(f::VariableValue)
         return new(i_variable(f))
     end
-    function UnivariateValue(i_variable::Integer)
+    function VariableValue(i_variable::Union{Integer,Symbol})
         return new(i_variable)
     end
 end
-featurename(f::UnivariateValue) = ""
+featurename(f::VariableValue) = ""
 
-function syntaxstring(
-    f::UnivariateValue;
-    kwargs...
-)
-    variable_name(f; kwargs...)
+function syntaxstring(f::VariableValue; show_colon = false, kwargs...)
+    if i_variable(f) isa Integer
+        variable_name(f; kwargs...)
+    else
+        show_colon ? repr(i_variable(f)) : string(i_variable(f))
+    end
 end
 
-function featvaltype(dataset, f::UnivariateValue)
+function featvaltype(dataset, f::VariableValue)
     return vareltype(dataset, f.i_variable)
 end
 
 ############################################################################################
 
 """
-    struct UnivariateMin <: AbstractUnivariateFeature
+    struct VariableMin <: AbstractUnivariateFeature
         i_variable::Integer
     end
 
@@ -319,26 +292,26 @@ Notable univariate feature computing the minimum value for a given variable.
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
 [`AbstractUnivariateFeature`](@ref),
-[`UnivariateMax`](@ref),
+[`VariableMax`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateMin <: AbstractUnivariateFeature
+struct VariableMin <: AbstractUnivariateFeature
     i_variable::Integer
-    function UnivariateMin(f::UnivariateMin)
+    function VariableMin(f::VariableMin)
         return new(i_variable(f))
     end
-    function UnivariateMin(i_variable::Integer)
+    function VariableMin(i_variable::Integer)
         return new(i_variable)
     end
 end
-featurename(f::UnivariateMin) = "min"
+featurename(f::VariableMin) = "min"
 
-function featvaltype(dataset, f::UnivariateMin)
+function featvaltype(dataset, f::VariableMin)
     return vareltype(dataset, f.i_variable)
 end
 
 """
-    struct UnivariateMax <: AbstractUnivariateFeature
+    struct VariableMax <: AbstractUnivariateFeature
         i_variable::Integer
     end
 
@@ -347,28 +320,28 @@ Notable univariate feature computing the maximum value for a given variable.
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
 [`AbstractUnivariateFeature`](@ref),
-[`UnivariateMin`](@ref),
+[`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateMax <: AbstractUnivariateFeature
+struct VariableMax <: AbstractUnivariateFeature
     i_variable::Integer
-    function UnivariateMax(f::UnivariateMax)
+    function VariableMax(f::VariableMax)
         return new(i_variable(f))
     end
-    function UnivariateMax(i_variable::Integer)
+    function VariableMax(i_variable::Integer)
         return new(i_variable)
     end
 end
-featurename(f::UnivariateMax) = "max"
+featurename(f::VariableMax) = "max"
 
-function featvaltype(dataset, f::UnivariateMax)
+function featvaltype(dataset, f::VariableMax)
     return vareltype(dataset, f.i_variable)
 end
 
 ############################################################################################
 
 """
-    struct UnivariateSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
+    struct VariableSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
         i_variable::Integer
         alpha::T
     end
@@ -378,30 +351,30 @@ Univariate feature computing a "softened" version of the minimum value for a giv
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
 [`AbstractUnivariateFeature`](@ref),
-[`UnivariateMin`](@ref),
+[`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
+struct VariableSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
     i_variable::Integer
     alpha::T
-    function UnivariateSoftMin(f::UnivariateSoftMin)
+    function VariableSoftMin(f::VariableSoftMin)
         return new{typeof(alpha(f))}(i_variable(f), alpha(f))
     end
-    function UnivariateSoftMin(i_variable::Integer, alpha::T) where {T}
-        @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate UnivariateSoftMin with alpha = $(alpha)"
-        @assert !isone(alpha) "Cannot instantiate UnivariateSoftMin with alpha = $(alpha). Use UnivariateMin instead!"
+    function VariableSoftMin(i_variable::Integer, alpha::T) where {T}
+        @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMin with alpha = $(alpha)"
+        @assert !isone(alpha) "Cannot instantiate VariableSoftMin with alpha = $(alpha). Use VariableMin instead!"
         new{T}(i_variable, alpha)
     end
 end
-alpha(f::UnivariateSoftMin) = f.alpha
-featurename(f::UnivariateSoftMin) = "min" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
+alpha(f::VariableSoftMin) = f.alpha
+featurename(f::VariableSoftMin) = "min" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
 
-function featvaltype(dataset, f::UnivariateSoftMin)
+function featvaltype(dataset, f::VariableSoftMin)
     return vareltype(dataset, f.i_variable)
 end
 
 """
-    struct UnivariateSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
+    struct VariableSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
         i_variable::Integer
         alpha::T
     end
@@ -411,54 +384,54 @@ Univariate feature computing a "softened" version of the maximum value for a giv
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
 [`AbstractUnivariateFeature`](@ref),
-[`UnivariateMax`](@ref),
+[`VariableMax`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
+struct VariableSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
     i_variable::Integer
     alpha::T
-    function UnivariateSoftMax(f::UnivariateSoftMax)
+    function VariableSoftMax(f::VariableSoftMax)
         return new{typeof(alpha(f))}(i_variable(f), alpha(f))
     end
-    function UnivariateSoftMax(i_variable::Integer, alpha::T) where {T}
-        @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate UnivariateSoftMax with alpha = $(alpha)"
-        @assert !isone(alpha) "Cannot instantiate UnivariateSoftMax with alpha = $(alpha). Use UnivariateMax instead!"
+    function VariableSoftMax(i_variable::Integer, alpha::T) where {T}
+        @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMax with alpha = $(alpha)"
+        @assert !isone(alpha) "Cannot instantiate VariableSoftMax with alpha = $(alpha). Use VariableMax instead!"
         new{T}(i_variable, alpha)
     end
 end
-alpha(f::UnivariateSoftMax) = f.alpha
-featurename(f::UnivariateSoftMax) = "max" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
+alpha(f::VariableSoftMax) = f.alpha
+featurename(f::VariableSoftMax) = "max" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
 
-function featvaltype(dataset, f::UnivariateSoftMax)
+function featvaltype(dataset, f::VariableSoftMax)
     return vareltype(dataset, f.i_variable)
 end
 
 ############################################################################################
 
 # These features collapse to a single value; it can be useful to know this
-is_collapsing_univariate_feature(f::Union{UnivariateMin,UnivariateMax,UnivariateSoftMin,UnivariateSoftMax}) = true
+is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax}) = true
 is_collapsing_univariate_feature(f::UnivariateFeature) = (f.f in [minimum, maximum, mean])
 
 
-_st_featop_abbr(f::UnivariateMin,     ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⪰"
-_st_featop_abbr(f::UnivariateMax,     ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⪯"
-_st_featop_abbr(f::UnivariateSoftMin, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) $("⪰" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::UnivariateSoftMax, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) $("⪯" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableMin,     ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⪰"
+_st_featop_abbr(f::VariableMax,     ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⪯"
+_st_featop_abbr(f::VariableSoftMin, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) $("⪰" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableSoftMax, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) $("⪯" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
 
-_st_featop_abbr(f::UnivariateMin,     ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ↓"
-_st_featop_abbr(f::UnivariateMax,     ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ↑"
-_st_featop_abbr(f::UnivariateSoftMin, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) $("↓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::UnivariateSoftMax, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) $("↑" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableMin,     ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ↓"
+_st_featop_abbr(f::VariableMax,     ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ↑"
+_st_featop_abbr(f::VariableSoftMin, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) $("↓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableSoftMax, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) $("↑" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
 
-_st_featop_abbr(f::UnivariateMin,     ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⤓"
-_st_featop_abbr(f::UnivariateMax,     ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⤒"
-_st_featop_abbr(f::UnivariateSoftMin, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) $("⤓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::UnivariateSoftMax, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) $("⤒" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableMin,     ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⤓"
+_st_featop_abbr(f::VariableMax,     ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⤒"
+_st_featop_abbr(f::VariableSoftMin, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) $("⤓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableSoftMax, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) $("⤒" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
 
-_st_featop_abbr(f::UnivariateMin,     ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ≻"
-_st_featop_abbr(f::UnivariateMax,     ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ≺"
-_st_featop_abbr(f::UnivariateSoftMin, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) $("≻" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::UnivariateSoftMax, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) $("≺" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableMin,     ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ≻"
+_st_featop_abbr(f::VariableMax,     ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ≺"
+_st_featop_abbr(f::VariableSoftMin, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) $("≻" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableSoftMax, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) $("≺" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
 
 ############################################################################################
 
@@ -471,10 +444,10 @@ Syntaxstring aliases for standard features, such as "min", "max", "avg".
 """
 const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String,Base.Callable}(
     #
-    "minimum" => UnivariateMin,
-    "min"     => UnivariateMin,
-    "maximum" => UnivariateMax,
-    "max"     => UnivariateMax,
+    "minimum" => VariableMin,
+    "min"     => VariableMin,
+    "maximum" => VariableMax,
+    "max"     => VariableMax,
     #
     "avg"     => StatsBase.mean,
     "mean"    => StatsBase.mean,
@@ -534,10 +507,10 @@ function parsefeature(
         "Parentheses must be single-character strings! " *
         "$(repr(opening_parenthesis)) and $(repr(closing_parenthesis)) encountered."
 
-    if FT <: UnivariateSymbolValue
-        return UnivariateSymbolValue(Symbol(expr))
-    elseif FT <: UnivariateValue
-        return UnivariateValue(parse(Int, expr))
+    if FT <: VariableValue
+        i_variable = tryparse(Int, expr)
+        isnothing(i_variable) && (i_variable = Symbol(expr))
+        return VariableValue(i_variable)
     elseif FT <: UnivariateNamedFeature
         r = Regex("^(\\d+):(.*)\$")
         slices = match(r, expr)
@@ -580,7 +553,7 @@ function parsefeature(
             end
             if haskey(featdict, _feature)
                 # If it is a known feature get it as
-                #  a type (e.g., `UnivariateMin`), or Julia function (e.g., `minimum`).
+                #  a type (e.g., `VariableMin`), or Julia function (e.g., `minimum`).
                 feat_or_fun = featdict[_feature]
                 # If it is a function, wrap it into a UnivariateFeature
                 #  otherwise, it is a feature, and it is used as a constructor.

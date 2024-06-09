@@ -1,4 +1,17 @@
+using SoleLogics: normalize
 using SoleLogics: AnyWorld
+
+function check(
+    φ::Atom{<:AbstractCondition},
+    i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
+    w::Union{Nothing,AnyWorld,<:AbstractWorld} = nothing,
+    args...;
+    kwargs...
+) where {W<:AbstractWorld,U}
+    X, i_instance = SoleLogics.splat(i)
+    cond = SoleLogics.value(φ)
+    return checkcondition(cond, X, i_instance, w, args...; kwargs...)
+end
 
 # TODO docstring
 function check(

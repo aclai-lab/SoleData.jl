@@ -1,7 +1,9 @@
 
 using SoleLogics: AbstractAlphabet
+using SoleLogics: AbstractInterpretationSet, LogicalInstance
 using Random
 import SoleLogics: hasdual, dual, atoms
+import SoleLogics: check, interpret
 
 import Base: in, isfinite, length
 
@@ -66,7 +68,7 @@ end
 
 function check(
     φ::Atom{<:AbstractCondition},
-    X::AbstractLogiset;
+    X::AbstractInterpretationSet;
     kwargs...
 )::BitVector
     cond = SoleLogics.value(φ)
@@ -75,25 +77,25 @@ end
 
 function check(
     φ::Atom{<:AbstractCondition},
-    i::LogicalInstance{<:AbstractLogiset},
+    i::LogicalInstance{<:AbstractInterpretationSet},
     args...;
     kwargs...
 )::Bool
-    @warn "Attempting single-instance check. This is not optimal."
+    # @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
     cond = SoleLogics.value(φ)
     return checkcondition(cond, X, i_instance, args...; kwargs...)
 end
 
-# Note: differently from other parts of the framework, where the opposite is true,
+# Note: differently from other parts of the Sole.jl framework, where the opposite is true,
 #  here `interpret` depends on `check`,
 function interpret(
     φ::Atom{<:AbstractCondition},
-    i::LogicalInstance{<:PropositionalLogiset},
+    i::LogicalInstance{<:AbstractInterpretationSet},
     args...;
     kwargs...
 )::Formula
-    @warn "Please use `check instead of `interpret` for crisp formulas."
+    # @warn "Please use `check` instead of `interpret` for crisp formulas."
     return check(φ, i, args...; kwargs...) ? ⊤ : ⊥
 end
 

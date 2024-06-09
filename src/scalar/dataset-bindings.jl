@@ -256,9 +256,9 @@ function scalarlogiset(
             if isnothing(conditions)
                 is_propositional_dataset = all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
                 if is_propositional_dataset
-                    [UnivariateValue(i_var) for i_var in 1:nvariables(dataset)]
+                    [VariableValue(i_var) for i_var in 1:nvariables(dataset)]
                 else
-                    vcat([[UnivariateMax(i_var), UnivariateMin(i_var)] for i_var in 1:nvariables(dataset)]...)
+                    vcat([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvariables(dataset)]...)
                 end
             else
                 unique(feature.(conditions))
@@ -415,18 +415,18 @@ function naturalconditions(
 
     def_test_operators = is_propositional_dataset ? [≥] : [≥, <]
 
-    univar_condition(i_var,cond::SoleData.CanonicalConditionGeq) = ([≥],UnivariateMin(i_var))
-    univar_condition(i_var,cond::SoleData.CanonicalConditionLeq) = ([<],UnivariateMax(i_var))
-    univar_condition(i_var,cond::SoleData.CanonicalConditionGeqSoft) = ([≥],UnivariateSoftMin(i_var, cond.alpha))
-    univar_condition(i_var,cond::SoleData.CanonicalConditionLeqSoft) = ([<],UnivariateSoftMax(i_var, cond.alpha))
+    univar_condition(i_var,cond::SoleData.CanonicalConditionGeq) = ([≥],VariableMin(i_var))
+    univar_condition(i_var,cond::SoleData.CanonicalConditionLeq) = ([<],VariableMax(i_var))
+    univar_condition(i_var,cond::SoleData.CanonicalConditionGeqSoft) = ([≥],VariableSoftMin(i_var, cond.alpha))
+    univar_condition(i_var,cond::SoleData.CanonicalConditionLeqSoft) = ([<],VariableSoftMax(i_var, cond.alpha))
     function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(identity)})
-        return (test_ops,UnivariateValue(i_var))
+        return (test_ops,VariableValue(i_var))
     end
     function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(minimum)})
-        return (test_ops,UnivariateMin(i_var))
+        return (test_ops,VariableMin(i_var))
     end
     function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(maximum)})
-        return (test_ops,UnivariateMax(i_var))
+        return (test_ops,VariableMax(i_var))
     end
     function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},Base.Callable})
         if isnothing(featvaltype)

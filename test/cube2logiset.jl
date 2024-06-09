@@ -11,8 +11,8 @@ begin
 n_instances = 2
 nvars = 2
 
-generic_features_oneworld = collect(Iterators.flatten([[SoleData.UnivariateValue(i_var)] for i_var in 1:nvars]))
-generic_features = collect(Iterators.flatten([[UnivariateMax(i_var), UnivariateMin(i_var)] for i_var in 1:nvars]))
+generic_features_oneworld = collect(Iterators.flatten([[SoleData.VariableValue(i_var)] for i_var in 1:nvars]))
+generic_features = collect(Iterators.flatten([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvars]))
 
 for (dataset, relations, features) in [
     # (Array(reshape(1.0:4.0, nvars,n_instances)), []),

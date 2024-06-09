@@ -2,23 +2,23 @@
 # # This is a first idea of an attempt at simplifying specific scalar, propositional formulas.
 
 # using SoleLogics: Atom
-# using SoleData:  AbstractFeature, ScalarCondition, UnivariateSymbolValue, LeftmostConjunctiveForm
+# using SoleData:  AbstractFeature, ScalarCondition, VariableValue, LeftmostConjunctiveForm
 # using SoleData: feature, value, test_operator, threshold, polarity
 
 # const SatMask = BitVector
 # TEST_OPS = [≤, ≥]
 
-# x_u1 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:x), ≤, 10))
-# x_u2 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:x), ≤, 9))
-# x_u3 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:x), ≤, 7))
-# x_u4 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:x), ≤, 6))
-# x_l1 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:x), ≥, 1))
-# x_l2 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:x), ≥, 3))
+# x_u1 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:x), ≤, 10))
+# x_u2 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:x), ≤, 9))
+# x_u3 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:x), ≤, 7))
+# x_u4 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:x), ≤, 6))
+# x_l1 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:x), ≥, 1))
+# x_l2 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:x), ≥, 3))
 
-# y_u1 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:y), ≤, 10))
-# y_u2 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:y), ≤, 9))
-# y_u3 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:y), ≤, 7))
-# y_u4 =  Atom{ScalarCondition}(ScalarCondition(UnivariateSymbolValue(:y), ≤, 6))
+# y_u1 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:y), ≤, 10))
+# y_u2 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:y), ≤, 9))
+# y_u3 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:y), ≤, 7))
+# y_u4 =  Atom{ScalarCondition}(ScalarCondition(VariableValue(:y), ≤, 6))
 
 
 

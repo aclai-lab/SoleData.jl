@@ -4,7 +4,7 @@ using Tables: DataAPI
 using SoleLogics: LogicalInstance
 using CategoricalArrays: CategoricalValue
 import SoleLogics: interpret
-import SoleData: UnivariateSymbolValue, UnivariateValue, featvalue
+import SoleData: VariableValue, featvalue
 
 
 include("discretization.jl")
@@ -16,8 +16,6 @@ abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment
 
 ############################################################################################
 
-# TODO Add NaN checks.
-# TODOO @Edo Add examples to docstring, showing different ways of slicing it.
 """
     PropositionalLogiset(table)
 A logiset of propositional interpretations, wrapping a [Tables](https://github.com/JuliaData/Tables.jl)'
@@ -33,12 +31,15 @@ X = PropositionalLogiset(MLJBase.load_iris())
 
 φ = parseformula(
     "sepal_length > 5.8 ∧ sepal_width < 3.0 ∨ target == \"setosa\"";
-    atom_parser = a->Atom(parsecondition(SoleData.ScalarCondition, a; featuretype = SoleData.UnivariateSymbolValue))
+    atom_parser = a->Atom(parsecondition(SoleData.ScalarCondition, a; featuretype = SoleData.VariableValue))
 )
 
-check(φ, X) # Check the formula on the whole dataset
-
 check(φ, X, 10) # Check the formula on a single instance
+
+satmask = check(φ, X) # Check the formula on the whole dataset
+
+slicedataset(X, satmask)
+slicedataset(X, (!).(satmask))
 ```
 
 See also
@@ -48,10 +49,8 @@ See also
 struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
     tabulardataset::T
 
-    function PropositionalLogiset(tabulardataset::T; allow_no_instances = true) where {T}
+    function PropositionalLogiset(tabulardataset::T) where {T}
         if Tables.istable(tabulardataset)
-            # @assert !allow_no_instances && DataAPI.nrow(tabulardataset)>0 "Could not initialize "*
-            #     "PropositionalLogiset with a table with no rows."
             @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(collect(Tables.columns(tabulardataset)))) "" *
                 "Unexpected eltypes for some columns. `Union{Real,AbstractString,CategoricalValue}` is expected, but " *
                 "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})`" *
@@ -81,25 +80,16 @@ nvariables(X::PropositionalLogiset) = nfeatures(X)
 
 function features(X::PropositionalLogiset)
     colnames = Tables.columnnames(gettable(X))
-    return UnivariateSymbolValue.(Symbol.(colnames))
+    return VariableValue.(Symbol.(colnames))
 end
 
 function featvalue(
-    f::UnivariateSymbolValue,
+    f::VariableValue,
     X::PropositionalLogiset,
     i_instance::Integer,
     args...
 )
-    X[i_instance, varname(f)]
-end
-
-function featvalue(
-    f::UnivariateValue,
-    X::PropositionalLogiset,
-    i_instance::Integer,
-    args...
-)
-    X[i_instance, f.i_variable]
+    X[i_instance, i_variable(f)]
 end
 
 function Base.show(io::IO, X::PropositionalLogiset; kwargs...)
@@ -182,12 +172,25 @@ function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer
     return Tables.getcolumn(gettable(X), col)[row]
 end
 
-# TODO @Edo: add thorough description of this function
-# TODO: @test_nowarn alphabet(X, false)
 # TODO: @test_broken alphabet(X, false; skipextremes = true)
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
 # TODO join discretize and y parameter into a single parameter.
-# TODO join sorted and y truerfirst into a single parameter.
+
+"""
+    alphabet(X::PropositionalLogiset, sorted=true;
+             test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable}=nothing,
+             discretizedomain=false, y::Union{Nothing, AbstractVector}=nothing
+    )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
+
+Constructs an alphabet based on the provided `PropositionalLogiset` `X`, with optional parameters:
+- `sorted`: whether to sort the atoms in the sub-alphabets (i.e., the threshold domains),
+    by a truer-first policy (default: true)
+- `test_operators`: test operators to use (defaulted to `[≤, ≥]` for real-valued features, and `[(==), (≠)]` for other features, e.g., categorical)
+- `discretizedomain`: whether to discretize the domain (default: false)
+- `y`: vector used for discretization (required if `discretizedomain` is true)
+
+Returns a `UnionAlphabet` containing `ScalarCondition` and `UnivariateScalarAlphabet`.
+"""
 function alphabet(
     X::PropositionalLogiset,
     sorted = true;
@@ -196,22 +199,24 @@ function alphabet(
     discretizedomain::Bool = false, # TODO default behavior depends on test_operator
     y::Union{Nothing, AbstractVector} = nothing,
 )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
-    get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
+    truerfirst = true
+                
     get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
+    get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
     get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
 
     coltypes = eltype.(collect(Tables.columns(gettable(X))))
     colnames = Tables.columnnames(gettable(X)) # features(X)
-    feats = UnivariateSymbolValue.(Symbol.(colnames))
+    feats = VariableValue.(Symbol.(colnames))
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
     
     if discretizedomain && isnothing(y)
         error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
     end
 
-    grouped_sas = map((feat,coltype) ->begin
-            domain = Tables.getcolumn(gettable(X), varname(feat))
+    grouped_sas = map(((feat,coltype),) ->begin
+            domain = Tables.getcolumn(gettable(X), i_variable(feat))
             domain = unique(domain)
 
             if discretizedomain
@@ -229,11 +234,11 @@ function alphabet(
                 if sorted && !allequal(polarity, test_ops) # Different domain
                     [begin
                         mc = ScalarMetaCondition(feat, test_op)
-                        this_domain = sort(domain, rev = (truerfirst == !polarity(test_op)))
+                        this_domain = sort(domain, rev = (!isnothing(polarity(test_op)) && truerfirst == !polarity(test_op)))
                         UnivariateScalarAlphabet((mc, this_domain))
                     end for test_op in test_ops]
                 else
-                    this_domain = sorted ? sort(domain, rev = (truerfirst == !polarity(test_ops[1]))) : domain
+                    this_domain = sorted ? sort(domain, rev = (!isnothing(polarity(test_ops[1])) && truerfirst == !polarity(test_ops[1]))) : domain
                     [begin
                         mc = ScalarMetaCondition(feat, test_op)
                         UnivariateScalarAlphabet((mc, this_domain))
@@ -261,7 +266,7 @@ function checkcondition(
     cond_operator = test_operator(cond)
     cond_feature = feature(cond)
 
-    col = varname(cond_feature)
+    col = i_variable(cond_feature)
     if _fastmath == Val(true)
         return @fastmath cond_operator.(Tables.getcolumn(gettable(X), col), cond_threshold)
     else
@@ -282,7 +287,7 @@ function checkcondition(
     cond_operator = test_operator(cond)
     cond_feature = feature(cond)
 
-    col = varname(cond_feature)
+    col = i_variable(cond_feature)
     return cond_operator(X[i_instance, col], cond_threshold)
 end
 
@@ -296,7 +301,7 @@ function checkcondition(
 
 
     testop = test_operator(cond)
-    # TODO: features
+    use # TODO: features
     p, n = cond.b, cond.u
     return testop.(((Tables.matrix(gettable(X)) .- p') * n), 0)
 end
@@ -311,7 +316,7 @@ function checkcondition(
     X, i_instance = SoleLogics.splat(i)
     
     testop = test_operator(cond)
-    # TODO: features
+    # TODO: use features
     p, n = cond.b, cond.u
     return testop(dot(([col[i_instance] for col in Tables.columns(X)] .- p), n), 0)
 end

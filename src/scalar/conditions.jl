@@ -108,7 +108,7 @@ It can be evaluated on a world of an instance of a logical dataset.
 
 For example: \$min[V1] ≥ 10\$, which translates to
 "Within this world, the minimum of variable 1 is greater or equal than 10."
-In this case, the feature a [`UnivariateMin`](@ref) object.
+In this case, the feature a [`VariableMin`](@ref) object.
 
 See also
 [`AbstractCondition`](@ref),
@@ -266,7 +266,7 @@ end
 #     end
 
 # An infinite alphabet of conditions induced from a finite set of metaconditions.
-# For example, if `metaconditions = [ScalarMetaCondition(UnivariateMin(1), ≥)]`,
+# For example, if `metaconditions = [ScalarMetaCondition(VariableMin(1), ≥)]`,
 # the alphabet represents the (infinite) set: \${min[V1] ≥ a, a ∈ ℝ}\$.
 
 # See also
@@ -295,7 +295,7 @@ end
 
 # Base.isfinite(::Type{<:UnboundedScalarAlphabet}) = false
 
-# function Base.in(p::Atom{<:AbstractCondition}, a::UnboundedScalarAlphabet)
+# function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarAlphabet)
 #     fc = SoleLogics.value(p)
 #     idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
 #     return !isnothing(idx)
@@ -391,7 +391,7 @@ dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, i
 syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] ⋈ 0"
 
 function checkcondition(c::ObliqueScalarCondition, args...; kwargs...)
-    f = [featvalue(features, args...; kwargs...) for features in c.features]
+    f = [featvalue(feat, args...; kwargs...) for feat in c.features]
     val = LinearAlgebra.dot((f .- c.b), c.u)
     apply_test_operator(test_operator(c), val, 0)
 end

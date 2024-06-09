@@ -12,8 +12,8 @@ using SoleData: feature
 @test_nowarn parsefeature(VarFeature, "min[V1]"; featvaltype = Float64)
 @test_nowarn parsefeature(VarFeature, "min[V1]"; featvaltype = Int64)
 @test_nowarn parsefeature(AbstractUnivariateFeature, "min[V1]")
-# @test_logs (:warn,) parsefeature(UnivariateMin, "min[V1]")
-@test_nowarn parsefeature(UnivariateMin, "min[V1]")
+# @test_logs (:warn,) parsefeature(VariableMin, "min[V1]")
+@test_nowarn parsefeature(VariableMin, "min[V1]")
 
 
 
