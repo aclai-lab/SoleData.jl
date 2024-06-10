@@ -20,8 +20,8 @@ Logisets are the symbolic counterpart to Machine Learning datasets.
 ## Examples
 
 ## Propositional Logic
-A tabular dataset (e.g., the [Iris flower dataset](https://en.m.wikipedia.org/wiki/Iris_flower_data_set)) can
-be treated as a set of propositional interpretations (or propositional *logiset*), onto which formulas of propositional logic are interpreted.
+Symbolic AI treats tabular dataset (e.g., the [Iris flower dataset](https://en.m.wikipedia.org/wiki/Iris_flower_data_set))
+as a set of propositional interpretations (or propositional *logiset*), onto which formulas of propositional logic are interpreted.
 ```julia-repl
 julia> using SoleData, MLJBase;
 
@@ -58,9 +58,10 @@ PropositionalLogiset (3.38 KBs)
 ```
 
 ## Modal Logic
-Non-tabular datasets (e.g., datasets of time-series or images) can be treated as sets of interpretations (*logisets*) of more-than-propositional logics.
-For example, a time-series dataset such as [NATOPS](http://www.timeseriesclassification.com/description.php?Dataset=NATOPS) can be interpreted via a modal logic formalism based on intervals and [Allen's (or Interval Algebra) relations](https://en.m.wikipedia.org/wiki/Allen%27s_interval_algebra).
-In the following example, we check on each time series in NATOPS the following temporal property, encoded via a modal logical formula:
+Symbolic AI treats non-tabular datasets (e.g., datasets of time-series or images) as sets of interpretations (*logisets*) of more-than-propositional logics,
+that can express *relational patterns*.
+In the following example, a time-series dataset such as [NATOPS](http://www.timeseriesclassification.com/description.php?Dataset=NATOPS) is interpreted via a modal logic formalism based on intervals and [Allen's (or Interval Algebra) relations](https://en.m.wikipedia.org/wiki/Allen%27s_interval_algebra).
+On each time series in NATOPS, we hereby check the following temporal property, encoded via a modal logical formula:
 *"there an interval where V1 is always higher than -0.54, and such that there exists a later interval where either V3 is lower than -0.78, or V5 is higher than -0.84."*
 
 ```julia-repl
