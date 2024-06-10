@@ -117,7 +117,7 @@ Base.@propagate_inbounds @inline function featchannel(
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -132,7 +132,7 @@ Base.@propagate_inbounds @inline function featvalues!(
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -157,7 +157,7 @@ Base.@propagate_inbounds @inline function featchannel(
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -172,7 +172,7 @@ Base.@propagate_inbounds @inline function featvalues!(
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -197,7 +197,7 @@ Base.@propagate_inbounds @inline function featchannel(
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -212,7 +212,7 @@ Base.@propagate_inbounds @inline function featvalues!(
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -239,7 +239,7 @@ end
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -256,7 +256,7 @@ end
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -273,7 +273,7 @@ end
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
     X.featstruct[w.x.x, w.x.y-1, w.y.x, w.y.y-1, i_instance, i_feature]
@@ -292,7 +292,7 @@ end
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -310,7 +310,7 @@ end
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -328,7 +328,7 @@ end
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
-            error("Could not find feature $(feature) in memoset of type $(typeof(X)).")
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 

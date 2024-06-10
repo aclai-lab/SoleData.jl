@@ -239,7 +239,7 @@ function _parsecondition(
     slices = match(r, expr)
 
     @assert !isnothing(slices) && length(slices) == 3 "Could not parse ScalarCondition from " *
-        "expression $(repr(expr))."
+        "expression $(repr(expr)). Regex slices = $(slices)"
 
     slices = string.(slices)
 
