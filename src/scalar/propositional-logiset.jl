@@ -53,7 +53,7 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
         if Tables.istable(tabulardataset)
             @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(collect(Tables.columns(tabulardataset)))) "" *
                 "Unexpected eltypes for some columns. `Union{Real,AbstractString,CategoricalValue}` is expected, but " *
-                "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})`" *
+                "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})` " *
                 "encountered."
             new{T}(tabulardataset)
         else
@@ -298,13 +298,13 @@ function checkcondition(
     _fastmath = Val(true), # TODO warning!!!
     kwargs...
 )::BitVector
-
-
     testop = test_operator(cond)
-    use # TODO: features
+    # TODO: use features
     p, n = cond.b, cond.u
     return testop.(((Tables.matrix(gettable(X)) .- p') * n), 0)
 end
+
+using LinearAlgebra: dot
 
 function checkcondition(
     cond::ObliqueScalarCondition,

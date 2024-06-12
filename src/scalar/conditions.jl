@@ -358,7 +358,7 @@ end
 
 ############################################################################################
 
-using LinearAlgebra
+using LinearAlgebra: dot
 
 """
     ObliqueScalarCondition(features, b, u, test_operator)
@@ -392,6 +392,6 @@ syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.feature
 
 function checkcondition(c::ObliqueScalarCondition, args...; kwargs...)
     f = [featvalue(feat, args...; kwargs...) for feat in c.features]
-    val = LinearAlgebra.dot((f .- c.b), c.u)
+    val = dot((f .- c.b), c.u)
     apply_test_operator(test_operator(c), val, 0)
 end
