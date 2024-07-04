@@ -162,6 +162,7 @@ function scalarlogiset(
     onestep_precompute_globmemoset   :: Bool = (use_onestep_memoization != false),
     onestep_precompute_relmemoset    :: Bool = false,
     print_progress                   :: Bool = false,
+    allow_propositional              :: Bool = false, # TODO default to true
     # featvaltype = nothing
 )
     is_feature(f) = (f isa MixedCondition)
@@ -247,7 +248,7 @@ function scalarlogiset(
             ])
     end
 
-    if all(i_instance->frame(dataset, i_instance) == OneWorld(), 1:ninstances(dataset))
+    if allow_propositional && all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
         return PropositionalLogiset(dataset)
     end
 

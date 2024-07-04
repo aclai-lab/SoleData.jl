@@ -96,6 +96,22 @@ end
 
 ############################################################################################
 
+function get_threshold_display_method(threshold_display_method, threshold_digits)
+    if (!isnothing(threshold_digits) && !isnothing(threshold_display_method))
+        @warn "Prioritizing threshold_display_method parameter over threshold_digits " *
+            "in syntaxstring for scalar condition."
+    end
+    if !isnothing(threshold_display_method)
+        threshold_display_method
+    elseif !isnothing(threshold_digits)
+        x->round(x; digits=threshold_digits)
+    else
+        identity
+    end
+end
+
+############################################################################################
+
 """
     struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractCondition{FT}
         metacond::M
@@ -165,19 +181,7 @@ function syntaxstring(
     threshold_display_method::Union{Nothing,Base.Callable} = nothing,
     kwargs...
 )
-    if (!isnothing(threshold_digits) && !isnothing(threshold_display_method))
-        @warn "Prioritizing threshold_display_method parameter over threshold_digits " *
-            "in syntaxstring for `ScalarCondition`."
-    end
-    threshold_display_method = begin
-        if !isnothing(threshold_display_method)
-            threshold_display_method
-        elseif !isnothing(threshold_digits)
-            x->round(x; digits=threshold_digits)
-        else
-            identity
-        end
-    end
+    threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
     string(_syntaxstring_metacondition(metacond(m); kwargs...)) * " " *
     string(threshold_display_method(threshold(m)))
 end
@@ -388,10 +392,57 @@ test_operator(m::ObliqueScalarCondition) = m.test_operator
 hasdual(::ObliqueScalarCondition) = true
 dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))
 
-syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] ⋈ 0"
+syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] $(c.test_operator) 0"
 
 function checkcondition(c::ObliqueScalarCondition, args...; kwargs...)
     f = [featvalue(feat, args...; kwargs...) for feat in c.features]
     val = dot((f .- c.b), c.u)
     apply_test_operator(test_operator(c), val, 0)
+end
+
+############################################################################################
+
+# TODO docstring
+struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractCondition{FT}
+
+    feature::FT
+
+    minval::U
+    maxval::U
+    minincluded::Bool
+    maxincluded::Bool
+
+    # function RangeScalarCondition(
+    #     feature::FT,
+    #     minval::U,
+    #     maxval::U,
+    #     minincluded::Bool,
+    #     maxincluded::Bool,
+    # ) where {U<:Number,FT<:AbstractFeature}
+    #     new{U,FT,O}(feature, minval, maxval, minincluded, maxincluded)
+    # end
+end
+
+_isgreater_test_operator(c::RangeScalarCondition) = (c.minincluded ? (>=) : (>))
+_isless_test_operator(c::RangeScalarCondition) = (c.maxincluded ? (<=) : (<))
+
+hasdual(::RangeScalarCondition) = false
+
+function checkcondition(c::RangeScalarCondition, args...; kwargs...)
+    apply_test_operator(_isgreater_test_operator(c), featvalue(feature(c), args...; kwargs...), c.minval) &&
+    apply_test_operator(_isless_test_operator(c), featvalue(feature(c), args...; kwargs...), c.maxval)
+end
+
+function syntaxstring(
+    m::RangeScalarCondition;
+    threshold_digits::Union{Nothing,Integer} = nothing,
+    threshold_display_method::Union{Nothing,Base.Callable} = nothing,
+    kwargs...
+)
+    threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
+    _min = string(threshold_display_method(m.minval))
+    _max = string(threshold_display_method(m.maxval))
+    _parmin = m.minincluded ? "[" : "("
+    _parmax = m.maxincluded ? "]" : ")"
+    "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
 end

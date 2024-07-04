@@ -5,16 +5,22 @@ using SoleData: feature, value, test_operator, threshold, polarity
 
 const SatMask = BitVector
 
-function scalar_simplification(φ::SoleLogics.Formula; silent = false)
+function scalar_simplification(φ::SoleLogics.Formula; silent = false, kwargs...)
     !silent && @warn "Could not perform scalar simplification on formula of type " *
         " $(typeof(φ))."
     φ
 end
 
-function scalar_simplification(φ::SoleLogics.SyntaxLeaf; silent = false)
+function scalar_simplification(φ::SoleLogics.SyntaxLeaf; silent = false, kwargs...)
     φ
 end
-function scalar_simplification(φ::Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm}; silent = false)
+
+function scalar_simplification(
+    φ::Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm};
+    silent = false,
+    allow_scalar_range_conditions = true,
+    kwargs...,
+)
     # @show φ
     # @show typeof.(SoleLogics.children(φ))
     # @show all(c->c isa Atom{<:ScalarCondition}, SoleLogics.children(φ))
@@ -50,8 +56,7 @@ function scalar_simplification(φ::Union{LeftmostConjunctiveForm,LeftmostDisjunc
     my_isless(::typeof(>=), ::typeof(>=)) = false
     my_isless(::typeof(<=), ::typeof(<=)) = false
 
-    # total reduced conditions
-    reduced_conditions = LeftmostLinearForm(SoleLogics.connective(φ), collect(Iterators.flatten([begin
+    ch = collect(Iterators.flatten([begin
             conds = scalar_conditions[bitmask]
 
             min_domain = nothing
@@ -61,37 +66,43 @@ function scalar_simplification(φ::Union{LeftmostConjunctiveForm,LeftmostDisjunc
                 @assert !SoleData.isordered(test_operator) "Unexpected test operator: $(test_operator)."
                 this_domain = (test_operator(cond), threshold(cond))
                 if !polarity(test_operator(cond))
-                    if isnothing(min_domain) ||
-                        (
-                            (isless(this_domain[2], min_domain[2]) ||
-                                (==(this_domain[2], min_domain[2]) && my_isless(this_domain[1], min_domain[1]))
-                                ) == conn_polarity)
-                        min_domain = this_domain
-                    end
-                # end
-                # if !polarity(test_operator(cond))
-                else
                     if isnothing(max_domain) ||
                         (
-                            (!(isless(this_domain[2], max_domain[2])) ||
+                            (isless(this_domain[2], max_domain[2]) ||
                                 (==(this_domain[2], max_domain[2]) && my_isless(this_domain[1], max_domain[1]))
                                 ) == conn_polarity)
                         max_domain = this_domain
                     end
+                # end
+                # if !polarity(test_operator(cond))
+                else
+                    if isnothing(min_domain) ||
+                        (
+                            (!(isless(this_domain[2], min_domain[2])) ||
+                                (==(this_domain[2], min_domain[2]) && my_isless(this_domain[1], min_domain[1]))
+                                ) == conn_polarity)
+                        min_domain = this_domain
+                    end
                 end
             end
-            # @show min_domain, max_domain
             out = []
-            if !isnothing(min_domain) && !isnothing(max_domain) && (min_domain[2] < max_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
+            # @show min_domain, max_domain
+
+            if !isnothing(max_domain) && !isnothing(min_domain) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
                 nothing
             else
-                if !isnothing(max_domain)
-                    push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
-                end
-                if !isnothing(min_domain)
-                    push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
+                if allow_scalar_range_conditions && (!isnothing(min_domain) && !isnothing(max_domain))
+                    push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], !SoleData.isstrict(min_domain[1]), !SoleData.isstrict(max_domain[1]), )))
+                else
+                    if !isnothing(min_domain)
+                        push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
+                    end
+                    if !isnothing(max_domain)
+                        push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
+                    end
                 end
             end
+            # @show out
             out
             # # thresholds for operator
             # ths_foroperator = Dict{Function,Real}([])
@@ -116,5 +127,7 @@ function scalar_simplification(φ::Union{LeftmostConjunctiveForm,LeftmostDisjunc
             # end
             # # Adesso ho solo il numero minimo di atomi che mi servono a descrivere l' intervallo
             # # per una USC. Devo capire se tale intervallo è ⊤, ⊥, o corrisponde ad un solo valore.
-        end for (feat, bitmask) in feature_groups])))
+        end for (feat, bitmask) in feature_groups]))
+
+    ψ = (length(ch) == 0 ? (⊤) : (length(ch) == 1 ? first(ch) : LeftmostLinearForm(SoleLogics.connective(φ), ch)))
 end
