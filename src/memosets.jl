@@ -189,7 +189,7 @@ end
 
 function instances(
     Xm::FullMemoset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )

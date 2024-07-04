@@ -5,7 +5,7 @@ import SoleData: modality, nmodalities, eachmodality
 import Base: hash, isequal
 
 """
-    struct MultiLogiset{L<:AbstractModalLogiset}
+    struct MultiLogiset{L<:AbstractLogiset}
         modalities  :: Vector{L}
     end
 
@@ -14,42 +14,42 @@ A logical dataset composed of different
 this structure is useful for representing multimodal datasets in logical terms.
 
 See also
-[`AbstractModalLogiset`](@ref),
+[`AbstractLogiset`](@ref),
 [`minify`](@ref).
 """
-struct MultiLogiset{L<:AbstractModalLogiset} <: AbstractInterpretationSet{AbstractKripkeStructure}
+struct MultiLogiset{L<:AbstractLogiset} <: AbstractInterpretationSet
 
     modalities  :: Vector{L}
 
-    function MultiLogiset{L}(X::MultiLogiset{L}) where {L<:AbstractModalLogiset}
+    function MultiLogiset{L}(X::MultiLogiset{L}) where {L<:AbstractLogiset}
         MultiLogiset{L}(X.modalities)
     end
-    function MultiLogiset{L}(X::AbstractVector) where {L<:AbstractModalLogiset}
+    function MultiLogiset{L}(X::AbstractVector) where {L<:AbstractLogiset}
         X = collect(X)
         @assert length(X) > 0 "Cannot instantiate an empty MultiLogiset."
         @assert length(unique(ninstances.(X))) == 1 "Cannot instantiate a MultiLogiset with mismatching number of instances (nmodalities: $(length(X)), modality_sizes: $(ninstances.(X)))."
         new{L}(X)
     end
-    function MultiLogiset{L}() where {L<:AbstractModalLogiset}
+    function MultiLogiset{L}() where {L<:AbstractLogiset}
         new{L}(L[])
     end
-    function MultiLogiset{L}(X::L) where {L<:AbstractModalLogiset}
+    function MultiLogiset{L}(X::L) where {L<:AbstractLogiset}
         MultiLogiset{L}(L[X])
     end
-    function MultiLogiset(X::AbstractVector{L}) where {L<:AbstractModalLogiset}
+    function MultiLogiset(X::AbstractVector{L}) where {L<:AbstractLogiset}
         MultiLogiset{L}(X)
     end
     function MultiLogiset(X::AbstractVector)
-        MultiLogiset{AbstractModalLogiset}(X)
+        MultiLogiset{AbstractLogiset}(X)
     end
-    function MultiLogiset(X::L) where {L<:AbstractModalLogiset}
+    function MultiLogiset(X::L) where {L<:AbstractLogiset}
         MultiLogiset{L}(X)
     end
 end
 
 eachmodality(X::MultiLogiset) = X.modalities
 
-modalitytype(::Type{<:MultiLogiset{L}}) where {L<:AbstractModalLogiset} = L
+modalitytype(::Type{<:MultiLogiset{L}}) where {L<:AbstractLogiset} = L
 modalitytype(X::MultiLogiset) = modalitytype(typeof(X))
 
 modality(X::MultiLogiset, i_modality::Integer) = eachmodality(X)[i_modality]
@@ -69,7 +69,7 @@ frametype(X::MultiLogiset) = Union{frametype.(eachmodality(X))...}
 
 function instances(
     X::MultiLogiset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )
@@ -156,7 +156,7 @@ end
 # nfeatures(X::MultiLogiset,  i_modality::Integer) = nfeatures(modality(X, i_modality))
 # nrelations(X::MultiLogiset, i_modality::Integer) = nrelations(modality(X, i_modality))
 # Base.length(X::MultiLogiset) = length(nmodalities(X))
-# Base.push!(X::MultiLogiset, f::AbstractModalLogiset) = push!(eachmodality(X), f)
+# Base.push!(X::MultiLogiset, f::AbstractLogiset) = push!(eachmodality(X), f)
 # Base.getindex(X::MultiLogiset, i_modality::Integer) = modality(X, i_modality)
 # Base.iterate(X::MultiLogiset, state=1)   = state > nmodalities(X) ? nothing : (modality(X, state), state+1)
 
@@ -318,11 +318,11 @@ end
 
 function check(
     φ::LeftmostConjunctiveForm{<:MultiFormula},
-    d::AbstractInterpretationSet{M},
+    d::AbstractInterpretationSet,
     i_instance::Integer,
     args...;
     kwargs...
-) where {M<:SoleLogics.AbstractKripkeStructure}
+)
     X = MultiLogiset(d)
     all([check(c,X,i_instance,args...; kwargs...) for c in children(φ)])
 end

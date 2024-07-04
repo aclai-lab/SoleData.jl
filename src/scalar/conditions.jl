@@ -97,7 +97,7 @@ end
 ############################################################################################
 
 """
-    struct ScalarCondition{U,FT,M<:ScalarMetaCondition{FT}} <: AbstractCondition{FT}
+    struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractCondition{FT}
         metacond::M
         a::U
     end
@@ -114,7 +114,7 @@ See also
 [`AbstractCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
 """
-struct ScalarCondition{U,FT,M<:ScalarMetaCondition{FT}} <: AbstractCondition{FT}
+struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractCondition{FT}
 
   # Metacondition
   metacond::M
@@ -224,7 +224,7 @@ function parsecondition(
     expr::String;
     featuretype::Union{Nothing,Type} = nothing,
     kwargs...
-) where {U,FT,C<:ScalarCondition{U,FT}}
+) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
     @assert isnothing(featuretype) || featuretype == FT "Cannot parse condition of type $(C) with " *
         "featuretype = $(featuretype). (expr = $(repr(expr)))"
     _parsecondition(C, expr; kwargs...)
@@ -234,7 +234,7 @@ function _parsecondition(
     ::Type{C},
     expr::String;
     kwargs...
-) where {U,FT,C<:ScalarCondition{U,FT}}
+) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
     r = Regex("^\\s*(\\S+)\\s+([^\\s\\d]+)\\s*(\\S+)\\s*\$")
     slices = match(r, expr)
 

@@ -230,21 +230,21 @@ end
 
 function instances(
     Xm::UniformFullDimensionalOneStepRelationalMemoset{U,W,N},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 ) where {U,W<:OneWorld,N}
     UniformFullDimensionalOneStepRelationalMemoset{U,W,N}(if return_view == Val(true) @view Xm.d[inds,:,:] else Xm.d[inds,:,:] end)
 end
 function instances(
     Xm::UniformFullDimensionalOneStepRelationalMemoset{U,W,N},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 ) where {U,W<:Interval,N}
     UniformFullDimensionalOneStepRelationalMemoset{U,W,N}(if return_view == Val(true) @view Xm.d[:,:,inds,:,:] else Xm.d[:,:,inds,:,:] end)
 end
 function instances(
     Xm::UniformFullDimensionalOneStepRelationalMemoset{U,W,N},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 ) where {U,W<:Interval2D,N}
     UniformFullDimensionalOneStepRelationalMemoset{U,W,N}(if return_view == Val(true) @view Xm.d[:,:,:,:,inds,:,:] else Xm.d[:,:,:,:,inds,:,:] end)

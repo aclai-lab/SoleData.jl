@@ -362,7 +362,7 @@ end
 
 function instances(
     X::UniformFullDimensionalLogiset{U,W,0},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 ) where {U,W}
     UniformFullDimensionalLogiset{U,W,0}(if return_view == Val(true) @view X.featstruct[inds,:] else X.featstruct[inds,:] end, features(X))
@@ -370,7 +370,7 @@ end
 
 function instances(
     X::UniformFullDimensionalLogiset{U,W,1},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 ) where {U,W}
     UniformFullDimensionalLogiset{U,W,1}(if return_view == Val(true) @view X.featstruct[:,:,inds,:] else X.featstruct[:,:,inds,:] end, features(X))
@@ -378,7 +378,7 @@ end
 
 function instances(
     X::UniformFullDimensionalLogiset{U,W,2},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 ) where {U,W}
     UniformFullDimensionalLogiset{U,W,2}(if return_view == Val(true) @view X.featstruct[:,:,:,:,inds,:] else X.featstruct[:,:,:,:,inds,:] end, features(X))

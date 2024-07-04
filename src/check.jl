@@ -1,5 +1,17 @@
+import SoleLogics: check
 using SoleLogics: normalize
 using SoleLogics: AnyWorld
+
+function check(
+    φ::Atom{<:AbstractCondition},
+    i::SoleLogics.LogicalInstance{<:AbstractLogiset},
+    args...;
+    kwargs...
+)
+    X, i_instance = SoleLogics.splat(i)
+    cond = SoleLogics.value(φ)
+    return checkcondition(cond, X, i_instance, args...; kwargs...)
+end
 
 function check(
     φ::Atom{<:AbstractCondition},

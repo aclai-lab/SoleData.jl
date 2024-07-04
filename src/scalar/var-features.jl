@@ -487,7 +487,6 @@ should be provided.
 
 See also [`VarFeature`](@ref), [`featvaltype`](@ref), [`parsecondition`](@ref).
 """
-
 function parsefeature(
     ::Type{FT},
     expr::String;

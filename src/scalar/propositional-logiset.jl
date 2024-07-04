@@ -5,19 +5,15 @@ using SoleLogics: LogicalInstance
 using CategoricalArrays: CategoricalValue
 import SoleLogics: interpret
 import SoleData: VariableValue, featvalue
-
+using SoleLogics: AbstractAssignment
 
 include("discretization.jl")
 
 ############################################################################################
 
-using SoleLogics: AbstractAssignment
-abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
-
-############################################################################################
-
 """
     PropositionalLogiset(table)
+
 A logiset of propositional interpretations, wrapping a [Tables](https://github.com/JuliaData/Tables.jl)'
 table of real/string/categorical values.
 
@@ -59,6 +55,10 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
         else
             error("Table interface not implemented for $(typeof(tabulardataset)) type")
         end
+    end
+
+    function PropositionalLogiset(l::PropositionalLogiset)
+        return l
     end
 end
 
@@ -132,7 +132,7 @@ end
 
 function instances(
     X::PropositionalLogiset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 )
     return PropositionalLogiset(if return_view == Val(true)
@@ -171,6 +171,15 @@ end
 function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer,Symbol})
     return Tables.getcolumn(gettable(X), col)[row]
 end
+
+
+function frame(
+    dataset::PropositionalLogiset,
+    i_instance::Integer
+)
+    return OneWorld()
+end
+
 
 # TODO: @test_broken alphabet(X, false; skipextremes = true)
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.

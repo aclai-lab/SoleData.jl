@@ -8,7 +8,7 @@ using SoleLogics: AbstractKripkeStructure
         U,
         FT<:AbstractFeature,
         FR<:AbstractFrame{W},
-    } <: AbstractLogiset{SoleLogics.AbstractKripkeStructure} end
+    } <: AbstractLogiset end
 
 Abstract type for logisets, that is, logical datasets for
 symbolic learning where each instance is a
@@ -28,7 +28,7 @@ abstract type AbstractModalLogiset{
     U,
     FT<:AbstractFeature,
     FR<:AbstractFrame{W},
-} <: AbstractLogiset{SoleLogics.AbstractKripkeStructure} end
+} <: AbstractLogiset end
 
 function featchannel(
     X::AbstractModalLogiset{W},
@@ -196,7 +196,7 @@ end
 
 function instances(
     X::ExplicitBooleanModalLogiset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )
@@ -334,7 +334,7 @@ end
 
 function instances(
     X::ExplicitModalLogiset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )

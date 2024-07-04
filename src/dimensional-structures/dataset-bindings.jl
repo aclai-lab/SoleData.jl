@@ -115,6 +115,36 @@ end
 
 ############################################################################################
 
+function islogiseed(
+    dataset::NamedTuple,
+)
+    true
+end
+
+function frame(
+    dataset::NamedTuple,
+    i_instance::Integer
+)
+    # dataset_dimensional, varnames = dataframe2dimensional(dataset; dry_run = true)
+    # FullDimensionalFrame(channelsize(dataset_dimensional, i_instance))
+    column = first(X)
+    # frame(column, i_instance)
+    v = column[i_instance]
+    !(v isa Array) ? OneWorld() : FullDimensionalFrame(size(v))
+end
+
+# # Note: used in naturalgrouping.
+# function frame(
+#     dataset::NamedTuple,
+#     column::Vector,
+#     i_instance::Integer
+# )
+#     v = [column[i_instance] for column in values(Tables.columns(X))]
+#     !(eltype(v) isa Array) ? OneWorld() : FullDimensionalFrame(size(v))
+# end
+
+############################################################################################
+
 using DataFrames
 
 using MultiData: dataframe2dimensional
@@ -144,7 +174,8 @@ function frame(
     # FullDimensionalFrame(channelsize(dataset_dimensional, i_instance))
     column = dataset[:,1]
     # frame(column, i_instance)
-    FullDimensionalFrame(size(column[i_instance]))
+    v = column[i_instance]
+    (v == ()) ? OneWorld() : FullDimensionalFrame(size(v))
 end
 
 # Note: used in naturalgrouping.
@@ -153,7 +184,8 @@ function frame(
     column::Vector,
     i_instance::Integer
 )
-    FullDimensionalFrame(size(column[i_instance]))
+    v = column[i_instance]
+    (v == ()) ? OneWorld() : FullDimensionalFrame(size(v))
 end
 
 # # Remove!! dangerous

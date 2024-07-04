@@ -7,23 +7,23 @@ function islogiseed(dataset)
     false
     # return error("Please, provide method islogiseed(dataset::$(typeof(dataset))).")
 end
-function initlogiset(dataset, features)
-    return error("Please, provide method initlogiset(dataset::$(typeof(dataset)), features::$(typeof(features))).")
+function initlogiset#(dataset, features)
+    # return error("Please, provide method initlogiset(dataset::$(typeof(dataset)), features::$(typeof(features))).")
 end
-function ninstances(dataset)
-    return error("Please, provide method ninstances(dataset::$(typeof(dataset))).")
+function ninstances#(dataset)
+    # return error("Please, provide method ninstances(dataset::$(typeof(dataset))).")
 end
-function nvariables(dataset)
-    return error("Please, provide method nvariables(dataset::$(typeof(dataset))).")
+function nvariables#(dataset)
+    # return error("Please, provide method nvariables(dataset::$(typeof(dataset))).")
 end
-function frame(dataset, i_instance::Integer)
-    return error("Please, provide method frame(dataset::$(typeof(dataset)), i_instance::Integer).")
+function frame#(dataset, i_instance::Integer)
+    # return error("Please, provide method frame(dataset::$(typeof(dataset)), i_instance::Integer).")
 end
-function featvalue(feature::AbstractFeature, dataset, i_instance::Integer, w)
-    return error("Please, provide method featvalue(feature::$(typeof(feature)), dataset::$(typeof(dataset)), i_instance::Integer, w::$(typeof(w))).")
+function featvalue#(feature::AbstractFeature, dataset, i_instance::Integer, w)
+    # return error("Please, provide method featvalue(feature::$(typeof(feature)), dataset::$(typeof(dataset)), i_instance::Integer, w::$(typeof(w))).")
 end
-function vareltype(dataset, i_variable)
-    return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::Integer).")
+function vareltype#(dataset, i_variable)
+    # return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::Integer).")
 end
 
 function allworlds(dataset, i_instance::Integer)
@@ -34,11 +34,11 @@ end
 function ismultilogiseed(dataset)
     false
 end
-function nmodalities(dataset)
-    return error("Please, provide method nmodalities(dataset::$(typeof(dataset))).")
+function nmodalities#(dataset)
+    # return error("Please, provide method nmodalities(dataset::$(typeof(dataset))).")
 end
-function eachmodality(dataset)
-    return error("Please, provide method eachmodality(dataset::$(typeof(dataset))).")
+function eachmodality#(dataset)
+    # return error("Please, provide method eachmodality(dataset::$(typeof(dataset))).")
 end
 
 function modality(dataset, i_modality)
@@ -70,7 +70,7 @@ end
 
 function instances(
     dataset::Union{AbstractVector,Tuple},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )
@@ -245,6 +245,10 @@ function scalarlogiset(
             end for (i_modality, (_dataset, _features, _conditions, _relations)) in
                     enumerate(zip(eachmodality(dataset), features, conditions, relations))
             ])
+    end
+
+    if all(i_instance->frame(dataset, i_instance) == OneWorld(), 1:ninstances(dataset))
+        return PropositionalLogiset(dataset)
     end
 
     @assert is_nofeatures(features) || is_unifeatures(features) "Unexpected features (type: $(typeof(features))).\n" *
