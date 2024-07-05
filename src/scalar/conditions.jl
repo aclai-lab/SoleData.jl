@@ -423,6 +423,8 @@ struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractCondition{
     # end
 end
 
+feature(m::RangeScalarCondition) = m.feature
+
 _isgreater_test_operator(c::RangeScalarCondition) = (c.minincluded ? (>=) : (>))
 _isless_test_operator(c::RangeScalarCondition) = (c.maxincluded ? (<=) : (<))
 

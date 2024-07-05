@@ -24,6 +24,7 @@ function scalar_simplification(
     # @show φ
     # @show typeof.(SoleLogics.children(φ))
     # @show all(c->c isa Atom{<:ScalarCondition}, SoleLogics.children(φ))
+    # if !all(c->c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}, SoleLogics.children(φ))
     if !all(c->c isa Atom{<:ScalarCondition}, SoleLogics.children(φ))
         !silent && error("Cannot perform scalar simplification on linear form ($(syntaxstring(φ))) on" *
             " $(Union{map(typeof, SoleLogics.children(φ))...}).")
@@ -58,6 +59,15 @@ function scalar_simplification(
 
     ch = collect(Iterators.flatten([begin
             conds = scalar_conditions[bitmask]
+
+            conds = Iterators.flatten([
+                if cond isa ScalarCondition
+                    [cond]
+                elseif cond isa RangeScalarCondition
+                    [ScalarCondition(feat, _isgreater_test_operator(cond), cond.minval), ScalarCondition(feat, _isless_test_operator(cond), cond.maxval)]
+                else
+                    error("Unexpected condition: $(cond)")
+                end for cond in conds])
 
             min_domain = nothing
             max_domain = nothing
