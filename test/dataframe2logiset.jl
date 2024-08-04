@@ -13,7 +13,7 @@ dataset, relations = (DataFrame(; NamedTuple([Symbol(i_var) => [rand(3,3) for i_
 
 nvars = nvariables(dataset)
 
-features = collect(Iterators.flatten([[UnivariateMax(i_var), UnivariateMin(i_var)] for i_var in 1:nvars]))
+features = collect(Iterators.flatten([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvars]))
 logiset = scalarlogiset(dataset, features; use_full_memoization = false, use_onestep_memoization = false)
 
 logiset = @test_nowarn scalarlogiset(dataset; use_full_memoization = false, use_onestep_memoization = false)
@@ -44,7 +44,7 @@ _formulas = [randformula(rng, 3, alph, [SoleLogics.BASE_PROPOSITIONAL_CONNECTIVE
 syntaxstring.(_formulas) .|> println;
 
 i_instance = 1
-@test_nowarn checkcondition(value(alph.atoms[1]), complete_logiset, i_instance, first(allworlds(complete_logiset, i_instance)))
+@test_nowarn checkcondition(SoleLogics.value(alph.atoms[1]), complete_logiset, i_instance, first(allworlds(complete_logiset, i_instance)))
 
 c1 = @test_nowarn [
         [check(φ, logiset, i_instance, w) for φ in _formulas]

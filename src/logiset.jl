@@ -1,5 +1,5 @@
-using SoleLogics: AbstractKripkeStructure, AbstractInterpretationSet, AbstractFrame
-using SoleLogics: Truth
+using SoleLogics: AbstractKripkeStructure, AbstractAssignment, AbstractInterpretationSet, AbstractFrame, AbstractWorld
+using SoleLogics: Truth, LogicalInstance
 import SoleLogics: alphabet, frame, check
 import SoleLogics: accessibles, allworlds, nworlds
 import SoleLogics: worldtype, frametype

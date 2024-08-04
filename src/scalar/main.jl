@@ -33,3 +33,7 @@ include("dataset-bindings.jl")
 include("memosets.jl")
 
 include("onestep-memoset.jl")
+
+export PropositionalLogiset
+include("propositional-logiset.jl")
+# include("propositional-formula-simplification.jl")

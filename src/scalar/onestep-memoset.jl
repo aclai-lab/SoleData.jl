@@ -8,7 +8,7 @@
     aggr::Aggregator,
     args...
 ) where {W<:AbstractWorld}
-    vs = [featvalue(X, i_instance, w2, f) for w2 in representatives(X, i_instance, w, r, f, aggr)]
+    vs = [featvalue(f, X, i_instance, w2) for w2 in representatives(X, i_instance, w, r, f, aggr)]
     U = featvaltype(X)
     return (length(vs) == 0 ? aggregator_bottom(aggr, U) : aggr(vs))
 end

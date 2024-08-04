@@ -98,10 +98,10 @@ function readfeature(
 end
 
 function featvalue(
+    feature::AbstractFeature,
     dataset::AbstractDimensionalDataset,
     i_instance::Integer,
     w::W,
-    feature::AbstractFeature,
 ) where {W<:AbstractWorld}
     readfeature(dataset, featchannel(dataset, i_instance, feature), w, feature)
 end
@@ -207,10 +207,10 @@ function readfeature(
 end
 
 function featvalue(
+    feature::AbstractFeature,
     dataset::AbstractDataFrame,
     i_instance::Integer,
     w::W,
-    feature::AbstractFeature,
 ) where {W<:AbstractWorld}
     readfeature(dataset, featchannel(dataset, i_instance, feature), w, feature)
 end

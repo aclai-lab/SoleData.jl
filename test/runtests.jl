@@ -1,4 +1,3 @@
-# using Revise
 using SoleData
 using SoleLogics
 using Test
@@ -23,6 +22,8 @@ test_suites = [
     ("MultiLogisets", [ "multilogisets.jl", ]),
     ("MLJ", [ "MLJ.jl", ]),
     ("Minify", ["minify.jl"]),
+    ("Discretization", ["discretization.jl"]),
+    ("Parse", ["parse.jl"]),
 ]
 
 @testset "SoleData.jl" begin

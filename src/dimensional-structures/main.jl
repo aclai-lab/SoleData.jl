@@ -32,7 +32,7 @@ using SoleData
 using SoleBase
 
 using SoleData: Aggregator, AbstractCondition
-using SoleData: BoundedScalarConditions
+using SoleData: UnivariateScalarAlphabet, UnionAlphabet
 using SoleData: AbstractModalLogiset, AbstractMultiModalFrame
 using SoleData: MultiLogiset, AbstractModalLogiset
 using SoleData: apply_test_operator, existential_aggregator, aggregator_bottom, aggregator_to_binary
@@ -40,7 +40,7 @@ using SoleData: apply_test_operator, existential_aggregator, aggregator_bottom, 
 import SoleData: features, nfeatures
 using SoleData: worldtype, featvaltype, featuretype, frametype
 
-import SoleData: representatives, ScalarMetaCondition, ScalarCondition, featvaltype
+import SoleData: representatives, ScalarMetaCondition, ScalarCondition, ObliqueScalarCondition, featvaltype
 import SoleData: ninstances, nrelations, nfeatures, check, instances, minify
 import SoleData: displaystructure, frame
 import SoleData: alphabet, isminifiable

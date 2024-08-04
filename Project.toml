@@ -1,7 +1,7 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-authors = ["Giovanni Pagliarini"]
-version = "0.13.1"
+authors = ["Edoardo PONSANESI", "Giovanni Pagliarini"]
+version = "0.14.0"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
@@ -12,6 +12,8 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+Lazy = "50d2b5c4-7a5e-59d5-8109-a42b560f39c0"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MLJModelInterface = "e80e1ace-859a-464e-9ed9-23947d8ae3ea"
 MultiData = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
@@ -44,6 +46,8 @@ Random = "1"
 Reexport = "1"
 Revise = "3"
 ScientificTypes = "3"
+SoleBase = "0.12"
+SoleLogics = "0.9"
 StatsBase = "0.30 - 0.34"
 Tables = "1"
 ThreadSafeDicts = "0.1"

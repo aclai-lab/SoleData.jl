@@ -11,8 +11,8 @@ begin
 n_instances = 2
 nvars = 2
 
-generic_features_oneworld = collect(Iterators.flatten([[SoleData.UnivariateValue(i_var)] for i_var in 1:nvars]))
-generic_features = collect(Iterators.flatten([[UnivariateMax(i_var), UnivariateMin(i_var)] for i_var in 1:nvars]))
+generic_features_oneworld = collect(Iterators.flatten([[SoleData.VariableValue(i_var)] for i_var in 1:nvars]))
+generic_features = collect(Iterators.flatten([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvars]))
 
 for (dataset, relations, features) in [
     # (Array(reshape(1.0:4.0, nvars,n_instances)), []),
@@ -58,7 +58,7 @@ _formulas = [randformula(rngcube, 3, alph, [SoleLogics.BASE_PROPOSITIONAL_CONNEC
 # syntaxstring.(_formulas) .|> println;
 
 i_instance = 1
-@test_nowarn checkcondition(value(alph.atoms[1]), logiset, i_instance, first(allworlds(logiset, i_instance)))
+@test_nowarn checkcondition(SoleLogics.value(alph.atoms[1]), logiset, i_instance, first(allworlds(logiset, i_instance)))
 
 c1 = @test_nowarn [
         [check(φ, logiset, i_instance, w) for φ in _formulas]

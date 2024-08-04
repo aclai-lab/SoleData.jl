@@ -1,7 +1,9 @@
 
 using SoleLogics: AbstractAlphabet
+using SoleLogics: AbstractInterpretationSet, LogicalInstance
 using Random
 import SoleLogics: hasdual, dual, atoms
+import SoleLogics: check, interpret
 
 import Base: in, isfinite, length
 
@@ -26,15 +28,6 @@ function checkcondition(c::AbstractCondition, args...; kwargs...)
         join(map(t->"::$(t)", typeof.(args)), ", ") * "; kwargs...). " *
         "Note that this value must be unique.")
 end
-
-# function checkcondition(
-#     c::AbstractCondition,
-#     X::AbstractModalLogiset{W,U,FT},
-#     i_instance::Integer,
-#     w::W,
-# ) where {W<:AbstractWorld,U,FT<:AbstractFeature}
-#     error("Please, provide method checkcondition(c::$(typeof(c)), X::$(typeof(X)), i_instance::$(typeof(i_instance)), w::$(typeof(w))).")
-# end
 
 function syntaxstring(c::AbstractCondition; kwargs...)
     return error("Please, provide method syntaxstring(::$(typeof(c)); kwargs...). " *
@@ -73,6 +66,39 @@ function parsecondition(
     return error("Please, provide method parsecondition(::$(Type{C}), expr::$(typeof(expr)); kwargs...).")
 end
 
+function check(
+    φ::Atom{<:AbstractCondition},
+    X::AbstractInterpretationSet;
+    kwargs...
+)::BitVector
+    cond = SoleLogics.value(φ)
+    return checkcondition(cond, X; kwargs...)
+end
+
+function check(
+    φ::Atom{<:AbstractCondition},
+    i::LogicalInstance{<:AbstractInterpretationSet},
+    args...;
+    kwargs...
+)::Bool
+    # @warn "Attempting single-instance check. This is not optimal."
+    X, i_instance = SoleLogics.splat(i)
+    cond = SoleLogics.value(φ)
+    return checkcondition(cond, X, i_instance, args...; kwargs...)
+end
+
+# Note: differently from other parts of the Sole.jl framework, where the opposite is true,
+#  here `interpret` depends on `check`,
+function interpret(
+    φ::Atom{<:AbstractCondition},
+    i::LogicalInstance{<:AbstractInterpretationSet},
+    args...;
+    kwargs...
+)::Formula
+    # @warn "Please use `check` instead of `interpret` for crisp formulas."
+    return check(φ, i, args...; kwargs...) ? ⊤ : ⊥
+end
+
 ############################################################################################
 
 """
@@ -99,17 +125,6 @@ function parsecondition(
     kwargs...
 )
     ValueCondition(featuretype(expr))
-end
-
-############################################################################################
-
-function featvalue(
-    feature::AbstractFeature,
-    X,
-    i_instance::Integer,
-    w::W,
-) where {W<:AbstractWorld}
-    featvalue(X, i_instance, w, feature)
 end
 
 ############################################################################################

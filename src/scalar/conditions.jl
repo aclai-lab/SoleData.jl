@@ -1,8 +1,9 @@
-
+import SoleLogics: randatom
 ############################################################################################
 
 const DEFAULT_SCALARCOND_FEATTYPE = SoleData.VarFeature
 
+# TODO ScalarMetaCondition is more like... an Alphabet, than a Condition.
 """
     struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
         feature::FT
@@ -15,7 +16,7 @@ of an instance of a logical dataset.
 A test operator is a binary mathematical relation, comparing the computed feature value
 and an external threshold value (see `ScalarCondition`). A metacondition can also be used
 for representing the infinite set of conditions that arise with a free threshold
-(see `UnboundedScalarConditions`): \${min[V1] ≥ a, a ∈ ℝ}\$.
+(see `UnboundedScalarAlphabet`): \${min[V1] ≥ a, a ∈ ℝ}\$.
 
 See also
 [`AbstractCondition`](@ref),
@@ -23,11 +24,11 @@ See also
 """
 struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
 
-  # Feature: a scalar function that can be computed on a world
-  feature::FT
+    # Feature: a scalar function that can be computed on a world
+    feature::FT
 
-  # Test operator (e.g. ≥)
-  test_operator::O
+    # Test operator (e.g. ≥)
+    test_operator::O
 
 end
 
@@ -107,7 +108,7 @@ It can be evaluated on a world of an instance of a logical dataset.
 
 For example: \$min[V1] ≥ 10\$, which translates to
 "Within this world, the minimum of variable 1 is greater or equal than 10."
-In this case, the feature a [`UnivariateMin`](@ref) object.
+In this case, the feature a [`VariableMin`](@ref) object.
 
 See also
 [`AbstractCondition`](@ref),
@@ -258,138 +259,139 @@ end
 ############################################################################################
 ############################################################################################
 
+# TODO remove in favor of UnionAlphabet{UnboundedUnivariateScalarAlphabet}
+# """
+#     struct UnboundedScalarAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C}
+#         metaconditions::Vector{<:ScalarMetaCondition}
+#     end
+
+# An infinite alphabet of conditions induced from a finite set of metaconditions.
+# For example, if `metaconditions = [ScalarMetaCondition(VariableMin(1), ≥)]`,
+# the alphabet represents the (infinite) set: \${min[V1] ≥ a, a ∈ ℝ}\$.
+
+# See also
+# [`UnivariateScalarAlphabet`](@ref),
+# [`ScalarCondition`](@ref),
+# [`ScalarMetaCondition`](@ref).
+# """
+# struct UnboundedScalarAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C}
+#     metaconditions::Vector{<:ScalarMetaCondition}
+
+#     function UnboundedScalarAlphabet{C}(
+#         metaconditions::Vector{<:ScalarMetaCondition}
+#     ) where {C<:ScalarCondition}
+#         new{C}(metaconditions)
+#     end
+
+#     function UnboundedScalarAlphabet(
+#         features       :: AbstractVector{C},
+#         test_operators :: AbstractVector,
+#     ) where {C<:ScalarCondition}
+#         metaconditions =
+#             [ScalarMetaCondition(f, t) for f in features for t in test_operators]
+#         UnboundedScalarAlphabet{C}(metaconditions)
+#     end
+# end
+
+# Base.isfinite(::Type{<:UnboundedScalarAlphabet}) = false
+
+# function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarAlphabet)
+#     fc = SoleLogics.value(p)
+#     idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
+#     return !isnothing(idx)
+# end
+
+############################################################################################
+############################################################################################
+############################################################################################
+
 """
-    abstract type AbstractConditionalAlphabet{C<:ScalarCondition} <: SoleLogics.AbstractAlphabet{C} end
-
-Abstract type for alphabets of conditions.
-
-See also
-[`ScalarCondition`](@ref),
-[`ScalarMetaCondition`](@ref).
-"""
-abstract type AbstractConditionalAlphabet{C<:ScalarCondition} <: AbstractAlphabet{C} end
-
-"""
-    struct UnboundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-        metaconditions::Vector{<:ScalarMetaCondition}
-    end
-
-An infinite alphabet of conditions induced from a finite set of metaconditions.
-For example, if `metaconditions = [ScalarMetaCondition(UnivariateMin(1), ≥)]`,
-the alphabet represents the (infinite) set: \${min[V1] ≥ a, a ∈ ℝ}\$.
-
-See also
-[`BoundedScalarConditions`](@ref),
-[`ScalarCondition`](@ref),
-[`ScalarMetaCondition`](@ref).
-"""
-struct UnboundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-    metaconditions::Vector{<:ScalarMetaCondition}
-
-    function UnboundedScalarConditions{C}(
-        metaconditions::Vector{<:ScalarMetaCondition}
-    ) where {C<:ScalarCondition}
-        new{C}(metaconditions)
-    end
-
-    function UnboundedScalarConditions(
-        features       :: AbstractVector{C},
-        test_operators :: AbstractVector,
-    ) where {C<:ScalarCondition}
-        metaconditions =
-            [ScalarMetaCondition(f, t) for f in features for t in test_operators]
-        UnboundedScalarConditions{C}(metaconditions)
-    end
-end
-
-Base.isfinite(::Type{<:UnboundedScalarConditions}) = false
-
-function Base.in(p::Atom{<:ScalarCondition}, a::UnboundedScalarConditions)
-    fc = value(p)
-    idx = findfirst(mc->mc == metacond(fc), a.metaconditions)
-    return !isnothing(idx)
-end
-
-# Finite alphabet of conditions induced from a set of metaconditions
-"""
-    struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-        grouped_featconditions::Vector{Tuple{<:ScalarMetaCondition,Vector}}
+    struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
+        featcondition::Vector{UnivariateScalarAlphabet}
     end
 
 A finite alphabet of conditions, grouped by (a finite set of) metaconditions.
 
 See also
-[`UnboundedScalarConditions`](@ref),
+[`UnboundedScalarAlphabet`](@ref),
 [`ScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
 """
-struct BoundedScalarConditions{C<:ScalarCondition} <: AbstractConditionalAlphabet{C}
-    grouped_featconditions::Vector{<:Tuple{ScalarMetaCondition,Vector}}
-
-    function BoundedScalarConditions{C}(
-        grouped_featconditions::Vector{<:Tuple{ScalarMetaCondition,Vector}}
-    ) where {C<:ScalarCondition}
-        new{C}(grouped_featconditions)
-    end
-
-    function BoundedScalarConditions{C}(
-        metaconditions::Vector{<:ScalarMetaCondition},
-        thresholds::Vector{<:Vector},
-    ) where {C<:ScalarCondition}
-        length(metaconditions) != length(thresholds) &&
-            error("Cannot instantiate BoundedScalarConditions with mismatching " *
-                "number of `metaconditions` and `thresholds` " *
-                "($(metaconditions) != $(thresholds)).")
-        grouped_featconditions = collect(zip(metaconditions, thresholds))
-        BoundedScalarConditions{C}(grouped_featconditions)
-    end
-
-    function BoundedScalarConditions(
-        features       :: AbstractVector{C},
-        test_operators :: AbstractVector,
-        thresholds     :: Vector
-    ) where {C<:ScalarCondition}
-        metaconditions =
-            [ScalarMetaCondition(f, t) for f in features for t in test_operators]
-        BoundedScalarConditions{C}(metaconditions, thresholds)
-    end
+struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
+    featcondition::Tuple{ScalarMetaCondition,Vector}
 end
 
-# TODO specify test_operator type 
-function getconditionset( pl::PropositionalLogiset, test_operators)::Vector{BoundedScalarConditions}
-
-    scalarconditions = []
-    for test_op ∈ test_operators 
-        
-        features = getfeatures(pl)
-        scalarmetacond = ScalarMetaCondition.(features,  test_op)
-        newconditions = BoundedScalarConditions{ScalarCondition}(
-            map( i -> (scalarmetacond[i], pl[:, varname.(features)[i]]), 1:length(features))
-        )
-        push!(scalarconditions, newconditions)
-    end
-
-    return scalarconditions
+function atoms(c::UnivariateScalarAlphabet)
+    mc, thresholds = c.featcondition
+    return Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
-function getconditionset( pl::PropositionalLogiset, test_operator::TestOperator)::Vector{BoundedScalarConditions}
-    return getconditionset(pl, [test_operator])
+metacond(c::UnivariateScalarAlphabet)   = c.featcondition[1]
+thresholds(c::UnivariateScalarAlphabet) = c.featcondition[2]
+
+feature(c::UnivariateScalarAlphabet)        = feature(metacond(c))
+test_operator(c::UnivariateScalarAlphabet)  = test_operator(metacond(c))
+
+natoms(c::UnivariateScalarAlphabet) = length(thresholds(c))
+
+function Base.show(io::IO, c::UnivariateScalarAlphabet)
+    mc, thresholds = c.featcondition
+    println(io, "\t$(syntaxstring(mc)) ⇒ $(thresholds)")
 end
 
-function atoms(a::BoundedScalarConditions)
-    Iterators.flatten(
-        map(
-            ((mc,thresholds),)->map(
-                threshold->Atom(ScalarCondition(mc, threshold)),
-                thresholds),
-            a.grouped_featconditions
-        )
-    ) |> collect
+# Optimized lookup for alphabet union
+function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet})
+    fc = SoleLogics.value(p)
+    sas = subalphabets(a)
+    idx = findfirst((sa) -> sa.featcondition[1] == metacond(fc), sas)
+    return !isnothing(idx) && Base.in(threshold(fc), sas[idx].featcondition[2])
 end
 
-function Base.in(p::Atom{<:ScalarCondition}, a::BoundedScalarConditions)
-    fc = value(p)
-    grouped_featconditions = a.grouped_featconditions
-    idx = findfirst(((mc,thresholds),)->mc == metacond(fc), grouped_featconditions)
-    return !isnothing(idx) && Base.in(threshold(fc), last(grouped_featconditions[idx]))
+function randatom(
+    rng::AbstractRNG,
+    a::UnivariateScalarAlphabet
+)::Atom
+    (mc, thresholds) = a.featcondition
+    threshold = rand(rng, thresholds)
+    return Atom(ScalarCondition(mc, threshold))
+end
+
+############################################################################################
+
+using LinearAlgebra
+
+"""
+    ObliqueScalarCondition(features, b, u, test_operator)
+
+An oblique scalar condition (see *oblique decision trees*),
+such as \$((features - b) ⋅ u) ≥ 0\$, where `features` is
+a set of \$m\$ features, and \$b,u ∈ ℝ^m\$.
+
+See also
+[`AbstractCondition`](@ref),
+[`ScalarCondition`](@ref).
+"""
+struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
+
+    # Feature: a scalar function that can be computed on a world
+    features::Vector{<:FT}
+    b::Vector{<:Real}
+    u::Vector{<:Real}
+
+    # Test operator (e.g. ≥)
+    test_operator::O
+
+end
+
+test_operator(m::ObliqueScalarCondition) = m.test_operator
+
+hasdual(::ObliqueScalarCondition) = true
+dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))
+
+syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] ⋈ 0"
+
+function checkcondition(c::ObliqueScalarCondition, args...; kwargs...)
+    f = [featvalue(feat, args...; kwargs...) for feat in c.features]
+    val = LinearAlgebra.dot((f .- c.b), c.u)
+    apply_test_operator(test_operator(c), val, 0)
 end

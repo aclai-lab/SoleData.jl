@@ -197,13 +197,13 @@ function readfeature(
 end
 
 function featvalue(
+    feature::AbstractFeature,
     X::SupportedLogiset,
     i_instance::Integer,
-    w::W,
-    f::AbstractFeature,
-    args...
-) where {W<:AbstractWorld}
-    featvalue(base(X), i_instance, w, f, args...)
+    args...;
+    kwargs...
+)
+    featvalue(feature, base(X), i_instance, args...; kwargs...)
 end
 
 frame(X::SupportedLogiset, i_instance::Integer) = frame(base(X), i_instance)

@@ -21,7 +21,7 @@ multidataset, multirelations = collect.(zip([
 multidataset = map(d->eachslice(d; dims = ndims(d)), multidataset)
 multilogiset = @test_nowarn scalarlogiset(multidataset)
 
-generic_features = collect(Iterators.flatten([[UnivariateMax(i_var), UnivariateMin(i_var)] for i_var in 1:_nvars]))
+generic_features = collect(Iterators.flatten([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:_nvars]))
 metaconditions = [ScalarMetaCondition(feature, >) for feature in generic_features]
 multilogiset = @test_logs min_level=Logging.Error scalarlogiset(multidataset; use_full_memoization = false, use_onestep_memoization = true, conditions = metaconditions, relations = multirelations)
 multilogiset = @test_logs min_level=Logging.Error scalarlogiset(multidataset; use_full_memoization = true, use_onestep_memoization = true, conditions = metaconditions, relations = multirelations)
@@ -67,7 +67,7 @@ multiformulas = [begin
 end for i in 1:200];
 # syntaxstring.(multiformulas) .|> println;
 
-@test_throws MethodError checkcondition(value(alph.atoms[1]), multilogiset, i_instance)
+@test_throws MethodError checkcondition(SoleLogics.value(alph.atoms[1]), multilogiset, i_instance)
 
 c1 = @test_nowarn [check(φ, multilogiset, i_instance) for φ in multiformulas]
 c3 = @test_nowarn [check(φ, complete_supported_multilogiset, i_instance) for φ in multiformulas]

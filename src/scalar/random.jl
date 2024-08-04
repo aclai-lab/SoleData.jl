@@ -1,38 +1,40 @@
 import Base: rand
+using SoleLogics
 
-# TODO @Michele Examples
-"""
-    Base.rand(
-        rng::AbstractRNG,
-        a::BoundedScalarConditions;
-        metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
-        feature::Union{Nothing,AbstractFeature,AbstractVector{<:AbstractFeature}} = nothing,
-        test_operator::Union{Nothing,TestOperator,AbstractVector{<:TestOperator}} = nothing,
-    )::Atom
+# Author: @Michele21
+# """
+#     randatom(
+#         rng::AbstractRNG,
+#         a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet};
+#         metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
+#         feature::Union{Nothing,AbstractFeature,AbstractVector{<:AbstractFeature}} = nothing,
+#         test_operator::Union{Nothing,TestOperator,AbstractVector{<:TestOperator}} = nothing,
+#     )::Atom
 
-Randomly sample an `Atom` holding a `ScalarCondition` from conditional alphabet `a`,
-such that:
-- if `metaconditions` are specified, then the set of metaconditions (feature-operator pairs)
-is limited to `metaconditions`;
-- if `feature` is specified, then the set of metaconditions (feature-operator pairs)
-is limited to those with `feature`;
-- if `test_operator` is specified, then the set of metaconditions (feature-operator pairs)
-is limited to those with `test_operator`.
+# Randomly sample an `Atom` holding a `ScalarCondition` from scalar alphabet `a`,
+# such that:
+# - if `metaconditions` are specified, then the set of metaconditions (feature-operator pairs)
+# is limited to `metaconditions`;
+# - if `feature` is specified, then the set of metaconditions (feature-operator pairs)
+# is limited to those with `feature`;
+# - if `test_operator` is specified, then the set of metaconditions (feature-operator pairs)
+# is limited to those with `test_operator`.
 
-See also
-[`BoundedScalarConditions`](@ref),
-[`ScalarCondition`](@ref),
-[`ScalarMetaCondition`](@ref),
-[`SoleLogics.AbstractAlphabet`](@ref).
-"""
-function Base.rand(
+# See also
+# [`UnionAlphabet`](@ref),
+# [`UnivariateScalarAlphabet`](@ref),
+# [`ScalarCondition`](@ref),
+# [`ScalarMetaCondition`](@ref).
+# """
+function randatom(
     rng::AbstractRNG,
-    a::BoundedScalarConditions;
+    a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet};
     metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
     features::Union{Nothing,AbstractFeature,AbstractVector{<:AbstractFeature}} = nothing,
     test_operators::Union{Nothing,TestOperator,AbstractVector{<:TestOperator}} = nothing,
 )::Atom
-
+    @warn "TODO this function is untested."
+    
     # Transform values to singletons
     metaconditions = metaconditions isa ScalarMetaCondition ? [metaconditions] : metaconditions
     features = features isa AbstractFeature ? [features] : features
@@ -46,7 +48,7 @@ function Base.rand(
             "feature: $(feature)\n" *
             "test operator: $(test_operator)\n"
 
-    grouped_featconditions = a.grouped_featconditions
+    grouped_featconditions = map(sa -> sa.featcondition, subalphabets(a))
 
     filtered_featconds = begin
         if !isnothing(metaconditions)

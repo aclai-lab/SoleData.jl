@@ -49,6 +49,19 @@ inverse_test_operator(::typeof(>))  = ≤
 inverse_test_operator(::typeof(==)) = !=
 inverse_test_operator(::typeof(!=)) = ==
 
+isordered(op::TestOperator) = op in [≥, ≤, <, >]
+polarity(::Any) = nothing
+polarity(::typeof(≥)) = true
+polarity(::typeof(≤)) = false
+polarity(::typeof(<)) = false
+polarity(::typeof(>)) = true
+
+isstrict(::typeof(≥)) = false
+isstrict(::typeof(≤)) = false
+isstrict(::typeof(<)) = true
+isstrict(::typeof(>)) = true
+
+
 dual_test_operator(::typeof(≥)) = ≤
 dual_test_operator(::typeof(≤)) = ≥
 

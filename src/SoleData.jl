@@ -6,6 +6,7 @@ module SoleData
 using Reexport
 using SoleBase
 using SoleBase: AbstractDataset, slicedataset
+import SoleBase: eachinstance
 
 using DataFrames
 using MultiData
@@ -48,8 +49,10 @@ export FullDimensionalFrame
 
 using ThreadSafeDicts
 
-using SoleLogics
+@reexport using SoleLogics
 import SoleLogics: frame
+
+using SoleLogics: value
 
 using SoleLogics: OneWorld, Interval, Interval2D
 using SoleLogics: Full0DFrame, Full1DFrame, Full2DFrame
@@ -69,23 +72,22 @@ import MultiData: _isnan
 import MultiData: hasnans, instances, concatdatasets
 import MultiData: displaystructure
 
-# TODO fix
-import MultiData: eachinstance
 import Tables: istable, rows, subset, getcolumn, columnnames, rowaccess
 
 
 export AbstractFeature, Feature
 
 export UnivariateNamedFeature,
-        UnivariateFeature
+        UnivariateFeature,
+        VariableValue
 
 export computefeature
 
 export parsefeature
 
 export VarFeature,
-        UnivariateMin, UnivariateMax,
-        UnivariateSoftMin, UnivariateSoftMax,
+        VariableMin, VariableMax,
+        VariableSoftMin, VariableSoftMax,
         MultivariateFeature
 
 # Features to be computed on worlds of dataset instances
@@ -114,11 +116,13 @@ export accessibles, allworlds, representatives
 # Interface for representative accessibles, for optimized model checking on specific frames
 include("representatives.jl")
 
-export ninstances, featvalue, displaystructure, isminifiable, minify
+export ninstances, eachinstance
+export featvalue, displaystructure, isminifiable, minify
+export alphabet
 
-# Logical datasets, where the instances are Kripke structures with conditional alphabets
+# Logical datasets, where the instances are Kripke structures with scalar alphabets
 include("logiset.jl")
-include("propositional-logisets.jl")
+
 include("modal-logisets.jl")
 
 include("memosets.jl")

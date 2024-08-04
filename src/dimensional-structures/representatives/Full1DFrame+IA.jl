@@ -47,80 +47,80 @@ using SoleLogics: _IA_AorO, _IA_AiorOi, _IA_DorBorE, _IA_DiorBiorEi, _IA_I, IA72
 ############################################################################################
 
 # e.g., minimum + ≥
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::UnivariateMin, ::typeof(maximum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   w.y+1)] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::UnivariateMin, ::typeof(maximum)) = (1 < w.x)                   ?  Interval{Int}[Interval(w.x-1, w.y  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::UnivariateMin, ::typeof(maximum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(w.x-1, w.y+1)] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::UnivariateMin, ::typeof(maximum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.y-1, w.y+1)] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::UnivariateMin, ::typeof(maximum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(w.x-1, w.x+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::VariableMin, ::typeof(maximum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   w.y+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::VariableMin, ::typeof(maximum)) = (1 < w.x)                   ?  Interval{Int}[Interval(w.x-1, w.y  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::VariableMin, ::typeof(maximum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(w.x-1, w.y+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::VariableMin, ::typeof(maximum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.y-1, w.y+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::VariableMin, ::typeof(maximum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(w.x-1, w.x+1)] : Interval{Int}[]
 
 # e.g., maximum + ≤
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::UnivariateMax, ::typeof(minimum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   w.y+1)] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::UnivariateMax, ::typeof(minimum)) = (1 < w.x)                   ?  Interval{Int}[Interval(w.x-1, w.y  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::UnivariateMax, ::typeof(minimum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(w.x-1, w.y+1)] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::UnivariateMax, ::typeof(minimum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.y-1, w.y+1)] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::UnivariateMax, ::typeof(minimum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(w.x-1, w.x+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::VariableMax, ::typeof(minimum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   w.y+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::VariableMax, ::typeof(minimum)) = (1 < w.x)                   ?  Interval{Int}[Interval(w.x-1, w.y  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::VariableMax, ::typeof(minimum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(w.x-1, w.y+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::VariableMax, ::typeof(minimum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.y-1, w.y+1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::VariableMax, ::typeof(minimum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(w.x-1, w.x+1)] : Interval{Int}[]
 
 # e.g., minimum + ≥
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::UnivariateMin, ::typeof(minimum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   X(fr)+1)]   : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::UnivariateMin, ::typeof(minimum)) = (1 < w.x)                   ?  Interval{Int}[Interval(1,     w.y  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::UnivariateMin, ::typeof(minimum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(1,     X(fr)+1  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::UnivariateMin, ::typeof(minimum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.x+1, X(fr)+1  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::UnivariateMin, ::typeof(minimum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(1,     w.y-1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::VariableMin, ::typeof(minimum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   X(fr)+1)]   : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::VariableMin, ::typeof(minimum)) = (1 < w.x)                   ?  Interval{Int}[Interval(1,     w.y  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::VariableMin, ::typeof(minimum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(1,     X(fr)+1  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::VariableMin, ::typeof(minimum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.x+1, X(fr)+1  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::VariableMin, ::typeof(minimum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(1,     w.y-1)] : Interval{Int}[]
 
 # e.g., maximum + ≤
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::UnivariateMax, ::typeof(maximum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   X(fr)+1)]   : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::UnivariateMax, ::typeof(maximum)) = (1 < w.x)                   ?  Interval{Int}[Interval(1,     w.y  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::UnivariateMax, ::typeof(maximum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(1,     X(fr)+1  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::UnivariateMax, ::typeof(maximum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.x+1, X(fr)+1  )] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::UnivariateMax, ::typeof(maximum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(1,     w.y-1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Bi, ::VariableMax, ::typeof(maximum)) = (w.y < X(fr)+1)                 ?  Interval{Int}[Interval(w.x,   X(fr)+1)]   : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Ei, ::VariableMax, ::typeof(maximum)) = (1 < w.x)                   ?  Interval{Int}[Interval(1,     w.y  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Di, ::VariableMax, ::typeof(maximum)) = (1 < w.x && w.y < X(fr)+1)      ?  Interval{Int}[Interval(1,     X(fr)+1  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_O,  ::VariableMax, ::typeof(maximum)) = (w.x+1 < w.y && w.y < X(fr)+1)  ?  Interval{Int}[Interval(w.x+1, X(fr)+1  )] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Oi, ::VariableMax, ::typeof(maximum)) = (1 < w.x && w.x+1 < w.y)    ?  Interval{Int}[Interval(1,     w.y-1)] : Interval{Int}[]
 
 ############################################################################################
 
 # e.g., minimum + ≥
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::UnivariateMin, ::typeof(maximum)) = (w.y+1 < X(fr)+1)   ? short_intervals_in(w.y+1, X(fr)+1)   : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::UnivariateMin, ::typeof(maximum)) = (1 < w.x-1)     ? short_intervals_in(1, w.x-1)     : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::UnivariateMin, ::typeof(maximum)) = (w.x+1 < w.y-1) ? short_intervals_in(w.x+1, w.y-1) : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::VariableMin, ::typeof(maximum)) = (w.y+1 < X(fr)+1)   ? short_intervals_in(w.y+1, X(fr)+1)   : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::VariableMin, ::typeof(maximum)) = (1 < w.x-1)     ? short_intervals_in(1, w.x-1)     : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::VariableMin, ::typeof(maximum)) = (w.x+1 < w.y-1) ? short_intervals_in(w.x+1, w.y-1) : Interval{Int}[]
 
 # e.g., maximum + ≤
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::UnivariateMax, ::typeof(minimum)) = (w.y+1 < X(fr)+1)   ? short_intervals_in(w.y+1, X(fr)+1)   : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::UnivariateMax, ::typeof(minimum)) = (1 < w.x-1)     ? short_intervals_in(1, w.x-1)     : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::UnivariateMax, ::typeof(minimum)) = (w.x+1 < w.y-1) ? short_intervals_in(w.x+1, w.y-1) : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::VariableMax, ::typeof(minimum)) = (w.y+1 < X(fr)+1)   ? short_intervals_in(w.y+1, X(fr)+1)   : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::VariableMax, ::typeof(minimum)) = (1 < w.x-1)     ? short_intervals_in(1, w.x-1)     : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::VariableMax, ::typeof(minimum)) = (w.x+1 < w.y-1) ? short_intervals_in(w.x+1, w.y-1) : Interval{Int}[]
 
 # e.g., minimum + ≥
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::UnivariateMin, ::typeof(minimum)) = (w.y+1 < X(fr)+1)   ? Interval{Int}[Interval(w.y+1, X(fr)+1)  ] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::UnivariateMin, ::typeof(minimum)) = (1 < w.x-1)     ? Interval{Int}[Interval(1, w.x-1)    ] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::UnivariateMin, ::typeof(minimum)) = (w.x+1 < w.y-1) ? Interval{Int}[Interval(w.x+1, w.y-1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::VariableMin, ::typeof(minimum)) = (w.y+1 < X(fr)+1)   ? Interval{Int}[Interval(w.y+1, X(fr)+1)  ] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::VariableMin, ::typeof(minimum)) = (1 < w.x-1)     ? Interval{Int}[Interval(1, w.x-1)    ] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::VariableMin, ::typeof(minimum)) = (w.x+1 < w.y-1) ? Interval{Int}[Interval(w.x+1, w.y-1)] : Interval{Int}[]
 
 # e.g., maximum + ≤
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::UnivariateMax, ::typeof(maximum)) = (w.y+1 < X(fr)+1)   ? Interval{Int}[Interval(w.y+1, X(fr)+1)  ] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::UnivariateMax, ::typeof(maximum)) = (1 < w.x-1)     ? Interval{Int}[Interval(1, w.x-1)    ] : Interval{Int}[]
-representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::UnivariateMax, ::typeof(maximum)) = (w.x+1 < w.y-1) ? Interval{Int}[Interval(w.x+1, w.y-1)] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_L,  ::VariableMax, ::typeof(maximum)) = (w.y+1 < X(fr)+1)   ? Interval{Int}[Interval(w.y+1, X(fr)+1)  ] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_Li, ::VariableMax, ::typeof(maximum)) = (1 < w.x-1)     ? Interval{Int}[Interval(1, w.x-1)    ] : Interval{Int}[]
+representatives(fr::Full1DFrame, w::Interval{Int}, r::_IA_D,  ::VariableMax, ::typeof(maximum)) = (w.x+1 < w.y-1) ? Interval{Int}[Interval(w.x+1, w.y-1)] : Interval{Int}[]
 
 ############################################################################################
 
 # e.g., minimum + ≥
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::UnivariateMin, ::typeof(maximum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   w.y+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.y, X(fr)+1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::UnivariateMin, ::typeof(maximum)) = (1 < w.x)       ?   Interval{Int}[Interval(w.x-1, w.x  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(1, w.x)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::UnivariateMin, ::typeof(maximum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.x+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x, w.y-1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::UnivariateMin, ::typeof(maximum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.y-1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x+1, w.y)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::VariableMin, ::typeof(maximum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   w.y+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.y, X(fr)+1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::VariableMin, ::typeof(maximum)) = (1 < w.x)       ?   Interval{Int}[Interval(w.x-1, w.x  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(1, w.x)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::VariableMin, ::typeof(maximum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.x+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x, w.y-1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::VariableMin, ::typeof(maximum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.y-1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x+1, w.y)]
 
 # e.g., maximum + ≤
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::UnivariateMax, ::typeof(minimum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   w.y+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.y, X(fr)+1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::UnivariateMax, ::typeof(minimum)) = (1 < w.x)       ?   Interval{Int}[Interval(w.x-1, w.x  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(1, w.x)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::UnivariateMax, ::typeof(minimum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.x+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x, w.y-1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::UnivariateMax, ::typeof(minimum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.y-1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x+1, w.y)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::VariableMax, ::typeof(minimum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   w.y+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.y, X(fr)+1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::VariableMax, ::typeof(minimum)) = (1 < w.x)       ?   Interval{Int}[Interval(w.x-1, w.x  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(1, w.x)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::VariableMax, ::typeof(minimum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.x+1)] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x, w.y-1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::VariableMax, ::typeof(minimum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.y-1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval   )# [Interval(w.x+1, w.y)]
 
 # e.g., minimum + ≥
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::UnivariateMin, ::typeof(minimum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   X(fr)+1  )] : Interval{Int}[] #  _ReprVal(Interval(w.y, w.y+1)   )# [Interval(w.y, X(fr)+1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::UnivariateMin, ::typeof(minimum)) = (1 < w.x)       ?   Interval{Int}[Interval(1,     w.x  )] : Interval{Int}[] #  _ReprVal(Interval(w.x-1, w.x)   )# [Interval(1, w.x)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::UnivariateMin, ::typeof(minimum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.y-1)] : Interval{Int}[] #  _ReprVal(Interval(w.x, w.x+1)   )# [Interval(w.x, w.y-1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::UnivariateMin, ::typeof(minimum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.x+1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval(w.y-1, w.y)   )# [Interval(w.x+1, w.y)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::VariableMin, ::typeof(minimum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   X(fr)+1  )] : Interval{Int}[] #  _ReprVal(Interval(w.y, w.y+1)   )# [Interval(w.y, X(fr)+1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::VariableMin, ::typeof(minimum)) = (1 < w.x)       ?   Interval{Int}[Interval(1,     w.x  )] : Interval{Int}[] #  _ReprVal(Interval(w.x-1, w.x)   )# [Interval(1, w.x)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::VariableMin, ::typeof(minimum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.y-1)] : Interval{Int}[] #  _ReprVal(Interval(w.x, w.x+1)   )# [Interval(w.x, w.y-1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::VariableMin, ::typeof(minimum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.x+1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval(w.y-1, w.y)   )# [Interval(w.x+1, w.y)]
 
 # e.g., maximum + ≤
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::UnivariateMax, ::typeof(maximum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   X(fr)+1  )] : Interval{Int}[] #  _ReprVal(Interval(w.y, w.y+1)   )# [Interval(w.y, X(fr)+1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::UnivariateMax, ::typeof(maximum)) = (1 < w.x)       ?   Interval{Int}[Interval(1,     w.x  )] : Interval{Int}[] #  _ReprVal(Interval(w.x-1, w.x)   )# [Interval(1, w.x)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::UnivariateMax, ::typeof(maximum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.y-1)] : Interval{Int}[] #  _ReprVal(Interval(w.x, w.x+1)   )# [Interval(w.x, w.y-1)]
-representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::UnivariateMax, ::typeof(maximum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.x+1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval(w.y-1, w.y)   )# [Interval(w.x+1, w.y)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_A,  ::VariableMax, ::typeof(maximum)) = (w.y < X(fr)+1)     ?   Interval{Int}[Interval(w.y,   X(fr)+1  )] : Interval{Int}[] #  _ReprVal(Interval(w.y, w.y+1)   )# [Interval(w.y, X(fr)+1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_Ai, ::VariableMax, ::typeof(maximum)) = (1 < w.x)       ?   Interval{Int}[Interval(1,     w.x  )] : Interval{Int}[] #  _ReprVal(Interval(w.x-1, w.x)   )# [Interval(1, w.x)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_B,  ::VariableMax, ::typeof(maximum)) = (w.x < w.y-1)   ?   Interval{Int}[Interval(w.x,   w.y-1)] : Interval{Int}[] #  _ReprVal(Interval(w.x, w.x+1)   )# [Interval(w.x, w.y-1)]
+representatives(fr::Full1DFrame, w::Interval{Int}, ::_IA_E,  ::VariableMax, ::typeof(maximum)) = (w.x+1 < w.y)   ?   Interval{Int}[Interval(w.x+1, w.y  )] : Interval{Int}[] #  _ReprVal(Interval(w.y-1, w.y)   )# [Interval(w.x+1, w.y)]
 
 ############################################################################################
 # Similarly, here is the categorization for IA7 & IA3 assuming feature = minimum and test_operator = ≥:

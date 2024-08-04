@@ -230,10 +230,10 @@ end
 ############################################################################################
 
 @inline function featvalue(
+    feature     :: AbstractFeature,
     X           :: UniformFullDimensionalLogiset{U,OneWorld},
     i_instance  :: Integer,
     w           :: OneWorld,
-    feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
@@ -247,10 +247,10 @@ end
 end
 
 @inline function featvalue(
+    feature     :: AbstractFeature,
     X           :: UniformFullDimensionalLogiset{U,<:Interval},
     i_instance  :: Integer,
     w           :: Interval,
-    feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
@@ -264,10 +264,10 @@ end
 end
 
 @inline function featvalue(
+    feature     :: AbstractFeature,
     X           :: UniformFullDimensionalLogiset{U,<:Interval2D},
     i_instance  :: Integer,
     w           :: Interval2D,
-    feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
@@ -282,11 +282,11 @@ end
 ############################################################################################
 
 @inline function featvalue!(
+    feature     :: AbstractFeature,
     X::UniformFullDimensionalLogiset{U,OneWorld},
     featval::U,
     i_instance::Integer,
     w::OneWorld,
-    feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
@@ -300,11 +300,11 @@ end
 end
 
 @inline function featvalue!(
+    feature     :: AbstractFeature,
     X::UniformFullDimensionalLogiset{U,<:Interval},
     featval::U,
     i_instance::Integer,
     w::Interval,
-    feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
@@ -318,11 +318,11 @@ end
 end
 
 @inline function featvalue!(
+    feature     :: AbstractFeature,
     X::UniformFullDimensionalLogiset{U,<:Interval2D},
     featval::U,
     i_instance::Integer,
     w::Interval2D,
-    feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
