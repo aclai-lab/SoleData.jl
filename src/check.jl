@@ -1,4 +1,5 @@
 using SoleLogics: AnyWorld
+using SoleLogics: value
 
 # TODO docstring
 function check(
