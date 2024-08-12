@@ -25,9 +25,10 @@ function scalar_simplification(
     # @show typeof.(SoleLogics.children(φ))
     # @show all(c->c isa Atom{<:ScalarCondition}, SoleLogics.children(φ))
     # if !all(c->c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}, SoleLogics.children(φ))
-    if !all(c->c isa Atom{<:ScalarCondition}, SoleLogics.children(φ))
-        !silent && error("Cannot perform scalar simplification on linear form ($(syntaxstring(φ))) on" *
+    if (!all(c->c isa Atom{<:ScalarCondition}, SoleLogics.children(φ)))
+        !silent && print("Cannot perform scalar simplification on linear form ($(syntaxstring(φ))) on" *
             " $(Union{map(typeof, SoleLogics.children(φ))...}).")
+        return φ
     end
 
     atomslist = SoleLogics.children(φ)
