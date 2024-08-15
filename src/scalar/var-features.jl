@@ -148,14 +148,18 @@ function variable_name(
     f::AbstractUnivariateFeature;
     variable_names_map::Union{Nothing,AbstractDict,AbstractVector} = nothing,
     variable_name_prefix::Union{Nothing,String} = nothing,
+    variable_idx = nothing,
     kwargs..., # TODO remove this.
 )
     if isnothing(variable_names_map)
         variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
         "$(variable_name_prefix)$(i_variable(f))"
-    else
+    elseif isnothing(variable_idx)
         @assert isnothing(variable_name_prefix)
         "$(variable_names_map[i_variable(f)])"
+    else
+        @assert isnothing(variable_name_prefix)
+        "$(variable_names_map[variable_idx[string(i_variable(f))]])"
     end
 end
 
@@ -268,9 +272,12 @@ struct VariableValue <: AbstractUnivariateFeature
 end
 featurename(f::VariableValue) = ""
 
-function syntaxstring(f::VariableValue; show_colon = false, kwargs...)
+function syntaxstring(f::VariableValue; show_colon = false, variable_idx = nothing, kwargs...)
     if i_variable(f) isa Integer
         variable_name(f; kwargs...)
+    elseif !isnothing(variable_idx)
+        # variable_name(variable_idx[string(i_variable(f))]; kwargs...)
+        variable_name(f; variable_idx = variable_idx, kwargs...)
     else
         show_colon ? repr(i_variable(f)) : string(i_variable(f))
     end
