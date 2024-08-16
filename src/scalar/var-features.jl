@@ -148,18 +148,18 @@ function variable_name(
     f::AbstractUnivariateFeature;
     variable_names_map::Union{Nothing,AbstractDict,AbstractVector} = nothing,
     variable_name_prefix::Union{Nothing,String} = nothing,
-    variable_idx = nothing,
     kwargs..., # TODO remove this.
 )
     if isnothing(variable_names_map)
         variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
         "$(variable_name_prefix)$(i_variable(f))"
-    elseif isnothing(variable_idx)
-        @assert isnothing(variable_name_prefix)
-        "$(variable_names_map[i_variable(f)])"
     else
-        @assert isnothing(variable_name_prefix)
-        "$(variable_names_map[variable_idx[string(i_variable(f))]])"
+        i_var = i_variable(f)
+        if i_var isa Integer
+            "$(variable_names_map[i_variable(f)])"
+        elseif i_var isa Symbol
+            "$(variable_names_map[findfirst(occursin.(string(i_variable(f)), variable_names_map))])"
+        end
     end
 end
 
@@ -272,12 +272,9 @@ struct VariableValue <: AbstractUnivariateFeature
 end
 featurename(f::VariableValue) = ""
 
-function syntaxstring(f::VariableValue; show_colon = false, variable_idx = nothing, kwargs...)
-    if i_variable(f) isa Integer
-        variable_name(f; kwargs...)
-    elseif !isnothing(variable_idx)
-        # variable_name(variable_idx[string(i_variable(f))]; kwargs...)
-        variable_name(f; variable_idx = variable_idx, kwargs...)
+function syntaxstring(f::VariableValue; variable_names_map = nothing, show_colon = false, kwargs...)
+    if i_variable(f) isa Integer || !isnothing(variable_names_map)
+        variable_name(f; variable_names_map = variable_names_map, kwargs...)
     else
         show_colon ? repr(i_variable(f)) : string(i_variable(f))
     end
