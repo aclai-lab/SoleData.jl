@@ -108,7 +108,7 @@ end
 
 function vareltype(
     dataset::AbstractDimensionalDataset{T},
-    i_variable::Integer
+    i_variable::Union{Integer,Symbol}
 ) where {T}
     T
 end

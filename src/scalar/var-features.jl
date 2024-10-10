@@ -150,11 +150,11 @@ function variable_name(
     variable_name_prefix::Union{Nothing,String} = nothing,
     kwargs..., # TODO remove this.
 )
+    i_var = i_variable(f)
     if isnothing(variable_names_map)
         variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
-        "$(variable_name_prefix)$(i_variable(f))"
+        i_var isa Integer ? "$(variable_name_prefix)$(i_variable(f))" : "$(i_variable(f))"
     else
-        i_var = i_variable(f)
         if i_var isa Integer
             "$(variable_names_map[i_variable(f)])"
         elseif i_var isa Symbol
@@ -181,7 +181,7 @@ end
 
 """
     struct UnivariateFeature{U} <: AbstractUnivariateFeature
-        i_variable::Integer
+        i_variable::Union{Integer,Symbol}
         f::Function
         fname::Union{Nothing,String}
     end
@@ -200,16 +200,16 @@ See also [`SoleLogics.Interval`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
 struct UnivariateFeature{U} <: AbstractUnivariateFeature
-    i_variable::Integer
+    i_variable::Union{Integer,Symbol}
     f::Function
     fname::Union{Nothing,String}
     function UnivariateFeature{U}(feat::UnivariateFeature) where {U<:Real}
         return new{U}(i_variable(f), feat.f, feat.fname)
     end
-    function UnivariateFeature{U}(i_variable::Integer, f::Function, fname::Union{Nothing,String} = nothing) where {U<:Real}
+    function UnivariateFeature{U}(i_variable::Union{Integer,Symbol}, f::Function, fname::Union{Nothing,String} = nothing) where {U<:Real}
         return new{U}(i_variable, f, fname)
     end
-    function UnivariateFeature(i_variable::Integer, f::Function, fname::Union{Nothing,String} = nothing)
+    function UnivariateFeature(i_variable::Union{Integer,Symbol}, f::Function, fname::Union{Nothing,String} = nothing)
         return UnivariateFeature{DEFAULT_VARFEATVALTYPE}(i_variable, f, fname)
     end
 end
@@ -221,7 +221,7 @@ end
 
 """
     struct UnivariateNamedFeature{U} <: AbstractUnivariateFeature
-        i_variable::Integer
+        i_variable::Union{Integer,Symbol}
         name::String
     end
 
@@ -233,15 +233,15 @@ See also [`SoleLogics.Interval`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
 struct UnivariateNamedFeature{U} <: AbstractUnivariateFeature
-    i_variable::Integer
+    i_variable::Union{Integer, Symbol}
     name::String
     function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U<:Real}
         return new{U}(i_variable(f), f.name)
     end
-    function UnivariateNamedFeature{U}(i_variable::Integer, name::String) where {U<:Real}
+    function UnivariateNamedFeature{U}(i_variable::Union{Integer,Symbol}, name::String) where {U<:Real}
         return new{U}(i_variable, name)
     end
-    function UnivariateNamedFeature(i_variable::Integer, name::String)
+    function UnivariateNamedFeature(i_variable::Union{Integer,Symbol}, name::String)
         return UnivariateNamedFeature{DEFAULT_VARFEATVALTYPE}(i_variable, name)
     end
 end
@@ -292,7 +292,7 @@ end
 
 """
     struct VariableMin <: AbstractUnivariateFeature
-        i_variable::Integer
+        i_variable::Union{Integer,Symbol}
     end
 
 Notable univariate feature computing the minimum value for a given variable.
@@ -304,11 +304,11 @@ See also [`SoleLogics.Interval`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
 struct VariableMin <: AbstractUnivariateFeature
-    i_variable::Integer
+    i_variable::Union{Integer,Symbol}
     function VariableMin(f::VariableMin)
         return new(i_variable(f))
     end
-    function VariableMin(i_variable::Integer)
+    function VariableMin(i_variable::Union{Integer,Symbol})
         return new(i_variable)
     end
 end
@@ -320,7 +320,7 @@ end
 
 """
     struct VariableMax <: AbstractUnivariateFeature
-        i_variable::Integer
+        i_variable::Union{Integer,Symbol}
     end
 
 Notable univariate feature computing the maximum value for a given variable.
@@ -332,11 +332,11 @@ See also [`SoleLogics.Interval`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
 struct VariableMax <: AbstractUnivariateFeature
-    i_variable::Integer
+    i_variable::Union{Integer, Symbol}
     function VariableMax(f::VariableMax)
         return new(i_variable(f))
     end
-    function VariableMax(i_variable::Integer)
+    function VariableMax(i_variable::Union{Integer,Symbol})
         return new(i_variable)
     end
 end
@@ -350,7 +350,7 @@ end
 
 """
     struct VariableSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
-        i_variable::Integer
+        i_variable::Union{Integer,Symbol}
         alpha::T
     end
 
@@ -363,12 +363,12 @@ See also [`SoleLogics.Interval`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
 struct VariableSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
-    i_variable::Integer
+    i_variable::Union{Integer,Symbol}
     alpha::T
     function VariableSoftMin(f::VariableSoftMin)
         return new{typeof(alpha(f))}(i_variable(f), alpha(f))
     end
-    function VariableSoftMin(i_variable::Integer, alpha::T) where {T}
+    function VariableSoftMin(i_variable::Union{Integer,Symbol}, alpha::T) where {T}
         @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMin with alpha = $(alpha)"
         @assert !isone(alpha) "Cannot instantiate VariableSoftMin with alpha = $(alpha). Use VariableMin instead!"
         new{T}(i_variable, alpha)
@@ -383,7 +383,7 @@ end
 
 """
     struct VariableSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
-        i_variable::Integer
+        i_variable::Union{Integer,Symbol}
         alpha::T
     end
 
@@ -396,12 +396,12 @@ See also [`SoleLogics.Interval`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
 struct VariableSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
-    i_variable::Integer
+    i_variable::Union{Integer,Symbol}
     alpha::T
     function VariableSoftMax(f::VariableSoftMax)
         return new{typeof(alpha(f))}(i_variable(f), alpha(f))
     end
-    function VariableSoftMax(i_variable::Integer, alpha::T) where {T}
+    function VariableSoftMax(i_variable::Union{Integer,Symbol}, alpha::T) where {T}
         @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMax with alpha = $(alpha)"
         @assert !isone(alpha) "Cannot instantiate VariableSoftMax with alpha = $(alpha). Use VariableMax instead!"
         new{T}(i_variable, alpha)

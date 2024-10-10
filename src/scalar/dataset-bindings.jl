@@ -489,7 +489,7 @@ function naturalconditions(
     end
 
     for i_var in 1:nvars
-        for (test_ops,feature) in map((cond)->univar_condition(i_var,cond),variable_specific_conditions)
+        for (test_ops,feature) in map((cond)->univar_condition(Symbol(names(dataset)[i_var]),cond),variable_specific_conditions)
             for test_op in test_ops
                 cond = ScalarMetaCondition(feature, test_op)
                 push!(metaconditions, cond)
