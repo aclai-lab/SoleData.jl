@@ -174,7 +174,7 @@ function syntaxstring(
     kwargs...
 )
     n = variable_name(f; kwargs...)
-    "$(featurename(f))$opening_parenthesis$n$closing_parenthesis"
+    "$(replace(featurename(f), r"([-+])$" => s -> s == "-" ? "⁻" : "⁺"))$opening_parenthesis$n$closing_parenthesis"
 end
 
 ############################################################################################
