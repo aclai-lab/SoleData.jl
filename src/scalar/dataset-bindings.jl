@@ -26,7 +26,7 @@ function vareltype#(dataset, i_variable)
     # return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::Integer).")
 end
 
-function featurenames#(dataset)
+function varnames#(dataset)
     # return error("Please, provide method featvalue(...).")
 end
 function allworlds(dataset, i_instance::Integer)
@@ -496,7 +496,7 @@ function naturalconditions(
     end
     for i_var in 1:nvars
         tmp = map((cond)->univar_condition(
-    if !force_i_variables && !isnothing(featurenames(dataset))
+    if !force_i_variables && !isnothing(varnames(dataset))
         Symbol(names(dataset)[i_var])
     else
         i_var
