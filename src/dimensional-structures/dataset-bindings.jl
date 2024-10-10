@@ -142,7 +142,7 @@ end
 #     v = [column[i_instance] for column in values(Tables.columns(X))]
 #     !(eltype(v) isa Array) ? OneWorld() : FullDimensionalFrame(size(v))
 # end
-
+featurenames(::AbstractDimensionalDataset) = nothing
 ############################################################################################
 
 using DataFrames
@@ -253,3 +253,5 @@ function vareltype(
 )
     eltype(eltype(dataset[:,i_variable]))
 end
+
+featurenames(dataset::AbstractDimensionalDataset) = names(dataset)

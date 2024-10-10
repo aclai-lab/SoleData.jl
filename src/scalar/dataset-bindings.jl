@@ -26,6 +26,9 @@ function vareltype#(dataset, i_variable)
     # return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::Integer).")
 end
 
+function featurenames#(dataset)
+    # return error("Please, provide method featvalue(...).")
+end
 function allworlds(dataset, i_instance::Integer)
     allworlds(frame(dataset, i_instance))
 end
@@ -163,6 +166,7 @@ function scalarlogiset(
     onestep_precompute_relmemoset    :: Bool = false,
     print_progress                   :: Bool = false,
     allow_propositional              :: Bool = false, # TODO default to true
+    force_i_variables              :: Bool = true,
     # featvaltype = nothing
 )
     is_feature(f) = (f isa MixedCondition)
@@ -271,7 +275,7 @@ function scalarlogiset(
         end
     else
         if isnothing(conditions)
-            conditions = naturalconditions(dataset, features)
+            conditions = naturalconditions(dataset, features; force_i_variables = force_i_variables)
             features = unique(feature.(conditions))
             if use_onestep_memoization == false
                 conditions = nothing
@@ -390,7 +394,8 @@ end
 function naturalconditions(
     dataset,
     mixed_conditions   :: AbstractVector,
-    featvaltype        :: Union{Nothing,Type} = nothing
+    featvaltype        :: Union{Nothing,Type} = nothing,
+    force_i_variables :: Bool = false,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -404,6 +409,8 @@ function naturalconditions(
 
     #     return [naturalconditions(mod, mixed_conditions, featvaltype) for mod in eachmodality(dataset)]
     # end
+
+    # @assert islogiseed(dataset)
 
     @assert !any(isa.(mixed_conditions, AbstractVector{<:AbstractVector})) "Unexpected mixed_conditions: $(mixed_conditions)."
 
@@ -487,9 +494,14 @@ function naturalconditions(
     for cond in readymade_conditions
         append!(metaconditions, cond)
     end
-
     for i_var in 1:nvars
-        for (test_ops,feature) in map((cond)->univar_condition(Symbol(names(dataset)[i_var]),cond),variable_specific_conditions)
+        tmp = map((cond)->univar_condition(
+    if !force_i_variables && !isnothing(featurenames(dataset))
+        Symbol(names(dataset)[i_var])
+    else
+        i_var
+    end,cond),variable_specific_conditions)
+        for (test_ops,feature) in tmp
             for test_op in test_ops
                 cond = ScalarMetaCondition(feature, test_op)
                 push!(metaconditions, cond)
