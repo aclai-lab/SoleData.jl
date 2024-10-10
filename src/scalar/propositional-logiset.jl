@@ -5,19 +5,15 @@ using SoleLogics: LogicalInstance
 using CategoricalArrays: CategoricalValue
 import SoleLogics: interpret
 import SoleData: VariableValue, featvalue
-
+using SoleLogics: AbstractAssignment
 
 include("discretization.jl")
 
 ############################################################################################
 
-using SoleLogics: AbstractAssignment
-abstract type AbstractPropositionalLogiset <: AbstractLogiset{AbstractAssignment} end
-
-############################################################################################
-
 """
     PropositionalLogiset(table)
+
 A logiset of propositional interpretations, wrapping a [Tables](https://github.com/JuliaData/Tables.jl)'
 table of real/string/categorical values.
 
@@ -53,12 +49,16 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
         if Tables.istable(tabulardataset)
             @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(collect(Tables.columns(tabulardataset)))) "" *
                 "Unexpected eltypes for some columns. `Union{Real,AbstractString,CategoricalValue}` is expected, but " *
-                "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})`" *
+                "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})` " *
                 "encountered."
             new{T}(tabulardataset)
         else
             error("Table interface not implemented for $(typeof(tabulardataset)) type")
         end
+    end
+
+    function PropositionalLogiset(l::PropositionalLogiset)
+        return l
     end
 end
 
@@ -132,7 +132,7 @@ end
 
 function instances(
     X::PropositionalLogiset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 )
     return PropositionalLogiset(if return_view == Val(true)
@@ -171,6 +171,15 @@ end
 function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer,Symbol})
     return Tables.getcolumn(gettable(X), col)[row]
 end
+
+
+function frame(
+    dataset::PropositionalLogiset,
+    i_instance::Integer
+)
+    return OneWorld()
+end
+
 
 # TODO: @test_broken alphabet(X, false; skipextremes = true)
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
@@ -298,13 +307,13 @@ function checkcondition(
     _fastmath = Val(true), # TODO warning!!!
     kwargs...
 )::BitVector
-
-
     testop = test_operator(cond)
-    use # TODO: features
+    # TODO: use features
     p, n = cond.b, cond.u
     return testop.(((Tables.matrix(gettable(X)) .- p') * n), 0)
 end
+
+using LinearAlgebra: dot
 
 function checkcondition(
     cond::ObliqueScalarCondition,

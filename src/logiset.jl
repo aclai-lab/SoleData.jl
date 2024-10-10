@@ -1,4 +1,4 @@
-using SoleLogics: AbstractKripkeStructure, AbstractAssignment, AbstractInterpretationSet, AbstractFrame, AbstractWorld
+using SoleLogics: AbstractKripkeStructure, AbstractAssignment, AbstractInterpretation, AbstractInterpretationSet, AbstractFrame, AbstractWorld
 using SoleLogics: Truth, LogicalInstance
 import SoleLogics: alphabet, frame, check
 import SoleLogics: accessibles, allworlds, nworlds
@@ -9,7 +9,7 @@ import MultiData: nvariables
 
 ############################################################################################
 #
-abstract type AbstractLogiset{M} <: AbstractInterpretationSet{M} end
+abstract type AbstractLogiset <: AbstractInterpretationSet end
 
 function ninstances(X::AbstractLogiset)
     return error("Please, provide method ninstances(::$(typeof(X))).")
@@ -32,7 +32,7 @@ end
 
 function instances(
     X::AbstractLogiset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )
@@ -74,3 +74,8 @@ end
 function nfeatures(X::AbstractLogiset)
     return error("Please, provide method nfeatures(::$(typeof(X))).")
 end
+
+
+############################################################################################
+
+abstract type AbstractPropositionalLogiset <: AbstractLogiset end

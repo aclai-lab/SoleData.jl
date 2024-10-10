@@ -255,7 +255,7 @@ hasnans(X::SupportedLogiset) = hasnans(base(X)) || any(hasnans.(supports(X)))
 
 function instances(
     X::SupportedLogiset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )

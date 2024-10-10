@@ -509,7 +509,7 @@ function check(
     end
 end
 
-function instances(Xm::ScalarOneStepMemoset{U}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {U}
+function instances(Xm::ScalarOneStepMemoset{U}, inds::AbstractVector, return_view::Union{Val{true},Val{false}} = Val(false)) where {U}
     ScalarOneStepMemoset{U}(
         instances(relmemoset(Xm), inds, return_view),
         (isnothing(globmemoset(Xm)) ? nothing : instances(globmemoset(Xm), inds, return_view)),
@@ -673,7 +673,7 @@ function hasnans(Xm::ScalarOneStepRelationalMemoset)
     any(map(d->(any(_isnan.(collect(values(d))))), Xm.d))
 end
 
-function instances(Xm::ScalarOneStepRelationalMemoset{W,U,FR}, inds::AbstractVector{<:Integer}, return_view::Union{Val{true},Val{false}} = Val(false)) where {W,U,FR}
+function instances(Xm::ScalarOneStepRelationalMemoset{W,U,FR}, inds::AbstractVector, return_view::Union{Val{true},Val{false}} = Val(false)) where {W,U,FR}
     ScalarOneStepRelationalMemoset{W,U,FR}(if return_view == Val(true) @view Xm.d[inds,:,:] else Xm.d[inds,:,:] end)
 end
 
@@ -791,7 +791,7 @@ end
 
 function instances(
     Xm::ScalarOneStepGlobalMemoset{W,U},
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false)
 ) where {W,U}
     ScalarOneStepGlobalMemoset{W,U}(if return_view == Val(true) @view Xm.d[inds,:] else Xm.d[inds,:] end)

@@ -103,7 +103,7 @@ end
 
 function instances(
     Xm::ScalarChainedMemoset,
-    inds::AbstractVector{<:Integer},
+    inds::AbstractVector,
     return_view::Union{Val{true},Val{false}} = Val(false);
     kwargs...
 )
