@@ -164,6 +164,7 @@ function scalarlogiset(
     print_progress                   :: Bool = false,
     allow_propositional              :: Bool = false, # TODO default to true
     # featvaltype = nothing
+    force_i_variables                :: String = "",
 )
     is_feature(f) = (f isa MixedCondition)
     is_nofeatures(_features) = isnothing(_features)
@@ -390,7 +391,8 @@ end
 function naturalconditions(
     dataset,
     mixed_conditions   :: AbstractVector,
-    featvaltype        :: Union{Nothing,Type} = nothing
+    featvaltype        :: Union{Nothing,Type} = nothing,
+    # force_i_variables  :: Bool = false,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -405,6 +407,7 @@ function naturalconditions(
     #     return [naturalconditions(mod, mixed_conditions, featvaltype) for mod in eachmodality(dataset)]
     # end
 
+    # force_i_variables ? println("TRUE") : println("FALSE") #################
     @assert !any(isa.(mixed_conditions, AbstractVector{<:AbstractVector})) "Unexpected mixed_conditions: $(mixed_conditions)."
 
     nvars = nvariables(dataset)
