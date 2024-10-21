@@ -39,4 +39,8 @@ function _load_NATOPS(
 end
 
 X_df, y = _load_NATOPS("../ModalAssociationRules/test/data/NATOPS/")
-SL = scalarlogiset(X_df)
+
+SL = scalarlogiset(
+    X_df;
+    worldtype_by_dim=Dict{Integer,Type{<:AbstractWorld}}(2 => SoleLogics.Point1D)
+)

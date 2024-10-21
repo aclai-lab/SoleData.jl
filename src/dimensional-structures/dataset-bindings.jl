@@ -12,11 +12,29 @@ function islogiseed(dataset::AbstractDimensionalDataset)
     ndims(eltype(dataset)) >= 1
 end
 
+"""
+    function initlogiset(
+        dataset::AbstractDimensionalDataset,
+        features::AbstractVector;
+        worldtype_by_dim::Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing
+    )::UniformFullDimensionalLogiset
+
+Given an [`AbstractDimensionalDataset`](@ref), build a
+[`UniformFullDimensionalLogiset`](@ref).
+
+# Arguments
+- worldtype_by_dim::Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing:
+map between a dimensionality, as integer, and the [`AbstractWorld`](@ref) type associated;
+when unspecified, this is defaulted to `1 => OneWorld, 2 => Interval, 3 => Interval2D`.
+
+See also [`AbstractDimensionalDataset`](@ref), SoleLogics.AbstractWorld,
+[`UniformFullDimensionalLogiset`](@ref).
+"""
 function initlogiset(
     dataset::AbstractDimensionalDataset,
     features::AbstractVector;
     worldtype_by_dim::Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing
-)
+)::UniformFullDimensionalLogiset
     worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Integer,Type{<:AbstractWorld}}([
         1 => OneWorld, 2 => Interval, 3 => Interval2D]) :
         worldtype_by_dim

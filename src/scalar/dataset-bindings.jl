@@ -160,9 +160,10 @@ see [`SoleData.AbstractCondition`](@ref);
 see [`AbstractRelation`](@ref);
 
 - `worldtype_by_dim`::AbstractDict{Integer,Type{<:AbstractWorld}}([1 => OneWorld, 2 => Interval, 3 => Interval2D]):
-the [`AbstractWorld`](@ref) type associated with data dimensionality; for example,
-by default, a vector `[1,2,3]` is encoded in `[1]`, `[2]`, `[3]`, `[1,2]`, `[1,3]`, `[2,3]`,
-`[1,2,3]` [`Interval`](@ref)s.
+map between a dimensionality, as integer, and the [`AbstractWorld`](@ref) type associated;
+for example, by default, a vector `[1,2,3]` is represented through a frame where each world
+is a [`Interval`](@ref) (all the intervals are `[1]`, `[2]`, `[3]`, `[1,2]`, `[1,3]`,
+`[2,3]`, `[1,2,3]`);
 
 - `use_onestep_memoization`::Union{Bool,Type{<:AbstractOneStepMemoset}}=!isnothing(conditions) && !isnothing(relations):
 
@@ -204,10 +205,9 @@ TODO - show how to give `worldtype_by_dim` as kwarg, manually casting it to Dict
 TODO - this docstring needs to be explained better. @giopaglia please fill the gaps in
 `Keyword Arguments` section.
 
-See also
-[`AbstractModalLogiset`](@ref),
-[`VarFeature`](@ref),
-[`ScalarCondition`](@ref).
+See also [`AbstractModalLogiset`](@ref), [`AbstractOneStepMemoset`](@ref),
+`SoleLogics.AbstractRelation`, `SoleLogics.AbstractWorld`, [`ScalarCondition`](@ref),
+[`VarFeature`](@ref).
 """
 function scalarlogiset(
     dataset,
