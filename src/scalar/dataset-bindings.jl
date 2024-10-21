@@ -125,7 +125,7 @@ end
 
 Converts a dataset structure (with variables) to a logiset with scalar-valued features.
 If `dataset` is not a multimodal dataset, the following methods should be defined:
-TODO explain
+
 ```julia
     islogiseed(::typeof(dataset)) = true
     initlogiset(dataset, features)
@@ -145,6 +145,38 @@ while its modalities (iterated via `eachmodality`) should provide the methods ab
     eachmodality(dataset)
 ```
 
+# Arguments
+- `dataset`: the dataset that will be transformed into a logiset;
+- `features`: vector of features, corresponding to `dataset` columns;
+
+# Keyword Arguments
+- `use_full_memoization`::Union{Bool,Type{<:Union{AbstractOneStepMemoset,AbstractFullMemoset}}}=true:
+enable full-memoization optimization, that is, each computation is stored to avoid recomputing;
+
+- `conditions`::Union{Nothing,AbstractVector{<:AbstractCondition},AbstractVector{<:Union{Nothing,AbstractVector}}}=nothing:
+see [`SoleData.AbstractCondition`](@ref);
+
+- `relations`::Union{Nothing,AbstractVector{<:AbstractRelation},AbstractVector{<:Union{Nothing,AbstractVector}}}=nothing:
+see [`AbstractRelation`](@ref);
+
+- `worldtype_by_dim`::AbstractDict{Integer,Type{<:AbstractWorld}}([1 => OneWorld, 2 => Interval, 3 => Interval2D]):
+the [`AbstractWorld`](@ref) type associated with data dimensionality; for example,
+by default, a vector `[1,2,3]` is encoded in `[1]`, `[2]`, `[3]`, `[1,2]`, `[1,3]`, `[2,3]`,
+`[1,2,3]` [`Interval`](@ref)s.
+
+- `use_onestep_memoization`::Union{Bool,Type{<:AbstractOneStepMemoset}}=!isnothing(conditions) && !isnothing(relations):
+
+- `onestep_precompute_globmemoset`::Bool = (use_onestep_memoization != false):
+
+- `onestep_precompute_relmemoset`::Bool = false:
+
+- `print_progress`::Bool = false:
+
+- `allow_propositional`::Bool = false:
+
+TODO - this docstring needs to be explained better. @giopaglia please fill the gaps in
+`Keyword Arguments` section.
+
 See also
 [`AbstractModalLogiset`](@ref),
 [`VarFeature`](@ref),
@@ -152,17 +184,16 @@ See also
 """
 function scalarlogiset(
     dataset,
-    features::Union{Nothing,AbstractVector} = nothing;
-    #
-    use_full_memoization             :: Union{Bool,Type{<:Union{AbstractOneStepMemoset,AbstractFullMemoset}}} = true,
-    #
-    conditions                       :: Union{Nothing,AbstractVector{<:AbstractCondition},AbstractVector{<:Union{Nothing,AbstractVector}}} = nothing,
-    relations                        :: Union{Nothing,AbstractVector{<:AbstractRelation},AbstractVector{<:Union{Nothing,AbstractVector}}} = nothing,
-    use_onestep_memoization          :: Union{Bool,Type{<:AbstractOneStepMemoset}} = !isnothing(conditions) && !isnothing(relations),
-    onestep_precompute_globmemoset   :: Bool = (use_onestep_memoization != false),
-    onestep_precompute_relmemoset    :: Bool = false,
-    print_progress                   :: Bool = false,
-    allow_propositional              :: Bool = false, # TODO default to true
+    features::Union{Nothing,AbstractVector}=nothing;
+    use_full_memoization             :: Union{Bool,Type{<:Union{AbstractOneStepMemoset,AbstractFullMemoset}}}=true,
+    conditions                       :: Union{Nothing,AbstractVector{<:AbstractCondition},AbstractVector{<:Union{Nothing,AbstractVector}}}=nothing,
+    relations                        :: Union{Nothing,AbstractVector{<:AbstractRelation},AbstractVector{<:Union{Nothing,AbstractVector}}}=nothing,
+    worldtype_by_dim                 :: Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing,
+    use_onestep_memoization          :: Union{Bool,Type{<:AbstractOneStepMemoset}}=!isnothing(conditions) && !isnothing(relations),
+    onestep_precompute_globmemoset   :: Bool=(use_onestep_memoization != false),
+    onestep_precompute_relmemoset    :: Bool=false,
+    print_progress                   :: Bool=false,
+    allow_propositional              :: Bool=false, # TODO default to true
     # featvaltype = nothing
 )
     is_feature(f) = (f isa MixedCondition)
@@ -339,7 +370,7 @@ function scalarlogiset(
     # end
 
     # Initialize the logiset structure
-    X = initlogiset(dataset, features)
+    X = initlogiset(dataset, features; worldtype_by_dim)
 
     # Load explicit features (if any)
     if any(isa.(features, ExplicitFeature))
