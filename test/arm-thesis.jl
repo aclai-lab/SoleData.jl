@@ -38,9 +38,14 @@ function _load_NATOPS(
     vcat(X_train, X_test), vcat(y_train, y_test)
 end
 
-X_df, y = _load_NATOPS("../ModalAssociationRules/test/data/NATOPS/")
+X_df, y = _load_NATOPS(joinpath(dirname(pathof(SoleData)), "../test/data/NATOPS"))
 
-SL = scalarlogiset(
+pointlogiset = scalarlogiset(
     X_df;
     worldtype_by_dim=Dict{Integer,Type{<:AbstractWorld}}(2 => SoleLogics.Point1D)
+)
+
+intervallogiset = scalarlogiset(
+    X_df;
+    worldtype_by_dim=Dict{Integer,Type{<:AbstractWorld}}(2 => SoleLogics.Interval)
 )
