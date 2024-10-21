@@ -174,6 +174,33 @@ by default, a vector `[1,2,3]` is encoded in `[1]`, `[2]`, `[3]`, `[1,2]`, `[1,3
 
 - `allow_propositional`::Bool = false:
 
+# Examples
+```julia>repl
+julia> df = DataFrame(A = [36, 37, 38], B = [1, 2, 3])
+3×2 DataFrame
+ Row │ A      B
+     │ Int64  Int64
+─────┼──────────────
+   1 │    36      1
+   2 │    37      2
+   3 │    38      3
+
+julia> scalarlogiset(df; worldtype_by_dim=Dict{Integer,Type{<:AbstractWorld}}([1=>OneWorld]))
+SupportedLogiset with 1 support (2.21 KBs)
+├ worldtype:                   OneWorld
+├ featvaltype:                 Int64
+├ featuretype:                 VariableValue
+├ frametype:                   SoleLogics.FullDimensionalFrame{0, OneWorld}
+├ # instances:                 3
+├ usesfullmemo:                true
+├[BASE] UniformFullDimensionalLogiset of dimensionality 0 (688.0 Bytes)
+│ ├ size × eltype:              (3, 2) × Int64
+│ └ features:                   2 -> VariableValue[V1, V2]
+└[SUPPORT 1] FullMemoset (0 memoized values, 1.5 KBs))
+```
+
+TODO - show how to give `worldtype_by_dim` as kwarg, manually casting it to Dict{Integer,Type{<:AbstractWorld}}
+
 TODO - this docstring needs to be explained better. @giopaglia please fill the gaps in
 `Keyword Arguments` section.
 
