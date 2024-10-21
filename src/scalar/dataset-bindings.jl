@@ -22,8 +22,8 @@ end
 function featvalue#(feature::AbstractFeature, dataset, i_instance::Integer, w)
     # return error("Please, provide method featvalue(feature::$(typeof(feature)), dataset::$(typeof(dataset)), i_instance::Integer, w::$(typeof(w))).")
 end
-function vareltype#(dataset, i_variable)
-    # return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::Integer).")
+function vareltype#(dataset, i_variable::VariableId)
+    # return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::VariableId).")
 end
 
 function varnames#(dataset)
@@ -136,7 +136,7 @@ TODO explain
     nvariables(dataset)
     frame(dataset, i_instance::Integer)
     featvalue(feature::VarFeature, dataset, i_instance::Integer, w::AbstractWorld)
-    vareltype(dataset, i_variable::Integer)
+    vareltype(dataset, i_variable::Union{Integer,Symbol})
 ```
 
 If `dataset` represents a multimodal dataset, the following methods should be defined,
@@ -166,7 +166,7 @@ function scalarlogiset(
     onestep_precompute_relmemoset    :: Bool = false,
     print_progress                   :: Bool = false,
     allow_propositional              :: Bool = false, # TODO default to true
-    force_i_variables              :: Bool = true,
+    force_i_variables                :: Bool = true,
     # featvaltype = nothing
 )
     is_feature(f) = (f isa MixedCondition)
@@ -394,8 +394,8 @@ end
 function naturalconditions(
     dataset,
     mixed_conditions   :: AbstractVector,
-    featvaltype        :: Union{Nothing,Type} = nothing,
-    force_i_variables :: Bool = false,
+    featvaltype        :: Union{Nothing,Type} = nothing;
+    force_i_variables  :: Bool = false,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -496,11 +496,11 @@ function naturalconditions(
     end
     for i_var in 1:nvars
         tmp = map((cond)->univar_condition(
-    if !force_i_variables && !isnothing(varnames(dataset))
-        Symbol(names(dataset)[i_var])
-    else
-        i_var
-    end,cond),variable_specific_conditions)
+            if !force_i_variables && !isnothing(varnames(dataset))
+                Symbol(varnames(dataset)[i_var])
+            else
+                i_var
+            end, cond), variable_specific_conditions)
         for (test_ops,feature) in tmp
             for test_op in test_ops
                 cond = ScalarMetaCondition(feature, test_op)

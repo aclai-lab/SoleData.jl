@@ -54,6 +54,7 @@ import SoleData: featchannel, readfeature, featvalues!, allfeatvalues
 import SoleData: get_instance, ninstances, nvariables, eltype
 
 using SoleData: scalarlogiset
+using SoleData: VariableId
 ############################################################################################
 
 export UniformFullDimensionalLogiset

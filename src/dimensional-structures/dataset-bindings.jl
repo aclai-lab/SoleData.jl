@@ -108,7 +108,7 @@ end
 
 function vareltype(
     dataset::AbstractDimensionalDataset{T},
-    i_variable::Union{Integer,Symbol}
+    i_variable::VariableId,
 ) where {T}
     T
 end
@@ -249,9 +249,9 @@ end
 
 function vareltype(
     dataset::AbstractDataFrame,
-    i_variable::Integer
+    i_variable::VariableId,
 )
     eltype(eltype(dataset[:,i_variable]))
 end
 
-varnames(dataset::AbstractDimensionalDataset) = names(dataset)
+varnames(dataset::AbstractDataFrame) = names(dataset)
