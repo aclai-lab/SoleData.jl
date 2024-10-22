@@ -16,34 +16,37 @@ end
     function initlogiset(
         dataset::AbstractDimensionalDataset,
         features::AbstractVector;
-        worldtype_by_dim::Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing
+        worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
     )::UniformFullDimensionalLogiset
 
 Given an [`AbstractDimensionalDataset`](@ref), build a
 [`UniformFullDimensionalLogiset`](@ref).
 
-# Arguments
-- worldtype_by_dim::Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing:
+# Keyword Arguments
+- worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing:
 map between a dimensionality, as integer, and the [`AbstractWorld`](@ref) type associated;
-when unspecified, this is defaulted to `1 => OneWorld, 2 => Interval, 3 => Interval2D`.
+when unspecified, this is defaulted to `0 => OneWorld, 1 => Interval, 2 => Interval2D`.
 
-See also [`AbstractDimensionalDataset`](@ref), SoleLogics.AbstractWorld,
+See also [`AbstractDimensionalDataset`](@ref),
+SoleLogics.AbstractWorld,
+MultiData.dimensionality,
 [`UniformFullDimensionalLogiset`](@ref).
 """
 function initlogiset(
     dataset::AbstractDimensionalDataset,
     features::AbstractVector;
-    worldtype_by_dim::Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing
+    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
 )::UniformFullDimensionalLogiset
-    worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Integer,Type{<:AbstractWorld}}([
-        1 => OneWorld, 2 => Interval, 3 => Interval2D]) :
+    worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:AbstractWorld}}([
+        0 => OneWorld, 1 => Interval, 2 => Interval2D]) :
         worldtype_by_dim
 
     _ninstances = ninstances(dataset)
 
-    _worldtype(instancetype::Type{<:AbstractArray{T,1}}) where {T} = worldtype_by_dim[1]
-    _worldtype(instancetype::Type{<:AbstractArray{T,2}}) where {T} = worldtype_by_dim[2]
-    _worldtype(instancetype::Type{<:AbstractArray{T,3}}) where {T} = worldtype_by_dim[3]
+    # Note: a dimension is for the variables
+    _worldtype(instancetype::Type{<:AbstractArray{T,1}}) where {T} = worldtype_by_dim[0]
+    _worldtype(instancetype::Type{<:AbstractArray{T,2}}) where {T} = worldtype_by_dim[1]
+    _worldtype(instancetype::Type{<:AbstractArray{T,3}}) where {T} = worldtype_by_dim[2]
 
     function _worldtype(instancetype::Type{<:AbstractArray})
         error("Cannot initialize logiset with dimensional instances of type " *
@@ -180,13 +183,12 @@ end
 function initlogiset(
     dataset::AbstractDataFrame,
     features::AbstractVector{<:VarFeature};
-    worldtype_by_dim::Union{Nothing,AbstractDict{Integer,Type{<:AbstractWorld}}}=nothing
+    kwargs...,
 )
     _ninstances = nrow(dataset)
-    # TODO - worldtype_by_dim must be a kwarg here
     dimensional, varnames = dataframe2dimensional(dataset; dry_run = true)
 
-    initlogiset(dimensional, features; worldtype_by_dim)
+    initlogiset(dimensional, features; kwargs...)
 end
 
 function frame(

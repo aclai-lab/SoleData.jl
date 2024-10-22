@@ -42,10 +42,10 @@ X_df, y = _load_NATOPS(joinpath(dirname(pathof(SoleData)), "../test/data/NATOPS"
 
 pointlogiset = scalarlogiset(
     X_df;
-    worldtype_by_dim=Dict{Integer,Type{<:AbstractWorld}}(2 => SoleLogics.Point1D)
+    worldtype_by_dim=Dict{Int,Type{<:AbstractWorld}}(1 => SoleLogics.Point1D)
 )
 
 intervallogiset = scalarlogiset(
     X_df;
-    worldtype_by_dim=Dict{Integer,Type{<:AbstractWorld}}(2 => SoleLogics.Interval)
+    worldtype_by_dim=Dict{Int,Type{<:AbstractWorld}}(1 => SoleLogics.Interval)
 )
