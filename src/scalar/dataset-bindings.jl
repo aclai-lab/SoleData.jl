@@ -136,6 +136,7 @@ TODO explain
     nvariables(dataset)
     frame(dataset, i_instance::Integer)
     featvalue(feature::VarFeature, dataset, i_instance::Integer, w::AbstractWorld)
+    varnames(dataset)::Union{Nothing,Vector{<:VariableId}}
     vareltype(dataset, i_variable::Union{Integer,Symbol})
 ```
 
