@@ -77,35 +77,30 @@ require(['jquery'], function($) {
 let timer = 0;
 var isExpanded = true;
 
-$(document).on(
-  "click",
-  ".docstring .docstring-article-toggle-button",
-  function () {
-    let articleToggleTitle = "Expand docstring";
-    const parent = $(this).parent();
+$(document).on("click", ".docstring header", function () {
+  let articleToggleTitle = "Expand docstring";
 
-    debounce(() => {
-      if (parent.siblings("section").is(":visible")) {
-        parent
-          .find("a.docstring-article-toggle-button")
-          .removeClass("fa-chevron-down")
-          .addClass("fa-chevron-right");
-      } else {
-        parent
-          .find("a.docstring-article-toggle-button")
-          .removeClass("fa-chevron-right")
-          .addClass("fa-chevron-down");
+  debounce(() => {
+    if ($(this).siblings("section").is(":visible")) {
+      $(this)
+        .find(".docstring-article-toggle-button")
+        .removeClass("fa-chevron-down")
+        .addClass("fa-chevron-right");
+    } else {
+      $(this)
+        .find(".docstring-article-toggle-button")
+        .removeClass("fa-chevron-right")
+        .addClass("fa-chevron-down");
 
-        articleToggleTitle = "Collapse docstring";
-      }
+      articleToggleTitle = "Collapse docstring";
+    }
 
-      parent
-        .children(".docstring-article-toggle-button")
-        .prop("title", articleToggleTitle);
-      parent.siblings("section").slideToggle();
-    });
-  }
-);
+    $(this)
+      .find(".docstring-article-toggle-button")
+      .prop("title", articleToggleTitle);
+    $(this).siblings("section").slideToggle();
+  });
+});
 
 $(document).on("click", ".docs-article-toggle-button", function (event) {
   let articleToggleTitle = "Expand docstring";
@@ -115,7 +110,7 @@ $(document).on("click", ".docs-article-toggle-button", function (event) {
   debounce(() => {
     if (isExpanded) {
       $(this).removeClass("fa-chevron-up").addClass("fa-chevron-down");
-      $("a.docstring-article-toggle-button")
+      $(".docstring-article-toggle-button")
         .removeClass("fa-chevron-down")
         .addClass("fa-chevron-right");
 
@@ -124,7 +119,7 @@ $(document).on("click", ".docs-article-toggle-button", function (event) {
       $(".docstring section").slideUp(animationSpeed);
     } else {
       $(this).removeClass("fa-chevron-down").addClass("fa-chevron-up");
-      $("a.docstring-article-toggle-button")
+      $(".docstring-article-toggle-button")
         .removeClass("fa-chevron-right")
         .addClass("fa-chevron-down");
 
