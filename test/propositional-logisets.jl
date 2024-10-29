@@ -29,6 +29,37 @@ c2 = check(φ, X)
 ############################################################################################
 ############################################################################################
 
+using DataFrames
+using Test
+using TestSole
+using SoleData
+
+X = MLJBase.load_iris()
+X = Float64.(X)
+X_df = DataFrame(X, :auto)
+
+myalphabet_symbol = alphabet(scalarlogiset(X_df; allow_propositional = true), test_operators = [<])
+@test eltype(SoleData.feature.(SoleData.value.(myalphabet_symbol))) <: VariableValue{Symbol}
+@test eltype(SoleData.i_variable.(SoleData.feature.(SoleData.value.(myalphabet_symbol)))) <: Symbol
+
+myalphabet_int = alphabet(scalarlogiset(X_df; allow_propositional = true), test_operators = [<], force_i_variables = true)
+@test eltype(SoleData.feature.(SoleData.value.(myalphabet_int))) <: VariableValue{Int}
+@test eltype(SoleData.i_variable.(SoleData.feature.(SoleData.value.(myalphabet_int)))) <: Int
+
+# myalphabet = UnionAlphabet(map(
+#     ((i,x),)->SoleData.UnivariateScalarAlphabet(
+#         (
+#             SoleData.ScalarMetaCondition(VariableValue(i), SoleData.test_operator(SoleData.metacond(x))),
+#             SoleData.thresholds(x),
+#         ),
+#     ),
+#     enumerate(subalphabets(myalphabet)),
+# ))
+
+############################################################################################
+############################################################################################
+############################################################################################
+
 using Test
 using SoleData
 using Tables

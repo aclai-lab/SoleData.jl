@@ -311,7 +311,7 @@ end
 
 """
     struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
-        featcondition::Vector{UnivariateScalarAlphabet}
+        featcondition::Tuple{ScalarMetaCondition,Vector}
     end
 
 A finite alphabet of conditions, grouped by (a finite set of) metaconditions.
