@@ -65,7 +65,7 @@ a,b,c,d = collect((alphabet(X; test_operators = [≥, <]) |> atoms))[1:4]
 
 @test_broken begin
     f = parsefeature(SoleData.VariableValue, ":x")
-    c = parsecondition(SoleData.ScalarCondition, "x < 0.03425152849651658"; featuretype = SoleData.VariableValue)
+    local c = parsecondition(SoleData.ScalarCondition, "x < 0.03425152849651658"; featuretype = SoleData.VariableValue)
     f isa SoleData.VariableValue && isapprox(SoleData.threshold(f), 0.03425152849651658)
 end
 
