@@ -5,8 +5,6 @@ using CategoricalArrays
 
 using DataStructures: OrderedDict
 
-# SoleData.load_arff_dataset("NATOPS")
-
 function load_arff_dataset(
     dataset_name,
     split = :all;

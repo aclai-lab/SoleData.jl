@@ -1,6 +1,7 @@
 import SoleLogics: check
 using SoleLogics: normalize
 using SoleLogics: AnyWorld
+using SoleLogics: value
 
 function check(
     φ::Atom{<:AbstractCondition},
