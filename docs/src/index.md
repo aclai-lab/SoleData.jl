@@ -98,5 +98,5 @@ Pages   = [
 
 ```@autodocs
 Modules = [SoleData]
-Pages   = ["multilogiset.jl"]
+Pages   = ["multilogiset.jl",]
 ```

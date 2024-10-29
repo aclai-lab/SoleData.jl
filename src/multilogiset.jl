@@ -188,6 +188,8 @@ import SoleLogics: normalize
 
 A symbolic antecedent that can be checked on a `MultiLogiset`, associating
 antecedents to modalities.
+
+See also [`MultiLogiset`](@ref)
 """
 struct MultiFormula{F<:Formula} <: AbstractSyntaxStructure
     modforms::Dict{Int,F}
