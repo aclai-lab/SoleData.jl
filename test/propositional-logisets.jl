@@ -31,7 +31,6 @@ c2 = check(φ, X)
 
 using DataFrames
 using Test
-using TestSole
 using SoleData
 
 X = MLJBase.load_iris()
