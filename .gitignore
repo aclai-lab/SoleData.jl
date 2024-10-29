@@ -4,3 +4,4 @@
 /src/tempfile.jl
 /Manifest.toml
 /docs/build/
+/test/data/*

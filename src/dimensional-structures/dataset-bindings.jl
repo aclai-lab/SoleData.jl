@@ -12,16 +12,41 @@ function islogiseed(dataset::AbstractDimensionalDataset)
     ndims(eltype(dataset)) >= 1
 end
 
+"""
+    function initlogiset(
+        dataset::AbstractDimensionalDataset,
+        features::AbstractVector;
+        worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+    )::UniformFullDimensionalLogiset
+
+Given an [`AbstractDimensionalDataset`](@ref), build a
+[`UniformFullDimensionalLogiset`](@ref).
+
+# Keyword Arguments
+- worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing:
+map between a dimensionality, as integer, and the [`AbstractWorld`](@ref) type associated;
+when unspecified, this is defaulted to `0 => OneWorld, 1 => Interval, 2 => Interval2D`.
+
+See also [`AbstractDimensionalDataset`](@ref),
+SoleLogics.AbstractWorld,
+MultiData.dimensionality,
+[`UniformFullDimensionalLogiset`](@ref).
+"""
 function initlogiset(
     dataset::AbstractDimensionalDataset,
-    features::AbstractVector,
-)
+    features::AbstractVector;
+    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+)::UniformFullDimensionalLogiset
+    worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:AbstractWorld}}([
+        0 => OneWorld, 1 => Interval, 2 => Interval2D]) :
+        worldtype_by_dim
 
     _ninstances = ninstances(dataset)
 
-    _worldtype(instancetype::Type{<:AbstractArray{T,1}}) where {T} = OneWorld
-    _worldtype(instancetype::Type{<:AbstractArray{T,2}}) where {T} = Interval{Int}
-    _worldtype(instancetype::Type{<:AbstractArray{T,3}}) where {T} = Interval2D{Int}
+    # Note: a dimension is for the variables
+    _worldtype(instancetype::Type{<:AbstractArray{T,1}}) where {T} = worldtype_by_dim[0]
+    _worldtype(instancetype::Type{<:AbstractArray{T,2}}) where {T} = worldtype_by_dim[1]
+    _worldtype(instancetype::Type{<:AbstractArray{T,3}}) where {T} = worldtype_by_dim[2]
 
     function _worldtype(instancetype::Type{<:AbstractArray})
         error("Cannot initialize logiset with dimensional instances of type " *
@@ -157,13 +182,13 @@ end
 
 function initlogiset(
     dataset::AbstractDataFrame,
-    features::AbstractVector{<:VarFeature},
+    features::AbstractVector{<:VarFeature};
+    kwargs...,
 )
     _ninstances = nrow(dataset)
-
     dimensional, varnames = dataframe2dimensional(dataset; dry_run = true)
 
-    initlogiset(dimensional, features)
+    initlogiset(dimensional, features; kwargs...)
 end
 
 function frame(
