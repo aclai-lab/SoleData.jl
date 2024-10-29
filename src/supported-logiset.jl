@@ -344,3 +344,5 @@ support(X::SupportedLogiset) = first(supports(X))
 
 features(X::SupportedLogiset) = features(base(X))
 nfeatures(X::SupportedLogiset) = nfeatures(base(X))
+
+alphabet(X::SupportedLogiset) = alphabet(base(X))
