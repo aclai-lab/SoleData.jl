@@ -32,16 +32,17 @@ c2 = check(φ, X)
 using DataFrames
 using Test
 using SoleData
+using MLJBase
 
 X = MLJBase.load_iris()
-X = Float64.(X)
 X_df = DataFrame(X, :auto)
+X = scalarlogiset(X_df; allow_propositional = true)
 
-myalphabet_symbol = alphabet(scalarlogiset(X_df; allow_propositional = true), test_operators = [<])
+myalphabet_symbol = alphabet(X, test_operators = [<])
 @test eltype(SoleData.feature.(SoleData.value.(myalphabet_symbol))) <: VariableValue{Symbol}
 @test eltype(SoleData.i_variable.(SoleData.feature.(SoleData.value.(myalphabet_symbol)))) <: Symbol
 
-myalphabet_int = alphabet(scalarlogiset(X_df; allow_propositional = true), test_operators = [<], force_i_variables = true)
+myalphabet_int = alphabet(X, test_operators = [<], force_i_variables = true)
 @test eltype(SoleData.feature.(SoleData.value.(myalphabet_int))) <: VariableValue{Int}
 @test eltype(SoleData.i_variable.(SoleData.feature.(SoleData.value.(myalphabet_int)))) <: Int
 
