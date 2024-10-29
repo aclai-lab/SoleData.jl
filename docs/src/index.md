@@ -64,14 +64,34 @@ Pages   = ["check.jl"]
 
 ```@autodocs
 Modules = [SoleData]
-Pages   = ["scalar/main.jl"]
+Pages   = [
+	"scalar/main.jl",
+	"scalar/var-features.jl",
+	"scalar/test-operators.jl",
+	"scalar/conditions.jl",
+	"scalar/templated-formulas.jl",
+	"scalar/random.jl",
+	"scalar/representatives.jl",
+	"scalar/canonical-conditions.jl",
+	"scalar/dataset-bindings.jl",
+	"scalar/memosets.jl",
+	"scalar/onestep-memoset.jl",
+	"scalar/propositional-logiset.jl",
+	"scalar/propositional-formula-simplification.jl",
+]
 ```
 
 ## Scalar Dimensional Logisets
 
 ```@autodocs
 Modules = [SoleData, SoleData.DimensionalDatasets]
-Pages   = ["dimensional-structures/main.jl"]
+Pages   = [
+	"dimensional-structures/main.jl",
+	"dimensional-structures/logiset.jl",
+	"dimensional-structures/onestep-memosets.jl",
+	"dimensional-structures/computefeature.jl",
+	"dimensional-structures/dataset-bindings.jl",
+]
 ```
 
 # Multimodal Logisets

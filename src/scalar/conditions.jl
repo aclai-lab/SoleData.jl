@@ -59,9 +59,9 @@ end
 
 _st_featop_name(feature::AbstractFeature,   test_operator::TestOperator; kwargs...)     = "\e[1m$(syntaxstring(feature; kwargs...)) $(_st_testop_name(test_operator))\e[0m"
 
-_st_testop_name(test_op::Any) = "\e[1m$(test_op)\e[0m"
-_st_testop_name(::typeof(>=)) = "\e[1m≥\e[0m"
-_st_testop_name(::typeof(<=)) = "\e[1m≤\e[0m"
+_st_testop_name(test_op::Any) = "$(test_op)"
+_st_testop_name(::typeof(>=)) = "≥"
+_st_testop_name(::typeof(<=)) = "≤"
 
 # Abbreviations
 
