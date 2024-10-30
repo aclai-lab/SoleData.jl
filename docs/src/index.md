@@ -73,7 +73,8 @@ Pages   = [
 	"scalar/random.jl",
 	"scalar/representatives.jl",
 	"scalar/canonical-conditions.jl",
-	"scalar/dataset-bindings.jl",
+	"scalar/logiseed.jl",
+	"scalar/scalarlogiset.jl",
 	"scalar/memosets.jl",
 	"scalar/onestep-memoset.jl",
 	"scalar/propositional-logiset.jl",
@@ -90,7 +91,9 @@ Pages   = [
 	"dimensional-structures/logiset.jl",
 	"dimensional-structures/onestep-memosets.jl",
 	"dimensional-structures/computefeature.jl",
-	"dimensional-structures/dataset-bindings.jl",
+	"dimensional-structures/logiseeds/abstractdataframe.jl",
+	"dimensional-structures/logiseeds/abstractdimensionaldataset.jl",
+	"dimensional-structures/logiseeds/namedtuple.jl",
 ]
 ```
 

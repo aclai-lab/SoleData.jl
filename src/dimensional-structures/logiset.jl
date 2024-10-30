@@ -8,7 +8,7 @@ all instances have the same frame, and "full" refers to the fact that
 
 See also
 [`UniformFullDimensionalLogiset`](@ref),
-[`SoleLogics.FullDimensionalFrame](@ref),
+[`SoleLogics.FullDimensionalFrame`](@ref),
 [`AbstractModalLogiset`](@ref).
 """
 abstract type AbstractUniformFullDimensionalLogiset{U,N,W<:AbstractWorld,FT<:AbstractFeature,FR<:FullDimensionalFrame{N,W}} <: AbstractModalLogiset{W,U,FT,FR} end
@@ -38,7 +38,7 @@ dimensions, ultimately resulting in a `(N*2+2)`-dimensional array.
 
 See also
 [`AbstractUniformFullDimensionalLogiset`](@ref),
-[`SoleLogics.FullDimensionalFrame](@ref),
+[`SoleLogics.FullDimensionalFrame`](@ref),
 [`AbstractModalLogiset`](@ref).
 """
 struct UniformFullDimensionalLogiset{

@@ -20,7 +20,7 @@ which can be used to define logical features.
 
 For example, with dimensional data (e.g., multivariate time series, digital images
 and videos), features can be computed as the minimum value for a given variable
-on a specific interval/rectangle/cuboid (in general, a [`SoleLogics.GeometricalWorld](@ref)).
+on a specific interval/rectangle/cuboid (in general, a [`SoleLogics.GeometricalWorld`](@ref)).
 
 As an example of a dimensional feature, consider *min[V1]*,
 which computes the minimum for variable 1 for a given world.
@@ -491,7 +491,7 @@ Note that at most one argument in `variable_names_map` and `variable_name_prefix
 should be provided.
 
 !!! note
-    The default parentheses, here, differ from those of [`SoleLogics.parseformula](@ref),
+    The default parentheses, here, differ from those of [`SoleLogics.parseformula`](@ref),
     since features are typically wrapped into `Atom`s, and `parseformula` does not
     allow parenthesis characters in atoms' `syntaxstring`s.
 

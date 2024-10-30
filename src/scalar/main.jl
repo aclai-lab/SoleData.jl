@@ -28,7 +28,9 @@ const MixedCondition = Union{
     <:ScalarMetaCondition,                                                   # ScalarMetaCondition;
 }
 
-include("dataset-bindings.jl")
+include("logiseed.jl")
+
+include("scalarlogiset.jl")
 
 include("memosets.jl")
 
