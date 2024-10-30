@@ -151,7 +151,7 @@ struct UniformFullDimensionalLogiset{
         # this is related to Point2D case: we are not talking about (hyper)intervals anymore
         # and maybe the formula (2*dimensionality+2) should be (2*dimensionality-1 + 2)...
         # I have the feeling UniformFullDimensionalLogiset is designed to only work with
-        # even sizes of the final `featstruct` (?).
+        # even sizes of the final `featstruct` (see `initlogiset`).
         _dimensionality(featstruct::AbstractArray{T,3}) where {T} = 1
         _dimensionality(featstruct::AbstractArray{T,4}) where {T} = 1
         _dimensionality(featstruct::AbstractArray{T,6}) where {T} = 2
@@ -319,31 +319,34 @@ end
     X           :: UniformFullDimensionalLogiset{U,Point1D},
     i_instance  :: Integer,
     w           :: Interval,
-    i_feature   :: Union{Nothing,Integer} = Point2D where {U}
+    i_feature   :: Union{Nothing,Integer} = nothing
+) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_featurePoint3D("Could not find feature $(feature) in logiset of type $(typeof(X)).")
-        end
-    end
-
-    X.featstruct[w.x, i_instance, i_feature]
-end
-
-@inline function featvalue!(
-    feature::AbstractFeature,
-    X::UniformFullDimensionalLogiset{U,<:Point1D},
-    featval::U,
-    i_instance::Integer,
-    w::Interval, # TODO: @mauro-milella adjust Point2D must be the same as X)
-    i_feature::Union{Nothing,Integer} = nothing
-) where {U}
-    if isnothing(i_featurePoint3D = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
             error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
-    # TODO: @mauro-milella
-    X.featstruct[(w)..., i_instance, i_feature] = featval
+
+    X.featstruct[w.xyz..., i_instance, i_feature]
+end
+
+@inline function featvalue!(
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,Point1D},
+    featval::U,
+    i_instance::Integer,
+    w::Point1D,
+    i_feature::Union{Nothing,Integer} = nothing
+) where {U}
+    if isnothing(i_feature)
+        i_feature = _findfirst(isequal(feature), features(X))
+        if isnothing(i_feature)
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        end
+    end
+
+    X.featstruct[w.xyz..., i_instance, i_feature] = featval
 end
 
 
