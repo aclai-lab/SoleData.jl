@@ -175,13 +175,13 @@ features(X::UniformFullDimensionalLogiset) = X.features
 ################################### maxchannelsize #########################################
 
 maxchannelsize(X::UniformFullDimensionalLogiset{U,OneWorld}) where {U} = ()
-maxchannelsize(X::UniformFullDimensionalLogiset{U,SoleLogics.Point1D}) where {U} = begin
+maxchannelsize(X::UniformFullDimensionalLogiset{U,Point1D}) where {U} = begin
     (size(X, 1),)
 end
-maxchannelsize(X::UniformFullDimensionalLogiset{U,SoleLogics.Point2D}) where {U} = begin
+maxchannelsize(X::UniformFullDimensionalLogiset{U,Point2D}) where {U} = begin
     (size(X, 1),)
 end
-maxchannelsize(X::UniformFullDimensionalLogiset{U,SoleLogics.Point3D}) where {U} = begin
+maxchannelsize(X::UniformFullDimensionalLogiset{U,Point3D}) where {U} = begin
     # to @giopaglia by @mauro-milella: is this correct? (same for Point2D dispatch)
     # here i Have a cube for each (instance,feature) pair, but I am getting doubts about
     # the tuples returned by this function.
@@ -316,15 +316,13 @@ end
 
 @inline function featvalue(
     feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,SoleLogics.Point1D},
+    X           :: UniformFullDimensionalLogiset{U,Point1D},
     i_instance  :: Integer,
     w           :: Interval,
-    i_feature   :: Union{Nothing,Integer} = nothing
-) where {U}
+    i_feature   :: Union{Nothing,Integer} = Point2D where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_feature)
-            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        if isnothing(i_featurePoint3D("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
 
@@ -333,14 +331,13 @@ end
 
 @inline function featvalue!(
     feature::AbstractFeature,
-    X::UniformFullDimensionalLogiset{U,<:SoleLogics.Point1D},
+    X::UniformFullDimensionalLogiset{U,<:Point1D},
     featval::U,
     i_instance::Integer,
-    w::Interval, # TODO: @mauro-milella adjust this (parameter must be the same as X)
+    w::Interval, # TODO: @mauro-milella adjust Point2D must be the same as X)
     i_feature::Union{Nothing,Integer} = nothing
 ) where {U}
-    if isnothing(i_feature)
-        i_feature = _findfirst(isequal(feature), features(X))
+    if isnothing(i_featurePoint3D = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
             error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
