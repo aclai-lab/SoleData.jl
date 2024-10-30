@@ -15,12 +15,8 @@ Here, *uniform* refers to the fact that all instances have the same frame,
 and *full* refers to the fact that all worlds of a given kind are considered
 (e.g., *all* points/intervals/rectangles).
 
-See also
-[`AbstractModalLogiset`](@ref),
-[`UniformFullDimensionalLogiset`](@ref),
-[`SoleLogics.FullDimensionalFrame`](@ref),
-[`AbstractModalLogiset`](@ref).
-[`SoleLogics.FullDimensionalFrame](@ref).
+See also [`AbstractModalLogiset`](@ref), [`UniformFullDimensionalLogiset`](@ref),
+`SoleLogics.FullDimensionalFrame`.
 """
 abstract type AbstractUniformFullDimensionalLogiset{
     U,
