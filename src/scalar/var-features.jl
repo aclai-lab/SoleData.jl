@@ -20,7 +20,7 @@ which can be used to define logical features.
 
 For example, with dimensional data (e.g., multivariate time series, digital images
 and videos), features can be computed as the minimum value for a given variable
-on a specific interval/rectangle/cuboid (in general, a [`SoleLogics.GeometricalWorld](@ref)).
+on a specific interval/rectangle/cuboid (in general, a [`SoleLogics.GeometricalWorld`](@ref)).
 
 As an example of a dimensional feature, consider *min[V1]*,
 which computes the minimum for variable 1 for a given world.
@@ -33,6 +33,8 @@ See also
 [`SoleLogics.Interval`](@ref).
 """
 abstract type VarFeature <: AbstractFeature end
+
+const VariableId = Union{Integer,Symbol}
 
 DEFAULT_VARFEATVALTYPE = Real
 
@@ -150,12 +152,16 @@ function variable_name(
     variable_name_prefix::Union{Nothing,String} = nothing,
     kwargs..., # TODO remove this.
 )
+    i_var = i_variable(f)
     if isnothing(variable_names_map)
         variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
-        "$(variable_name_prefix)$(i_variable(f))"
+        i_var isa Integer ? "$(variable_name_prefix)$(i_var)" : "$(i_var)"
     else
-        @assert isnothing(variable_name_prefix)
-        "$(variable_names_map[i_variable(f)])"
+        if i_var isa Integer
+            "$(variable_names_map[i_var])"
+        elseif i_var isa Symbol
+            "$(variable_names_map[findfirst(occursin.(string(i_var), variable_names_map))])"
+        end
     end
 end
 
@@ -176,33 +182,37 @@ end
 ############################################################################################
 
 """
-    struct UnivariateFeature{U} <: AbstractUnivariateFeature
-        i_variable::Integer
+    struct UnivariateFeature{U,I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
         f::Function
+        fname::Union{Nothing,String}
     end
 
 A dimensional feature represented by the application of a generic function `f`
 to a single variable of a dimensional channel.
 For example, it can wrap a scalar function computing
 how much red a `Interval2D` world, when interpreted on an image, contains.
+Optionally, a feature name `fname` can be attached to the function,
+which can be useful for inspection (e.g., if `f` is an anonymous function, this avoids
+names such s "#47" or "#49".
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateFeature{U} <: AbstractUnivariateFeature
-    i_variable::Integer
+struct UnivariateFeature{U,I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
     f::Function
     fname::Union{Nothing,String}
     function UnivariateFeature{U}(feat::UnivariateFeature) where {U<:Real}
-        return new{U}(i_variable(f), feat.f, feat.fname)
+        return UnivariateFeature{U}(i_variable(f), feat.f, feat.fname)
     end
-    function UnivariateFeature{U}(i_variable::Integer, f::Function, fname::Union{Nothing,String} = nothing) where {U<:Real}
-        return new{U}(i_variable, f, fname)
+    function UnivariateFeature{U}(i_variable::I, f::Function, fname::Union{Nothing,String} = nothing) where {U<:Real,I<:VariableId}
+        return new{U,I}(i_variable, f, fname)
     end
-    function UnivariateFeature(i_variable::Integer, f::Function, fname::Union{Nothing,String} = nothing)
-        return UnivariateFeature{DEFAULT_VARFEATVALTYPE}(i_variable, f, fname)
+    function UnivariateFeature(i_variable::I, f::Function, fname::Union{Nothing,String} = nothing) where {I<:VariableId}
+        return new{DEFAULT_VARFEATVALTYPE,I}(i_variable, f, fname)
     end
 end
 featurename(f::UnivariateFeature) = (!isnothing(f.fname) ? f.fname : string(f.f))
@@ -212,8 +222,8 @@ function featvaltype(dataset, f::UnivariateFeature{U}) where {U}
 end
 
 """
-    struct UnivariateNamedFeature{U} <: AbstractUnivariateFeature
-        i_variable::Integer
+    struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
         name::String
     end
 
@@ -224,17 +234,17 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateNamedFeature{U} <: AbstractUnivariateFeature
-    i_variable::Integer
+struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
     name::String
     function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U<:Real}
-        return new{U}(i_variable(f), f.name)
+        return UnivariateNamedFeature{U}(i_variable(f), f.name)
     end
-    function UnivariateNamedFeature{U}(i_variable::Integer, name::String) where {U<:Real}
-        return new{U}(i_variable, name)
+    function UnivariateNamedFeature{U}(i_variable::I, name::String) where {U<:Real,I<:VariableId}
+        return new{U,I}(i_variable, name)
     end
-    function UnivariateNamedFeature(i_variable::Integer, name::String)
-        return UnivariateNamedFeature{DEFAULT_VARFEATVALTYPE}(i_variable, name)
+    function UnivariateNamedFeature(i_variable::I, name::String) where {I<:VariableId}
+        return new{DEFAULT_VARFEATVALTYPE,I}(i_variable, name)
     end
 end
 featurename(f::UnivariateNamedFeature) = f.name
@@ -246,8 +256,8 @@ end
 ############################################################################################
 
 """
-    struct VariableValue <: AbstractUnivariateFeature
-        i_variable::Union{Integer,Symbol}
+    struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
     end
 
 A simple feature, equal the value of a scalar variable.
@@ -257,20 +267,20 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableValue <: AbstractUnivariateFeature
-    i_variable::Union{Integer,Symbol}
+struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
     function VariableValue(f::VariableValue)
-        return new(i_variable(f))
+        return VariableValue(i_variable(f))
     end
-    function VariableValue(i_variable::Union{Integer,Symbol})
-        return new(i_variable)
+    function VariableValue(i_variable::I) where {I<:VariableId}
+        return new{I}(i_variable)
     end
 end
 featurename(f::VariableValue) = ""
 
-function syntaxstring(f::VariableValue; show_colon = false, kwargs...)
-    if i_variable(f) isa Integer
-        variable_name(f; kwargs...)
+function syntaxstring(f::VariableValue; variable_names_map = nothing, show_colon = false, kwargs...)
+    if i_variable(f) isa Integer || !isnothing(variable_names_map)
+        variable_name(f; variable_names_map = variable_names_map, kwargs...)
     else
         show_colon ? repr(i_variable(f)) : string(i_variable(f))
     end
@@ -283,8 +293,8 @@ end
 ############################################################################################
 
 """
-    struct VariableMin <: AbstractUnivariateFeature
-        i_variable::Integer
+    struct VariableMin{I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
     end
 
 Notable univariate feature computing the minimum value for a given variable.
@@ -295,13 +305,13 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMax`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableMin <: AbstractUnivariateFeature
-    i_variable::Integer
+struct VariableMin{I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
     function VariableMin(f::VariableMin)
-        return new(i_variable(f))
+        return VariableMin(i_variable(f))
     end
-    function VariableMin(i_variable::Integer)
-        return new(i_variable)
+    function VariableMin(i_variable::I) where {I<:VariableId}
+        return new{I}(i_variable)
     end
 end
 featurename(f::VariableMin) = "min"
@@ -311,8 +321,8 @@ function featvaltype(dataset, f::VariableMin)
 end
 
 """
-    struct VariableMax <: AbstractUnivariateFeature
-        i_variable::Integer
+    struct VariableMax{I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
     end
 
 Notable univariate feature computing the maximum value for a given variable.
@@ -323,13 +333,13 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableMax <: AbstractUnivariateFeature
-    i_variable::Integer
+struct VariableMax{I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
     function VariableMax(f::VariableMax)
-        return new(i_variable(f))
+        return VariableMax(i_variable(f))
     end
-    function VariableMax(i_variable::Integer)
-        return new(i_variable)
+    function VariableMax(i_variable::I) where {I<:VariableId}
+        return new{I}(i_variable)
     end
 end
 featurename(f::VariableMax) = "max"
@@ -341,8 +351,8 @@ end
 ############################################################################################
 
 """
-    struct VariableSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
-        i_variable::Integer
+    struct VariableSoftMin{T<:AbstractFloat,I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
         alpha::T
     end
 
@@ -354,16 +364,16 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableSoftMin{T<:AbstractFloat} <: AbstractUnivariateFeature
-    i_variable::Integer
+struct VariableSoftMin{T<:AbstractFloat,I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
     alpha::T
     function VariableSoftMin(f::VariableSoftMin)
-        return new{typeof(alpha(f))}(i_variable(f), alpha(f))
+        return VariableSoftMin(i_variable(f), alpha(f))
     end
-    function VariableSoftMin(i_variable::Integer, alpha::T) where {T}
+    function VariableSoftMin(i_variable::I, alpha::T) where {T,I<:VariableId}
         @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMin with alpha = $(alpha)"
         @assert !isone(alpha) "Cannot instantiate VariableSoftMin with alpha = $(alpha). Use VariableMin instead!"
-        new{T}(i_variable, alpha)
+        new{T,I}(i_variable, alpha)
     end
 end
 alpha(f::VariableSoftMin) = f.alpha
@@ -374,8 +384,8 @@ function featvaltype(dataset, f::VariableSoftMin)
 end
 
 """
-    struct VariableSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
-        i_variable::Integer
+    struct VariableSoftMax{T<:AbstractFloat,I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
         alpha::T
     end
 
@@ -387,16 +397,16 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMax`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableSoftMax{T<:AbstractFloat} <: AbstractUnivariateFeature
-    i_variable::Integer
+struct VariableSoftMax{T<:AbstractFloat,I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
     alpha::T
     function VariableSoftMax(f::VariableSoftMax)
-        return new{typeof(alpha(f))}(i_variable(f), alpha(f))
+        return VariableSoftMax(i_variable(f), alpha(f))
     end
-    function VariableSoftMax(i_variable::Integer, alpha::T) where {T}
+    function VariableSoftMax(i_variable::I, alpha::T) where {T,I<:VariableId}
         @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMax with alpha = $(alpha)"
         @assert !isone(alpha) "Cannot instantiate VariableSoftMax with alpha = $(alpha). Use VariableMax instead!"
-        new{T}(i_variable, alpha)
+        new{T,I}(i_variable, alpha)
     end
 end
 alpha(f::VariableSoftMax) = f.alpha
@@ -481,7 +491,7 @@ Note that at most one argument in `variable_names_map` and `variable_name_prefix
 should be provided.
 
 !!! note
-    The default parentheses, here, differ from those of [`SoleLogics.parseformula](@ref),
+    The default parentheses, here, differ from those of [`SoleLogics.parseformula`](@ref),
     since features are typically wrapped into `Atom`s, and `parseformula` does not
     allow parenthesis characters in atoms' `syntaxstring`s.
 

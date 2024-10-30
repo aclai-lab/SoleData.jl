@@ -1,150 +1,5 @@
 using ProgressMeter
-using SoleData: AbstractMultiDataset
-import SoleData: ninstances, nvariables, nmodalities, eachmodality, displaystructure
-import SoleData: instances, concatdatasets
 
-"""
-    islogiseed(dataset)::Bool
-
-A logiseed is a dataset that can be converted to a logiset (e.g., via [`scalarlogiset`](@ref)).
-If the `dataset` is multimodal, the following methods should be defined:
-
-```julia
-    islogiseed(::typeof(dataset)) = true
-    initlogiset(dataset, features; kwargs...)
-    ninstances(dataset)
-    nvariables(dataset)
-    frame(dataset, i_instance::Integer)
-    featvalue(feature::VarFeature, dataset, i_instance::Integer, w::AbstractWorld)
-    vareltype(dataset, i_variable::Integer)
-```
-
-If `dataset` is multimodal, the following methods should be defined,
-while its modalities (iterated via `eachmodality`) should provide the methods above:
-
-```julia
-    ismultilogiseed(dataset)
-    nmodalities(dataset)
-    eachmodality(dataset)
-```
-"""
-function islogiseed(dataset)
-    false
-    # return error("Please, provide method islogiseed(dataset::$(typeof(dataset))).")
-end
-function initlogiset#(dataset, features)
-    # return error("Please, provide method initlogiset(dataset::$(typeof(dataset)), features::$(typeof(features))).")
-end
-function ninstances#(dataset)
-    # return error("Please, provide method ninstances(dataset::$(typeof(dataset))).")
-end
-function nvariables#(dataset)
-    # return error("Please, provide method nvariables(dataset::$(typeof(dataset))).")
-end
-function frame#(dataset, i_instance::Integer)
-    # return error("Please, provide method frame(dataset::$(typeof(dataset)), i_instance::Integer).")
-end
-function featvalue#(feature::AbstractFeature, dataset, i_instance::Integer, w)
-    # return error("Please, provide method featvalue(feature::$(typeof(feature)), dataset::$(typeof(dataset)), i_instance::Integer, w::$(typeof(w))).")
-end
-function vareltype#(dataset, i_variable)
-    # return error("Please, provide method vareltype(dataset::$(typeof(dataset)), i_variable::Integer).")
-end
-
-function allworlds(dataset, i_instance::Integer)
-    allworlds(frame(dataset, i_instance))
-end
-
-# Multimodal dataset interface
-function ismultilogiseed(dataset)
-    false
-end
-function nmodalities#(dataset)
-    # return error("Please, provide method nmodalities(dataset::$(typeof(dataset))).")
-end
-function eachmodality#(dataset)
-    # return error("Please, provide method eachmodality(dataset::$(typeof(dataset))).")
-end
-
-function modality(dataset, i_modality)
-    eachmodality(dataset)[i_modality]
-end
-
-function ismultilogiseed(dataset::MultiLogiset)
-    true
-end
-function ismultilogiseed(dataset::AbstractMultiDataset)
-    true
-end
-
-function ismultilogiseed(dataset::Union{AbstractVector,Tuple})
-    length(dataset) > 0 && all(islogiseed, dataset) # && allequal(ninstances, eachmodality(dataset))
-end
-function nmodalities(dataset::Union{AbstractVector,Tuple})
-    @assert ismultilogiseed(dataset) "$(typeof(dataset))"
-    length(dataset)
-end
-function eachmodality(dataset::Union{AbstractVector,Tuple})
-    # @assert ismultilogiseed(dataset) "$(typeof(dataset))"
-    dataset
-end
-function ninstances(dataset::Union{AbstractVector,Tuple})
-    @assert ismultilogiseed(dataset) "$(typeof(dataset))"
-    ninstances(first(dataset))
-end
-
-function instances(
-    dataset::Union{AbstractVector,Tuple},
-    inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false);
-    kwargs...
-)
-    @assert ismultilogiseed(dataset) "$(typeof(dataset))"
-    map(modality->instances(modality, inds, return_view; kwargs...), eachmodality(dataset))
-end
-
-function concatdatasets(datasets::Union{AbstractVector,Tuple}...)
-    @assert all(ismultilogiseed.(datasets)) "$(typeof.(datasets))"
-    @assert allequal(nmodalities.(datasets)) "Cannot concatenate multilogiseed's of type ($(typeof.(datasets))) with mismatching " *
-        "number of modalities: $(nmodalities.(datasets))"
-    out = [concatdatasets([modality(dataset, i_mod) for dataset in datasets]...) for i_mod in 1:nmodalities(first(datasets))]
-    if eltype(datasets) <: Tuple
-        out = Tuple(out)
-    end
-    out
-end
-
-function displaystructure(dataset; indent_str = "", include_ninstances = true, kwargs...)
-    if ismultilogiseed(dataset)
-        pieces = []
-        push!(pieces, "multilogiseed with $(nmodalities(dataset)) modalities ($(humansize(dataset)))")
-        # push!(pieces, indent_str * "├ # modalities:\t$(nmodalities(dataset))")
-        if include_ninstances
-            push!(pieces, indent_str * "├ # instances:\t$(ninstances(dataset))")
-        end
-        # push!(pieces, indent_str * "├ modalitytype:\t$(modalitytype(dataset))")
-        for (i_modality, mod) in enumerate(eachmodality(dataset))
-            out = ""
-            if i_modality == nmodalities(dataset)
-                out *= "$(indent_str)└"
-            else
-                out *= "$(indent_str)├"
-            end
-            out *= "{$i_modality} "
-            # \t\t\t$(humansize(mod))\t(worldtype: $(worldtype(mod)))"
-            out *= displaystructure(mod; indent_str = indent_str * (i_modality == nmodalities(dataset) ? "  " : "│ "), include_ninstances = false, kwargs...)
-            push!(pieces, out)
-        end
-        return join(pieces, "\n")
-    elseif islogiseed(dataset)
-        return "logiseed ($(humansize(dataset)))\n$(dataset)" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
-    else
-        return "?? dataset of type $(typeof(dataset)) ($(humansize(dataset))) ??\n$(dataset)\n" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
-    end
-end
-
-
-# TODO explain kwargs
 """
     scalarlogiset(dataset, features; kwargs...)
 
@@ -168,8 +23,9 @@ precompute the memoization set for global one-step formulas. This usually takes 
 precompute the memoization set for global one-step formulas. This may take a long time, depending on the relations and the number of worlds; it is usually not needed.
 - `use_full_memoization::Union{Bool,Type{<:Union{AbstractOneStepMemoset,AbstractFullMemoset}}}=true`:
 enable full memoization, where every intermediate `check` result is cached to avoid recomputing. This can be used in conjunction with one-step memoization;
-- `print_progress::Bool = false`:
-- `allow_propositional::Bool = false`:
+- `print_progress::Bool = false`: print a progress bar;
+- `allow_propositional::Bool = false`: allows a tabular (i.e, non-relational) dataset to be instantiated as a `PropositionalLogiset`, instead of a modal logiset;
+- `force_i_variables::Bool = false`: when conditions are to be inferred (`conditions = nothing`), force (meta)conditions to refer to variables by their integer index, instead of their `Symbol` name (when available through `varnames`, see [`islogiseed`](@ref)).
 
 # Logiseed-specific Keyword Arguments
 - `worldtype_by_dim::AbstractDict{Int,Type{<:AbstractWorld}}([0 => OneWorld, 1 => Interval, 2 => Interval2D])`:
@@ -222,6 +78,7 @@ function scalarlogiset(
     onestep_precompute_relmemoset    :: Bool=false,
     print_progress                   :: Bool=false,
     allow_propositional              :: Bool=false, # TODO default to true
+    force_i_variables                :: Bool=false,
     worldtype_by_dim                 :: Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing,
     kwargs...,
     # featvaltype = nothing
@@ -332,7 +189,7 @@ function scalarlogiset(
         end
     else
         if isnothing(conditions)
-            conditions = naturalconditions(dataset, features)
+            conditions = naturalconditions(dataset, features; force_i_variables = force_i_variables)
             features = unique(feature.(conditions))
             if use_onestep_memoization == false
                 conditions = nothing
@@ -451,7 +308,8 @@ end
 function naturalconditions(
     dataset,
     mixed_conditions   :: AbstractVector,
-    featvaltype        :: Union{Nothing,Type} = nothing
+    featvaltype        :: Union{Nothing,Type} = nothing;
+    force_i_variables  :: Bool = false,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -465,6 +323,8 @@ function naturalconditions(
 
     #     return [naturalconditions(mod, mixed_conditions, featvaltype) for mod in eachmodality(dataset)]
     # end
+
+    # @assert islogiseed(dataset)
 
     @assert !any(isa.(mixed_conditions, AbstractVector{<:AbstractVector})) "Unexpected mixed_conditions: $(mixed_conditions)."
 
@@ -548,9 +408,14 @@ function naturalconditions(
     for cond in readymade_conditions
         append!(metaconditions, cond)
     end
-
     for i_var in 1:nvars
-        for (test_ops,feature) in map((cond)->univar_condition(i_var,cond),variable_specific_conditions)
+        tmp = map((cond)->univar_condition(
+            if !force_i_variables && !isnothing(varnames(dataset))
+                Symbol(varnames(dataset)[i_var])
+            else
+                i_var
+            end, cond), variable_specific_conditions)
+        for (test_ops,feature) in tmp
             for test_op in test_ops
                 cond = ScalarMetaCondition(feature, test_op)
                 push!(metaconditions, cond)

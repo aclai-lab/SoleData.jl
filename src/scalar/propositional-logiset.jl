@@ -78,9 +78,13 @@ ninstances(X::PropositionalLogiset) = DataAPI.nrow(gettable(X))
 nfeatures(X::PropositionalLogiset) = DataAPI.ncol(gettable(X))
 nvariables(X::PropositionalLogiset) = nfeatures(X)
 
-function features(X::PropositionalLogiset)
-    colnames = Tables.columnnames(gettable(X))
-    return VariableValue.(Symbol.(colnames))
+function features(X::PropositionalLogiset; force_i_variables::Bool = false)
+    if force_i_variables
+        return VariableValue.(1:nfeatures(X))
+    else
+        colnames = Tables.columnnames(gettable(X))
+        return VariableValue.(Symbol.(colnames))
+    end
 end
 
 function featvalue(
@@ -206,20 +210,20 @@ function alphabet(
     test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
     # skipextremes::Bool = true,
     discretizedomain::Bool = false, # TODO default behavior depends on test_operator
+    force_i_variables::Bool = false,
     y::Union{Nothing, AbstractVector} = nothing,
 )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
     truerfirst = true
-                
+
     get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
     get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
     get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
 
     coltypes = eltype.(collect(Tables.columns(gettable(X))))
-    colnames = Tables.columnnames(gettable(X)) # features(X)
-    feats = VariableValue.(Symbol.(colnames))
+    feats = features(X; force_i_variables = force_i_variables)
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
-    
+
     if discretizedomain && isnothing(y)
         error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
     end
@@ -236,10 +240,10 @@ function alphabet(
             #     # Heuristic ?
             #     domain = sort(domain)
             # end
-            
+
             sub_alphabets = begin
                 test_ops = get_test_operators(test_operators, coltype)
-                
+
                 if sorted && !allequal(polarity, test_ops) # Different domain
                     [begin
                         mc = ScalarMetaCondition(feat, test_op)
@@ -252,7 +256,7 @@ function alphabet(
                         mc = ScalarMetaCondition(feat, test_op)
                         UnivariateScalarAlphabet((mc, this_domain))
                     end for test_op in test_ops]
-                end    
+                end
             end
 
             sub_alphabets
@@ -323,7 +327,7 @@ function checkcondition(
 )::Bool
     @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
-    
+
     testop = test_operator(cond)
     # TODO: use features
     p, n = cond.b, cond.u

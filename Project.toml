@@ -1,7 +1,7 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-authors = ["Giovanni Pagliarini", "Edoardo PONSANESI"]
-version = "0.15.1"
+authors = ["Mauro MILELLA", "Giovanni PAGLIARINI", "Edoardo PONSANESI", "Riccardo PASINI"]
+version = "0.15.3"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
@@ -49,7 +49,7 @@ Reexport = "1"
 Revise = "3"
 ScientificTypes = "3"
 SoleBase = "0.12"
-SoleLogics = "0.9"
+SoleLogics = "0.9, 0.10"
 StatsBase = "0.30 - 0.34"
 Tables = "1"
 ThreadSafeDicts = "0.1"

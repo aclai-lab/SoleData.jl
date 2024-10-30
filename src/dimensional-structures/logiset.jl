@@ -18,6 +18,8 @@ and *full* refers to the fact that all worlds of a given kind are considered
 See also
 [`AbstractModalLogiset`](@ref),
 [`UniformFullDimensionalLogiset`](@ref),
+[`SoleLogics.FullDimensionalFrame`](@ref),
+[`AbstractModalLogiset`](@ref).
 [`SoleLogics.FullDimensionalFrame](@ref).
 """
 abstract type AbstractUniformFullDimensionalLogiset{
@@ -84,7 +86,7 @@ are reserved to represent each pair combination:
 └───┴───────┴───────┴───────┘
 
 See also [`AbstractModalLogiset`](@ref), [`AbstractUniformFullDimensionalLogiset`](@ref),
-`SoleLogics.FullDimensionalFrame.
+`SoleLogics.FullDimensionalFrame`.
 """
 struct UniformFullDimensionalLogiset{
     U,

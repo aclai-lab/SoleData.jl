@@ -51,9 +51,10 @@ using SoleData: memoizationinfo
 
 import SoleData: worldtype, allworlds, featvalue, featvalue!
 import SoleData: featchannel, readfeature, featvalues!, allfeatvalues
-import SoleData: get_instance, ninstances, nvariables, eltype
+import SoleData: get_instance, ninstances, nvariables, eltype, varnames
 
 using SoleData: scalarlogiset
+using SoleData: VariableId
 ############################################################################################
 
 export UniformFullDimensionalLogiset
@@ -70,7 +71,9 @@ export nvariables
 include("computefeature.jl")
 
 # Bindings for interpreting dataset structures as logisets
-include("dataset-bindings.jl")
+include("logiseeds/abstractdimensionaldataset.jl")
+include("logiseeds/abstractdataframe.jl")
+include("logiseeds/namedtuple.jl")
 
 using SoleLogics: Full0DFrame, Full1DFrame, Full2DFrame
 using SoleLogics: X, Y, Z
