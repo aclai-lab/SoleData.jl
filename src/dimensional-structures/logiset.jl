@@ -193,7 +193,7 @@ maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Interval2D}) where {U} = beg
 end
 channelsize(X::UniformFullDimensionalLogiset, i_instance::Integer) = maxchannelsize(X)
 
-##################### featchannel, featvalue, featvalues!, readfeature #####################
+############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
 #################################### OneWorld ##############################################
 
 Base.@propagate_inbounds @inline function featchannel(
@@ -235,7 +235,42 @@ function readfeature(
     featchannel
 end
 
-##################### featchannel, featvalue, featvalues!, readfeature #####################
+@inline function featvalue(
+    feature     :: AbstractFeature,
+    X           :: UniformFullDimensionalLogiset{U,OneWorld},
+    i_instance  :: Integer,
+    w           :: OneWorld,
+    i_feature   :: Union{Nothing,Integer} = nothing
+) where {U}
+    if isnothing(i_feature)
+        i_feature = _findfirst(isequal(feature), features(X))
+        if isnothing(i_feature)
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        end
+    end
+
+    X.featstruct[i_instance, i_feature]
+end
+
+@inline function featvalue!(
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,OneWorld},
+    featval::U,
+    i_instance::Integer,
+    w::OneWorld,
+    i_feature::Union{Nothing,Integer} = nothing
+) where {U}
+    if isnothing(i_feature)
+        i_feature = _findfirst(isequal(feature), features(X))
+        if isnothing(i_feature)
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        end
+    end
+
+    X.featstruct[i_instance, i_feature] = featval
+end
+
+############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
 #################################### Point1D ###############################################
 
 Base.@propagate_inbounds @inline function featchannel(
@@ -279,7 +314,43 @@ function readfeature(
     featchannel[w.xyz...]
 end
 
-##################### featchannel, featvalue, featvalues!, readfeature #####################
+@inline function featvalue(
+    feature     :: AbstractFeature,
+    X           :: UniformFullDimensionalLogiset{U,<:SoleLogics.Point1D},
+    i_instance  :: Integer,
+    w           :: Interval,
+    i_feature   :: Union{Nothing,Integer} = nothing
+) where {U}
+    if isnothing(i_feature)
+        i_feature = _findfirst(isequal(feature), features(X))
+        if isnothing(i_feature)
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        end
+    end
+
+    X.featstruct[w.x, i_instance, i_feature]
+end
+
+@inline function featvalue!(
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,<:SoleLogics.Point1D},
+    featval::U,
+    i_instance::Integer,
+    w::Interval, # TODO: @mauro-milella adjust this (parameter must be the same as X)
+    i_feature::Union{Nothing,Integer} = nothing
+) where {U}
+    if isnothing(i_feature)
+        i_feature = _findfirst(isequal(feature), features(X))
+        if isnothing(i_feature)
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        end
+    end
+    # TODO: @mauro-milella
+    X.featstruct[(w)..., i_instance, i_feature] = featval
+end
+
+
+############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
 #################################### Interval ##############################################
 
 # to @giopaglia from @mauro-milella: why is "<:Interval"? Isn't Interval a concrete type
@@ -323,7 +394,42 @@ function readfeature(
     featchannel[w.x, w.y-1]
 end
 
-##################### featchannel, featvalue, featvalues!, readfeature #####################
+@inline function featvalue(
+    feature     :: AbstractFeature,
+    X           :: UniformFullDimensionalLogiset{U,<:Interval},
+    i_instance  :: Integer,
+    w           :: Interval,
+    i_feature   :: Union{Nothing,Integer} = nothing
+) where {U}
+    if isnothing(i_feature)
+        i_feature = _findfirst(isequal(feature), features(X))
+        if isnothing(i_feature)
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        end
+    end
+
+    X.featstruct[w.x, w.y-1, i_instance, i_feature]
+end
+
+@inline function featvalue!(
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,<:Interval},
+    featval::U,
+    i_instance::Integer,
+    w::Interval,
+    i_feature::Union{Nothing,Integer} = nothing
+) where {U}
+    if isnothing(i_feature)
+        i_feature = _findfirst(isequal(feature), features(X))
+        if isnothing(i_feature)
+            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
+        end
+    end
+
+    X.featstruct[w.x, w.y-1, i_instance, i_feature] = featval
+end
+
+############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
 ################################### Interval2D #############################################
 
 Base.@propagate_inbounds @inline function featchannel(
@@ -365,59 +471,6 @@ function readfeature(
     featchannel[w.x.x, w.x.y-1, w.y.x, w.y.y-1]
 end
 
-############################################################################################
-
-@inline function featvalue(
-    feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,OneWorld},
-    i_instance  :: Integer,
-    w           :: OneWorld,
-    i_feature   :: Union{Nothing,Integer} = nothing
-) where {U}
-    if isnothing(i_feature)
-        i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_feature)
-            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
-        end
-    end
-
-    X.featstruct[i_instance, i_feature]
-end
-
-@inline function featvalue(
-    feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,<:SoleLogics.Point1D},
-    i_instance  :: Integer,
-    w           :: Interval,
-    i_feature   :: Union{Nothing,Integer} = nothing
-) where {U}
-    if isnothing(i_feature)
-        i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_feature)
-            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
-        end
-    end
-
-    X.featstruct[w.x, i_instance, i_feature]
-end
-
-@inline function featvalue(
-    feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,<:Interval},
-    i_instance  :: Integer,
-    w           :: Interval,
-    i_feature   :: Union{Nothing,Integer} = nothing
-) where {U}
-    if isnothing(i_feature)
-        i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_feature)
-            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
-        end
-    end
-
-    X.featstruct[w.x, w.y-1, i_instance, i_feature]
-end
-
 @inline function featvalue(
     feature     :: AbstractFeature,
     X           :: UniformFullDimensionalLogiset{U,<:Interval2D},
@@ -432,62 +485,6 @@ end
         end
     end
     X.featstruct[w.x.x, w.x.y-1, w.y.x, w.y.y-1, i_instance, i_feature]
-end
-
-############################################################################################
-
-@inline function featvalue!(
-    feature::AbstractFeature,
-    X::UniformFullDimensionalLogiset{U,OneWorld},
-    featval::U,
-    i_instance::Integer,
-    w::OneWorld,
-    i_feature::Union{Nothing,Integer} = nothing
-) where {U}
-    if isnothing(i_feature)
-        i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_feature)
-            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
-        end
-    end
-
-    X.featstruct[i_instance, i_feature] = featval
-end
-
-@inline function featvalue!(
-    feature::AbstractFeature,
-    X::UniformFullDimensionalLogiset{U,<:SoleLogics.Point1D},
-    featval::U,
-    i_instance::Integer,
-    w::Interval, # TODO: @mauro-milella adjust this (parameter must be the same as X)
-    i_feature::Union{Nothing,Integer} = nothing
-) where {U}
-    if isnothing(i_feature)
-        i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_feature)
-            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
-        end
-    end
-    # TODO: @mauro-milella
-    X.featstruct[(w)..., i_instance, i_feature] = featval
-end
-
-@inline function featvalue!(
-    feature::AbstractFeature,
-    X::UniformFullDimensionalLogiset{U,<:Interval},
-    featval::U,
-    i_instance::Integer,
-    w::Interval,
-    i_feature::Union{Nothing,Integer} = nothing
-) where {U}
-    if isnothing(i_feature)
-        i_feature = _findfirst(isequal(feature), features(X))
-        if isnothing(i_feature)
-            error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
-        end
-    end
-
-    X.featstruct[w.x, w.y-1, i_instance, i_feature] = featval
 end
 
 @inline function featvalue!(
