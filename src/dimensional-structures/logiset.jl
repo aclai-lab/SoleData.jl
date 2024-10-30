@@ -316,7 +316,7 @@ end
 
 @inline function featvalue(
     feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,<:SoleLogics.Point1D},
+    X           :: UniformFullDimensionalLogiset{U,SoleLogics.Point1D},
     i_instance  :: Integer,
     w           :: Interval,
     i_feature   :: Union{Nothing,Integer} = nothing

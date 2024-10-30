@@ -54,7 +54,7 @@ import SoleLogics: frame
 
 using SoleLogics: value
 
-using SoleLogics: OneWorld, Interval, Interval2D
+using SoleLogics: OneWorld, Point1D, Point2D, Point3D, Interval, Interval2D
 using SoleLogics: Full0DFrame, Full1DFrame, Full2DFrame
 using SoleLogics: X, Y, Z
 using SoleLogics: AbstractWorld, IdentityRel
