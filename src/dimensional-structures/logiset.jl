@@ -193,7 +193,7 @@ maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Interval2D}) where {U} = beg
 end
 channelsize(X::UniformFullDimensionalLogiset, i_instance::Integer) = maxchannelsize(X)
 
-############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
+############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
 #################################### OneWorld ##############################################
 
 Base.@propagate_inbounds @inline function featchannel(
@@ -270,7 +270,7 @@ end
     X.featstruct[i_instance, i_feature] = featval
 end
 
-############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
+############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
 #################################### Point1D ###############################################
 
 Base.@propagate_inbounds @inline function featchannel(
@@ -350,7 +350,7 @@ end
 end
 
 
-############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
+############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
 #################################### Interval ##############################################
 
 # to @giopaglia from @mauro-milella: why is "<:Interval"? Isn't Interval a concrete type
@@ -429,7 +429,7 @@ end
     X.featstruct[w.x, w.y-1, i_instance, i_feature] = featval
 end
 
-############### featchannel, featvalues!, featvalue, featvalue!, readfeature ###############
+############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
 ################################### Interval2D #############################################
 
 Base.@propagate_inbounds @inline function featchannel(
