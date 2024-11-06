@@ -17,5 +17,5 @@ a = ExplicitAlphabet(collect(atoms(myalphabet_symbol)))
 @test_nowarn SoleData.scalaralphabet(a)
 
 a = ExplicitAlphabet(collect(atoms(alphabet(X, test_operators = [<, ≥])))
-@test_throws  SoleData.scalaralphabet(a; discretizedomain = true)
+@test_throws ErrorException SoleData.scalaralphabet(a; discretizedomain = true)
 @test_nowarn SoleData.scalaralphabet(a; discretizedomain = true, y = y)
