@@ -193,7 +193,7 @@ end
     alphabet(X::PropositionalLogiset, sorted=true;
              test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable}=nothing,
              discretizedomain=false, y::Union{Nothing, AbstractVector}=nothing
-    )::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
+    )::MultivariateScalarAlphabet
 
 Constructs an alphabet based on the provided `PropositionalLogiset` `X`, with optional parameters:
 - `sorted`: whether to sort the atoms in the sub-alphabets (i.e., the threshold domains),
@@ -207,63 +207,32 @@ Returns a `UnionAlphabet` containing `ScalarCondition` and `UnivariateScalarAlph
 function alphabet(
     X::PropositionalLogiset,
     sorted = true;
-    test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
-    # skipextremes::Bool = true,
-    discretizedomain::Bool = false, # TODO default behavior depends on test_operator
     force_i_variables::Bool = false,
-    y::Union{Nothing, AbstractVector} = nothing,
-)::UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
-    truerfirst = true
-
-    get_test_operators(::Nothing, ::Type{<:Number}) = [≤, ≥]
-    get_test_operators(::Nothing, ::Type{<:Any}) = [(==), (≠)]
-    get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
-    get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
-
-    coltypes = eltype.(collect(Tables.columns(gettable(X))))
-    feats = features(X; force_i_variables = force_i_variables)
+    test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
+    kwargs...
+)::MultivariateScalarAlphabet
+    feats = collect(features(X; force_i_variables = force_i_variables))
+    coltypes = eltype.(collect(Tables.columns(gettable(X)))) # TODO could this be inferred from the features
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
 
-    if discretizedomain && isnothing(y)
-        error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
-    end
+    domains = [begin
+        domain = Tables.getcolumn(gettable(X), i_variable(feat))
+        domain = unique(domain)
+    end for feat in feats]
 
-    grouped_sas = map(((feat,coltype),) ->begin
-            domain = Tables.getcolumn(gettable(X), i_variable(feat))
-            domain = unique(domain)
-
-            if discretizedomain
-                domain = discretize(domain, y)
-            end
-
-            # if sorted
-            #     # Heuristic ?
-            #     domain = sort(domain)
-            # end
-
-            sub_alphabets = begin
-                test_ops = get_test_operators(test_operators, coltype)
-
-                if sorted && !allequal(polarity, test_ops) # Different domain
-                    [begin
-                        mc = ScalarMetaCondition(feat, test_op)
-                        this_domain = sort(domain, rev = (!isnothing(polarity(test_op)) && truerfirst == !polarity(test_op)))
-                        UnivariateScalarAlphabet((mc, this_domain))
-                    end for test_op in test_ops]
-                else
-                    this_domain = sorted ? sort(domain, rev = (!isnothing(polarity(test_ops[1])) && truerfirst == !polarity(test_ops[1]))) : domain
-                    [begin
-                        mc = ScalarMetaCondition(feat, test_op)
-                        UnivariateScalarAlphabet((mc, this_domain))
-                    end for test_op in test_ops]
-                end
-            end
-
-            sub_alphabets
-        end, zip(feats,coltypes))
-    sas = vcat(grouped_sas...)
-    return UnionAlphabet(sas)
-
+    get_test_operators(to, t::Type{<:Any}) = _get_test_operators(Val(to), t)
+    get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
+    get_test_operators(f::Base.Callable, t::Type{<:Any}) = f(t)
+    _get_test_operators(::Val{nothing}, ::Type{<:Number}) = [≤, ≥]
+    _get_test_operators(::Val{nothing}, ::Type{<:Any}) = [(==), (≠)]
+    _get_test_operators(::Val{:single}, ::Type{<:Number}) = [≤]
+    _get_test_operators(::Val{:double}, ::Type{<:Any}) = [(==)]
+    
+    testopss = [begin
+        get_test_operators(test_operators, coltype)
+    end for coltype in coltypes]
+    
+    _multivariate_scalar_alphabet(feats, testopss, domains; sorted = sorted, kwargs...)
 end
 
 # Note that this method is important and very fast!

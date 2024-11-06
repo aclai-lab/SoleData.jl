@@ -1,4 +1,4 @@
-const BoundedScalarConditions = UnionAlphabet{ScalarCondition,UnivariateScalarAlphabet}
+const BoundedScalarConditions = MultivariateScalarAlphabet{ScalarCondition}
 
 function BoundedScalarConditions(
     metaconditions::Vector{<:ScalarMetaCondition},
