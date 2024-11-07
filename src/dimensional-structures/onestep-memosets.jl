@@ -8,7 +8,7 @@ full dimensional frames.
 See also
 [`UniformFullDimensionalLogiset`](@ref),
 [`AbstractScalarOneStepRelationalMemoset`](@ref),
-[`SoleLogics.FullDimensionalFrame](@ref),
+[`SoleLogics.FullDimensionalFrame`](@ref),
 [`AbstractModalLogiset`](@ref).
 """
 abstract type AbstractUniformFullDimensionalOneStepRelationalMemoset{U,W<:AbstractWorld,FR<:AbstractFrame{W}} <: AbstractScalarOneStepRelationalMemoset{W,U,FR} end
@@ -28,7 +28,7 @@ dimensions, ultimately resulting in a `(N*2+3)`-dimensional array.
 
 See also
 [`UniformFullDimensionalLogiset`](@ref),
-[`FullDimensionalFrame](@ref),
+[`FullDimensionalFrame`](@ref),
 [`AbstractModalLogiset`](@ref).
 """
 struct UniformFullDimensionalOneStepRelationalMemoset{

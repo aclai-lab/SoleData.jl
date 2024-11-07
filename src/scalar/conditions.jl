@@ -311,7 +311,7 @@ end
 
 """
     struct UnivariateScalarAlphabet <: AbstractAlphabet{ScalarCondition}
-        featcondition::Vector{UnivariateScalarAlphabet}
+        featcondition::Tuple{ScalarMetaCondition,Vector}
     end
 
 A finite alphabet of conditions, grouped by (a finite set of) metaconditions.
@@ -358,6 +358,76 @@ function randatom(
     (mc, thresholds) = a.featcondition
     threshold = rand(rng, thresholds)
     return Atom(ScalarCondition(mc, threshold))
+end
+
+const MultivariateScalarAlphabet{C<:ScalarCondition} = UnionAlphabet{C,UnivariateScalarAlphabet}
+
+
+function _multivariate_scalar_alphabet(
+    feats::AbstractVector{<:AbstractFeature},
+    testopss::AbstractVector{<:AbstractVector},
+    domains::AbstractVector{<:AbstractVector};
+    sorted = true,
+    # skipextremes::Bool = true,
+    discretizedomain::Bool = false, # TODO default behavior depends on test_operator
+    y::Union{Nothing,AbstractVector} = nothing,
+)::MultivariateScalarAlphabet
+
+    truerfirst = true
+
+    if discretizedomain && isnothing(y)
+        error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
+    end
+
+    grouped_sas = map(((feat,testops,domain),) ->begin
+
+            discretizedomain && (domain = discretize(domain, y))
+
+            sub_alphabets = begin
+                if sorted && !allequal(polarity, testops) # Different domain
+                    [begin
+                        mc = ScalarMetaCondition(feat, test_op)
+                        this_domain = sort(domain, rev = (!isnothing(polarity(test_op)) && truerfirst == !polarity(test_op)))
+                        UnivariateScalarAlphabet((mc, this_domain))
+                    end for test_op in testops]
+                else
+                    this_domain = sorted ? sort(domain, rev = (!isnothing(polarity(testops[1])) && truerfirst == !polarity(testops[1]))) : domain
+                    [begin
+                        mc = ScalarMetaCondition(feat, test_op)
+                        UnivariateScalarAlphabet((mc, this_domain))
+                    end for test_op in testops]
+                end
+            end
+
+            sub_alphabets
+        end, zip(feats,testopss,domains))
+    sas = vcat(grouped_sas...)
+    return UnionAlphabet(sas)
+end
+
+############################################################################################
+
+using Query
+
+# TODO document
+function scalaralphabet(a::ExplicitAlphabet{<:ScalarCondition}; domains_by_feature = true, kwargs...)::MultivariateScalarAlphabet
+    atoms_groups = begin
+        if domains_by_feature
+            atoms_by_feature = (atoms(a) |> @groupby(SoleData.feature(SoleLogics.value(_))))
+        else
+            atoms_by_metacond = (atoms(a) |> @groupby(SoleData.metacond(SoleLogics.value(_))))
+        end
+    end
+
+    feats, testopss, domains = zip([begin
+        scalarconditions = SoleLogics.value.(atoms_group)
+        feat = domains_by_feature ? key(atoms_group) : SoleData.feature(key(atoms_group))
+        testopss = unique(SoleData.test_operator.(scalarconditions))
+        domain = unique(SoleData.threshold.(scalarconditions))
+        (feat, testopss, domain)
+    end for atoms_group in atoms_groups]...) .|> collect
+    
+    return _multivariate_scalar_alphabet(feats, testopss, domains; kwargs...)
 end
 
 ############################################################################################

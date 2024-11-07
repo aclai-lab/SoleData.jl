@@ -15,16 +15,19 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("Logisets", [ "logisets.jl", ]),
-    ("Example Datasets", [ "example-datasets.jl", ]),
     ("Propositional Logisets", [ "propositional-logisets.jl", ]),
     ("Memosets", [ "memosets.jl", ]),
+    # 
     ("Cube to Logiset", [ "cube2logiset.jl", ]),
     ("DataFrame to Logiset", [ "dataframe2logiset.jl", ]),
     ("MultiLogisets", [ "multilogisets.jl", ]),
+    # 
+    ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
+    # 
     ("MLJ", [ "MLJ.jl", ]),
     ("Minify", ["minify.jl"]),
-    ("Discretization", ["discretization.jl"]),
     ("Parse", ["parse.jl"]),
+    ("Example Datasets", [ "example-datasets.jl", ]),
 ]
 
 @testset "SoleData.jl" begin
