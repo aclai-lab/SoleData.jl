@@ -57,7 +57,18 @@ function _syntaxstring_metacondition(
     end
 end
 
-_st_featop_name(feature::AbstractFeature,   test_operator::TestOperator; kwargs...)     = "\e[1m$(syntaxstring(feature; kwargs...)) $(_st_testop_name(test_operator))\e[0m"
+function _st_featop_name(feature::AbstractFeature,   test_operator::TestOperator; style = false, kwargs...)
+    unstyled_str = "$(syntaxstring(feature; style, kwargs...)) $(_st_testop_name(test_operator))"
+    if style != false && haskey(style, :featurestyle)
+        if style.featurestyle == :bold
+            "\e[1m" * unstyled_str * "\e[0m"
+        else
+            error("Unknown featurestyle: $(style.featurestyle).")
+        end
+    else
+        unstyled_str
+    end
+end
 
 _st_testop_name(test_op::Any) = "$(test_op)"
 _st_testop_name(::typeof(>=)) = "≥"
