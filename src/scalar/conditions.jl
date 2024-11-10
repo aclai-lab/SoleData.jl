@@ -57,7 +57,7 @@ function _syntaxstring_metacondition(
     end
 end
 
-_st_featop_name(feature::AbstractFeature,   test_operator::TestOperator; kwargs...)     = "\e[1m$(syntaxstring(feature; kwargs...)) $(_st_testop_name(test_operator))\e[0m"
+_st_featop_name(feature::AbstractFeature,   test_operator::TestOperator; kwargs...)     = "$(syntaxstring(feature; kwargs...)) $(_st_testop_name(test_operator))"
 
 _st_testop_name(test_op::Any) = "$(test_op)"
 _st_testop_name(::typeof(>=)) = "≥"

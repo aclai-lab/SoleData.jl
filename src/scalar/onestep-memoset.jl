@@ -1,3 +1,11 @@
+function fixnans(_featchannel, aggregator)
+    replace_nan_dict = Dict(maximum => -Inf, minimum => Inf)
+    
+    replacement = get(replace_nan_dict, aggregator, nothing)
+    isnothing(replacement) && return _featchannel
+    
+    return replace(x -> isnan(x) ? replacement : x, _featchannel)
+end
 
 @inline function onestep_aggregation(
     X::AbstractModalLogiset{W},
@@ -34,7 +42,7 @@ function featchannel_onestep_aggregation(
 )
     # accessible_worlds = allworlds(X, i_instance)
     accessible_worlds = representatives(X, i_instance, r, f, aggregator)
-    gamma = apply_aggregator(X, featchannel, accessible_worlds, f, aggregator)
+    gamma = apply_aggregator(X, fixnans(featchannel, aggregator), accessible_worlds, f, aggregator)
 end
 
 function featchannel_onestep_aggregation(
@@ -48,7 +56,7 @@ function featchannel_onestep_aggregation(
 )
     # accessible_worlds = accessibles(X, i_instance, w, r)
     accessible_worlds = representatives(X, i_instance, w, r, f, aggregator)
-    gamma = apply_aggregator(X, featchannel, accessible_worlds, f, aggregator)
+    gamma = apply_aggregator(X, fixnans(featchannel, aggregator), accessible_worlds, f, aggregator)
 end
 
 function apply_aggregator(
