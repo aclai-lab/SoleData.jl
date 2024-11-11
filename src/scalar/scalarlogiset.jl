@@ -305,11 +305,17 @@ function scalarlogiset(
 end
 
 
+function nanpatchedfunction(f::Base.Callable, test_op, fname = (string(f) * (polarity(test_op) ? "⁺" : "⁻")))
+    newf = (channel -> let val = f(channel); (isnan(val) ? eltype(channel)(aggregator_bottom(existential_aggregator(test_op), Float64)) : eltype(channel)(val)) end)
+    return PatchedFunction(newf, fname)
+end
+
 function naturalconditions(
     dataset,
     mixed_conditions   :: AbstractVector,
     featvaltype        :: Union{Nothing,Type} = nothing;
     force_i_variables  :: Bool = false,
+    fixcallablenans    :: Bool = false,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -354,7 +360,7 @@ function naturalconditions(
     function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(maximum)})
         return (test_ops,VariableMax(i_var))
     end
-    function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},Base.Callable})
+    function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},<:Union{Base.Callable,SoleData.PatchedFunction}})
         if isnothing(featvaltype)
             featvaltype = SoleData.vareltype(dataset, i_var)
         end
@@ -364,36 +370,60 @@ function naturalconditions(
                 "Please provide `featvaltype` parameter to naturalconditions."
         end
         # f = function (x) return V(cond(x)) end # breaks because it does not create a closure.
-        f = cond
-        return (test_ops,UnivariateFeature{V}(i_var, f))
+        if cond isa Base.Callable
+            f = cond
+            cond = UnivariateFeature{V}(i_var, f)
+        elseif cond isa SoleData.PatchedFunction
+            cond = UnivariateFeature{V}(i_var, cond.f, cond.fname)
+        else
+            error("Unknown cond: $(cond).")
+        end
+        return (test_ops,cond)
     end
     univar_condition(i_var,::Any) = throw_n_log("Unknown mixed_feature type: $(cond), $(typeof(cond))")
-
-
+    
     # readymade conditions
     unpackcondition(cond::ScalarMetaCondition) = [cond]
     unpackcondition(feature::AbstractFeature) = [ScalarMetaCondition(feature, test_op) for test_op in def_test_operators]
     unpackcondition(cond::Tuple{TestOperator,AbstractFeature}) = [ScalarMetaCondition(cond[2], cond[1])]
 
     # single-variable conditions
-    unpackcondition(cond::Any) = cond
+    unpackcondition(cond::Any) = [cond]
+    unpackcondition(cond::Vector) = cond
     # unpackcondition(cond::CanonicalCondition) = cond
-    unpackcondition(cond::Base.Callable) = (def_test_operators, cond)
-    function unpackcondition(cond::Tuple{Base.Callable,Integer})
-        return univar_condition(cond[2], (def_test_operators, cond[1]))
+    function unpackcondition(cond::PatchedFunction, test_ops = def_test_operators)
+        [(test_ops, cond)]
     end
-    unpackcondition(cond::Tuple{TestOperator,Base.Callable}) = ([cond[1]], cond[2])
+    unpackcondition(cond::Tuple{TestOperator,PatchedFunction}) = unpackcondition(cond[2], [cond[1]])
+    
+    function unpackcondition(cond::Base.Callable, test_ops = def_test_operators)
+        if fixcallablenans
+            [([test_operator], nanpatchedfunction(cond,test_operator)) for test_operator in test_ops]
+        else
+            [(test_ops, cond)]
+        end
+    end
+    unpackcondition(cond::Tuple{TestOperator,Base.Callable}) = unpackcondition(cond[2], [cond[1]])
+
+    function unpackcondition((callable,i_var)::Tuple{Base.Callable,Integer})
+        if fixcallablenans
+            return [univar_condition(i_var, ([test_operator], nanpatchedfunction(callable,test_operator))) for test_operator in def_test_operators]
+        else
+            return [univar_condition(i_var, (def_test_operators, callable))]
+        end
+    end
 
     metaconditions = ScalarMetaCondition[]
 
-    mixed_conditions = unpackcondition.(mixed_conditions)
-
+    mixed_conditions = vcat(unpackcondition.(mixed_conditions)...)
+    @show mixed_conditions
     readymade_conditions          = filter(x->
-        isa(x, Vector{<:ScalarMetaCondition}),
+        isa(x, ScalarMetaCondition),
         mixed_conditions,
     )
     variable_specific_conditions = filter(x->
         isa(x, CanonicalCondition) ||
+        isa(x, Tuple{AbstractVector,PatchedFunction}) ||
         # isa(x, Tuple{<:AbstractVector{<:TestOperator},Base.Callable}) ||
         (isa(x, Tuple{AbstractVector,Base.Callable}) && !isa(x, Tuple{AbstractVector,AbstractFeature})),
         mixed_conditions,
@@ -406,7 +436,7 @@ function naturalconditions(
         "$(length(readymade_conditions)) + $(length(variable_specific_conditions)) == $(length(mixed_conditions))."
 
     for cond in readymade_conditions
-        append!(metaconditions, cond)
+        push!(metaconditions, cond)
     end
     for i_var in 1:nvars
         tmp = map((cond)->univar_condition(

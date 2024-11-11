@@ -21,6 +21,10 @@ test_suites = [
     ("Cube to Logiset", [ "cube2logiset.jl", ]),
     ("DataFrame to Logiset", [ "dataframe2logiset.jl", ]),
     ("MultiLogisets", [ "multilogisets.jl", ]),
+    # 
+    ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
+    ("Features", [ "patchedfeatures"]),
+    # 
     ("MLJ", [ "MLJ.jl", ]),
     ("Minify", ["minify.jl"]),
     ("Discretization", ["discretization.jl"]),

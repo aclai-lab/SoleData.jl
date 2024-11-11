@@ -191,6 +191,8 @@ using .DimensionalDatasets: IA2DRelations
 using .DimensionalDatasets: identityrel
 using .DimensionalDatasets: globalrel
 
+include("utils/autologiset-tools.jl")
+
 include("deprecate.jl")
 
 end # module
