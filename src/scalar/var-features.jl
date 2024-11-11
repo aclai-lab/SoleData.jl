@@ -160,7 +160,7 @@ function variable_name(
         if i_var isa Integer
             "$(variable_names_map[i_var])"
         elseif i_var isa Symbol
-            "$(variable_names_map[findfirst(occursin.(string(i_var), variable_names_map))])"
+            "$(variable_names_map[findfirst(v->occursin(string(i_var), string(v)), variable_names_map)])"
         end
     end
 end
