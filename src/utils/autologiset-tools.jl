@@ -341,18 +341,18 @@ function autoconditions(conditions)
     return conditions, warning
 end
 
-function autodownsize(downsize)
+function autodownsize(m)
     warning = ""
 
     downsize = begin
-        if downsize == true
+        if m.downsize == true
             make_downsizing_function(m)
-        elseif downsize == false
+        elseif m.downsize == false
             identity
-        elseif downsize isa NTuple{N,Integer} where N
-            make_downsizing_function(downsize)
-        elseif downsize isa Function
-            downsize
+        elseif m.downsize isa NTuple{N,Integer} where N
+            make_downsizing_function(m.downsize)
+        elseif m.downsize isa Function
+            m.downsize
         else
             error("Unexpected value for `downsize` encountered: $(m.downsize)")
         end
