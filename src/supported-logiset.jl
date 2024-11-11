@@ -123,6 +123,7 @@ struct SupportedLogiset{
         use_onestep_memoization          :: Union{Bool,Type{<:AbstractOneStepMemoset}} = !isnothing(conditions) && !isnothing(relations),
         onestep_precompute_globmemoset   :: Bool = (use_onestep_memoization != false),
         onestep_precompute_relmemoset    :: Bool = false,
+        fixnans                          :: Bool = false
     )
         supports = Union{AbstractOneStepMemoset,AbstractFullMemoset}[]
 
@@ -142,7 +143,8 @@ struct SupportedLogiset{
                     conditions,
                     relations;
                     precompute_globmemoset = onestep_precompute_globmemoset,
-                    precompute_relmemoset = onestep_precompute_relmemoset
+                    precompute_relmemoset = onestep_precompute_relmemoset,
+                    fixnans = fixnans,
                 )
             )
         else

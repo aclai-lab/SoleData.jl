@@ -35,7 +35,8 @@ MultiData.dimensionality,
 function initlogiset(
     dataset::AbstractDimensionalDataset,
     features::AbstractVector;
-    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing,
+    kwargs...
 )::UniformFullDimensionalLogiset
     worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:AbstractWorld}}([
         0 => OneWorld, 1 => Interval, 2 => Interval2D]) :

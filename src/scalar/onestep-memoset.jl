@@ -1,4 +1,4 @@
-function fixnans(_featchannel, aggregator)
+@inline @inbounds function _fixnans(_featchannel, aggregator)
     replace_nan_dict = Dict(maximum => -Inf, minimum => Inf)
     
     replacement = get(replace_nan_dict, aggregator, nothing)
@@ -21,14 +21,14 @@ end
     return (length(vs) == 0 ? aggregator_bottom(aggr, U) : aggr(vs))
 end
 
-function featchannel_onestep_aggregation(X::SupportedLogiset, args...)
+function featchannel_onestep_aggregation(X::SupportedLogiset, args...; kwargs...)
     onestep_supps = filter(supp->supp isa AbstractOneStepMemoset, supports(X))
     if length(onestep_supps) > 0
         @assert length(onestep_supps) == 1 "Currently, using more " *
             "than one AbstractOneStepMemoset is not allowed."
-        featchannel_onestep_aggregation(base(X), onestep_supps[1], args...)
+        featchannel_onestep_aggregation(base(X), onestep_supps[1], args...; kwargs...)
     else
-        featchannel_onestep_aggregation(base(X), args...)
+        featchannel_onestep_aggregation(base(X), args...; kwargs...)
     end
 end
 
@@ -38,11 +38,13 @@ function featchannel_onestep_aggregation(
     i_instance,
     r::GlobalRel,
     f::AbstractFeature,
-    aggregator::Aggregator
+    aggregator::Aggregator;
+    fixnans::Bool=false,
 )
     # accessible_worlds = allworlds(X, i_instance)
     accessible_worlds = representatives(X, i_instance, r, f, aggregator)
-    gamma = apply_aggregator(X, fixnans(featchannel, aggregator), accessible_worlds, f, aggregator)
+    fchannel = fixnans ? _fixnans(featchannel, aggregator) : featchannel
+    gamma = apply_aggregator(X, fchannel, accessible_worlds, f, aggregator)
 end
 
 function featchannel_onestep_aggregation(
@@ -52,11 +54,13 @@ function featchannel_onestep_aggregation(
     w,
     r::AbstractRelation,
     f::AbstractFeature,
-    aggregator::Aggregator
+    aggregator::Aggregator;
+    fixnans::Bool=false,
 )
     # accessible_worlds = accessibles(X, i_instance, w, r)
     accessible_worlds = representatives(X, i_instance, w, r, f, aggregator)
-    gamma = apply_aggregator(X, fixnans(featchannel, aggregator), accessible_worlds, f, aggregator)
+    fchannel = fixnans ? _fixnans(featchannel, aggregator) : featchannel
+    gamma = apply_aggregator(X, fchannel, accessible_worlds, f, aggregator)
 end
 
 function apply_aggregator(
@@ -302,6 +306,7 @@ struct ScalarOneStepMemoset{
         precompute_relmemoset   :: Bool = false,
         print_progress          :: Bool = false,
         silent                  :: Bool = false,
+        fixnans                 :: Bool = false,
     ) where {W<:AbstractWorld,U}
 
         # Only compute global memoset if the global relation is in the relation set.
@@ -358,7 +363,8 @@ struct ScalarOneStepMemoset{
 
                         for (i_metacond, aggregator, _metacond) in these_metaconditions
 
-                            gamma = featchannel_onestep_aggregation(X, _featchannel, i_instance, globalrel, _feature, aggregator)
+                            fchannel = fixnans ? _fixnans(_featchannel, aggregator) : _featchannel
+                            gamma = featchannel_onestep_aggregation(X, fchannel, i_instance, globalrel, _feature, aggregator; fixnans = fixnans)
 
                             globmemoset[i_instance, i_metacond] = gamma
                         end
@@ -372,7 +378,8 @@ struct ScalarOneStepMemoset{
 
                                 for (i_metacond, aggregator, _metacond) in these_metaconditions
 
-                                    gamma = featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, _feature, aggregator)
+                                    fchannel = fixnans ? _fixnans(_featchannel, aggregator) : _featchannel
+                                    gamma = featchannel_onestep_aggregation(X, fchannel, i_instance, w, relation, _feature, aggregator; fixnans = fixnans)
 
                                     relmemoset[i_instance, w, i_metacond, i_relation] = gamma
                                 end
@@ -428,7 +435,8 @@ function featchannel_onestep_aggregation(
     rel::AbstractRelation,
     metacond::ScalarMetaCondition,
     i_metacond::Union{Nothing,Integer} = nothing,
-    i_relation::Union{Nothing,Integer} = nothing
+    i_relation::Union{Nothing,Integer} = nothing;
+    fixnans::Bool = false,
 )::U where {U,W<:AbstractWorld}
 
     if isnothing(i_metacond)
@@ -457,7 +465,9 @@ function featchannel_onestep_aggregation(
                 error("Could not compute one-step aggregation with no global memoset.")
             else
                 if isnothing(_globmemoset[i_instance, i_metacond])
-                    gamma = featchannel_onestep_aggregation(X, featchannel, i_instance, rel, _feature, aggregator)
+
+                    fchannel = fixnans ? _fixnans(featchannel, aggregator) : featchannel
+                    gamma = featchannel_onestep_aggregation(X, fchannel, i_instance, rel, _feature, aggregator; fixnans = fixnans)
                     _globmemoset[i_instance, i_metacond] = gamma
                 end
                 _globmemoset[i_instance, i_metacond]
@@ -469,7 +479,9 @@ function featchannel_onestep_aggregation(
             end
             _relmemoset = relmemoset(Xm)
             if isnothing(_relmemoset[i_instance, w, i_metacond, i_relation])
-                gamma = featchannel_onestep_aggregation(X, featchannel, i_instance, w, rel, _feature, aggregator)
+
+                fchannel = fixnans ? _fixnans(featchannel, aggregator) : featchannel
+                gamma = featchannel_onestep_aggregation(X, fchannel, i_instance, w, rel, _feature, aggregator; fixnans = fixnans)
                 _relmemoset[i_instance, w, i_metacond, i_relation] = gamma
             end
             _relmemoset[i_instance, w, i_metacond, i_relation]
@@ -523,7 +535,7 @@ function instances(Xm::ScalarOneStepMemoset{U}, inds::AbstractVector, return_vie
         (isnothing(globmemoset(Xm)) ? nothing : instances(globmemoset(Xm), inds, return_view)),
         metaconditions(Xm),
         relations(Xm);
-        silent = true
+        silent = true,
     )
 end
 

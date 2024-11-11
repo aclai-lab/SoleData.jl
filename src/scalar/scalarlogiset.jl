@@ -300,6 +300,7 @@ function scalarlogiset(
             relations = relations,
             onestep_precompute_globmemoset = onestep_precompute_globmemoset,
             onestep_precompute_relmemoset = onestep_precompute_relmemoset,
+            kwargs...
         )
     end
 end
