@@ -93,7 +93,11 @@ function varnames(logiseed)
 end
 
 # Helper
-allworlds(dataset, i_instance::Integer) = allworlds(frame(dataset, i_instance))
+allworlds(
+    dataset,
+    i_instance::Integer;
+    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+) = allworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim))
 
 # Multimodal dataset interface
 
@@ -187,4 +191,3 @@ function displaystructure(dataset; indent_str = "", include_ninstances = true, k
         return "?? dataset of type $(typeof(dataset)) ($(humansize(dataset))) ??\n$(dataset)\n" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
     end
 end
-

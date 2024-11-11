@@ -22,15 +22,23 @@ end
 
 function frame(
     dataset::AbstractDataFrame,
-    i_instance::Integer
+    i_instance::Integer;
+    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
 )
-    # dataset_dimensional, varnames = dataframe2dimensional(dataset; dry_run = true)
-    # FullDimensionalFrame(channelsize(dataset_dimensional, i_instance))
+    worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:SoleLogics.AbstractWorld}}([
+        0 => OneWorld, 1 => Interval{Int64}, 2 => Interval2D{Int64}]) :
+        worldtype_by_dim
+
     column = dataset[:,1]
-    # frame(column, i_instance)
     v = column[i_instance]
-    (v == ()) ? OneWorld() : FullDimensionalFrame(size(v))
+
+    if v == ()
+        OneWorld()
+    else
+        FullDimensionalFrame{1,worldtype_by_dim[dimensionality(dataset)]}(size(v))# _worldtype(eltype(dataset)))
+    end
 end
+
 
 # Note: used in naturalgrouping.
 function frame(
@@ -86,6 +94,7 @@ function readfeature(
     f::AbstractUnivariateFeature,
 ) where {W<:AbstractWorld}
     _interpret_world(::OneWorld, varchannel::T) where {T} = varchannel
+    _interpret_world(::Point{N}, varchannel::AbstractArray{T,N}) where {T,N} = varchannel[w.xyz...]
     _interpret_world(w::Interval, varchannel::AbstractArray{T,1}) where {T} = varchannel[w.x:w.y-1]
     _interpret_world(w::Interval2D, varchannel::AbstractArray{T,2}) where {T} = varchannel[w.x.x:w.x.y-1,w.y.x:w.y.y-1]
     wchannel = _interpret_world(w, featchannel)

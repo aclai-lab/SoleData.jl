@@ -1,4 +1,5 @@
 import Base: size, ndims, getindex, setindex!
+using SoleLogics: Point
 
 """
     abstract type AbstractUniformFullDimensionalLogiset{
@@ -58,19 +59,23 @@ end
 Uniform scalar logiset with full dimensional frames of dimensionality `N`,
 storing values for each world in a `ninstances` × `nfeatures` array.
 
-The final logiset dimension depends from the (unique) world type considered.
+The size of the internal structure (or `featstruct`) depends on the (unique) world type
+considered.
 
-If world is a hyper-interval, given the fact that its `N*2` components are used to index
-different array dimensions, the final array dimension would be `(N*2+2)`.
-For example, if each world is a `SoleLogics.Interval`, the final dimension is 4 since
-two dimensions are reserved for storing an `(instance, feature)` pair, while the other two
-are reserved to represent each pair combination:
+# Examples
 
-# I have three points in one dimension (`N`=1)
+## Interval-based frames
+
+With an interval-based, `N`-dimensional frame, the worlds are `N`-intervals, and have `2*N`
+parameters, which are used to index an `(N*2+2)`-dimensional `featstruct` (recall that two
+dimensions are reserved for instances and features).
+
+For example, consider the case of a 1-dimensional frame with three points:
         1       2       3
     ─────────────────────────
 
-# I need `N*2` dimensions to represent each hyper interval
+Given an instance and a feature, the `featstruct` will map the hyper-intervals across two
+dimensions:
 ┌───┬───────┬───────┬───────┐
 │   │   1   │   2   │   3   │
 ├───┼───────┼───────┼───────┤
@@ -125,38 +130,18 @@ struct UniformFullDimensionalLogiset{
     function UniformFullDimensionalLogiset(
         featstruct::Any,
         features::AbstractVector{<:VarFeature},
+        worldtype::Type,
     )
-        # At the intersection between one instance (rows of a matrix) and one feature,
-        # by default there is a single world wrapping a scalar: instead of `OneWorld`,
-        # it could be of type `Point1D` (declared in SoleLogics).
-        #
-        # If, given the intersection, I can also move on an additional axis, then I am
-        # encoding (x,y) coordinates, that is, I am working with `Point2D` world types.
-        #
-        # The same reasoning could be applied for triples (x,y,z), where I have a new
-        # axis of freedom and dimensionality is but instead, this case
-        # is defaulted to represent `Interval` pairs.
-
-        _worldtype(featstruct::AbstractArray{T,2}) where {T} = OneWorld
-        # _worldtype(featstruct::AbstractArray{T,2}) where {T} = Point1D{Int}
-        _worldtype(featstruct::AbstractArray{T,3}) where {T} = Point2D{Int}
-        # _worldtype(featstruct::AbstractArray{T,4}) where {T} = Point3D{Int}
-        _worldtype(featstruct::AbstractArray{T,4}) where {T} = Interval{Int}
-        _worldtype(featstruct::AbstractArray{T,6}) where {T} = Interval2D{Int}
-
-        _dimensionality(featstruct::AbstractArray{T,2}) where {T} = 0
-        # to @giopaglia by @mauro-milella: is this dispatch correct?
-        # this is related to Point2D case: we are not talking about (hyper)intervals anymore
-        # and maybe the formula (2*dimensionality+2) should be (2*dimensionality-1 + 2)...
-        # I have the feeling UniformFullDimensionalLogiset is designed to only work with
-        # even sizes of the final `featstruct` (see `initlogiset`).
-        _dimensionality(featstruct::AbstractArray{T,3}) where {T} = 1
-        _dimensionality(featstruct::AbstractArray{T,4}) where {T} = 1
-        _dimensionality(featstruct::AbstractArray{T,6}) where {T} = 2
+        # TODO move to SoleLogics geometrical worlds interface
+        numparams(::Type{<:OneWorld}) = 0
+        numparams(::Type{<:Point{N}}) where {N} = N
+        numparams(::Type{<:Interval}) = 2
+        numparams(::Type{<:Interval2D}) = 4
 
         U = eltype(featstruct)
-        W = _worldtype(featstruct)
-        N = _dimensionality(featstruct)
+        W = worldtype
+        # T=D*P+2
+        N = (ndims(featstruct)-2)//numparams(worldtype)
         UniformFullDimensionalLogiset{U,W,N}(featstruct, features)
     end
 
@@ -171,19 +156,9 @@ nfeatures(X::UniformFullDimensionalLogiset) = size(X, ndims(X))
 features(X::UniformFullDimensionalLogiset) = X.features
 
 ################################### maxchannelsize #########################################
-
 maxchannelsize(X::UniformFullDimensionalLogiset{U,OneWorld}) where {U} = ()
-maxchannelsize(X::UniformFullDimensionalLogiset{U,Point1D}) where {U} = begin
-    (size(X, 1),)
-end
-maxchannelsize(X::UniformFullDimensionalLogiset{U,Point2D}) where {U} = begin
-    (size(X, 1),)
-end
-maxchannelsize(X::UniformFullDimensionalLogiset{U,Point3D}) where {U} = begin
-    # to @giopaglia by @mauro-milella: is this correct? (same for Point2D dispatch)
-    # here i Have a cube for each (instance,feature) pair, but I am getting doubts about
-    # the tuples returned by this function.
-    (size(X, 1),)
+maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Point{N}}) where {U,N} = begin
+    (size(X)[1:N]...,)
 end
 maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Interval}) where {U} = (size(X, 1),)
 maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Interval2D}) where {U} = begin
@@ -269,10 +244,10 @@ end
 end
 
 ############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
-#################################### Point1D ###############################################
+##################################### Point ################################################
 
 Base.@propagate_inbounds @inline function featchannel(
-    X::UniformFullDimensionalLogiset{U,Point1D},
+    X::UniformFullDimensionalLogiset{U,<:Point},
     i_instance::Integer,
     feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing
@@ -287,11 +262,18 @@ Base.@propagate_inbounds @inline function featchannel(
     @views X.featstruct[:, i_instance, i_feature]
 end
 Base.@propagate_inbounds @inline function featvalues!(
-    X::UniformFullDimensionalLogiset{U,Point1D},
-    featslice   :: AbstractArray{U,2},
+    X::UniformFullDimensionalLogiset{U,<:Point},
+    featslice   :: AbstractArray{U},
     feature     :: AbstractFeature,
     i_feature   :: Union{Nothing,Integer} = nothing,
 ) where {U}
+    _ndims_featslice = ndims(featslice)
+
+    if dimensionality(X) == _ndims_featslice-1
+        throw(ArgumentError("Mismatching dimensionality between `X` " *
+        "($(dimensionality(X))) and `featslice`-1 ($(_ndims_featslice-1))."))
+    end
+
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
         if isnothing(i_feature)
@@ -299,12 +281,12 @@ Base.@propagate_inbounds @inline function featvalues!(
         end
     end
 
-    X.featstruct[:, :, i_feature] = featslice
+    X.featstruct[[(:) for i in 1:_ndims_featslice]..., i_feature] = featslice
 end
 function readfeature(
-    X::UniformFullDimensionalLogiset{U,Point1D},
+    X::UniformFullDimensionalLogiset{U,<:Point},
     featchannel::AbstractArray{U,1},
-    w::Point1D,
+    w::Point,
     f::AbstractFeature
 ) where {U}
     # to @giopaglia from @mauro-milella: tuple splatting works, but maybe I need to
@@ -314,9 +296,9 @@ end
 
 @inline function featvalue(
     feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,Point1D},
+    X           :: UniformFullDimensionalLogiset{U,<:Point},
     i_instance  :: Integer,
-    w           :: Interval,
+    w           :: Point,
     i_feature   :: Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
@@ -331,10 +313,10 @@ end
 
 @inline function featvalue!(
     feature::AbstractFeature,
-    X::UniformFullDimensionalLogiset{U,Point1D},
+    X::UniformFullDimensionalLogiset{U,<:Point},
     featval::U,
     i_instance::Integer,
-    w::Point1D,
+    w::Point,
     i_feature::Union{Nothing,Integer} = nothing
 ) where {U}
     if isnothing(i_feature)
@@ -351,8 +333,6 @@ end
 ############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
 #################################### Interval ##############################################
 
-# to @giopaglia from @mauro-milella: why is "<:Interval"? Isn't Interval a concrete type
-# (children of the abstract type GeometricalWorld)? I would only write "Interval".
 Base.@propagate_inbounds @inline function featchannel(
     X::UniformFullDimensionalLogiset{U,<:Interval},
     i_instance::Integer,

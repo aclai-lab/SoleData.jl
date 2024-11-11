@@ -79,7 +79,7 @@ function scalarlogiset(
     print_progress                   :: Bool=false,
     allow_propositional              :: Bool=false, # TODO default to true
     force_i_variables                :: Bool=false,
-    worldtype_by_dim                 :: Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing,
+    worldtype_by_dim                 :: Union{Nothing,AbstractDict{Int,<:Type{<:AbstractWorld}}}=nothing,
     kwargs...,
     # featvaltype = nothing
 )
@@ -177,7 +177,11 @@ function scalarlogiset(
     if isnothing(features)
         features = begin
             if isnothing(conditions)
-                is_propositional_dataset = all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
+                is_propositional_dataset = all(
+                    i_instance->nworlds(
+                        frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1,
+                    1:ninstances(dataset)
+                )
                 if is_propositional_dataset
                     [VariableValue(i_var) for i_var in 1:nvariables(dataset)]
                 else
@@ -279,8 +283,11 @@ function scalarlogiset(
         p = Progress(_ninstances; dt = 1, desc = "Computing logiset...")
     end
     @inbounds Threads.@threads for i_instance in 1:_ninstances
-        for w in allworlds(dataset, i_instance)
-            for (i_feature,feature) in enum_features
+        # This calls `allworlds(dataset, i_instance::Integer)`
+        # which calls `allworlds(frame(dataset, i_instance))`
+        # and `frame` is essentially the constructor for a FullDimensionalFrame.
+        for w in allworlds(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)
+           for (i_feature,feature) in enum_features
                 featval = featvalue(feature, dataset, i_instance, w)
                 featvalue!(feature, X, featval, i_instance, w, i_feature)
             end

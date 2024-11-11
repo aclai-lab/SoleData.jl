@@ -37,6 +37,8 @@ function initlogiset(
     features::AbstractVector;
     worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
 )::UniformFullDimensionalLogiset
+    # TODO/IDEA - default this initialization to a DEFAULT_WORLDTYPE_BY_DIM constant,
+    # here and whenever this piece of code is repeated
     worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:AbstractWorld}}([
         0 => OneWorld, 1 => Interval, 2 => Interval2D]) :
         worldtype_by_dim
@@ -71,9 +73,19 @@ function initlogiset(
 
     if allequal(map(i_instance->channelsize(dataset, i_instance), 1:ninstances(dataset)))
         _maxchannelsize = maxchannelsize(dataset)
-        featstruct = Array{U,length(_maxchannelsize)*2+2}(
+
+        # Using *2+2 below is ok for Interval and Interval2D (also for Point2D),
+        # but is wrong for Point1D and Point3D, where respectively the correct math is
+        # *2+1 and *2+3. We need to distinguish the two cases.
+        _featstruct_size_accumulator = W <: SoleLogics.Point{N} where {N} ?
+            W.parameters[1] : 2
+
+        featstruct = Array{U,length(_maxchannelsize)*2+_featstruct_size_accumulator}(
                 undef,
-                vcat([[s, s] for s in _maxchannelsize]...)...,
+                vcat([
+                    [s for _ in 1:_featstruct_size_accumulator]
+                    for s in _maxchannelsize]...
+                )...,
                 _ninstances,
                 length(features)
             )
@@ -81,6 +93,7 @@ function initlogiset(
             # @warn "Abstract featvaltype detected upon initializing UniformFullDimensionalLogiset logiset: $(U)."
             fill!(featstruct, 0)
         # end
+
         return UniformFullDimensionalLogiset{U,W,N}(featstruct, features)
     else
         error("Different frames encountered for different dataset instances.")
