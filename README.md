@@ -12,8 +12,11 @@
 
 ## In a nutshell
 
-*SoleData.jl* defines optimized structures for representing
-*logisets*, that is, sets of logical interpretations.
+Learning logical models (that is, models with logical formulas as antecedents)
+[often](https://scholar.google.com/scholar?q=Multi-Models+and+Multi-Formulas+Finite+Model+Checking+for+Modal+Logic+Formulas+Induction.)
+requires performing [model checking](https://en.wikipedia.org/wiki/Model_checking) many times.
+*SoleData.jl* provides *logiset* (that is, sets of logical interpretations) structures that are
+optimized for for checking many formulas.
 Logisets are the symbolic counterpart to Machine Learning datasets.
 <!-- Some optimized data structures, useful when learning models from symbolic learning datasets; -->
 
