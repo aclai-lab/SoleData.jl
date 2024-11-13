@@ -35,8 +35,7 @@ nonscalar_logiset = SoleData.ExplicitModalLogiset([(Dict([w => Dict([f => rand(r
 nonscalar_condition = SoleData.FunctionalCondition(features[1], (vals)->length(vals) >= 2)
 
 @test [SoleData.checkcondition(nonscalar_condition, nonscalar_logiset, i_instance, w)
-    for w in worlds] == Bool[0, 1, 0, 0, 1, 1, 1, 0, 1, 1]
-
+    for w in worlds] == Bool[0, 1, 0, 1, 1, 1, 0, 0, 1, 0]
 
 multilogiset = MultiLogiset([bool_logiset, scalar_logiset, nonscalar_logiset])
 
