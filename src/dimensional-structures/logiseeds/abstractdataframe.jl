@@ -23,20 +23,10 @@ end
 function frame(
     dataset::AbstractDataFrame,
     i_instance::Integer;
-    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
+    kwargs...
 )
-    worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:SoleLogics.AbstractWorld}}([
-        0 => OneWorld, 1 => Interval{Int64}, 2 => Interval2D{Int64}]) :
-        worldtype_by_dim
-
     column = dataset[:,1]
-    v = column[i_instance]
-
-    if v == ()
-        OneWorld()
-    else
-        FullDimensionalFrame{1,worldtype_by_dim[dimensionality(dataset)]}(size(v))# _worldtype(eltype(dataset)))
-    end
+    frame(dataset, column, i_instance; kwargs...)
 end
 
 
@@ -44,10 +34,19 @@ end
 function frame(
     dataset::AbstractDataFrame,
     column::Vector,
-    i_instance::Integer
+    i_instance::Integer;
+    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
 )
+    worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
+        worldtype_by_dim
+
     v = column[i_instance]
-    (v == ()) ? OneWorld() : FullDimensionalFrame(size(v))
+    if v == ()
+        OneWorld()
+    else
+        W = worldtype_by_dim[dimensionality(dataset)]
+        FullDimensionalFrame{1,W}(size(v))# _worldtype(eltype(dataset)))
+    end
 end
 
 # # Remove!! dangerous

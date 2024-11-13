@@ -28,7 +28,7 @@ enable full memoization, where every intermediate `check` result is cached to av
 - `force_i_variables::Bool = false`: when conditions are to be inferred (`conditions = nothing`), force (meta)conditions to refer to variables by their integer index, instead of their `Symbol` name (when available through `varnames`, see [`islogiseed`](@ref)).
 
 # Logiseed-specific Keyword Arguments
-- `worldtype_by_dim::AbstractDict{<:Integer,<:Type}([0 => OneWorld, 1 => Interval, 2 => Interval2D])`:
+- `worldtype_by_dim::AbstractDict{<:Integer,<:Type} = Dict([0 => OneWorld, 1 => Interval, 2 => Interval2D])`:
 When the dataset is a [`MultiData.AbstractDimensionalDataset`](@ref),
 this map between the [`dimensionality`](@ref) and the desired [`AbstractWorld`](@ref) type is used to infer the frame type.
 By default, dimensional datasets of dimensionalities 0, 1 and 2 will generate logisets based on OneWorld, Interval's, and Interval2D's, respectively.
@@ -283,10 +283,7 @@ function scalarlogiset(
         p = Progress(_ninstances; dt = 1, desc = "Computing logiset...")
     end
     @inbounds Threads.@threads for i_instance in 1:_ninstances
-        # This calls `allworlds(dataset, i_instance::Integer)`
-        # which calls `allworlds(frame(dataset, i_instance))`
-        # and `frame` is essentially the constructor for a FullDimensionalFrame.
-        for w in allworlds(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)
+        for w in allworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim))
            for (i_feature,feature) in enum_features
                 featval = featvalue(feature, dataset, i_instance, w)
                 featvalue!(feature, X, featval, i_instance, w, i_feature)

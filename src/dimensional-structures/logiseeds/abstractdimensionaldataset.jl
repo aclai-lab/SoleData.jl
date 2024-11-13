@@ -8,9 +8,15 @@ import SoleData:
     islogiseed, initlogiset, frame,
     featchannel, readfeature, featvalue, vareltype, featvaltype
 
+using SoleLogics: nparameters
+
 function islogiseed(dataset::AbstractDimensionalDataset)
     ndims(eltype(dataset)) >= 1
 end
+
+DEFAULT_WORLDTYPE_BY_DIM = Dict{Int,Type{<:SoleLogics.AbstractWorld}}([
+    0 => OneWorld, 1 => Interval{Int64}, 2 => Interval2D{Int64}
+])
 
 """
     function initlogiset(
@@ -25,7 +31,7 @@ Given an [`AbstractDimensionalDataset`](@ref), build a
 # Keyword Arguments
 - worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing:
 map between a dimensionality, as integer, and the [`AbstractWorld`](@ref) type associated;
-when unspecified, this is defaulted to `0 => OneWorld, 1 => Interval, 2 => Interval2D`.
+when unspecified, this is defaulted to `Dict(0 => OneWorld, 1 => Interval, 2 => Interval2D)`.
 
 See also [`AbstractDimensionalDataset`](@ref),
 SoleLogics.AbstractWorld,
@@ -37,10 +43,7 @@ function initlogiset(
     features::AbstractVector;
     worldtype_by_dim::Union{Nothing,<:AbstractDict{<:Integer,<:Type}}=nothing
 )::UniformFullDimensionalLogiset
-    # TODO/IDEA - default this initialization to a DEFAULT_WORLDTYPE_BY_DIM constant,
-    # here and whenever this piece of code is repeated
-    worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:AbstractWorld}}([
-        0 => OneWorld, 1 => Interval, 2 => Interval2D]) :
+    worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
         worldtype_by_dim
 
     _ninstances = ninstances(dataset)
@@ -74,25 +77,19 @@ function initlogiset(
     if allequal(map(i_instance->channelsize(dataset, i_instance), 1:ninstances(dataset)))
         _maxchannelsize = maxchannelsize(dataset)
 
-        # Using *2+2 below is ok for Interval and Interval2D (also for Point2D),
-        # but is wrong for Point1D and Point3D, where respectively the correct math is
-        # *2+1 and *2+3. We need to distinguish the two cases.
-        _featstruct_size_accumulator = W <: SoleLogics.Point{N} where {N} ?
-            W.parameters[1] : 2
-
-        featstruct = Array{U,length(_maxchannelsize)*2+_featstruct_size_accumulator}(
+        featstruct = Array{U,length(_maxchannelsize)*nparameters(W)+2}(
                 undef,
                 vcat([
-                    [s for _ in 1:_featstruct_size_accumulator]
+                    [s for _ in 1:nparameters(W)]
                     for s in _maxchannelsize]...
                 )...,
                 _ninstances,
                 length(features)
             )
-        # if !isconcretetype(U) # TODO only in this case but this breaks code
-            # @warn "Abstract featvaltype detected upon initializing UniformFullDimensionalLogiset logiset: $(U)."
+        if !isconcretetype(U) # TODO only in this case but this breaks code
+            @warn "Abstract featvaltype detected upon initializing UniformFullDimensionalLogiset logiset: $(U)."
             fill!(featstruct, 0)
-        # end
+        end
 
         return UniformFullDimensionalLogiset{U,W,N}(featstruct, features)
     else

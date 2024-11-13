@@ -93,11 +93,15 @@ function varnames(logiseed)
 end
 
 # Helper
-allworlds(
+function allworlds(
     dataset,
-    i_instance::Integer;
-    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
-) = allworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim))
+    i_instance::Integer,
+    args...;
+    kwargs...
+)
+    @warn "Please, use allworlds(frame(...)) instead of allworlds(...). This sholtcut is deprecating."
+    return allworlds(frame(dataset, i_instance, args...; kwargs...))
+end
 
 # Multimodal dataset interface
 
