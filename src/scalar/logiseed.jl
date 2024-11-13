@@ -96,7 +96,7 @@ end
 allworlds(
     dataset,
     i_instance::Integer;
-    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
 ) = allworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim))
 
 # Multimodal dataset interface

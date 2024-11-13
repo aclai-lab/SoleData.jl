@@ -3,6 +3,7 @@
 #
 # When this will be finished, everything will be moved to more appropriate test files.
 
+using Test
 using CategoricalArrays
 using DataFrames
 using SoleData
@@ -42,7 +43,7 @@ X_df, y = _load_NATOPS(joinpath(dirname(pathof(SoleData)), "../test/data/NATOPS"
 
 pointlogiset = scalarlogiset(
     X_df;
-    worldtype_by_dim=Dict{Int,Type{<:SoleLogics.AbstractWorld}}(
+    worldtype_by_dim=Dict(
         1 => SoleLogics.Point1D{Int})
 )
 
@@ -50,7 +51,7 @@ pointlogiset = scalarlogiset(
 
 intervallogiset = scalarlogiset(
     X_df;
-    worldtype_by_dim=Dict{Int,Type{<:SoleLogics.AbstractWorld}}(
+    worldtype_by_dim=Dict(
         1 => SoleLogics.Interval{Int})
 )
 

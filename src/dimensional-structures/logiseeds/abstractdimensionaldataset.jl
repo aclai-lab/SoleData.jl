@@ -16,14 +16,14 @@ end
     function initlogiset(
         dataset::AbstractDimensionalDataset,
         features::AbstractVector;
-        worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+        worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
     )::UniformFullDimensionalLogiset
 
 Given an [`AbstractDimensionalDataset`](@ref), build a
 [`UniformFullDimensionalLogiset`](@ref).
 
 # Keyword Arguments
-- worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing:
+- worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing:
 map between a dimensionality, as integer, and the [`AbstractWorld`](@ref) type associated;
 when unspecified, this is defaulted to `0 => OneWorld, 1 => Interval, 2 => Interval2D`.
 
@@ -35,7 +35,7 @@ MultiData.dimensionality,
 function initlogiset(
     dataset::AbstractDimensionalDataset,
     features::AbstractVector;
-    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+    worldtype_by_dim::Union{Nothing,<:AbstractDict{<:Integer,<:Type}}=nothing
 )::UniformFullDimensionalLogiset
     # TODO/IDEA - default this initialization to a DEFAULT_WORLDTYPE_BY_DIM constant,
     # here and whenever this piece of code is repeated

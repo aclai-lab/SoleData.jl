@@ -23,7 +23,7 @@ end
 function frame(
     dataset::AbstractDataFrame,
     i_instance::Integer;
-    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
 )
     worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:SoleLogics.AbstractWorld}}([
         0 => OneWorld, 1 => Interval{Int64}, 2 => Interval2D{Int64}]) :
