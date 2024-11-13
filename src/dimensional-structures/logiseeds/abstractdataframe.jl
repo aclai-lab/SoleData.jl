@@ -37,15 +37,15 @@ function frame(
     i_instance::Integer;
     worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
 )
-    worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
-        worldtype_by_dim
-
     v = column[i_instance]
     if v == ()
         OneWorld()
     else
-        W = worldtype_by_dim[dimensionality(dataset)]
-        FullDimensionalFrame{1,W}(size(v))# _worldtype(eltype(dataset)))
+        worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
+            worldtype_by_dim
+        N = dimensionality(dataset)
+        W = worldtype_by_dim[N]
+        FullDimensionalFrame{N,W}(size(v))# _worldtype(eltype(dataset)))
     end
 end
 

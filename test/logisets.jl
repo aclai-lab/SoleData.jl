@@ -157,14 +157,14 @@ _formulas = [randformula(rng, 4, alph, [NEGATION, CONJUNCTION, IMPLICATION, DIAM
 @test_nowarn syntaxstring.(_formulas; threshold_digits = 2)
 
 c1 = @test_nowarn [check(φ, bool_logiset, 1, w) for φ in _formulas]
-@test_broken [check(φ, bool_logiset, 1, w; use_memo = nothing) for φ in _formulas]
-@test_broken [check(φ, bool_logiset, 1, w; use_memo = memoset) for φ in _formulas]
+c2 = @test_nowarn [check(φ, bool_logiset, 1, w; use_memo = nothing) for φ in _formulas]
+c3 = @test_nowarn [check(φ, bool_logiset, 1, w; use_memo = memoset) for φ in _formulas]
 c4 = @test_nowarn [check(φ, SupportedLogiset(bool_logiset), 1, w) for φ in _formulas]
-@test_broken [check(φ, SupportedLogiset(bool_logiset), 1, w; use_memo = nothing) for φ in _formulas]
+c5 = @test_nowarn [check(φ, SupportedLogiset(bool_logiset), 1, w; use_memo = nothing) for φ in _formulas]
 # @test (@test_logs (:warn,) [check(φ, bool_supported_logiset, 1, w; use_memo = memoset) for φ in _formulas])
 # c6 = [check(φ, bool_supported_logiset, 1, w; use_memo = memoset) for φ in _formulas]
 
-@test c1 == c4
+@test c1 == c2 == c3 == c4 == c5
 
 w = worlds[1]
 W = worldtype(scalar_logiset)

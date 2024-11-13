@@ -166,7 +166,7 @@ function scalarlogiset(
             ])
     end
 
-    if allow_propositional && all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
+    if allow_propositional && all(i_instance->nworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1, 1:ninstances(dataset))
         return PropositionalLogiset(dataset)
     end
 
@@ -341,7 +341,7 @@ function naturalconditions(
 
     mixed_conditions = Vector{MixedCondition}(mixed_conditions)
 
-    is_propositional_dataset = all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
+    is_propositional_dataset = all(i_instance->nworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1, 1:ninstances(dataset))
 
     def_test_operators = is_propositional_dataset ? [≥] : [≥, <]
 
