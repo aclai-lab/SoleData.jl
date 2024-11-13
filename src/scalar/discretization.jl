@@ -14,12 +14,12 @@ function entropy_normalized2(D)
             for pr in rows]
 end
 
-# Normalize threshold_domain so it sums to 1.0 over the 'axis'
-function _normalize(threshold_domain; axis::Int64)
-    scale = sum(threshold_domain, dims = axis)
+# Normalize varvalue so it sums to 1.0 over the 'axis'
+function _normalize(varvalue; axis::Int64)
+    scale = sum(varvalue, dims = axis)
     scale[scale .== 0] .= 1
 
-    return threshold_domain ./ scale
+    return varvalue ./ scale
 end
 
 # Compute the entropy of distributions in D (one per each row)
@@ -120,10 +120,11 @@ function _entropy_discretize_sorted(
 end
 
 function discretize(
-	threshold_domain::AbstractVector,
+	varvalue::AbstractVector,
 	y::AbstractVector
 )
-	vals, counts_ = contingency(threshold_domain,y)
+    allequal(length.([varvalue, y])) || throw(DimensionMismatch("$(length(varvalue)) != $(length(y))"))
+	vals, counts_ = contingency(varvalue, y)
 	cut_ind = _entropy_discretize_sorted(counts_, force=true)
 	return [vals[ind] for ind in cut_ind]
 end
