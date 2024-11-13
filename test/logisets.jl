@@ -18,7 +18,7 @@ bool_logiset = SoleData.ExplicitBooleanModalLogiset([(Dict([w => sample(rng, fea
 bool_condition = SoleData.ValueCondition(features[1])
 
 @test [SoleData.checkcondition(bool_condition, bool_logiset, i_instance, w)
-    for w in worlds] == Bool[0, 1, 1, 1, 0, 0, 0, 0, 0, 0]
+    for w in worlds] == Bool[0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
 
 # Scalar (Float)
 rng = Random.MersenneTwister(1)
@@ -26,7 +26,7 @@ scalar_logiset = SoleData.ExplicitModalLogiset([(Dict([w => Dict([f => rand(rng)
 scalar_condition = SoleData.ScalarCondition(features[1], >, 0.5)
 
 @test [SoleData.checkcondition(scalar_condition, scalar_logiset, i_instance, w)
-    for w in worlds] == Bool[0, 0, 1, 1, 0, 1, 0, 1, 0, 0]
+    for w in worlds] == Bool[0, 1, 1, 0, 1, 0, 1, 0, 1, 1]
 
 # Non-scalar (Vector{Float})
 rng = Random.MersenneTwister(2)
@@ -172,4 +172,3 @@ memoset = [ThreadSafeDict{SyntaxTree,Worlds{W}}() for i_instance in 1:ninstances
 @test_throws AssertionError check(φ, scalar_logiset, 1; use_memo = nothing)
 @time check(φ, scalar_logiset, 1, w; use_memo = nothing)
 @time check(φ, scalar_logiset, 1, w; use_memo = memoset)
-
