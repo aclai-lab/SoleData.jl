@@ -49,14 +49,6 @@ function frame(
     end
 end
 
-# # Remove!! dangerous
-# function frame(
-#     column::Vector,
-#     i_instance::Integer
-# )
-#     FullDimensionalFrame(size(column[i_instance]))
-# end
-
 function featchannel(
     dataset::AbstractDataFrame,
     i_instance::Integer,

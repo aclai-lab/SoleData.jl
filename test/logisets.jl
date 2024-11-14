@@ -14,7 +14,8 @@ i_instance = 1
 
 # Boolean
 rng = Random.MersenneTwister(1)
-bool_logiset = SoleData.ExplicitBooleanModalLogiset([(Dict([w => sample(rng, features, 2, replace = false) for w in worlds]), fr)])
+bool_logiset = SoleData.ExplicitBooleanModalLogiset([(
+    Dict([w => sample(rng, features, 2, replace=false) for w in worlds]), fr)])
 bool_condition = SoleData.ValueCondition(features[1])
 
 @test [SoleData.checkcondition(bool_condition, bool_logiset, i_instance, w)
@@ -152,7 +153,10 @@ bool_supported_logiset2 = @test_nowarn SupportedLogiset(bool_logiset, [memoset])
 rng = Random.MersenneTwister(1)
 alph = ExplicitAlphabet([SoleData.ScalarCondition(rand(rng, features), rand(rng, [>, <]), rand(rng)) for i in 1:10])
 syntaxstring.(alph)
-_formulas = [randformula(rng, 4, alph, [NEGATION, CONJUNCTION, IMPLICATION, DIAMOND, BOX]) for i in 1:10]
+_formulas = [randformula(
+    rng, 4, alph, [NEGATION, CONJUNCTION, IMPLICATION, DIAMOND, BOX]; mode=:exactheight)
+    for i in 1:10
+]
 @test_nowarn syntaxstring.(_formulas)
 @test_nowarn syntaxstring.(_formulas; threshold_digits = 2)
 
@@ -172,4 +176,3 @@ memoset = [ThreadSafeDict{SyntaxTree,Worlds{W}}() for i_instance in 1:ninstances
 @test_throws AssertionError check(φ, scalar_logiset, 1; use_memo = nothing)
 @time check(φ, scalar_logiset, 1, w; use_memo = nothing)
 @time check(φ, scalar_logiset, 1, w; use_memo = memoset)
-

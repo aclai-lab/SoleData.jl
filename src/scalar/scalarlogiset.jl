@@ -102,6 +102,8 @@ function scalarlogiset(
             "$(features)" *
             "Suspects: $(filter(f->(!is_feature(f) && !is_nofeatures(f) && !is_unifeatures(f)), features))"
 
+    framekwargs = (;worldtype_by_dim=worldtype_by_dim)
+
     if ismultilogiseed(dataset)
 
         newkwargs = (;
@@ -167,7 +169,8 @@ function scalarlogiset(
             ])
     end
 
-    frames = map(i_instance->frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim), 1:ninstances(dataset))
+    frames = map(
+        i_instance->frame(dataset, i_instance; framekwargs...), 1:ninstances(dataset))
     is_propositional = all(_frame->nworlds(_frame) == 1, frames)
 
     if allow_propositional && is_propositional
@@ -196,7 +199,12 @@ function scalarlogiset(
         end
     else
         if isnothing(conditions)
-            conditions = naturalconditions(dataset, features; force_i_variables = force_i_variables)
+            conditions = naturalconditions(
+                dataset,
+                features;
+                force_i_variables=force_i_variables,
+                worldtype_by_dim=worldtype_by_dim
+            )
             features = unique(feature.(conditions))
             if use_onestep_memoization == false
                 conditions = nothing
@@ -315,8 +323,9 @@ end
 function naturalconditions(
     dataset,
     mixed_conditions   :: AbstractVector,
-    featvaltype        :: Union{Nothing,Type} = nothing;
-    force_i_variables  :: Bool = false,
+    featvaltype        :: Union{Nothing,Type}=nothing;
+    force_i_variables  :: Bool=false,
+    worldtype_by_dim   :: Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -344,7 +353,10 @@ function naturalconditions(
 
     mixed_conditions = Vector{MixedCondition}(mixed_conditions)
 
-    is_propositional = all(i_instance->nworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1, 1:ninstances(dataset))
+    is_propositional = all(i_instance->nworlds(frame(
+        dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1,
+        1:ninstances(dataset)
+    )
 
     def_test_operators = is_propositional ? [≥] : [≥, <]
 
@@ -447,16 +459,17 @@ All instances must have the same frame (e.g., channel size/number of worlds).
 """
 function naturalgrouping(
     X::AbstractDataFrame;
-    allow_variable_drop = false,
+    allow_variable_drop=false,
+    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
     # allow_nonuniform_variable_types = false,
     # allow_nonuniform_variables = false,
 ) #::AbstractVector{<:AbstractVector{<:Symbol}}
 
     coltypes = eltype.(eachcol(X))
 
-    function _frame(datacolumn, i_instance)
+    function _frame(datacolumn, i_instance, worldtype_by_dim)
         if hasmethod(frame, (typeof(X), typeof(datacolumn), Integer))
-            frame(X, datacolumn, i_instance)
+            frame(X, datacolumn, i_instance, worldtype_by_dim=worldtype_by_dim)
         else
             missing
         end
@@ -474,7 +487,10 @@ function naturalgrouping(
     end
 
     columnnames = names(X)
-    percol_framess = [unique(map((i_instance)->(_frame(X[:,col], i_instance)), 1:ninstances(X))) for col in columnnames]
+    percol_framess = [unique(map(
+        (i_instance)->(_frame(X[:,col], i_instance, worldtype_by_dim)),
+        1:ninstances(X)
+    )) for col in columnnames]
 
     # Must have common frame across instances
     _uniform_columns = (length.(percol_framess) .== 1)

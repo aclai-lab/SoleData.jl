@@ -41,44 +41,66 @@ end
 
 X_df, y = _load_NATOPS(joinpath(dirname(pathof(SoleData)), "../test/data/NATOPS"))
 
+# From here onwards, differend kind of SupportedLogiset are created;
+# for each of them, this is the shared test parameterization:
+at_identity_geq_zero = Atom(ScalarCondition(VariableValue(1), >=, 0))
+at_identity_leq_zero = Atom(ScalarCondition(VariableValue(1), <=, 0))
+at_max_geq_zero = Atom(ScalarCondition(VariableMax(1), >, 0))
+i_instance = 1
+id1_world, id2_world = (3,5)
+
+# Common parameterization (parameters shared by each )
 pointlogiset = scalarlogiset(
     X_df;
     worldtype_by_dim=Dict(
         1 => SoleLogics.Point1D{Int})
 )
 
-at = Atom(ScalarCondition(VariableValue(1), >, 0))
-i_instance = 1
-id_point = 3
-X_df[i_instance,1][id_point]
 @test size(pointlogiset.base.featstruct) == (51, 360, 24)
-@test_nowarn check(globaldiamond(at), pointlogiset, i_instance)
-@test_nowarn check((at), pointlogiset, 1, SoleLogics.Point(id_point))
+
+@test_nowarn check(globaldiamond(at_identity_geq_zero), pointlogiset, i_instance)
+@test check(at_identity_geq_zero, pointlogiset, 1, Point(id1_world)) == false
+@test check(at_identity_leq_zero, pointlogiset, 1, Point(id1_world)) == true
+
 
 intervallogiset = scalarlogiset(
     X_df;
     worldtype_by_dim=Dict(
-        1 => SoleLogics.Interval{Int})
+        1 => Interval{Int})
 )
 
 @test size(intervallogiset.base.featstruct) == (51, 51, 360, 48)
-@test_nowarn check(globaldiamond(Atom(ScalarCondition(VariableMax(1), >, 0))), intervallogiset, 1)
-
-@test_broken @scalarformula V1 > 0 ∧ V2 < 0
-
-
+@test_nowarn check(globaldiamond(at_max_geq_zero), intervallogiset, 1)
+@test check(
+    at_max_geq_zero, intervallogiset, 1, Interval(id1_world, id2_world)) == false
 
 
 interval2dlogiset = scalarlogiset(
     DataFrame(
-        x=[rand(3,3) for i_instance in 1:100],
+        x=[rand(Xoshiro(3), 3, 3) for i_instance in 1:100],
     );
 )
+@test size(interval2dlogiset.base.featstruct) == (3, 3, 3, 3, 100, 2)
+@test_nowarn check(globaldiamond(at_max_geq_zero), interval2dlogiset, 1)
+@test check(
+    at_max_geq_zero, interval2dlogiset, 1, Interval2D{Int}((1,2), (2,3))) == true
+
 
 point2dlogiset = scalarlogiset(
     DataFrame(
-        x=[rand(3,3) for i_instance in 1:100],
+        x=[rand(Xoshiro(3), 3, 3) for i_instance in 1:100],
     );
     worldtype_by_dim=Dict(
-        2 => SoleLogics.Interval2D{Int})
+        2 => Point2D{Int})
 )
+@test size(point2dlogiset.base.featstruct) == (3, 3, 100, 1)
+
+@test_nowarn check(globaldiamond(at_identity_geq_zero), pointlogiset, i_instance)
+@test check(at_identity_geq_zero, pointlogiset, 1, Point(id1_world, id2_world)) == false
+@test check(at_identity_leq_zero, pointlogiset, 1, Point(id1_world, id2_world)) == true
+
+
+# Ideas that could be implemented
+
+# Utility macro to avoid writing
+@test_broken @scalarformula V1 > 0 ∧ V2 < 0

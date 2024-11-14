@@ -74,8 +74,8 @@ function initlogiset(
     # @show typeof(dataset)
     U = Union{map(f->featvaltype(dataset, f), features)...}
 
-    repeatdim = div(nparameters(W), N)
-    
+    repeatdim = N > 0 ? div(nparameters(W), N) : N
+
     if allequal(map(i_instance->channelsize(dataset, i_instance), 1:ninstances(dataset)))
         _maxchannelsize = maxchannelsize(dataset)
 
@@ -105,9 +105,17 @@ end
 
 function frame(
     dataset::AbstractDimensionalDataset,
-    i_instance::Integer
+    i_instance::Integer;
+    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
+    kwargs...
 )
-    FullDimensionalFrame(channelsize(dataset, i_instance))
+    if !isnothing(worldtype_by_dim)
+        N = dimensionality(dataset)
+        W = worldtype_by_dim[N]
+        FullDimensionalFrame{N,W}(channelsize(dataset, i_instance))
+    else
+        FullDimensionalFrame(channelsize(dataset, i_instance))
+    end
 end
 
 function featchannel(

@@ -85,7 +85,8 @@ w = worlds[1]
 ############################################################################################
 c1 = @test_nowarn [check(φ, bool_logiset, 1, w) for φ in _formulas]
 ############################################################################################
-c1 = @test_nowarn [check(φ, bool_logiset, 1, w; perform_normalization = false) for φ in _formulas]
+c1 = @test_nowarn [
+    check(φ, bool_logiset, 1, w; perform_normalization=false) for φ in _formulas]
 
 ############################################################################################
 # 107.169 ms (545163 allocations: 14.71 MiB)
@@ -97,10 +98,13 @@ c2 = @test_nowarn [check(φ, bool_logiset_2layer, 1, w; perform_normalization = 
 ############################################################################################
 # 34.990 ms (301175 allocations: 14.93 MiB)
 ############################################################################################
-memoset = [ThreadSafeDict{SyntaxTree,Worlds{W}}() for i_instance in 1:ninstances(bool_logiset)]
-bool_logiset_3layer = SupportedLogiset(bool_logiset, [bool_onestepmemoset_empty, memoset])
+memoset = [
+    ThreadSafeDict{SyntaxTree,Worlds{W}}() for i_instance in 1:ninstances(bool_logiset)]
+bool_logiset_3layer = SupportedLogiset(
+    bool_logiset, [bool_onestepmemoset_empty, memoset])
 # c4 = @test_nowarn [check(φ, bool_logiset_3layer, 1, w; perform_normalization = false) for φ in _formulas]
-@test_broken [check(φ, bool_logiset_3layer, 1, w; perform_normalization = false) for φ in _formulas]
+@test_broken [
+    check(φ, bool_logiset_3layer, 1, w; perform_normalization=false) for φ in _formulas]
 # @test SoleData.nmemoizedvalues(bool_logiset_3layer.supports[1].relmemoset) > 0
 ############################################################################################
 
