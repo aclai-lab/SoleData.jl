@@ -47,7 +47,13 @@ pointlogiset = scalarlogiset(
         1 => SoleLogics.Point1D{Int})
 )
 
-@test size(pointlogiset.base.featstruct) == (51, 360, 48)
+at = Atom(ScalarCondition(VariableValue(1), >, 0))
+i_instance = 1
+id_point = 3
+X_df[i_instance,1][id_point]
+@test size(pointlogiset.base.featstruct) == (51, 360, 24)
+@test_nowarn check(globaldiamond(at), pointlogiset, i_instance)
+@test_nowarn check((at), pointlogiset, 1, SoleLogics.Point(id_point))
 
 intervallogiset = scalarlogiset(
     X_df;
@@ -56,3 +62,23 @@ intervallogiset = scalarlogiset(
 )
 
 @test size(intervallogiset.base.featstruct) == (51, 51, 360, 48)
+@test_nowarn check(globaldiamond(Atom(ScalarCondition(VariableMax(1), >, 0))), intervallogiset, 1)
+
+@test_broken @scalarformula V1 > 0 ∧ V2 < 0
+
+
+
+
+interval2dlogiset = scalarlogiset(
+    DataFrame(
+        x=[rand(3,3) for i_instance in 1:100],
+    );
+)
+
+point2dlogiset = scalarlogiset(
+    DataFrame(
+        x=[rand(3,3) for i_instance in 1:100],
+    );
+    worldtype_by_dim=Dict(
+        2 => SoleLogics.Interval2D{Int})
+)

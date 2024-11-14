@@ -39,8 +39,8 @@ function dimensionality(X::AbstractUniformFullDimensionalLogiset{U,N}) where {U,
     N
 end
 
-frame(X::AbstractUniformFullDimensionalLogiset, i_instance::Integer) = begin
-    FullDimensionalFrame(channelsize(X, i_instance))
+function frame(X::AbstractUniformFullDimensionalLogiset{U,N,W}, i_instance::Integer) where {U,N,W<:AbstractWorld}
+    return FullDimensionalFrame{N,W}(channelsize(X, i_instance))
 end
 
 ############################################################################################

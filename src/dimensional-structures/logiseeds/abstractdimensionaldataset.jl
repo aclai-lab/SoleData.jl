@@ -74,15 +74,14 @@ function initlogiset(
     # @show typeof(dataset)
     U = Union{map(f->featvaltype(dataset, f), features)...}
 
+    repeatdim = div(nparameters(W), N)
+    
     if allequal(map(i_instance->channelsize(dataset, i_instance), 1:ninstances(dataset)))
         _maxchannelsize = maxchannelsize(dataset)
 
-        featstruct = Array{U,length(_maxchannelsize)*nparameters(W)+2}(
+        featstruct = Array{U,nparameters(W)+2}(
                 undef,
-                vcat([
-                    [s for _ in 1:nparameters(W)]
-                    for s in _maxchannelsize]...
-                )...,
+                repeat(collect(_maxchannelsize), inner=repeatdim)...,
                 _ninstances,
                 length(features)
             )

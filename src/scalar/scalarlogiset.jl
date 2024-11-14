@@ -1,3 +1,4 @@
+using SoleLogics: worldtype, Point
 using ProgressMeter
 
 """
@@ -166,7 +167,10 @@ function scalarlogiset(
             ])
     end
 
-    if allow_propositional && all(i_instance->nworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1, 1:ninstances(dataset))
+    frames = map(i_instance->frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim), 1:ninstances(dataset))
+    is_propositional = all(_frame->nworlds(_frame) == 1, frames)
+
+    if allow_propositional && is_propositional
         return PropositionalLogiset(dataset)
     end
 
@@ -177,12 +181,11 @@ function scalarlogiset(
     if isnothing(features)
         features = begin
             if isnothing(conditions)
-                is_propositional_dataset = all(
-                    i_instance->nworlds(
-                        frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1,
-                    1:ninstances(dataset)
-                )
-                if is_propositional_dataset
+                # TODO use the fact that the worldtype is constant
+                worldtypes = map(_frame->SoleLogics.worldtype(_frame), frames)
+                !allequal(worldtypes) && error("Could not infere worldtype. $(unique(worldtypes)).")
+                worldtype = first(worldtypes)
+                if is_propositional || worldtype <: Point
                     [VariableValue(i_var) for i_var in 1:nvariables(dataset)]
                 else
                     vcat([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvariables(dataset)]...)
@@ -283,7 +286,7 @@ function scalarlogiset(
         p = Progress(_ninstances; dt = 1, desc = "Computing logiset...")
     end
     @inbounds Threads.@threads for i_instance in 1:_ninstances
-        for w in allworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim))
+        for w in allworlds(frames[i_instance])
            for (i_feature,feature) in enum_features
                 featval = featvalue(feature, dataset, i_instance, w)
                 featvalue!(feature, X, featval, i_instance, w, i_feature)
@@ -341,9 +344,9 @@ function naturalconditions(
 
     mixed_conditions = Vector{MixedCondition}(mixed_conditions)
 
-    is_propositional_dataset = all(i_instance->nworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1, 1:ninstances(dataset))
+    is_propositional = all(i_instance->nworlds(frame(dataset, i_instance; worldtype_by_dim=worldtype_by_dim)) == 1, 1:ninstances(dataset))
 
-    def_test_operators = is_propositional_dataset ? [≥] : [≥, <]
+    def_test_operators = is_propositional ? [≥] : [≥, <]
 
     univar_condition(i_var,cond::SoleData.CanonicalConditionGeq) = ([≥],VariableMin(i_var))
     univar_condition(i_var,cond::SoleData.CanonicalConditionLeq) = ([<],VariableMax(i_var))
