@@ -1,5 +1,4 @@
 import Base: size, ndims, getindex, setindex!
-using SoleLogics: Point
 
 """
     abstract type AbstractUniformFullDimensionalLogiset{
