@@ -379,12 +379,11 @@ function _multivariate_scalar_alphabet(
     testopss::AbstractVector{<:AbstractVector},
     domains::AbstractVector{<:AbstractVector};
     sorted = true,
+    truerfirst = true,
     # skipextremes::Bool = true,
     discretizedomain::Bool = false, # TODO default behavior should depend on test_operator
     y::Union{Nothing,AbstractVector} = nothing,
 )::MultivariateScalarAlphabet
-
-    truerfirst = true
 
     if discretizedomain && isnothing(y)
         error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
