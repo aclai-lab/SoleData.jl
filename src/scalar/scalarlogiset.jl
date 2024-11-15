@@ -1,3 +1,4 @@
+using SoleLogics: worldtype, Point
 using ProgressMeter
 
 """
@@ -28,7 +29,7 @@ enable full memoization, where every intermediate `check` result is cached to av
 - `force_i_variables::Bool = false`: when conditions are to be inferred (`conditions = nothing`), force (meta)conditions to refer to variables by their integer index, instead of their `Symbol` name (when available through `varnames`, see [`islogiseed`](@ref)).
 
 # Logiseed-specific Keyword Arguments
-- `worldtype_by_dim::AbstractDict{Int,Type{<:AbstractWorld}}([0 => OneWorld, 1 => Interval, 2 => Interval2D])`:
+- `worldtype_by_dim::AbstractDict{<:Integer,<:Type} = Dict([0 => OneWorld, 1 => Interval, 2 => Interval2D])`:
 When the dataset is a [`MultiData.AbstractDimensionalDataset`](@ref),
 this map between the [`dimensionality`](@ref) and the desired [`AbstractWorld`](@ref) type is used to infer the frame type.
 By default, dimensional datasets of dimensionalities 0, 1 and 2 will generate logisets based on OneWorld, Interval's, and Interval2D's, respectively.
@@ -79,7 +80,7 @@ function scalarlogiset(
     print_progress                   :: Bool=false,
     allow_propositional              :: Bool=false, # TODO default to true
     force_i_variables                :: Bool=false,
-    worldtype_by_dim                 :: Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing,
+    worldtype_by_dim                 :: Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
     kwargs...,
     # featvaltype = nothing
 )
@@ -101,6 +102,9 @@ function scalarlogiset(
             "$(features)" *
             "Suspects: $(filter(f->(!is_feature(f) && !is_nofeatures(f) && !is_unifeatures(f)), features))"
 
+    framekwargs = (; worldtype_by_dim = worldtype_by_dim)
+    framekwargs = NamedTuple(filter(x->!isnothing(last(x)), pairs(framekwargs)))
+    
     if ismultilogiseed(dataset)
 
         newkwargs = (;
@@ -166,7 +170,11 @@ function scalarlogiset(
             ])
     end
 
-    if allow_propositional && all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
+    frames = map(
+        i_instance->frame(dataset, i_instance; framekwargs...), 1:ninstances(dataset))
+    is_propositional = all(_frame->nworlds(_frame) == 1, frames)
+
+    if allow_propositional && is_propositional
         return PropositionalLogiset(dataset)
     end
 
@@ -177,8 +185,11 @@ function scalarlogiset(
     if isnothing(features)
         features = begin
             if isnothing(conditions)
-                is_propositional_dataset = all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
-                if is_propositional_dataset
+                # TODO use the fact that the worldtype is constant
+                worldtypes = map(_frame->SoleLogics.worldtype(_frame), frames)
+                !allequal(worldtypes) && error("Could not infere worldtype. $(unique(worldtypes)).")
+                worldtype = first(worldtypes)
+                if is_propositional || worldtype <: Point
                     [VariableValue(i_var) for i_var in 1:nvariables(dataset)]
                 else
                     vcat([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvariables(dataset)]...)
@@ -189,7 +200,12 @@ function scalarlogiset(
         end
     else
         if isnothing(conditions)
-            conditions = naturalconditions(dataset, features; force_i_variables = force_i_variables)
+            conditions = naturalconditions(
+                dataset,
+                features;
+                force_i_variables,
+                framekwargs...,
+            )
             features = unique(feature.(conditions))
             if use_onestep_memoization == false
                 conditions = nothing
@@ -257,7 +273,7 @@ function scalarlogiset(
     # end
 
     # Initialize the logiset structure
-    X = initlogiset(dataset, features; worldtype_by_dim, kwargs...)
+    X = initlogiset(dataset, features; framekwargs..., kwargs...)
 
     # Load explicit features (if any)
     if any(isa.(features, ExplicitFeature))
@@ -279,8 +295,8 @@ function scalarlogiset(
         p = Progress(_ninstances; dt = 1, desc = "Computing logiset...")
     end
     @inbounds Threads.@threads for i_instance in 1:_ninstances
-        for w in allworlds(dataset, i_instance)
-            for (i_feature,feature) in enum_features
+        for w in allworlds(frames[i_instance])
+           for (i_feature,feature) in enum_features
                 featval = featvalue(feature, dataset, i_instance, w)
                 featvalue!(feature, X, featval, i_instance, w, i_feature)
             end
@@ -308,8 +324,9 @@ end
 function naturalconditions(
     dataset,
     mixed_conditions   :: AbstractVector,
-    featvaltype        :: Union{Nothing,Type} = nothing;
-    force_i_variables  :: Bool = false,
+    featvaltype        :: Union{Nothing,Type}=nothing;
+    force_i_variables  :: Bool=false,
+    framekwargs...,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -337,9 +354,12 @@ function naturalconditions(
 
     mixed_conditions = Vector{MixedCondition}(mixed_conditions)
 
-    is_propositional_dataset = all(i_instance->nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
+    is_propositional = all(i_instance->nworlds(frame(
+        dataset, i_instance; framekwargs...)) == 1,
+        1:ninstances(dataset)
+    )
 
-    def_test_operators = is_propositional_dataset ? [≥] : [≥, <]
+    def_test_operators = is_propositional ? [≥] : [≥, <]
 
     univar_condition(i_var,cond::SoleData.CanonicalConditionGeq) = ([≥],VariableMin(i_var))
     univar_condition(i_var,cond::SoleData.CanonicalConditionLeq) = ([<],VariableMax(i_var))
@@ -440,20 +460,14 @@ All instances must have the same frame (e.g., channel size/number of worlds).
 """
 function naturalgrouping(
     X::AbstractDataFrame;
-    allow_variable_drop = false,
+    allow_variable_drop=false,
+    framekwargs...,
     # allow_nonuniform_variable_types = false,
     # allow_nonuniform_variables = false,
 ) #::AbstractVector{<:AbstractVector{<:Symbol}}
 
     coltypes = eltype.(eachcol(X))
 
-    function _frame(datacolumn, i_instance)
-        if hasmethod(frame, (typeof(X), typeof(datacolumn), Integer))
-            frame(X, datacolumn, i_instance)
-        else
-            missing
-        end
-    end
 
     # Check that columns with same dimensionality have same eltype's.
     for T in [Real, Vector, Matrix]
@@ -467,7 +481,10 @@ function naturalgrouping(
     end
 
     columnnames = names(X)
-    percol_framess = [unique(map((i_instance)->(_frame(X[:,col], i_instance)), 1:ninstances(X))) for col in columnnames]
+    percol_framess = [unique(map(
+        (i_instance)->(frame(X[:,col], i_instance; framekwargs...)),
+        1:ninstances(X)
+    )) for col in columnnames]
 
     # Must have common frame across instances
     _uniform_columns = (length.(percol_framess) .== 1)

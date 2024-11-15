@@ -64,7 +64,8 @@ function readfeature(
     X::ExplicitBooleanModalLogiset{W},
     featchannel::Any,
     w::W,
-    feature::AbstractFeature,
+    feature::AbstractFeature;
+    kwargs...
 ) where {W<:AbstractWorld}
     Base.in(feature, featchannel[w])
 end

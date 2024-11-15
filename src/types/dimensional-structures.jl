@@ -11,7 +11,13 @@ See also
 [`SoleLogics.FullDimensionalFrame`](@ref),
 [`AbstractModalLogiset`](@ref).
 """
-abstract type AbstractUniformFullDimensionalLogiset{U,N,W<:AbstractWorld,FT<:AbstractFeature,FR<:FullDimensionalFrame{N,W}} <: AbstractModalLogiset{W,U,FT,FR} end
+abstract type AbstractUniformFullDimensionalLogiset{
+    U,
+    N,
+    W<:AbstractWorld,
+    FT<:AbstractFeature,
+    FR<:FullDimensionalFrame{N,W}
+} <: AbstractModalLogiset{W,U,FT,FR} end
 
 function maxchannelsize(X::AbstractUniformFullDimensionalLogiset)
     return error("Please, provide method maxchannelsize(::$(typeof(X))).")
@@ -25,7 +31,9 @@ function dimensionality(X::AbstractUniformFullDimensionalLogiset{U,N}) where {U,
     N
 end
 
-frame(X::AbstractUniformFullDimensionalLogiset, i_instance::Integer) = FullDimensionalFrame(channelsize(X, i_instance))
+function frame(X::AbstractUniformFullDimensionalLogiset{U,N,W}, i_instance::Integer) where {U,N,W<:AbstractWorld}
+    return FullDimensionalFrame{N,W}(channelsize(X, i_instance))
+end
 
 """
 Abstract type for relational memosets optimized for uniform logisets with

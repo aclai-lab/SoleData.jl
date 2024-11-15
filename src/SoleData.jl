@@ -54,7 +54,10 @@ import SoleLogics: frame
 
 using SoleLogics: value
 
-using SoleLogics: OneWorld, Interval, Interval2D
+using SoleLogics: OneWorld
+using SoleLogics: Point, Point1D, Point2D, Point3D
+using SoleLogics: Interval, Interval2D
+
 using SoleLogics: Full0DFrame, Full1DFrame, Full2DFrame
 using SoleLogics: X, Y, Z
 using SoleLogics: AbstractWorld, IdentityRel
@@ -198,7 +201,9 @@ function default_full_memoset_type(X::AbstractModalLogiset)
     # end
 end
 
-using .DimensionalDatasets: OneWorld, Interval, Interval2D
+using .DimensionalDatasets: OneWorld
+using .DimensionalDatasets: Point, Point1D, Point2D, Point3D
+using .DimensionalDatasets: Interval, Interval2D
 using .DimensionalDatasets: IARelations
 using .DimensionalDatasets: IA2DRelations
 using .DimensionalDatasets: identityrel
