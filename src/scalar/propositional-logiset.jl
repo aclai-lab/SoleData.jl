@@ -190,9 +190,12 @@ end
 # TODO join discretize and y parameter into a single parameter.
 
 """
-    alphabet(X::PropositionalLogiset, sorted=true;
-             test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable}=nothing,
-             discretizedomain=false, y::Union{Nothing, AbstractVector}=nothing
+    alphabet(
+        X::PropositionalLogiset,
+        sorted=true;
+        test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable}=nothing,
+        discretizedomain=false,
+        y::Union{Nothing, AbstractVector}=nothing,
     )::MultivariateScalarAlphabet
 
 Constructs an alphabet based on the provided `PropositionalLogiset` `X`, with optional parameters:
@@ -209,6 +212,7 @@ function alphabet(
     sorted = true;
     force_i_variables::Bool = false,
     test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
+    discretizedomain::Bool = false,
     kwargs...
 )::MultivariateScalarAlphabet
     feats = collect(features(X; force_i_variables = force_i_variables))
@@ -217,7 +221,9 @@ function alphabet(
 
     domains = [begin
         domain = Tables.getcolumn(gettable(X), i_variable(feat))
-        domain = unique(domain)
+        if !discretizedomain
+            domain = unique(domain)
+        end
     end for feat in feats]
 
     get_test_operators(to, t::Type{<:Any}) = _get_test_operators(Val(to), t)
@@ -232,7 +238,7 @@ function alphabet(
         get_test_operators(test_operators, coltype)
     end for coltype in coltypes]
     
-    _multivariate_scalar_alphabet(feats, testopss, domains; sorted = sorted, kwargs...)
+    _multivariate_scalar_alphabet(feats, testopss, domains; sorted, discretizedomain, kwargs...)
 end
 
 # Note that this method is important and very fast!

@@ -573,3 +573,49 @@ function naturalgrouping(
 
     var_grouping
 end
+
+
+using Query
+
+"""
+    scalaralphabet(a::AbstractAlphabet{<:ScalarCondition}, args...; kwargs...)
+
+# TODO explain args and kwargs...
+
+- `sorted`: whether to sort the atoms in the sub-alphabets (i.e., the threshold domains),
+    by a truer-first policy (default: true)
+- `test_operators`: test operators to use (defaulted to `[≤, ≥]` for real-valued features, and `[(==), (≠)]` for other features, e.g., categorical)
+
+
+Return a MultivariateScalarAlphabet from an alphabet of `ScalarCondition`'s.
+"""
+function scalaralphabet(a::AbstractAlphabet{<:ScalarCondition}, args...; kwargs...)
+    return scalaralphabet(atoms(a), args...; kwargs...)
+end
+
+function scalaralphabet(atoms::Vector{<:Atom{<:ScalarCondition}}; domains_by_feature = true, discretizedomain::Bool = false, kwargs...)::MultivariateScalarAlphabet
+    if discretizedomain
+        @warn "Cannot discretize domains given a vector of atoms."
+        discretizedomain = false
+    end
+
+    atoms_groups = begin
+        if domains_by_feature
+            atoms_by_feature = (atoms |> @groupby(SoleData.feature(SoleLogics.value(_))))
+        else
+            atoms_by_metacond = (atoms |> @groupby(SoleData.metacond(SoleLogics.value(_))))
+        end
+    end
+
+    feats, testopss, domains = zip([begin
+        scalarconditions = SoleLogics.value.(atoms_group)
+        feat = domains_by_feature ? key(atoms_group) : SoleData.feature(key(atoms_group))
+        testopss = unique(SoleData.test_operator.(scalarconditions))
+        domain = unique(SoleData.threshold.(scalarconditions))
+        (feat, testopss, domain)
+    end for atoms_group in atoms_groups]...) .|> collect
+    
+    return _multivariate_scalar_alphabet(feats, testopss, domains; kwargs...)
+end
+
+############################################################################################

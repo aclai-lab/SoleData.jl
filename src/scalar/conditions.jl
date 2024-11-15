@@ -379,12 +379,11 @@ function _multivariate_scalar_alphabet(
     testopss::AbstractVector{<:AbstractVector},
     domains::AbstractVector{<:AbstractVector};
     sorted = true,
+    truerfirst = true,
     # skipextremes::Bool = true,
-    discretizedomain::Bool = false, # TODO default behavior depends on test_operator
+    discretizedomain::Bool = false, # TODO default behavior should depend on test_operator
     y::Union{Nothing,AbstractVector} = nothing,
 )::MultivariateScalarAlphabet
-
-    truerfirst = true
 
     if discretizedomain && isnothing(y)
         error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
@@ -411,34 +410,9 @@ function _multivariate_scalar_alphabet(
             end
 
             sub_alphabets
-        end, zip(feats,testopss,domains))
+        end, zip(feats,testopss, domains))
     sas = vcat(grouped_sas...)
     return UnionAlphabet(sas)
-end
-
-############################################################################################
-
-using Query
-
-# TODO document
-function scalaralphabet(a::ExplicitAlphabet{<:ScalarCondition}; domains_by_feature = true, kwargs...)::MultivariateScalarAlphabet
-    atoms_groups = begin
-        if domains_by_feature
-            atoms_by_feature = (atoms(a) |> @groupby(SoleData.feature(SoleLogics.value(_))))
-        else
-            atoms_by_metacond = (atoms(a) |> @groupby(SoleData.metacond(SoleLogics.value(_))))
-        end
-    end
-
-    feats, testopss, domains = zip([begin
-        scalarconditions = SoleLogics.value.(atoms_group)
-        feat = domains_by_feature ? key(atoms_group) : SoleData.feature(key(atoms_group))
-        testopss = unique(SoleData.test_operator.(scalarconditions))
-        domain = unique(SoleData.threshold.(scalarconditions))
-        (feat, testopss, domain)
-    end for atoms_group in atoms_groups]...) .|> collect
-    
-    return _multivariate_scalar_alphabet(feats, testopss, domains; kwargs...)
 end
 
 ############################################################################################
