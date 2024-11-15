@@ -158,10 +158,14 @@ function variable_name(
         i_var isa Integer ? "$(variable_name_prefix)$(i_var)" : "$(i_var)"
     else
         if i_var isa Integer
-            "$(variable_names_map[i_var])"
+            i_var =i_var
         elseif i_var isa Symbol
-            "$(variable_names_map[findfirst(v->occursin(string(i_var), string(v)), variable_names_map)])"
+            i_var = findfirst(v->occursin(string(i_var), string(v)), variable_names_map)
         end
+        if !(i_var in keys(variable_names_map))
+            "Could not find variable $i_var in `variable_names_map`. ($(@show variable_names_map))"
+        end
+        "$(variable_names_map[i_var])"
     end
 end
 
