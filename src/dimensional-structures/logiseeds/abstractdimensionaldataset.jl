@@ -109,13 +109,8 @@ function frame(
     worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
     kwargs...
 )
-    if !isnothing(worldtype_by_dim)
-        N = dimensionality(dataset)
-        W = worldtype_by_dim[N]
-        FullDimensionalFrame{N,W}(channelsize(dataset, i_instance))
-    else
-        FullDimensionalFrame(channelsize(dataset, i_instance))
-    end
+    worldtype = !isnothing(worldtype_by_dim) ? worldtype_by_dim[dimensionality(dataset)] : nothing
+    FullDimensionalFrame(channelsize(dataset, i_instance), worldtype)
 end
 
 function featchannel(

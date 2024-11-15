@@ -1,3 +1,5 @@
+using SoleLogics: Point, Point1D, Point2D, Point3D
+
 import Base: size, ndims, getindex, setindex!
 
 """

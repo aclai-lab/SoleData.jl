@@ -92,16 +92,16 @@ function varnames(logiseed)
     return error("Please, provide method varnames(logiseed::$(typeof(logiseed))).")
 end
 
-# Helper
-function allworlds(
-    dataset,
-    i_instance::Integer,
-    args...;
-    kwargs...
-)
-    @warn "Please, use allworlds(frame(...)) instead of allworlds(...). This sholtcut is deprecating."
-    return allworlds(frame(dataset, i_instance, args...; kwargs...))
-end
+# # Helper
+# function allworlds(
+#     dataset,
+#     i_instance::Integer,
+#     args...;
+#     kwargs...
+# )
+#     @warn "Please, use allworlds(frame(...)) instead of allworlds(...). This sholtcut is deprecating."
+#     return allworlds(frame(dataset, i_instance, args...; kwargs...))
+# end
 
 # Multimodal dataset interface
 
