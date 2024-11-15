@@ -163,9 +163,12 @@ function variable_name(
             i_var = findfirst(v->occursin(string(i_var), string(v)), variable_names_map)
         end
         if !(i_var in keys(variable_names_map))
-            "Could not find variable $i_var in `variable_names_map`. ($(@show variable_names_map))"
+            @warn "Could not find variable $i_var in `variable_names_map`. ($(@show variable_names_map))"
+            variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
+            i_var isa Integer ? "?$(variable_name_prefix)$(i_var)?" : "?$(i_var)?"
+        else
+            "$(variable_names_map[i_var])"
         end
-        "$(variable_names_map[i_var])"
     end
 end
 
