@@ -59,9 +59,18 @@ using SoleData: VariableId
 
 export UniformFullDimensionalLogiset
 
+import SoleData: AbstractUniformFullDimensionalLogiset,
+      maxchannelsize,
+      channelsize,
+      dimensionality,
+      frame
+
 # Frame-specific logisets
 include("logiset.jl")
 
+import SoleData: AbstractUniformFullDimensionalOneStepRelationalMemoset,
+      innerstruct,
+      nmemoizedvalues
 include("onestep-memosets.jl")
 
 export initlogiset, ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue

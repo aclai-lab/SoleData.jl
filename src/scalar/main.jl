@@ -32,7 +32,7 @@ include("logiseed.jl")
 
 include("scalarlogiset.jl")
 
-include("memosets.jl")
+include("memoset.jl")
 
 include("onestep-memoset.jl")
 

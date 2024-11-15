@@ -1,23 +1,6 @@
 using SoleData: AbstractScalarOneStepRelationalMemoset
 
 import Base: size, ndims, getindex, setindex!
-"""
-Abstract type for relational memosets optimized for uniform logisets with
-full dimensional frames.
-
-See also
-[`UniformFullDimensionalLogiset`](@ref),
-[`AbstractScalarOneStepRelationalMemoset`](@ref),
-[`SoleLogics.FullDimensionalFrame`](@ref),
-[`AbstractModalLogiset`](@ref).
-"""
-abstract type AbstractUniformFullDimensionalOneStepRelationalMemoset{U,W<:AbstractWorld,FR<:AbstractFrame{W}} <: AbstractScalarOneStepRelationalMemoset{W,U,FR} end
-
-innerstruct(Xm::AbstractUniformFullDimensionalOneStepRelationalMemoset) = Xm.d
-
-function nmemoizedvalues(Xm::AbstractUniformFullDimensionalOneStepRelationalMemoset)
-    count(!isnothing, innerstruct(Xm))
-end
 
 """
 A relational memoset optimized for uniform scalar logisets with

@@ -483,7 +483,28 @@ end
 
 ############################################################################################
 
-# TODO docstring
+"""
+    struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractCondition{FT}
+
+A condition specifying a range of values for a scalar feature.
+
+Fields:
+- `feature`: the scalar feature
+- `minval`, `maxval`: the minimum and maximum values of the range
+- `minincluded`, `maxincluded`: whether to include the minimum and maximum values in the range, respectively
+
+The range is specified using interval notation, where the minimum value is included if `minincluded` is `true`
+and excluded if it is `false`. Similarly, the maximum value is included if `maxincluded` is `true` and excluded
+if it is `false`.
+
+For example, if `minincluded == true` and `maxincluded == false`, the range is `[minval, maxval)`.
+
+The `checkcondition` method checks whether the value of the feature is within the specified range.
+
+The `syntaxstring` method returns a string representation of the condition in the form
+`feature ∈ [minval, maxval]`, where the interval notation is used to indicate whether the minimum and maximum
+values are included or excluded.
+"""
 struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractCondition{FT}
 
     feature::FT
@@ -529,3 +550,4 @@ function syntaxstring(
     _parmax = m.maxincluded ? "]" : ")"
     "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
 end
+

@@ -22,7 +22,32 @@ See also
 """
 abstract type AbstractCondition{FT<:AbstractFeature} end
 
-# Check a condition (e.g., on a world of a logiset instance)
+"""
+    checkcondition(c::AbstractCondition, args...; kwargs...)
+
+Check a condition (e.g., on a world of a logiset instance).
+
+This function must be implemented for each subtype of `AbstractCondition`.
+
+# Examples
+
+```julia
+# Checking a condition on a logiset created from a DataFrame
+using SoleData, DataFrames
+
+# Load the iris dataset
+iris_df = DataFrame(load_iris());
+
+# Convert the DataFrame to a logiset
+iris_logiset = scalarlogiset(iris_df);
+
+# Create a ScalarCondition
+condition = ScalarCondition(:sepal_length, >, 5.0);
+
+# Check the condition on the logiset
+@assert checkcondition(condition, iris_logiset, 1) == true
+```
+"""
 function checkcondition(c::AbstractCondition, args...; kwargs...)
     return error("Please, provide method checkcondition(::$(typeof(c)), " *
         join(map(t->"::$(t)", typeof.(args)), ", ") * "; kwargs...). " *
@@ -97,73 +122,4 @@ function interpret(
 )::Formula
     # @warn "Please use `check` instead of `interpret` for crisp formulas."
     return check(φ, i, args...; kwargs...) ? ⊤ : ⊥
-end
-
-############################################################################################
-
-"""
-    struct ValueCondition{FT<:AbstractFeature} <: AbstractCondition{FT}
-        feature::FT
-    end
-
-A condition which yields a truth value equal to the value of a feature.
-
-See also [`AbstractFeature`](@ref).
-"""
-struct ValueCondition{FT<:AbstractFeature} <: AbstractCondition{FT}
-    feature::FT
-end
-
-checkcondition(c::ValueCondition, args...; kwargs...) = featvalue(c.feature, args...; kwargs...)
-
-syntaxstring(c::ValueCondition; kwargs...) = syntaxstring(c.feature)
-
-function parsecondition(
-    ::Type{ValueCondition},
-    expr::String;
-    featuretype = Feature,
-    kwargs...
-)
-    ValueCondition(featuretype(expr))
-end
-
-############################################################################################
-
-"""
-    struct FunctionalCondition{FT<:AbstractFeature} <: AbstractCondition{FT}
-        feature::FT
-        f::FT
-    end
-
-A condition which yields a truth value equal to the value of a function.
-
-See also [`AbstractFeature`](@ref).
-"""
-struct FunctionalCondition{FT<:AbstractFeature} <: AbstractCondition{FT}
-    feature::FT
-    f::Function
-end
-
-checkcondition(c::FunctionalCondition, args...; kwargs...) = (c.f)(featvalue(c.feature, args...; kwargs...))
-
-syntaxstring(c::FunctionalCondition; kwargs...) = string(c.f, "(", syntaxstring(c.feature), ")")
-
-function parsecondition(
-    ::Type{FunctionalCondition},
-    expr::String;
-    featuretype = Feature,
-    kwargs...
-)
-    r = Regex("^\\s*(\\w+)\\(\\s*(\\w+)\\s*\\)\\s*\$")
-    slices = match(r, expr)
-
-    @assert !isnothing(slices) && length(slices) == 2 "Could not parse FunctionalCondition from " *
-        "expression $(repr(expr))."
-
-    slices = string.(slices)
-
-    feature = featuretype(slices[1])
-    f = eval(Meta.parse(slices[2]))
-
-    FunctionalCondition(feature, f)
 end

@@ -71,7 +71,7 @@ function islogiseed(dataset)
     false
 end
 function initlogiset(logiseed, features; kwargs...)
-    return error("Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...::$(typeof(kwargs))).")
+    return error("Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...{" * join(map(p->"$(p.first)::$(p.second)", kwargs), ", ") * "}).")
 end
 function ninstances(logiseed)
     return error("Please, provide method ninstances(logiseed::$(typeof(logiseed))).")

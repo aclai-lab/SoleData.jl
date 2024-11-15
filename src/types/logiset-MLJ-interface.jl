@@ -8,7 +8,6 @@ function eachinstance(X::MultiLogiset)
 end
 
 
-
 function featchannel(
     X::AbstractModalLogiset{W},
     i_instance::Integer,
@@ -16,7 +15,7 @@ function featchannel(
 ) where {W<:AbstractWorld}
     featchannel(X, i_instance, features(X)[i_feature])
 end
-
+    
 function readfeature(
     X::AbstractModalLogiset{W},
     featchannel::Any,
