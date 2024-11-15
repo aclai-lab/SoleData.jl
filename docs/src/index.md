@@ -86,6 +86,7 @@ Pages   = [
 	"scalar/canonical-conditions.jl",
 	"scalar/logiseed.jl",
 	"scalar/scalarlogiset.jl",
+	"scalar/autologiset-tools.jl",
 	"scalar/memosets.jl",
 	"scalar/onestep-memoset.jl",
 	"scalar/propositional-logiset.jl",

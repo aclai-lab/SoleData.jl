@@ -212,6 +212,8 @@ using .DimensionalDatasets: globalrel
 # Tables interface for (modal) logiset's, so that it can be integrated with MLJ
 include("types/logiset-MLJ-interface.jl")
 
+include("utils/autologiset-tools.jl")
+
 include("deprecate.jl")
 
 end # module

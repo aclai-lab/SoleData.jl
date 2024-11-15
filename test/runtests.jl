@@ -23,6 +23,7 @@ test_suites = [
     ("MultiLogisets", [ "multilogisets.jl", ]),
     # 
     ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
+    ("Features", [ "patchedfeatures"]),
     # 
     ("MLJ", [ "MLJ.jl", ]),
     ("Minify", ["minify.jl"]),

@@ -18,13 +18,20 @@ include("representatives.jl")
 # # Types for representing common associations between features and operators
 include("canonical-conditions.jl") # TODO remove
 
+
+struct PatchedFunction
+    f::Base.Callable
+    fname::String
+end
+
 const MixedCondition = Union{
     CanonicalCondition,
     #
     <:SoleData.AbstractFeature,                                            # feature
     <:Base.Callable,                                                         # feature function (i.e., callables to be associated to all variables);
+    <:PatchedFunction,
     <:Tuple{Base.Callable,Integer},                                          # (callable,var_id);
-    <:Tuple{TestOperator,<:Union{SoleData.AbstractFeature,Base.Callable}}, # (test_operator,features);
+    <:Tuple{TestOperator,<:Union{SoleData.AbstractFeature,Base.Callable,PatchedFunction}}, # (test_operator,features);
     <:ScalarMetaCondition,                                                   # ScalarMetaCondition;
 }
 
