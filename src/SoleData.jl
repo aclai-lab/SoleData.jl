@@ -147,9 +147,6 @@ export @scalarformula
 
 include("scalar/main.jl")
 
-# Tables interface for logiset's, so that it can be integrated with MLJ
-include("MLJ-interface.jl")
-
 export initlogiset, ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue
 
 export nvariables
@@ -194,7 +191,7 @@ using .DimensionalDatasets: identityrel
 using .DimensionalDatasets: globalrel
 
 # Tables interface for (modal) logiset's, so that it can be integrated with MLJ
-include("types/logiset-MLJ-interface.jl")
+include("types/MLJ-interface.jl")
 
 include("scalar-pla.jl")
 include("deprecate.jl")
