@@ -25,6 +25,7 @@ test_suites = [
     ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
     # 
     ("MLJ", [ "MLJ.jl", ]),
+    ("PLA", [ "pla.jl", ]),
     ("Minify", ["minify.jl"]),
     ("Parse", ["parse.jl"]),
     ("Example Datasets", [ "example-datasets.jl", ]),

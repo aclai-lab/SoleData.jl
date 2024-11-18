@@ -34,7 +34,7 @@ Base.hash(a::AbstractFeature) = Base.hash(map(x->getfield(a, x), fieldnames(type
 
 
 """
-    parsefeature(FT::Type{<:AbstractFeature}, expr::String; kwargs...)
+    parsefeature(FT::Type{<:AbstractFeature}, expr::AbstractString; kwargs...)
 
 Parse a feature of type `FT` from its [`syntaxstring`](@ref) representation.
 Depending on `FT`, specifying
@@ -44,7 +44,7 @@ See also [`parsecondition`](@ref).
 """
 function parsefeature(
     FT::Type{<:AbstractFeature},
-    expr::String;
+    expr::AbstractString;
     kwargs...
 )
     return error("Please, provide method parsefeature(::$(FT), " *
@@ -76,7 +76,7 @@ syntaxstring(f::Feature; kwargs...) = string(f.atom)
 
 function parsefeature(
     ::Type{FT},
-    expr::String;
+    expr::AbstractString;
     kwargs...
 ) where {FT<:Feature}
     if FT == Feature

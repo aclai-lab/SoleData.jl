@@ -199,7 +199,7 @@ end
 
 function parsecondition(
     ::Type{ScalarCondition},
-    expr::String;
+    expr::AbstractString;
     featuretype::Union{Nothing,Type} = nothing,
     featvaltype::Union{Nothing,Type} = nothing,
     kwargs...
@@ -221,7 +221,7 @@ end
 
 function parsecondition(
     ::Type{C},
-    expr::String;
+    expr::AbstractString;
     featuretype::Union{Nothing,Type} = nothing,
     kwargs...
 ) where {U,C<:ScalarCondition{U}}
@@ -236,7 +236,7 @@ end
 
 function parsecondition(
     ::Type{C},
-    expr::String;
+    expr::AbstractString;
     featuretype::Union{Nothing,Type} = nothing,
     kwargs...
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
@@ -247,10 +247,10 @@ end
 
 function _parsecondition(
     ::Type{C},
-    expr::String;
+    expr::AbstractString;
     kwargs...
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
-    r = Regex("^\\s*(\\S+)\\s+([^\\s\\d]+)\\s*(\\S+)\\s*\$")
+    r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\S+)\\s*\$")
     slices = match(r, expr)
 
     @assert !isnothing(slices) && length(slices) == 3 "Could not parse ScalarCondition from " *
@@ -457,37 +457,67 @@ end
 
 ############################################################################################
 
-# TODO docstring
-struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractCondition{FT}
+"""
+    struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractCondition{FT}
+
+A condition specifying a range of values for a scalar feature.
+
+Fields:
+- `feature`: the scalar feature
+- `minval`, `maxval`: the minimum and maximum values of the range
+- `minincluded`, `maxincluded`: whether to include the minimum and maximum values in the range, respectively
+
+The range is specified using interval notation, where the minimum value is included if `minincluded` is `true`
+and excluded if it is `false`. Similarly, the maximum value is included if `maxincluded` is `true` and excluded
+if it is `false`.
+
+For example, if `minincluded == true` and `maxincluded == false`, the range is `[minval, maxval)`.
+
+The `checkcondition` method checks whether the value of the feature is within the specified range.
+
+The `syntaxstring` method returns a string representation of the condition in the form
+`feature ∈ [minval, maxval]`, where the interval notation is used to indicate whether the minimum and maximum
+values are included or excluded.
+"""
+struct RangeScalarCondition{U<:Number,UU<:Union{Nothing,U},FT<:AbstractFeature} <: AbstractCondition{FT}
 
     feature::FT
 
-    minval::U
-    maxval::U
+    minval::UU
+    maxval::UU
     minincluded::Bool
     maxincluded::Bool
 
-    # function RangeScalarCondition(
-    #     feature::FT,
-    #     minval::U,
-    #     maxval::U,
-    #     minincluded::Bool,
-    #     maxincluded::Bool,
-    # ) where {U<:Number,FT<:AbstractFeature}
-    #     new{U,FT,O}(feature, minval, maxval, minincluded, maxincluded)
-    # end
+    function RangeScalarCondition(
+        feature::FT,
+        minval::U1,
+        maxval::U2,
+        minincluded::Bool,
+        maxincluded::Bool,
+    ) where {U1<:Union{Nothing,Number},U2<:Union{Nothing,Number},FT<:AbstractFeature}
+        U = isnothing(minval) ? typeof(maxval) : typeof(minval)
+        new{U,Union{U1,U2},FT}(feature, minval, maxval, minincluded, maxincluded)
+    end
 end
 
 feature(m::RangeScalarCondition) = m.feature
+minval(m::RangeScalarCondition) = m.minval
+maxval(m::RangeScalarCondition) = m.maxval
 
 _isgreater_test_operator(c::RangeScalarCondition) = (c.minincluded ? (>=) : (>))
 _isless_test_operator(c::RangeScalarCondition) = (c.maxincluded ? (<=) : (<))
 
 hasdual(::RangeScalarCondition) = false
 
-function checkcondition(c::RangeScalarCondition, args...; kwargs...)
-    apply_test_operator(_isgreater_test_operator(c), featvalue(feature(c), args...; kwargs...), c.minval) &&
-    apply_test_operator(_isless_test_operator(c), featvalue(feature(c), args...; kwargs...), c.maxval)
+@inline function honors_minval(c::RangeScalarCondition, featval)
+    isnothing(c.minval) || apply_test_operator(_isgreater_test_operator(c), featval, c.minval)
+end
+@inline function honors_maxval(c::RangeScalarCondition, featval)
+    isnothing(c.maxval) || apply_test_operator(_isgreater_test_operator(c), featval, c.maxval)
+end
+@inline function checkcondition(c::RangeScalarCondition, args...; kwargs...)
+    featval = featvalue(feature(c), args...; kwargs...)
+    honors_minval(c, featval) && honors_maxval(c, featval)
 end
 
 function syntaxstring(
@@ -497,8 +527,8 @@ function syntaxstring(
     kwargs...
 )
     threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
-    _min = string(threshold_display_method(m.minval))
-    _max = string(threshold_display_method(m.maxval))
+    _min = string(isnothing(m.minval) ? "-" : threshold_display_method(m.minval))
+    _max = string(isnothing(m.maxval) ? "-" : threshold_display_method(m.maxval))
     _parmin = m.minincluded ? "[" : "("
     _parmax = m.maxincluded ? "]" : ")"
     "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"

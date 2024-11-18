@@ -143,6 +143,8 @@ include("check.jl")
 
 export nfeatures
 
+export @scalarformula
+
 include("scalar/main.jl")
 
 # Tables interface for logiset's, so that it can be integrated with MLJ
@@ -191,6 +193,10 @@ using .DimensionalDatasets: IA2DRelations
 using .DimensionalDatasets: identityrel
 using .DimensionalDatasets: globalrel
 
+# Tables interface for (modal) logiset's, so that it can be integrated with MLJ
+include("types/logiset-MLJ-interface.jl")
+
+include("scalar-pla.jl")
 include("deprecate.jl")
 
 end # module
