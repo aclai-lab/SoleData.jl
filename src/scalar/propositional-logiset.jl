@@ -224,6 +224,7 @@ function alphabet(
         if !discretizedomain
             domain = unique(domain)
         end
+        domain
     end for feat in feats]
 
     get_test_operators(to, t::Type{<:Any}) = _get_test_operators(Val(to), t)
