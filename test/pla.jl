@@ -29,6 +29,30 @@ PLA._formula_to_pla(formula0)[1] |> println
 formula0_min = SoleData.espresso_minimize(formula0)
 println(formula0); println(formula0_min);
 
+
+
+φ = @scalarformula (V4 < 0.7 && V2 ≥ 2.6500000000000004 && V3 ≥ 5.0) ||
+(V4 < 0.7 && V2 < 2.6500000000000004 && V3 ≥ 5.0) ||
+(V4 < 0.7 && V2 ≥ 2.6500000000000004 && V3 < 5.0 && V3 ≥ 4.95) ||
+(V4 < 0.7 && V2 < 2.6500000000000004 && V3 < 5.0 && V3 ≥ 4.95) ||
+(V4 < 0.7 && V2 ≥ 2.6500000000000004 && V3 < 4.95) ||
+(V4 < 0.7 && V2 < 2.6500000000000004 && V3 < 4.95)
+φ_min = SoleData.espresso_minimize(φ)
+println(φ); println(φ_min);
+@test syntaxstring(φ_min) == syntaxstring(@scalarformula (V4 < 0.7))
+
+
+φ = @scalarformula (V4 ≥ 1.7000000000000002) ∧ (V2 ≥ 2.6500000000000004) ∧ (V3 ≥ 5.0) ∨
+(V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 ≥ 5.0) ∨
+(V4 ≥ 1.7000000000000002) ∧ (V2 ≥ 2.6500000000000004) ∧ (V3 < 5.0) ∧ (V3 ≥ 4.95) ∨
+(V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 < 5.0) ∧ (V3 ≥ 4.95) ∨
+(V4 ≥ 1.7000000000000002) ∧ (V2 ≥ 2.6500000000000004) ∧ (V3 < 4.95) ∨
+(V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 < 4.95)
+φ_min = SoleData.espresso_minimize(φ, false)
+println(φ); println(φ_min);
+@test syntaxstring(φ_min) == syntaxstring(@scalarformula (V4 ≥ 1.7000000000000002))
+
+
 # Looks okay?
 
 using Test

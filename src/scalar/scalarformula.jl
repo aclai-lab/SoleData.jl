@@ -34,7 +34,7 @@ macro scalarformula(expr)
             args = [_parse_syntaxtree(arg) for arg in expr.args]
             return Expr(:call, SyntaxTree, op, args...)
         else
-            throw(ArgumentError("Unsupported expression type: $expr"))
+            throw(ArgumentError("Unsupported expression type: $expr (head: $(expr.head), args: $(expr.args))"))
         end
     end
 

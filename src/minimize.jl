@@ -1,5 +1,6 @@
 
-function espresso_minimize(syntaxtree::SoleLogics.Formula, dc_set = false, silent::Bool = true, args...; kwargs...)
+function espresso_minimize(syntaxtree::SoleLogics.Formula, silent::Bool = true, Dflag = "exact", Sflag = nothing, eflag = nothing, args...; otherflags = [], kwargs...)
+    dc_set = false
     pla_string, others... = PLA._formula_to_pla(syntaxtree, dc_set, silent, args...; kwargs...)
 
     silent || println()
@@ -18,7 +19,12 @@ function espresso_minimize(syntaxtree::SoleLogics.Formula, dc_set = false, silen
     # echo_cmd = `echo $(escape_for_shell(pla_string))`
     echo_cmd = `echo $(pla_string)`
     # run(echo_cmd)
-    cmd = pipeline(pipeline(echo_cmd, `./espresso`), stdout=out, stderr=err)
+    args = String[]
+    isnothing(Dflag) || push!(args, "-D$(Dflag)")
+    isnothing(Sflag) || push!(args, "-S$(Sflag)")
+    isnothing(eflag) || push!(args, "-e$(eflag)")
+    append!(otherflags, args)
+    cmd = pipeline(pipeline(echo_cmd, `./espresso $args`), stdout=out, stderr=err)
     # cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
     try
         run(cmd)

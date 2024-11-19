@@ -11,16 +11,16 @@ _removewhitespaces = x->replace(x, (' ' => ""))
 # Function to extract thresholds and build domains for each variable
 function extract_domains(conds::AbstractVector{<:SoleData.AbstractCondition})
     # @assert all(a->test_operator(a) in [(<), (<=), (>), (>=), (==), (!=)], conds)
-    domains = OrderedDict{SoleData.AbstractFeature,Set{Int}}()
+    domains = OrderedDict{SoleData.AbstractFeature,Set}()
     map(conds) do cond
         if cond isa SoleData.ScalarCondition
-            push!(get!(domains, feature(cond), Set{Int}()), threshold(cond))
+            push!(get!(domains, feature(cond), Set()), threshold(cond))
         elseif cond isa SoleData.RangeScalarCondition
             let x = SoleData.minval(cond)
-                !isnothing(x) && push!(get!(domains, feature(cond), Set{Int}()), x)
+                !isnothing(x) && push!(get!(domains, feature(cond), Set()), x)
             end
             let x = SoleData.maxval(cond)
-                !isnothing(x) && push!(get!(domains, feature(cond), Set{Int}()), x)
+                !isnothing(x) && push!(get!(domains, feature(cond), Set()), x)
             end
         end
     end
@@ -97,7 +97,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, domains::OrderedDict
 end
 
 # Function to parse and process the formula into PLA
-function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, args...; kwargs...)
+function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent = true, args...; kwargs...)
 
     scalar_kwargs = (;
         profile = :nnf,
@@ -106,11 +106,11 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, args...
 
     dnfformula = SoleLogics.dnf(syntaxtree, Atom; scalar_kwargs..., kwargs...)
 
-    # @show dnfformula
+    silent || @show dnfformula
 
     dnfformula = SoleLogics.LeftmostDisjunctiveForm(map(d->SoleData.scalar_simplification(d; force_scalar_range_conditions=true), SoleLogics.disjuncts(dnfformula)))
 
-    # @show dnfformula
+    silent || @show dnfformula
 
     # scalar_kwargs = (;
     #     profile = :nnf,
@@ -121,7 +121,7 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, args...
 
     dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs..., kwargs...)
 
-    # @show dnfformula
+    silent || @show dnfformula
 
     # Extract domains
     conditions = unique(map(SoleLogics.value, atoms(dnfformula)))
@@ -140,7 +140,8 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, args...
     ilb_str = join(allvarlabels, " ")
     # @show ilb_str
     # Generate PLA header
-    num_vars = sum(length(v) for v in values(domains))  # Total PLA variables
+    # num_vars = sum(length(v) for v in values(domains))  # Total PLA variables
+    num_vars = length(conditions)
     # @show [length(v) for v in values(domains)]
     # featnames = map(syntaxstring, collect(keys(domains)))
     num_outputs = 1
