@@ -194,6 +194,7 @@ using .DimensionalDatasets: globalrel
 include("types/MLJ-interface.jl")
 
 include("scalar-pla.jl")
+include("minimize.jl")
 include("deprecate.jl")
 
 end # module

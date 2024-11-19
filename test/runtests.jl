@@ -22,6 +22,7 @@ test_suites = [
     ("DataFrame to Logiset", [ "dataframe2logiset.jl", ]),
     ("MultiLogisets", [ "multilogisets.jl", ]),
     # 
+    ("Conditions", [ "range-scalar-condition.jl", ]),
     ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
     # 
     ("MLJ", [ "MLJ.jl", ]),

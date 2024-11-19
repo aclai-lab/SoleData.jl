@@ -3,9 +3,11 @@ import SoleLogics: randatom
 
 const DEFAULT_SCALARCOND_FEATTYPE = SoleData.VarFeature
 
+abstract type AbstractScalarCondition{FT} <: AbstractCondition{FT} end
+
 # TODO ScalarMetaCondition is more like... an Alphabet, than a Condition.
 """
-    struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
+    struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractScalarCondition{FT}
         feature::FT
         test_operator::O
     end
@@ -19,10 +21,10 @@ for representing the infinite set of conditions that arise with a free threshold
 (see `UnboundedScalarAlphabet`): \${min[V1] ≥ a, a ∈ ℝ}\$.
 
 See also
-[`AbstractCondition`](@ref),
+[`AbstractScalarCondition`](@ref),
 [`ScalarCondition`](@ref).
 """
-struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
+struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractScalarCondition{FT}
 
     # Feature: a scalar function that can be computed on a world
     feature::FT
@@ -124,7 +126,7 @@ end
 ############################################################################################
 
 """
-    struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractCondition{FT}
+    struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractScalarCondition{FT}
         metacond::M
         a::U
     end
@@ -138,10 +140,10 @@ For example: \$min[V1] ≥ 10\$, which translates to
 In this case, the feature a [`VariableMin`](@ref) object.
 
 See also
-[`AbstractCondition`](@ref),
+[`AbstractScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
 """
-struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractCondition{FT}
+struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractScalarCondition{FT}
 
   # Metacondition
   metacond::M
@@ -252,7 +254,7 @@ function _parsecondition(
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
     r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\S+)\\s*\$")
     slices = match(r, expr)
-
+    
     @assert !isnothing(slices) && length(slices) == 3 "Could not parse ScalarCondition from " *
         "expression $(repr(expr)). Regex slices = $(slices)"
 
@@ -427,10 +429,10 @@ such as \$((features - b) ⋅ u) ≥ 0\$, where `features` is
 a set of \$m\$ features, and \$b,u ∈ ℝ^m\$.
 
 See also
-[`AbstractCondition`](@ref),
+[`AbstractScalarCondition`](@ref),
 [`ScalarCondition`](@ref).
 """
-struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractCondition{FT}
+struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractScalarCondition{FT}
 
     # Feature: a scalar function that can be computed on a world
     features::Vector{<:FT}
@@ -458,7 +460,7 @@ end
 ############################################################################################
 
 """
-    struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractCondition{FT}
+    struct RangeScalarCondition{U<:Number,FT<:AbstractFeature} <: AbstractScalarCondition{FT}
 
 A condition specifying a range of values for a scalar feature.
 
@@ -479,7 +481,7 @@ The `syntaxstring` method returns a string representation of the condition in th
 `feature ∈ [minval, maxval]`, where the interval notation is used to indicate whether the minimum and maximum
 values are included or excluded.
 """
-struct RangeScalarCondition{U<:Number,UU<:Union{Nothing,U},FT<:AbstractFeature} <: AbstractCondition{FT}
+struct RangeScalarCondition{U<:Number,UU<:Union{Nothing,U},FT<:AbstractFeature} <: AbstractScalarCondition{FT}
 
     feature::FT
 
@@ -495,7 +497,9 @@ struct RangeScalarCondition{U<:Number,UU<:Union{Nothing,U},FT<:AbstractFeature} 
         minincluded::Bool,
         maxincluded::Bool,
     ) where {U1<:Union{Nothing,Number},U2<:Union{Nothing,Number},FT<:AbstractFeature}
-        U = isnothing(minval) ? typeof(maxval) : typeof(minval)
+        U = isnothing(minval) ? U2 : (
+                isnothing(maxval) ? U1 : Union{U1,U2}
+            )
         new{U,Union{U1,U2},FT}(feature, minval, maxval, minincluded, maxincluded)
     end
 end
@@ -508,6 +512,49 @@ _isgreater_test_operator(c::RangeScalarCondition) = (c.minincluded ? (>=) : (>))
 _isless_test_operator(c::RangeScalarCondition) = (c.maxincluded ? (<=) : (<))
 
 hasdual(::RangeScalarCondition) = false
+
+module IntervalSetsWrap
+using IntervalSets: Interval
+end
+
+# function myisless(a::Number, aismin::Bool, b::Number, bismin::Bool)
+#     return a < b
+# end
+
+# function myisless(a::Number, aismin::Bool, b::Nothing, bismin::Bool)
+#     return !bismin
+# end
+
+# function myisless(a::Nothing, aismin::Bool, b::Number, bismin::Bool)
+#     return aismin
+# end
+
+# function myisless(a::Nothing, aismin::Bool, b::Nothing, bismin::Bool)
+#     return aismin && !bismin
+# end
+
+function tointervalset(a::RangeScalarCondition)
+    f1 = a.minincluded ? :closed : :open
+    f2 = a.maxincluded ? :closed : :open
+    IntervalSetsWrap.Interval{f1,f2}(isnothing(minval(a)) ? -Inf : minval(a), isnothing(maxval(a)) ? Inf : maxval(a))
+end
+
+function includes(a::RangeScalarCondition, b::RangeScalarCondition)
+    (feature(a) == feature(b)) || return false
+    return issubset(tointervalset(b),tointervalset(a))
+    # return 
+    #         (a.minincluded ? (!myisless(b.minval, true, a.minval, true)) : (myisless(a.minval, true, b.minval, true) || (!(b.minincluded) && a.minval == b.minval))) &&
+    #         (a.maxincluded ? (!myisless(a.maxval, false, b.maxval, false)) : (myisless(a.maxval, false, b.maxval, false) || (!(b.maxincluded) && a.maxval == b.maxval)))
+end
+
+function excludes(a::RangeScalarCondition, b::RangeScalarCondition)
+    (feature(a) == feature(b)) || return false
+    return isdisjoint(tointervalset(a),tointervalset(b))
+    # intersect = 
+    #         (a.minincluded ? (!myisless(b.maxval, false, a.minval, true) || ((b.maxincluded) && a.minval == b.maxval)) : (myisless(a.minval, true, b.maxval, false))) ||
+    #         (a.maxincluded ? (!myisless(a.maxval, false, b.minval, true) || ((b.minincluded) && a.maxval == b.minval)) : (myisless(a.maxval, false, b.minval, true)))
+    # return !intersect
+end
 
 @inline function honors_minval(c::RangeScalarCondition, featval)
     isnothing(c.minval) || apply_test_operator(_isgreater_test_operator(c), featval, c.minval)
@@ -527,9 +574,65 @@ function syntaxstring(
     kwargs...
 )
     threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
-    _min = string(isnothing(m.minval) ? "-" : threshold_display_method(m.minval))
-    _max = string(isnothing(m.maxval) ? "-" : threshold_display_method(m.maxval))
+    _min = string(isnothing(m.minval) ? "-∞" : threshold_display_method(m.minval))
+    _max = string(isnothing(m.maxval) ? "∞" : threshold_display_method(m.maxval))
     _parmin = m.minincluded ? "[" : "("
     _parmax = m.maxincluded ? "]" : ")"
     "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
+end
+
+# TODO remove repetition with other parsecondition method.
+function parsecondition(
+    T::Type{<:RangeScalarCondition},
+    expr::AbstractString;
+    featuretype::Union{Nothing,Type} = nothing,
+    featvaltype::Union{Nothing,Type} = nothing,
+    kwargs...
+)
+    if isnothing(featvaltype)
+        featvaltype = DEFAULT_VARFEATVALTYPE
+        @warn "Please, specify a type for the feature values (featvaltype = ...). " *
+            "$(featvaltype) will be used, but note that this may raise type errors. " *
+            "(expr = $(repr(expr)))"
+    end
+    if isnothing(featuretype)
+        featuretype = DEFAULT_SCALARCOND_FEATTYPE
+        @warn "Please, specify a feature type (featuretype = ...). " *
+            "$(featuretype) will be used. " *
+            "(expr = $(repr(expr)))"
+    end
+    _parsecondition(RangeScalarCondition, expr; featuretype, featvaltype, kwargs...)
+end
+function _parsecondition(
+    ::Type{C},
+    expr::AbstractString;
+    featuretype::Union{Nothing,Type} = nothing,
+    featvaltype::Union{Nothing,Type} = nothing,
+    kwargs...
+) where {C<:RangeScalarCondition}
+    U = featvaltype
+    FT = featuretype
+    r = Regex("^\\s*(\\S+)\\s*∈\\s*(\\[|\\()\\s*(\\S+)\\s*,\\s*(\\S+)\\s*(\\]|\\))\\s*\$")
+    # r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\[|\\()\\s*(\\S+)\\s*,\\s*(\\S+)\\s*(\\]|\\))\\s*\$")
+    slices = match(r, expr)
+    
+    @assert !isnothing(slices) && length(slices) == 5 "Could not parse ScalarCondition from " *
+        "expression $(repr(expr)). Regex slices = $(slices)"
+
+    slices = string.(slices)
+
+    feature = parsefeature(FT, slices[1]; featvaltype = U, kwargs...)
+    # test_operator = eval(Meta.parse(slices[2]))
+    # @assert test_operator == (∈) "Unknown test operator: $(test_operator)"
+    minincluded = (slices[2] == "[")
+    minval = (slices[3] == "-∞" ? nothing : eval(Meta.parse(slices[3])))
+    maxval = (slices[4] == "∞" ? nothing : eval(Meta.parse(slices[4])))
+    maxincluded = (slices[5] == "]")
+
+    condition = RangeScalarCondition(feature, minval, maxval, minincluded, maxincluded)
+    # if !(condition isa C)
+    #     @warn "Could not parse expression $(repr(expr)) as condition of type $(C); " *
+    #         " $(typeof(condition)) was used."
+    # end
+    condition
 end

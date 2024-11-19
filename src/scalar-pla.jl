@@ -34,7 +34,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, domains::OrderedDict
     
     # For each atom in the disjunct, add zeros or ones to relevants
     for lit in SoleLogics.grandchildren(disjunct)
-        @show lit
+        # @show lit
         cond = SoleLogics.value(atom(lit))
         pla_row[map(c->c==cond, conditions)] .= SoleLogics.ispos(lit) ? "1" : "0"
         # cond = SoleLogics.value(atom)
@@ -97,7 +97,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, domains::OrderedDict
 end
 
 # Function to parse and process the formula into PLA
-function _formula_to_pla(syntaxtree::SoleLogics.Formula, args...; kwargs...)
+function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, args...; kwargs...)
 
     scalar_kwargs = (;
         profile = :nnf,
@@ -106,11 +106,11 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, args...; kwargs...)
 
     dnfformula = SoleLogics.dnf(syntaxtree, Atom; scalar_kwargs..., kwargs...)
 
-    @show dnfformula
+    # @show dnfformula
 
     dnfformula = SoleLogics.LeftmostDisjunctiveForm(map(d->SoleData.scalar_simplification(d; force_scalar_range_conditions=true), SoleLogics.disjuncts(dnfformula)))
 
-    @show dnfformula
+    # @show dnfformula
 
     # scalar_kwargs = (;
     #     profile = :nnf,
@@ -121,15 +121,15 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, args...; kwargs...)
 
     dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs..., kwargs...)
 
-    @show dnfformula
+    # @show dnfformula
 
     # Extract domains
     conditions = unique(map(SoleLogics.value, atoms(dnfformula)))
     _patchnothing(v, d) = isnothing(v) ? d : v
     sort!(conditions, by=cond->(syntaxstring(SoleData.feature(cond)), _patchnothing(SoleData.minval(cond), -Inf), _patchnothing(SoleData.maxval(cond), Inf)))
     domains = extract_domains(conditions)
-    @show domains
-    @show syntaxstring.(conditions)
+    # @show domains
+    # @show syntaxstring.(conditions)
 
     allvarlabels = []
     for (i_feat, (feat, domain)) in enumerate(pairs(domains))
@@ -138,7 +138,7 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, args...; kwargs...)
         append!(allvarlabels, varlabels)
     end
     ilb_str = join(allvarlabels, " ")
-    @show ilb_str
+    # @show ilb_str
     # Generate PLA header
     num_vars = sum(length(v) for v in values(domains))  # Total PLA variables
     # @show [length(v) for v in values(domains)]
@@ -156,62 +156,65 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, args...; kwargs...)
     # pla_labels = String[]
     # push!(pla_labels, ".label var=$(i_feat-1) $(join(varlabels, ' '))")
 
+    # Generate DC-set rows for each disjunct
+    pla_dcset_rows = []
+    if dc_set
+        for (i_feat, (feat, domain)) in enumerate(pairs(domains))
+            cond_idxs = findall(c->feature(c) == feat, conditions)
+            # cond_idxs = collect(eachindex(conditions))
+            # cond_mask = map((c)->feature(c) == feat, conditions)
+            inclusions = [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in cond_idxs, cond_j in cond_idxs]
+            excludes = [SoleData.excludes(conditions[cond_i], conditions[cond_j]) for cond_i in cond_idxs, cond_j in cond_idxs]
+            for (i,cond_i) in enumerate(cond_idxs)
+                for (j,cond_j) in enumerate(cond_idxs)
+                    if inclusions[i, j]
+                        println("$(syntaxstring(conditions[cond_i])) -> $(syntaxstring(conditions[cond_j]))")
+                    end
+                    if excludes[j, i]
+                        println("$(syntaxstring(conditions[cond_i])) -> !$(syntaxstring(conditions[cond_j]))")
+                    end
+                end
+            end
+            print(inclusions)
+            print(excludes)
+            for (i,cond_i) in enumerate(cond_idxs)
+                row = fill("-", length(conditions))
+                row[cond_i] = "1"
+                for (j,cond_j) in enumerate(cond_idxs)
+                    if inclusions[j, i]
+                        row[cond_j] = "1"
+                    elseif excludes[j, i]
+                        row[cond_j] = "0"
+                    end
+                end
+                push!(pla_dcset_rows, "$(join(row, "")) -") # Append "-" for the DC-set output
+            end
+        end
+        println(pla_dcset_rows)
+        readline()
+    end
+
     # Generate ON-set rows for each disjunct
-    pla_rows = []
+    pla_onset_rows = []
     for disjunct in SoleLogics.disjuncts(dnfformula)
         row = encode_disjunct(disjunct, domains, conditions)
-        push!(pla_rows, "$row 1")  # Append "1" for the ON-set output
+        push!(pla_onset_rows, "$row 1")  # Append "1" for the ON-set output
     end
 
     # Combine PLA components
     pla_content = [
         join(pla_header, "\n"),
         # join(pla_labels, "\n"),
-        join(pla_rows, "\n"),
+        join(pla_dcset_rows, "\n"),
+        join(pla_onset_rows, "\n"),
         ".e"
     ]
     c = strip(join(pla_content, "\n"))
     return c, ilb_str, conditions
 end
 
-function espresso_minimize(syntaxtree::SoleLogics.Formula, args...; kwargs...)
-    pla_string, others... = _formula_to_pla(syntaxtree, args...; kwargs...)
-
-    println()
-    println(pla_string)
-    println()
-
-    # print(join(pla_content, "\n\n"))
-    out = Pipe()
-    err = Pipe()
-
-    function escape_for_shell(input::AbstractString)
-        # Replace single quotes with properly escaped shell-safe single quotes
-        return "'$(replace(input, "'" => "\\'"))'"
-    end
-
-    # cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`, `./espresso`), stdout=out, stderr=err)
-    cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
-    try
-        run(cmd)
-        close(out.in)
-        close(err.in)
-        errstr = String(read(err))
-        !isempty(errstr) && (@warn String(read(err)))
-    catch
-        close(out.in)
-        close(err.in)
-        errstr = String(read(err))
-        !isempty(errstr) && (throw(errstr))
-    end
-
-    minimized_pla = String(read(out))
-
-    return _pla_to_formula(minimized_pla, others...)
-end
-
 function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = nothing)
-    @show ilb_str, conditions
+    # @show ilb_str, conditions
     # Split the PLA into lines and parse key components
     lines = split(pla, '\n')
     input_vars = []
@@ -245,13 +248,15 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
             output_var = join(args, " ")  # Extract output variable label
         elseif cmd == ".e"  # End marker
             break
-        else
+        elseif cmd[1] in ['0', '1', '-']
             push!(rows, join(parts, ""))  # Add rows to data structure
+        else
+            throw("Unknown PLA command: $cmd")
         end
     end
 
     # @show domains
-    @show input_vars
+    # @show input_vars
     conditions
     this_conditions = [begin
         if !isnothing(conditions)
@@ -261,12 +266,12 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
             parsecondition(ScalarCondition, var_str)
         end
     end for var_str in input_vars]
-    @show syntaxstring.(this_conditions)
+    # @show syntaxstring.(this_conditions)
 
     # Process rows to build the formula
     disjuncts = []
     for row in rows
-        @show row
+        # @show row
         row_values, output_value = row[1:end-1], row[end]
         # @show row_values
         if output_value != '1'  # Only process ON-set rows
@@ -299,5 +304,9 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
         return ⊤  # True formula
     end
 end
+
+
+function formula_to_emacs(expr::SyntaxTree) end
+
 
 end

@@ -81,7 +81,7 @@ function scalar_simplification(
                     error("Unexpected condition: $(cond)")
                 end for cond in conds])
             
-            @show conds
+            # @show conds
 
             min_domain = nothing
             max_domain = nothing

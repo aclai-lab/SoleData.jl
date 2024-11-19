@@ -8,25 +8,28 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 @test_broken PLA._formula_to_pla(formula0)
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 >= 2))
-
 SoleData.scalar_simplification(dnf(formula0, Atom))
-PLA._formula_to_pla(formula0)[1] |> println
+PLA._formula_to_pla(formula0, true)[1] |> println
 
 formula01 = tree(PLA._pla_to_formula(PLA._formula_to_pla(formula0)...))
-formula0_min = PLA.espresso_minimize(formula0)
+formula0_min = SoleData.espresso_minimize(formula0)
 
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0))
 formula0 = SoleData.scalar_simplification(dnf(formula0, Atom))
 PLA._formula_to_pla(formula0)[1] |> println
-formula0_min = PLA.espresso_minimize(formula0)
+formula0_min = SoleData.espresso_minimize(formula0)
+println(formula0); println(formula0_min);
 @test_nowarn SoleData.scalar_simplification(formula0_min)
 
-Note that formula0_min is not smaller than
 
-println(pla_result)
+formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0)) ∨ (V1 <= 0) ∧ (V2 < 0) ∧ (V1 <= 10) ∧ (V3 > 10))
+formula0 = SoleData.scalar_simplification(dnf(formula0, Atom))
+PLA._formula_to_pla(formula0)[1] |> println
+formula0_min = SoleData.espresso_minimize(formula0)
+println(formula0); println(formula0_min);
 
-
+# Looks okay?
 
 using Test
 
@@ -39,7 +42,7 @@ pla = """
 .e
 """
 
-formula = PLA._pla_to_formula(pla)
+@test_nowarn formula = PLA._pla_to_formula(pla)
 
 
 pla = """.i 2
