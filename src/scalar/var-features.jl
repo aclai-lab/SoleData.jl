@@ -471,7 +471,7 @@ const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String,Base.Callable}(
 )
 
 """
-    parsefeature(FT::Type{<:VarFeature}, expr::String; kwargs...)
+    parsefeature(FT::Type{<:VarFeature}, expr::AbstractString; kwargs...)
 
 Parse a [`VarFeature`](@ref) of type `FT` from its [`syntaxstring`](@ref) representation.
 
@@ -506,7 +506,7 @@ See also [`VarFeature`](@ref), [`featvaltype`](@ref), [`parsecondition`](@ref).
 """
 function parsefeature(
     ::Type{FT},
-    expr::String;
+    expr::AbstractString;
     featvaltype::Union{Nothing,Type} = nothing,
     opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
     closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
@@ -543,6 +543,24 @@ function parsefeature(
         variable_name_prefix = isnothing(variable_name_prefix) &&
             isnothing(variable_names_map) ? UVF_VARPREFIX : variable_name_prefix
         variable_name_prefix = isnothing(variable_name_prefix) ? "" : variable_name_prefix
+
+        r = Regex("^\\s*$(variable_name_prefix)(\\S+)\\s*\$")
+        slices = match(r, expr)
+
+        # Assert for malformed strings (e.g. "V189")
+        if !isnothing(slices) && length(slices) == 1
+            i_variable = slices[1]
+            # if isnothing(featvaltype)
+            #     featvaltype = DEFAULT_VARFEATVALTYPE
+            #     @warn "Please, specify a type for the feature values (featvaltype = ...). " *
+            #         "$(featvaltype) will be used, but note that this may raise type errors. " *
+            #         "(expression = $(repr(expr)))"
+            # end
+            # @show VariableValue{featvaltype}
+            # @show (parse(Int64, i_variable))
+            # return VariableValue{featvaltype}(parse(Int64, i_variable))
+            return VariableValue(parse(Int64, i_variable))
+        end
 
         r = Regex("^\\s*(\\w+)\\s*\\$(opening_parenthesis)\\s*$(variable_name_prefix)(\\S+)\\s*\\$(closing_parenthesis)\\s*\$")
         slices = match(r, expr)

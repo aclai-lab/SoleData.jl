@@ -20,7 +20,7 @@ syntaxstring(c::ValueCondition; kwargs...) = syntaxstring(c.feature)
 
 function parsecondition(
     ::Type{ValueCondition},
-    expr::String;
+    expr::AbstractString;
     featuretype = Feature,
     kwargs...
 )
@@ -50,7 +50,7 @@ syntaxstring(c::FunctionalCondition; kwargs...) = string(c.f, "(", syntaxstring(
 
 function parsecondition(
     ::Type{FunctionalCondition},
-    expr::String;
+    expr::AbstractString;
     featuretype = Feature,
     kwargs...
 )

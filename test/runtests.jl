@@ -22,10 +22,12 @@ test_suites = [
     ("DataFrame to Logiset", [ "dataframe2logiset.jl", ]),
     ("MultiLogisets", [ "multilogisets.jl", ]),
     # 
+    ("Conditions", [ "range-scalar-condition.jl", ]),
     ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
     ("Features", [ "patchedfeatures"]),
     # 
     ("MLJ", [ "MLJ.jl", ]),
+    ("PLA", [ "pla.jl", ]),
     ("Minify", ["minify.jl"]),
     ("Parse", ["parse.jl"]),
     ("Example Datasets", [ "example-datasets.jl", ]),

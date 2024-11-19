@@ -147,6 +147,8 @@ export MultiFormula, modforms
 include("utils/multilogiset.jl")
 
 
+export @scalarformula
+
 include("scalar/main.jl")
 
 export initlogiset, ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue
@@ -214,6 +216,8 @@ include("types/logiset-MLJ-interface.jl")
 
 include("utils/autologiset-tools.jl")
 
+include("scalar-pla.jl")
+include("minimize.jl")
 include("deprecate.jl")
 
 end # module

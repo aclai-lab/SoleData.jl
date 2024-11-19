@@ -74,7 +74,7 @@ Base.isequal(a::AbstractCondition, b::AbstractCondition) = Base.isequal(map(x->g
 Base.hash(a::AbstractCondition) = Base.hash(map(x->getfield(a, x), fieldnames(typeof(a))), Base.hash(typeof(a)))
 
 """
-    parsecondition(C::Type{<:AbstractCondition}, expr::String; kwargs...)
+    parsecondition(C::Type{<:AbstractCondition}, expr::AbstractString; kwargs...)
 
 Parse a condition of type `C` from its [`syntaxstring`](@ref) representation.
 Depending on `C`, specifying
@@ -85,7 +85,7 @@ See also [`parsefeature`](@ref).
 """
 function parsecondition(
     C::Type{<:AbstractCondition},
-    expr::String;
+    expr::AbstractString;
     kwargs...
 )
     return error("Please, provide method parsecondition(::$(Type{C}), expr::$(typeof(expr)); kwargs...).")

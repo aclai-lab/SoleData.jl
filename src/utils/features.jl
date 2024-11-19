@@ -24,7 +24,7 @@ syntaxstring(f::Feature; kwargs...) = string(f.atom)
 
 function parsefeature(
     ::Type{FT},
-    expr::String;
+    expr::AbstractString;
     kwargs...
 ) where {FT<:Feature}
     if FT == Feature
