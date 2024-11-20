@@ -192,7 +192,7 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent 
             end
         end
         println(pla_dcset_rows)
-        readline()
+        # readline()
     end
 
     # Generate ON-set rows for each disjunct
