@@ -15,7 +15,6 @@ import MultiData: nvariables
 Abstract type for logisets, that is, sets of logical interpretations
 onto which (formulas on) conditions can be checked.
 
-
 See also
 [`AbstractCondition`](@ref),
 [`AbstractFeature`](@ref),

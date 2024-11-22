@@ -48,7 +48,7 @@ condition = ScalarCondition(:sepal_length, >, 5.0);
 @assert checkcondition(condition, iris_logiset, 1) == true
 ```
 """
-function checkcondition(c::AbstractCondition, args...; kwargs...)
+function checkcondition(c::AbstractCondition, args...; kwargs...)::Bool
     return error("Please, provide method checkcondition(::$(typeof(c)), " *
         join(map(t->"::$(t)", typeof.(args)), ", ") * "; kwargs...). " *
         "Note that this value must be unique.")
@@ -121,5 +121,6 @@ function interpret(
     kwargs...
 )::Formula
     # @warn "Please use `check` instead of `interpret` for crisp formulas."
-    return check(φ, i, args...; kwargs...) ? ⊤ : ⊥
+    cond = SoleLogics.value(φ)
+    return checkcondition(cond, i, args...; kwargs...) ? ⊤ : ⊥
 end

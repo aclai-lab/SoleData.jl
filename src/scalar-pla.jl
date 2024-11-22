@@ -27,6 +27,7 @@ function extract_domains(conds::AbstractVector{<:SoleData.AbstractCondition})
     return OrderedDict(k => sort(collect(v)) for (k, v) in domains)
 end
 
+
 # Function to encode a disjunct into a PLA row
 function encode_disjunct(disjunct::LeftmostConjunctiveForm, domains::OrderedDict, conditions::AbstractVector)
     # pla_row = []

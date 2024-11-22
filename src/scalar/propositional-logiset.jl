@@ -12,7 +12,7 @@ include("discretization.jl")
 ############################################################################################
 
 """
-    PropositionalLogiset(table)
+    PropositionalLogiset(table) <: AbstractPropositionalLogiset
 
 A logiset of propositional interpretations, wrapping a [Tables](https://github.com/JuliaData/Tables.jl)'
 table of real/string/categorical values.
@@ -249,7 +249,6 @@ function checkcondition(
     _fastmath = Val(true), # TODO warning!!!
     kwargs...,
 )::BitVector
-
 
     cond_threshold = threshold(cond)
     cond_operator = test_operator(cond)
