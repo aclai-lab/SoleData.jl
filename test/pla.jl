@@ -48,7 +48,7 @@ println(φ); println(φ_min);
 (V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 < 5.0) ∧ (V3 ≥ 4.95) ∨
 (V4 ≥ 1.7000000000000002) ∧ (V2 ≥ 2.6500000000000004) ∧ (V3 < 4.95) ∨
 (V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 < 4.95)
-φ_min = SoleData.espresso_minimize(φ, false)
+φ_min = SoleData.espresso_minimize(φ, false; encoding = :multivariate)
 println(φ); println(φ_min);
 @test syntaxstring(φ_min) == syntaxstring(@scalarformula (V4 ≥ 1.7000000000000002))
 

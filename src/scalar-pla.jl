@@ -182,7 +182,7 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent 
         end
         for i_var in 1:length(feat_nvars[feat_nvars .> 1])
             if feat_nvars[feat_nvars .> 1][i_var] > 1
-                this_ilb_str = join(varlabelss[i_var], " ")
+                this_ilb_str = join(varlabelss[feat_nvars .> 1][i_var], " ")
                 push!(pla_header, ".label var=$(num_binary_vars+i_var-1) $(this_ilb_str)")
             end
         end
@@ -266,6 +266,7 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent 
     pla_content = [
         join(pla_header, "\n"),
         join(pla_dcset_rows, "\n"),
+        ".p $(length(pla_onset_rows))",
         join(pla_onset_rows, "\n"),
         ".e"
     ]
@@ -365,8 +366,9 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
     # Process rows to build the formula
     disjuncts = []
     for row in rows
-        parts = split(row, "|")
-        
+        parts = split(row, r" |\|")
+        TODO
+        @show parts
         binary_part = parts[1]
 
         if (total_vars == nbinary_vars)
