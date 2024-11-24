@@ -122,7 +122,9 @@ function scalar_simplification(
                     max_domain = isnothing(max_domain) ? (<=, nothing #= typemax(T) =#) : max_domain
                 end
                 if allow_scalar_range_conditions && (!isnothing(min_domain) && !isnothing(max_domain))
-                    push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], !SoleData.isstrict(min_domain[1]), !SoleData.isstrict(max_domain[1]), )))
+                    minincluded = (!SoleData.isstrict(min_domain[1])) || isnothing(min_domain[2])
+                    maxincluded = (!SoleData.isstrict(max_domain[1])) || isnothing(max_domain[2])
+                    push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], minincluded, maxincluded)))
                 else
                     if !isnothing(min_domain)
                         push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))

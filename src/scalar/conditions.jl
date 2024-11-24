@@ -507,11 +507,42 @@ end
 feature(m::RangeScalarCondition) = m.feature
 minval(m::RangeScalarCondition) = m.minval
 maxval(m::RangeScalarCondition) = m.maxval
+minincluded(m::RangeScalarCondition) = m.minincluded
+maxincluded(m::RangeScalarCondition) = m.maxincluded
 
-_isgreater_test_operator(c::RangeScalarCondition) = (c.minincluded ? (>=) : (>))
-_isless_test_operator(c::RangeScalarCondition) = (c.maxincluded ? (<=) : (<))
+_isgreater_test_operator(c::RangeScalarCondition) = (minincluded(c) ? (>=) : (>))
+_isless_test_operator(c::RangeScalarCondition) = (maxincluded(c) ? (<=) : (<))
 
-hasdual(::RangeScalarCondition) = false
+function dual(c::RangeScalarCondition)
+    if (isnothing(minval(c)) && isnothing(maxval(c)))
+        RangeScalarCondition(feature(c), zero(U), zero(U), false, false) # Always false condition
+    elseif isnothing(minval(c))
+        RangeScalarCondition(
+            feature(c),
+            maxval(c),
+            nothing,
+            !maxincluded(c),
+            true,
+        )
+    elseif isnothing(maxval(c))
+        RangeScalarCondition(
+            feature(c),
+            nothing,
+            minval(c),
+            true,
+            !minincluded(c),
+        )
+    else
+        error("Could not compute dual condition for RangeScalarCondition: $(syntaxstring(c)).")
+    end
+end
+
+function hasdual(c::RangeScalarCondition)
+    (isnothing(minval(c)) || isnothing(maxval(c))) || (
+        minval(c) == maxval(c) &&
+        maxincluded(c) == minincluded(c) == false
+    )
+end
 
 module IntervalSetsWrap
 using IntervalSets: Interval
@@ -534,8 +565,8 @@ end
 # end
 
 function tointervalset(a::RangeScalarCondition)
-    f1 = a.minincluded ? :closed : :open
-    f2 = a.maxincluded ? :closed : :open
+    f1 = minincluded(a) ? :closed : :open
+    f2 = maxincluded(a) ? :closed : :open
     IntervalSetsWrap.Interval{f1,f2}(isnothing(minval(a)) ? -Inf : minval(a), isnothing(maxval(a)) ? Inf : maxval(a))
 end
 
@@ -543,16 +574,16 @@ function includes(a::RangeScalarCondition, b::RangeScalarCondition)
     (feature(a) == feature(b)) || return false
     return issubset(tointervalset(b),tointervalset(a))
     # return 
-    #         (a.minincluded ? (!myisless(b.minval, true, a.minval, true)) : (myisless(a.minval, true, b.minval, true) || (!(b.minincluded) && a.minval == b.minval))) &&
-    #         (a.maxincluded ? (!myisless(a.maxval, false, b.maxval, false)) : (myisless(a.maxval, false, b.maxval, false) || (!(b.maxincluded) && a.maxval == b.maxval)))
+    #         (minincluded(a) ? (!myisless(b.minval, true, a.minval, true)) : (myisless(a.minval, true, b.minval, true) || (!(minincluded(b)) && a.minval == b.minval))) &&
+    #         (maxincluded(a) ? (!myisless(a.maxval, false, b.maxval, false)) : (myisless(a.maxval, false, b.maxval, false) || (!(maxincluded(b)) && a.maxval == b.maxval)))
 end
 
 function excludes(a::RangeScalarCondition, b::RangeScalarCondition)
     (feature(a) == feature(b)) || return false
     return isdisjoint(tointervalset(a),tointervalset(b))
     # intersect = 
-    #         (a.minincluded ? (!myisless(b.maxval, false, a.minval, true) || ((b.maxincluded) && a.minval == b.maxval)) : (myisless(a.minval, true, b.maxval, false))) ||
-    #         (a.maxincluded ? (!myisless(a.maxval, false, b.minval, true) || ((b.minincluded) && a.maxval == b.minval)) : (myisless(a.maxval, false, b.minval, true)))
+    #         (minincluded(a) ? (!myisless(b.maxval, false, a.minval, true) || ((maxincluded(b)) && a.minval == b.maxval)) : (myisless(a.minval, true, b.maxval, false))) ||
+    #         (maxincluded(a) ? (!myisless(a.maxval, false, b.minval, true) || ((minincluded(b)) && a.maxval == b.minval)) : (myisless(a.maxval, false, b.minval, true)))
     # return !intersect
 end
 
@@ -576,8 +607,8 @@ function syntaxstring(
     threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
     _min = string(isnothing(m.minval) ? "-∞" : threshold_display_method(m.minval))
     _max = string(isnothing(m.maxval) ? "∞" : threshold_display_method(m.maxval))
-    _parmin = m.minincluded ? "[" : "("
-    _parmax = m.maxincluded ? "]" : ")"
+    _parmin = minincluded(m) ? "[" : "("
+    _parmax = maxincluded(m) ? "]" : ")"
     "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
 end
 
