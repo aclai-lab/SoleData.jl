@@ -92,14 +92,19 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent 
 
     dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs..., kwargs...)
 
+    _patchnothing(v, d) = isnothing(v) ? d : v
+    condsortby = cond->(syntaxstring(SoleData.feature(cond)), _patchnothing(SoleData.minval(cond), -Inf), _patchnothing(SoleData.maxval(cond), Inf))
+
+    for ch in SoleLogics.grandchildren(dnfformula)
+        sort!(SoleLogics.grandchildren(ch), by=lit->condsortby(SoleLogics.value(SoleLogics.atom(lit))))
+    end
     silent || @show dnfformula
 
     # Extract domains
     conditions = unique(map(SoleLogics.value, atoms(dnfformula)))
     features = unique(SoleData.feature.(conditions))
     # nnbinary_vars =div(length(setdiff(_duals, conditions)), 2)
-    _patchnothing(v, d) = isnothing(v) ? d : v
-    sort!(conditions, by=cond->(syntaxstring(SoleData.feature(cond)), _patchnothing(SoleData.minval(cond), -Inf), _patchnothing(SoleData.maxval(cond), Inf)))
+    sort!(conditions, by=condsortby)
     original_conditions = conditions
     println(SoleLogics.displaysyntaxvector(original_conditions))
     conditions = begin
@@ -367,7 +372,6 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
     disjuncts = []
     for row in rows
         parts = split(row, r" |\|")
-        TODO
         @show parts
         binary_part = parts[1]
 
@@ -386,9 +390,9 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
             @show value            
             cond = parsed_conditions[idx]
             if value == '1'
-                push!(conjuncts, Atom(cond))
+                push!(conjuncts, Literal(true, Atom(cond)))
             elseif value == '0'
-                push!(conjuncts, ¬(Atom(cond)))
+                push!(conjuncts, Literal(false, Atom(cond)))
             end
         end
         
@@ -399,7 +403,7 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
                 var_labels = multivalued_info[nbinary_vars + i + 1]
                 selected = findfirst('1' == c for c in multi_part)
                 if selected
-                    push!(conjuncts, Atom(var_labels[selected]))
+                    push!(conjuncts, Literal(true, Atom(var_labels[selected])))
                 end
             end
         end

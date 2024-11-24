@@ -34,8 +34,8 @@ function scalar_simplification(
     # @show all(c->c isa Atom{<:ScalarCondition}, SoleLogics.grandchildren(φ))
     if !all(c->c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}, SoleLogics.grandchildren(φ))
     # if (!all(c->c isa Atom{<:ScalarCondition}, SoleLogics.grandchildren(φ)))
-        !silent && print("Cannot perform scalar simplification on linear form ($(syntaxstring(φ))) on" *
-            " $(Union{map(typeof, SoleLogics.grandchildren(φ))...}).")
+        !silent && println("Cannot perform scalar simplification on linear form:\n$(syntaxstring(φ))\n on" *
+            " $(Union{map(typeof, filter(c->!(c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}), SoleLogics.grandchildren(φ)))...}).")
         return φ
     end
 
