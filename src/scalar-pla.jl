@@ -327,7 +327,7 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
         elseif cmd[1] in ['0', '1', '-', '|']
             push!(rows, join(parts, ""))  # Add rows to data structure
         else
-            throw("Unknown PLA command: $cmd")
+            throw(ArgumentError("Unknown PLA command: $cmd"))
         end
     end
 

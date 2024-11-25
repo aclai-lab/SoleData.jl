@@ -120,7 +120,7 @@ nonscalar_supported_logiset = @test_nowarn SupportedLogiset(nonscalar_logiset)
 @test SoleLogics.frame(bool_logiset, 1) == SoleLogics.frame(bool_supported_logiset, 1)
 
 
-@test_throws AssertionError SoleData.parsecondition(SoleData.ScalarCondition, "p > 0.5")
+@test_throws ArgumentError SoleData.parsecondition(SoleData.ScalarCondition, "p > 0.5")
 @test_nowarn SoleData.parsecondition(SoleData.ScalarCondition, "p > 0.5"; featvaltype = String, featuretype = Feature)
 @test SoleData.ScalarCondition(features[1], >, 0.5) == SoleData.parsecondition(SoleData.ScalarCondition, "p > 0.5"; featvaltype = String, featuretype = Feature)
 

@@ -159,6 +159,7 @@ include("types/dimensional-structures.jl")
 
 include("dimensional-structures/main.jl")
 
+
 ################################################################################
 
 include("utils/conditions.jl")
@@ -215,6 +216,25 @@ using .DimensionalDatasets: globalrel
 include("types/logiset-MLJ-interface.jl")
 
 include("utils/autologiset-tools.jl")
+
+"""
+Logical datasets with scalar features.
+"""
+const AbstractScalarLogiset{
+    W<:AbstractWorld,
+    U<:Number,
+    FT<:AbstractFeature,
+    FR<:AbstractFrame{W}
+} = AbstractModalLogiset{W,U,FT,FR}
+
+nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
+nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
+relations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = relations(supports(X)[1])
+relations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = relations(supports(X)[1])
+nmetaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nmetaconditions(supports(X)[1])
+nmetaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nmetaconditions(supports(X)[1])
+metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
+metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
 
 include("scalar-pla.jl")
 include("minimize.jl")

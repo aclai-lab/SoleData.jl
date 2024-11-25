@@ -19,14 +19,14 @@ function frame(
     !(v isa Array) ? OneWorld() : FullDimensionalFrame(size(v), worldtype)
 end
 
-# # Note: used in naturalgrouping.
-# function frame(
-#     dataset::NamedTuple,
-#     column::Vector,
-#     i_instance::Integer
-# )
-#     v = [column[i_instance] for column in values(Tables.columns(X))]
-#     !(eltype(v) isa Array) ? OneWorld() : FullDimensionalFrame(size(v))
-# end
+# Note: used in naturalgrouping.
+function frame(
+    dataset::NamedTuple,
+    column::Vector,
+    i_instance::Integer
+)
+    v = [column[i_instance] for column in values(Tables.columns(X))]
+    !(eltype(v) isa Array) ? OneWorld() : FullDimensionalFrame(size(v))
+end
 varnames(X::NamedTuple) = keys(X)
 ############################################################################################

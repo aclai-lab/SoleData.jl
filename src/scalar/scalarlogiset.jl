@@ -514,7 +514,7 @@ function naturalgrouping(
 
     columnnames = names(X)
     percol_framess = [unique(map(
-        (i_instance)->(frame(X[:,col], i_instance; framekwargs...)),
+        (i_instance)->(frame(X, X[:,col], i_instance; framekwargs...)),
         1:ninstances(X)
     )) for col in columnnames]
 

@@ -91,7 +91,7 @@ function scalar_simplification(
                 this_domain = (test_operator(cond), threshold(cond))
                 p = polarity(test_operator(cond))
                 if isnothing(p)
-                    throw("Cannot simplify scalar formula with test operator = $(test_operator(cond))")
+                    throw(ArgumentError("Cannot simplify scalar formula with test operator = $(test_operator(cond))"))
                 elseif !p
                     if isnothing(max_domain) ||
                         (

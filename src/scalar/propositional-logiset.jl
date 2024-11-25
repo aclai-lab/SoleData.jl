@@ -268,7 +268,7 @@ function checkcondition(
     args...;
     kwargs...,
 )::Bool
-    @warn "Attempting single-instance check. This is not optimal."
+    # @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
 
     cond_threshold = threshold(cond)
@@ -300,7 +300,7 @@ function checkcondition(
     args...;
     kwargs...
 )::Bool
-    @warn "Attempting single-instance check. This is not optimal."
+    # @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
 
     testop = test_operator(cond)

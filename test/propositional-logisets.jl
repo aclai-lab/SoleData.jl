@@ -88,7 +88,7 @@ X = PropositionalLogiset(df)
 @test_nowarn alphabet(X, true; test_operators = [≥]) |> atoms .|> syntaxstring
 @test_nowarn alphabet(X; test_operators = [≥, <]) |> atoms .|> x->syntaxstring(x; show_colon = false)
 @test_nowarn alphabet(X, false)
-@test_throws MethodError alphabet(X, false; discretizedomain = true)
+@test_throws ArgumentError alphabet(X, false; discretizedomain = true)
 @test_nowarn alphabet(X, false; discretizedomain = true, y = [rand() for i in 1:4])
 
 a,b,c,d = collect((alphabet(X; test_operators = [≥, <]) |> atoms))[1:4]

@@ -235,15 +235,16 @@ function parsecondition(
     end
     _parsecondition(C{featuretype}, expr; kwargs...)
 end
-
 function parsecondition(
     ::Type{C},
     expr::AbstractString;
     featuretype::Union{Nothing,Type} = nothing,
     kwargs...
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
-    @assert isnothing(featuretype) || featuretype == FT "Cannot parse condition of type $(C) with " *
-        "featuretype = $(featuretype). (expr = $(repr(expr)))"
+    if !isnothing(featuretype) && featuretype != FT
+        throw(ValueError("Cannot parse condition of type $(C) with " *
+            "featuretype = $(featuretype). (expr = $(repr(expr)))"))
+    end
     _parsecondition(C, expr; kwargs...)
 end
 
@@ -255,8 +256,10 @@ function _parsecondition(
     r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\S+)\\s*\$")
     slices = match(r, expr)
     
-    @assert !isnothing(slices) && length(slices) == 3 "Could not parse ScalarCondition from " *
-        "expression $(repr(expr)). Regex slices = $(slices)"
+    if isnothing(slices) || length(slices) != 3
+        throw(ValueError("Could not parse ScalarCondition from " *
+            "expression $(repr(expr)). Regex slices = $(slices)"))
+    end
 
     slices = string.(slices)
 
@@ -388,7 +391,7 @@ function _multivariate_scalar_alphabet(
 )::MultivariateScalarAlphabet
 
     if discretizedomain && isnothing(y)
-        error("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.")
+        throw(ArgumentError("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm."))
     end
 
     grouped_sas = map(((feat,testops,domain),) ->begin
@@ -646,9 +649,10 @@ function _parsecondition(
     r = Regex("^\\s*(\\S+)\\s*∈\\s*(\\[|\\()\\s*(\\S+)\\s*,\\s*(\\S+)\\s*(\\]|\\))\\s*\$")
     # r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\[|\\()\\s*(\\S+)\\s*,\\s*(\\S+)\\s*(\\]|\\))\\s*\$")
     slices = match(r, expr)
-    
-    @assert !isnothing(slices) && length(slices) == 5 "Could not parse ScalarCondition from " *
-        "expression $(repr(expr)). Regex slices = $(slices)"
+    if isnothing(slices) || length(slices) != 5
+        throw(ValueError("Could not parse ScalarCondition from " *
+            "expression $(repr(expr)). Regex slices = $(slices)"))
+    end
 
     slices = string.(slices)
 
