@@ -56,7 +56,7 @@ function check(
     hasformula(memo_structure::AbstractMemoset, φ::Formula) = haskey(memo_structure, i_instance, SoleLogics.tree(φ))
 
     onestep_memoset = begin
-        if X isa SupportedLogiset && supporttypes(X) <: Tuple{<:AbstractOneStepMemoset,<:AbstractFullMemoset}
+        if SoleData.hassupports(X) && supporttypes(X) <: Tuple{<:AbstractOneStepMemoset,<:AbstractFullMemoset}
             supports(X)[1]
         else
             nothing
@@ -69,7 +69,7 @@ function check(
     end
 
     X, memo_structure = begin
-        if X isa SupportedLogiset && usesfullmemo(X)
+        if SoleData.hassupports(X) && usesfullmemo(X)
             if !isnothing(use_memo)
                 @warn "Dataset of type $(typeof(X)) uses full memoization, " *
                     "but a memoization structure was provided to check(...)."
