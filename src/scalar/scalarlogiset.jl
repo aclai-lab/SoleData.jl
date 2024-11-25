@@ -79,6 +79,7 @@ function scalarlogiset(
     print_progress                   :: Bool=false,
     allow_propositional              :: Bool=false, # TODO default to true
     force_i_variables                :: Bool=false,
+    fixcallablenans                  :: Bool = false,
     worldtype_by_dim                 :: Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing,
     kwargs...,
     # featvaltype = nothing
@@ -189,7 +190,7 @@ function scalarlogiset(
         end
     else
         if isnothing(conditions)
-            conditions = naturalconditions(dataset, features; force_i_variables = force_i_variables)
+            conditions = naturalconditions(dataset, features; force_i_variables, fixcallablenans)
             features = unique(feature.(conditions))
             if use_onestep_memoization == false
                 conditions = nothing
@@ -327,7 +328,7 @@ function naturalconditions(
     #         end
     #     end
 
-    #     return [naturalconditions(mod, mixed_conditions, featvaltype) for mod in eachmodality(dataset)]
+    #     return [naturalconditions(mod, mixed_conditions, featvaltype; force_i_variables, fixcallablenans) for mod in eachmodality(dataset)]
     # end
 
     # @assert islogiseed(dataset)

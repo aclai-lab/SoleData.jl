@@ -109,7 +109,13 @@ function defaultconditions(dataset)
     end
 end
 
-function readconditions(model_conditions, model_featvaltype, dataset)
+function readconditions(
+    model_conditions,
+    model_featvaltype,
+    dataset;
+    force_i_variables  :: Bool = false,
+    fixcallablenans    :: Bool = false,
+)
     conditions = begin
         if model_conditions == mlj_default_conditions
             defaultconditions(dataset)
@@ -128,7 +134,7 @@ function readconditions(model_conditions, model_featvaltype, dataset)
         conditions
     else
         # @show typeof(dataset)
-        naturalconditions(dataset, conditions, model_featvaltype)
+        naturalconditions(dataset, conditions, model_featvaltype; force_i_variables, fixcallablenans)
     end
 end
 
@@ -152,7 +158,9 @@ function autologiset(
     conditions = autoconditions(nothing),
     featvaltype = Float64, # TODO derive it from X + conditions.
     relations = autorelations(nothing),
-    passive_mode = falseq
+    passive_mode = false,
+    force_i_variables  :: Bool = false,
+    fixcallablenans    :: Bool = false,
 )
 
     if X isa MultiLogiset
@@ -188,7 +196,7 @@ function autologiset(
 
             if !passive_mode
                 @info "Precomputing logiset..."
-                metaconditions = readconditions(conditions, featvaltype, X)
+                metaconditions = readconditions(conditions, featvaltype, X; force_i_variables, fixcallablenans)
                 features = unique(SoleData.feature.(metaconditions))
                 scalarlogiset(X, features;
                     use_onestep_memoization = true,
@@ -204,7 +212,7 @@ function autologiset(
         elseif X isa AbstractModalLogiset
             SupportedLogiset(X;
                 use_onestep_memoization = true,
-                conditions = readconditions(conditions, featvaltype, X),
+                conditions = readconditions(conditions, featvaltype, X); force_i_variables, fixcallablenans,
                 relations = readrelations(relations, X)
             )
         elseif X isa AbstractMultiDataset
@@ -268,7 +276,7 @@ function autologiset(
             if !passive_mode || !SoleData.ismultilogiseed(X)
                 @info "Precomputing logiset..."
                 MultiLogiset([begin
-                        _metaconditions = readconditions(conditions, featvaltype, mod)
+                        _metaconditions = readconditions(conditions, featvaltype, mod; force_i_variables, fixcallablenans)
                         features = unique(SoleData.feature.(_metaconditions))
                         # @show _metaconditions
                         # @show features
