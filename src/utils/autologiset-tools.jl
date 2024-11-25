@@ -212,7 +212,7 @@ function autologiset(
         elseif X isa AbstractModalLogiset
             SupportedLogiset(X;
                 use_onestep_memoization = true,
-                conditions = readconditions(conditions, featvaltype, X); force_i_variables, fixcallablenans,
+                conditions = readconditions(conditions, featvaltype, X; force_i_variables, fixcallablenans),
                 relations = readrelations(relations, X)
             )
         elseif X isa AbstractMultiDataset
