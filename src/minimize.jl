@@ -1,7 +1,7 @@
 
 function espresso_minimize(syntaxtree::SoleLogics.Formula, silent::Bool = true, Dflag = "exact", Sflag = nothing, eflag = nothing, args...; otherflags = [], kwargs...)
     dc_set = false
-    pla_string, others... = PLA._formula_to_pla(syntaxtree, dc_set, silent, args...; kwargs...)
+    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(syntaxtree, dc_set, silent, args...; kwargs...)
 
     silent || println()
     silent || println(pla_string)
@@ -41,5 +41,5 @@ function espresso_minimize(syntaxtree::SoleLogics.Formula, silent::Bool = true, 
 
     minimized_pla = String(read(out))
     silent || println(minimized_pla)
-    return PLA._pla_to_formula(minimized_pla, others...)
+    return PLA._pla_to_formula(minimized_pla, pla_args...; pla_kwargs...)
 end

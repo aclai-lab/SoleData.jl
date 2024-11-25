@@ -67,7 +67,15 @@ end
 
 # Function to parse and process the formula into PLA
 # function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent = true, args...; encoding = :multivariate, kwargs...)
-function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent = true, args...; encoding = :univariate, kwargs...)
+function _formula_to_pla(
+    syntaxtree::SoleLogics.Formula,
+    dc_set = false,
+    silent = true,
+    args...;
+    encoding = :univariate,
+    use_scalar_range_conditions = true,
+    kwargs...
+)
     @assert encoding in [:univariate, :multivariate]
     
     scalar_kwargs = (;
@@ -79,7 +87,7 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent 
 
     silent || @show dnfformula
 
-    dnfformula = SoleLogics.LeftmostDisjunctiveForm(map(d->SoleData.scalar_simplification(d; force_scalar_range_conditions=true), SoleLogics.disjuncts(dnfformula)))
+    dnfformula = SoleLogics.LeftmostDisjunctiveForm(map(d->SoleData.scalar_simplification(d; force_scalar_range_conditions=use_scalar_range_conditions), SoleLogics.disjuncts(dnfformula)))
 
     silent || @show dnfformula
 
@@ -276,10 +284,14 @@ function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent 
         ".e"
     ]
     c = strip(join(pla_content, "\n"))
-    return c, nothing, conditions
+    return c, (nothing, conditions), (
+        encoding = encoding,
+        use_scalar_range_conditions = use_scalar_range_conditions,
+        kwargs...
+    )
 end
 
-function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = nothing)
+function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = nothing; kwargs...)
     # @show ilb_str, conditions
     # Split the PLA into lines and parse key components
     lines = split(pla, '\n')
@@ -317,7 +329,7 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
         elseif cmd == ".ilb"  # Input labels
             this_ilb_str = join(args, " ")
             if !isnothing(ilb_str)
-                @assert ilb_str == this_ilb_str "Mismatch between given ilb_str and parsed .ilb."
+                @assert ilb_str == this_ilb_str "Mismatch between given ilb_str and parsed .ilb.\n$(ilb_str)\n$(this_ilb_str)."
             end
             input_vars = split(this_ilb_str)  # Extract input variable labels
         elseif cmd == ".ob"  # Output labels

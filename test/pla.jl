@@ -8,10 +8,11 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 @test_broken PLA._formula_to_pla(formula0)
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 >= 2))
-SoleData.scalar_simplification(dnf(formula0, Atom))
+@test_nowarn SoleData.scalar_simplification(dnf(formula0, Atom))
 PLA._formula_to_pla(formula0, true)[1] |> println
 
-formula01 = tree(PLA._pla_to_formula(PLA._formula_to_pla(formula0)...))
+f, args, kwargs = PLA._formula_to_pla(formula0)
+formula01 = tree(PLA._pla_to_formula(f, args...; kwargs...))
 formula0_min = SoleData.espresso_minimize(formula0)
 
 
