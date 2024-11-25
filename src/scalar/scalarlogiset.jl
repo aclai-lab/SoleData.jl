@@ -80,7 +80,8 @@ function scalarlogiset(
     print_progress                   :: Bool=false,
     allow_propositional              :: Bool=false, # TODO default to true
     force_i_variables                :: Bool=false,
-    worldtype_by_dim                 :: Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
+    fixcallablenans                  :: Bool = false,
+    worldtype_by_dim                 :: Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing,
     kwargs...,
     # featvaltype = nothing
 )
@@ -104,7 +105,7 @@ function scalarlogiset(
 
     framekwargs = (; worldtype_by_dim = worldtype_by_dim)
     framekwargs = NamedTuple(filter(x->!isnothing(last(x)), pairs(framekwargs)))
-    
+
     if ismultilogiseed(dataset)
 
         newkwargs = (;
@@ -204,6 +205,7 @@ function scalarlogiset(
                 dataset,
                 features;
                 force_i_variables,
+                fixcallablenans,
                 framekwargs...,
             )
             features = unique(feature.(conditions))
@@ -344,7 +346,7 @@ function naturalconditions(
     #         end
     #     end
 
-    #     return [naturalconditions(mod, mixed_conditions, featvaltype) for mod in eachmodality(dataset)]
+    #     return [naturalconditions(mod, mixed_conditions, featvaltype; force_i_variables, fixcallablenans) for mod in eachmodality(dataset)]
     # end
 
     # @assert islogiseed(dataset)
@@ -614,7 +616,7 @@ function scalaralphabet(atoms::Vector{<:Atom{<:ScalarCondition}}; domains_by_fea
         domain = unique(SoleData.threshold.(scalarconditions))
         (feat, testopss, domain)
     end for atoms_group in atoms_groups]...) .|> collect
-    
+
     return _multivariate_scalar_alphabet(feats, testopss, domains; kwargs...)
 end
 
