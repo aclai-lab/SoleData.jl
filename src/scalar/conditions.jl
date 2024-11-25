@@ -242,7 +242,7 @@ function parsecondition(
     kwargs...
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
     if !isnothing(featuretype) && featuretype != FT
-        throw(ValueError("Cannot parse condition of type $(C) with " *
+        throw(ArgumentError("Cannot parse condition of type $(C) with " *
             "featuretype = $(featuretype). (expr = $(repr(expr)))"))
     end
     _parsecondition(C, expr; kwargs...)
@@ -257,7 +257,7 @@ function _parsecondition(
     slices = match(r, expr)
     
     if isnothing(slices) || length(slices) != 3
-        throw(ValueError("Could not parse ScalarCondition from " *
+        throw(ArgumentError("Could not parse ScalarCondition from " *
             "expression $(repr(expr)). Regex slices = $(slices)"))
     end
 
@@ -650,7 +650,7 @@ function _parsecondition(
     # r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\[|\\()\\s*(\\S+)\\s*,\\s*(\\S+)\\s*(\\]|\\))\\s*\$")
     slices = match(r, expr)
     if isnothing(slices) || length(slices) != 5
-        throw(ValueError("Could not parse ScalarCondition from " *
+        throw(ArgumentError("Could not parse ScalarCondition from " *
             "expression $(repr(expr)). Regex slices = $(slices)"))
     end
 
