@@ -438,7 +438,7 @@ function naturalconditions(
     metaconditions = ScalarMetaCondition[]
 
     mixed_conditions = vcat(unpackcondition.(mixed_conditions)...)
-    @show mixed_conditions
+    # @show mixed_conditions
     readymade_conditions          = filter(x->
         isa(x, ScalarMetaCondition),
         mixed_conditions,
