@@ -29,51 +29,57 @@ _removewhitespaces = x->replace(x, (' ' => ""))
 
 
 # Function to encode a disjunct into a PLA row
-function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, cond_idxss)
+function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, feat_condindxss)
     pla_row = fill("-", length(conditions))
     # For each atom in the disjunct, add zeros or ones to relevants
     for lit in SoleLogics.grandchildren(disjunct)
-        # @show lit
+        # @show syntaxstring(lit)
+        ispos = SoleLogics.ispos(lit)
         cond = SoleLogics.value(atom(lit))
-        feature = SoleData.feature(cond)
-        i_feat = findfirst((f)->f==feature, features)
-        cond_idxs = cond_idxss[i_feat]
-        @show cond_idxs
-        @show cond
-        icond = findfirst(c->c==cond, conditions[cond_idxs])
-        @show icond
-        # pla_row[map(c->c==cond, conditions)] .= SoleLogics.ispos(lit) ? "1" : "0"
-        if SoleData.hasdual(cond)
-            idualcond = findfirst(c->c==SoleData.dual(cond), conditions[cond_idxs])
-            @show idualcond
-            # pla_row[map(c->c==SoleData.dual(cond), conditions)] .= SoleLogics.ispos(lit) ? "0" : "1"
-        end
+        # @show cond
 
-        if SoleLogics.ispos(lit)
-            if !isnothing(icond)
-                @views pla_row[cond_idxs][map(((ic,c),)->includes[i_feat][icond,ic], enumerate(cond_idxs))] .= "1"
-                @views pla_row[cond_idxs][map(((ic,c),)->excludes[i_feat][icond,ic], enumerate(cond_idxs))] .= "0"
-            end
-        else
-            if SoleData.hasdual(cond) && !isnothing(idualcond)
-                @views pla_row[cond_idxs][map(((ic,c),)->includes[i_feat][idualcond,ic], enumerate(cond_idxs))] .= "1"
-                @views pla_row[cond_idxs][map(((ic,c),)->excludes[i_feat][idualcond,ic], enumerate(cond_idxs))] .= "0"
-            end
+        i_feat = findfirst((f)->f==SoleData.feature(cond), features)
+        feat_condindxs = feat_condindxss[i_feat]
+        # @show feat_condindxs
+        feat_icond = findfirst(c->c==cond, conditions[feat_condindxs])
+        feat_idualcond = SoleData.hasdual(cond) ? findfirst(c->c==SoleData.dual(cond), conditions[feat_condindxs]) : nothing
+        # @show feat_icond, feat_idualcond
+        @assert !(isnothing(feat_icond) && isnothing(feat_idualcond))
+
+        # if ispos
+        #     @show excludes[i_feat]
+        #     if !isnothing(feat_icond)
+        #         @views pla_row[feat_condindxs][map(ic->includes[i_feat][feat_icond,ic], eachindex(feat_condindxs))] .= "1"
+        #         @views pla_row[feat_condindxs][map(ic->excludes[i_feat][feat_icond,ic], eachindex(feat_condindxs))] .= "0"
+        #     end
+        # else
+        #     # if !isnothing(feat_idualcond)
+        #     #     @views pla_row[feat_condindxs][map(ic->includes[i_feat][feat_idualcond,ic], eachindex(feat_condindxs))] .= "0"
+        #     #     @views pla_row[feat_condindxs][map(ic->excludes[i_feat][feat_idualcond,ic], eachindex(feat_condindxs))] .= "1"
+        #     # end
+        # end
+        POS, NEG = ispos ? ("1", "0") : ("0", "1")
+        if !isnothing(feat_icond)
+            @views pla_row[feat_condindxs][map(((ic,c),)->includes[i_feat][feat_icond,ic], enumerate(feat_condindxs))] .= POS
+            @views pla_row[feat_condindxs][map(((ic,c),)->excludes[i_feat][feat_icond,ic], enumerate(feat_condindxs))] .= NEG
+        end
+        if !isnothing(feat_idualcond)
+            @views pla_row[feat_condindxs][map(((ic,c),)->includes[i_feat][feat_idualcond,ic], enumerate(feat_condindxs))] .= NEG
+            @views pla_row[feat_condindxs][map(((ic,c),)->excludes[i_feat][feat_idualcond,ic], enumerate(feat_condindxs))] .= POS
         end
     end
-
+    # println(pla_row)
     return pla_row
 end
 
 # Function to parse and process the formula into PLA
-# function _formula_to_pla(syntaxtree::SoleLogics.Formula, dc_set = false, silent = true, args...; encoding = :multivariate, kwargs...)
 function _formula_to_pla(
-    syntaxtree::SoleLogics.Formula,
+    formula::SoleLogics.Formula,
     dc_set = false,
     silent = true,
     args...;
     encoding = :univariate,
-    use_scalar_range_conditions = true,
+    use_scalar_range_conditions = false,
     kwargs...
 )
     @assert encoding in [:univariate, :multivariate]
@@ -83,11 +89,17 @@ function _formula_to_pla(
         allow_atom_flipping = true,
     )
 
-    dnfformula = SoleLogics.dnf(syntaxtree, Atom; scalar_kwargs..., kwargs...)
+    dnfformula = SoleLogics.dnf(formula, Atom; scalar_kwargs..., kwargs...)
 
+    scalar_simplification_kwargs = (;
+        force_scalar_range_conditions = use_scalar_range_conditions, 
+        allow_scalar_range_conditions = use_scalar_range_conditions,
+    )
     silent || @show dnfformula
-
-    dnfformula = SoleLogics.LeftmostDisjunctiveForm(map(d->SoleData.scalar_simplification(d; force_scalar_range_conditions=use_scalar_range_conditions), SoleLogics.disjuncts(dnfformula)))
+    
+    dnfformula = SoleData.scalar_simplification(dnfformula;
+        scalar_simplification_kwargs...
+    )
 
     silent || @show dnfformula
 
@@ -98,132 +110,106 @@ function _formula_to_pla(
     #     # flip_atom = a -> SoleData.polarity(SoleData.test_operator(SoleLogics.value(a))) == false
     # )
 
-    dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs..., kwargs...)
+    dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs..., 
+    kwargs...)
 
     _patchnothing(v, d) = isnothing(v) ? d : v
-    condsortby = cond->(syntaxstring(SoleData.feature(cond)), _patchnothing(SoleData.minval(cond), -Inf), _patchnothing(SoleData.maxval(cond), Inf))
 
     for ch in SoleLogics.grandchildren(dnfformula)
-        sort!(SoleLogics.grandchildren(ch), by=lit->condsortby(SoleLogics.value(SoleLogics.atom(lit))))
+        sort!(SoleLogics.grandchildren(ch), by=lit->SoleData._scalarcondition_sortby(SoleLogics.value(SoleLogics.atom(lit))))
     end
     silent || @show dnfformula
 
     # Extract domains
     conditions = unique(map(SoleLogics.value, atoms(dnfformula)))
     features = unique(SoleData.feature.(conditions))
+    sort!(features, by=syntaxstring)
     # nnbinary_vars =div(length(setdiff(_duals, conditions)), 2)
-    sort!(conditions, by=condsortby)
-    original_conditions = conditions
-    println(SoleLogics.displaysyntaxvector(original_conditions))
-    conditions = begin
-        newconds = SoleData.AbstractCondition[]
-        for feat in features
-            conds = filter(c->feature(c) == feat, conditions)
-            # @show syntaxstring.(conds)
-            minextremes = [(true, (SoleData.minval(cond), !SoleData.minincluded(cond))) for cond in conds]
-            maxextremes = [(false, (SoleData.maxval(cond), SoleData.maxincluded(cond))) for cond in conds]
-            extremes = [minextremes..., maxextremes...]
-            sort!(extremes, by=((ismin, (mv, mi)),)->(_patchnothing(mv, ismin ? -Inf : Inf), mi))
-            extremes = map(last, extremes)
-            extremes = unique(extremes)
-            @show extremes
-            for (minextreme,maxextreme) in zip(extremes[1:end-1], extremes[2:end])
-                # @show maxextreme
-                cond = SoleData.RangeScalarCondition(feat, minextreme[1], maxextreme[1], !minextreme[2], maxextreme[2])
-                push!(newconds, cond)
-            end
-        end
-        # @show syntaxstring.(newconds)
-        newconds
-    end
-    @assert length(setdiff(original_conditions, conditions)) == 0 "$(setdiff(original_conditions, conditions))"
-    # readline()
-    conditions = begin
-        SoleData.hasdual.(conditions)
-        newconditions = similar(conditions, (0,))
-        for cond in conditions
-            if !SoleData.hasdual(cond) || !(SoleData.dual(cond) in newconditions)
-                push!(newconditions, cond)
-            end
-        end
-        # conditions = [condition for condition in conditions if !(condition in _duals)]
-        newconditions
+    sort!(conditions, by=SoleData._scalarcondition_sortby)
+    silent || println(SoleLogics.displaysyntaxvector(features))
+    silent || println(SoleLogics.displaysyntaxvector(conditions))
+    if use_scalar_range_conditions
+        original_conditions = conditions
+        silent || println(SoleLogics.displaysyntaxvector(conditions))
+        conditions = SoleData.scalartiling(conditions, features)
+        @assert length(setdiff(original_conditions, conditions)) == 0 "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
     end
     # readline()
-    sort!(conditions, by=cond->(syntaxstring(SoleData.feature(cond)), _patchnothing(SoleData.minval(cond), -Inf), _patchnothing(SoleData.maxval(cond), Inf)))
-    # @show length(conditions)
-    # @show syntaxstring.(conditions)
+    conditions = SoleData.removeduals(conditions)
+    silent || println(SoleLogics.displaysyntaxvector(conditions))
 
-    println(SoleLogics.displaysyntaxvector(conditions))
-    feat_nvars = []
-    varlabelss = []
-    for feat in features
+    # For each feature, derive the conditions, and their names.
+    feat_condindxss, feat_conds, feat_condnames = zip(map(features) do feat
+        feat_condindxs = findall(c->feature(c) == feat, conditions)
         conds = filter(c->feature(c) == feat, conditions)
-        push!(feat_nvars, length(conds))
-        varlabels = _removewhitespaces.(syntaxstring.(conds))
-        push!(varlabelss, varlabels)
-    end
+        condname = _removewhitespaces.(syntaxstring.(conds))
+        (feat_condindxs, conds, condname)
+    end...)
 
-    @show syntaxstring.(conditions)
-    @show feat_nvars
-    # @show varlabelss
+    feat_nconds = length.(feat_conds)
     
-    cond_idxss = []
-    includes = []
-    excludes = []
-    for feat in features
-        cond_idxs = findall(c->feature(c) == feat, conditions)
-        push!(cond_idxss, cond_idxs)
-        push!(includes, [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in cond_idxs, cond_j in cond_idxs])
-        push!(excludes, [SoleData.excludes(conditions[cond_j], conditions[cond_i]) for cond_i in cond_idxs, cond_j in cond_idxs])
+    silent || @show feat_nconds
+    silent || @show feat_condnames
+    
+    # Derive inclusions and exclusions between conditions
+    includes, excludes = [], []
+    for (i,feat_condindxs) in enumerate(feat_condindxss)
+        # silent || @show feat_condnames[i]
+        this_includes = [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
+        this_excludes = [SoleData.excludes(conditions[cond_j], conditions[cond_i]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
+        # println(this_includes)
+        # println(this_excludes)
+        push!(includes, this_includes)
+        push!(excludes, this_excludes)
     end
 
-    # @show ilb_str
+    # silent || @show ilb_str
     # Generate PLA header
     pla_header = []
     if encoding == :multivariate
-        num_binary_vars = sum(feat_nvars .== 1)
-        num_nonbinary_vars = sum(feat_nvars .> 1) + 1
-        @show feat_nvars .== 1
-        @show num_binary_vars
-        @show num_nonbinary_vars
+        @warn "encoding = :multivariate is untested."
+        num_binary_vars = sum(feat_nconds .== 1)
+        num_nonbinary_vars = sum(feat_nconds .> 1) + 1
+        silent || @show feat_nconds .== 1
+        silent || @show num_binary_vars
+        silent || @show num_nonbinary_vars
         num_vars = num_binary_vars + num_nonbinary_vars
-        push!(pla_header, ".mv $(num_vars) $(num_binary_vars) $(join(feat_nvars[feat_nvars .> 1], " ")) 1")
+        push!(pla_header, ".mv $(num_vars) $(num_binary_vars) $(join(feat_nconds[feat_nconds .> 1], " ")) 1")
         if num_binary_vars > 0
-            ilb_str = join(vcat(varlabelss[feat_nvars .== 1]...), " ")
+            ilb_str = join(vcat(feat_condnames[feat_nconds .== 1]...), " ")
             push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
         end
-        for i_var in 1:length(feat_nvars[feat_nvars .> 1])
-            if feat_nvars[feat_nvars .> 1][i_var] > 1
-                this_ilb_str = join(varlabelss[feat_nvars .> 1][i_var], " ")
+        for i_var in 1:length(feat_nconds[feat_nconds .> 1])
+            if feat_nconds[feat_nconds .> 1][i_var] > 1
+                this_ilb_str = join(feat_condnames[feat_nconds .> 1][i_var], " ")
                 push!(pla_header, ".label var=$(num_binary_vars+i_var-1) $(this_ilb_str)")
             end
         end
     else
         num_outputs = 1
         num_vars = length(conditions)
-        ilb_str = join(vcat(varlabelss...), " ")
+        ilb_str = join(vcat(feat_condnames...), " ")
         push!(pla_header, ".i $(num_vars)")
         push!(pla_header, ".o $(num_outputs)")
         push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
         push!(pla_header, ".ob formula_output")
     end
 
-    @show pla_header
+    silent || @show pla_header
 
     # Generate ON-set rows for each disjunct
-    end_idxs = cumsum(feat_nvars)
-    @show feat_nvars
-    feat_varidxs = [(startidx:endidx) for (startidx,endidx) in zip([1, (end_idxs.+1)...],end_idxs)]
-    @show feat_varidxs
+    end_idxs = cumsum(feat_nconds)
+    silent || @show feat_nconds
+    feat_varidxs = [(startidx:endidx) for (startidx,endidx) in zip([1, (end_idxs.+1)...], end_idxs)]
+    silent || @show feat_varidxs
     pla_onset_rows = []
     for disjunct in SoleLogics.disjuncts(dnfformula)
-        row = encode_disjunct(disjunct, features, conditions, includes, excludes, cond_idxss)
+        row = encode_disjunct(disjunct, features, conditions, includes, excludes, feat_condindxss)
         if encoding == :multivariate
             # Binary variables first
-            @show row
-            binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nvars)
-            nonbinary_variable_idxs = findall(feat_nvar->feat_nvar > 1, feat_nvars)
+            silent || @show row
+            binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nconds)
+            nonbinary_variable_idxs = findall(feat_nvar->feat_nvar > 1, feat_nconds)
             row = vcat(
                 [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
                 (num_binary_vars > 0 ? ["|"] : [])...,
@@ -241,13 +227,13 @@ function _formula_to_pla(
     # @assert !(dc_set && encoding == :multivariate)
     # if dc_set
     #     for feat in features
-    #         cond_idxs = findall(c->feature(c) == feat, conditions)
-    #         # cond_idxs = collect(eachindex(conditions))
+    #         feat_condindxs = findall(c->feature(c) == feat, conditions)
+    #         # feat_condindxs = collect(eachindex(conditions))
     #         # cond_mask = map((c)->feature(c) == feat, conditions)
-    #         includes = [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in cond_idxs, cond_j in cond_idxs]
-    #         excludes = [SoleData.excludes(conditions[cond_i], conditions[cond_j]) for cond_i in cond_idxs, cond_j in cond_idxs]
-    #         for (i,cond_i) in enumerate(cond_idxs)
-    #             for (j,cond_j) in enumerate(cond_idxs)
+    #         includes = [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
+    #         excludes = [SoleData.excludes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
+    #         for (i,cond_i) in enumerate(feat_condindxs)
+    #             for (j,cond_j) in enumerate(feat_condindxs)
     #                 if includes[i, j]
     #                     println("$(syntaxstring(conditions[cond_i])) -> $(syntaxstring(conditions[cond_j]))")
     #                 end
@@ -258,14 +244,14 @@ function _formula_to_pla(
     #         end
     #         print(includes)
     #         print(excludes)
-    #         for (i,cond_i) in enumerate(cond_idxs)
+    #         for (i,cond_i) in enumerate(feat_condindxs)
     #             row = fill("-", length(conditions))
     #             row[cond_i] = "1"
-    #             for (j,cond_j) in enumerate(cond_idxs)
+    #             for (j,cond_j) in enumerate(feat_condindxs)
     #                 if includes[j, i]
     #                     row[cond_j] = "1"
     #                 elseif excludes[j, i]
-    #                     row[cond_j] = "0"
+    #                     row[cond_j] = NEG
     #                 end
     #             end
     #             push!(pla_dcset_rows, "$(join(row, "")) -") # Append "-" for the DC-set output
@@ -291,7 +277,16 @@ function _formula_to_pla(
     )
 end
 
-function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = nothing; kwargs...)
+function _pla_to_formula(
+    pla::AbstractString,
+    silent = true,
+    ilb_str = nothing,
+    conditions = nothing;
+    conditionstype = SoleData.ScalarCondition,
+    featuretype = SoleData.VariableValue,
+    featvaltype = nothing,
+    kwargs...
+)
     # @show ilb_str, conditions
     # Split the PLA into lines and parse key components
     lines = split(pla, '\n')
@@ -301,11 +296,11 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
 
     multivalued_info = Dict()  # To store multi-valued variable metadata
     total_vars, nbinary_vars, multivalued_sizes = 0, 0, []
-    println(lines)
+    silent || println(lines)
     # Parse header and rows
     for line in lines
         line = strip(line)
-        @show line
+        silent || @show line
         parts = split(line)
 
         isempty(parts) && continue
@@ -313,6 +308,7 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
         cmd, args = parts[1], parts[2:end]
 
         if cmd == ".mv"
+            @warn "PLA: Multivalued variables not tested."
             total_vars, nbinary_vars = parse(Int, args[1]), parse(Int, args[2])
             multivalued_sizes = parse.(Int, args[3:end])
         elseif cmd == ".label"
@@ -344,14 +340,14 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
     end
 
     # Map input variables to conditions
-    conditions_map = if !isempty(conditions)
+    conditions_map = if !isnothing(conditions)
         Dict(_removewhitespaces(syntaxstring(c)) => c for c in conditions)
     else
         Dict()
     end
 
-    @show total_vars, nbinary_vars
-    @show input_vars
+    silent || @show total_vars, nbinary_vars
+    silent || @show input_vars
     # parsed_conditions = [begin
     #     if !isnothing(conditions)
     #         idx = findfirst(c->_removewhitespaces(syntaxstring(c)) == _removewhitespaces(var_str), conditions)
@@ -361,30 +357,35 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
     #     end
     # end for var_str in input_vars]
 
-    @show multivalued_info
+    silent || @show multivalued_info
     parsed_conditions = []
     binary_idx = 1
-    parsefun = c->parsecondition(SoleData.RangeScalarCondition, c, featuretype = SoleData.VariableValue)
-    for (i, size) in enumerate([(1:nbinary_vars)..., multivalued_sizes...])
-        if i <= nbinary_vars
-            cond = (binary_idx ∈ eachindex(input_vars) ? conditions_map[input_vars[binary_idx]] : parsefun(input_vars[binary_idx]))
+    parsefun = c->parsecondition(conditionstype, c; featuretype, featvaltype)
+    silent || @show nbinary_vars, multivalued_sizes
+    for (i_var, domain_size) in enumerate([fill(2, nbinary_vars)..., multivalued_sizes...])
+        silent || @show (i_var, domain_size)
+        if i_var <= nbinary_vars
+            silent || @show i_var ∈ eachindex(input_vars)
+            silent || @show input_vars
+            silent || @show conditions_map
+            condname = i_var ∈ eachindex(input_vars) ? input_vars[i_var] : "?"
+            cond = (condname ∈ keys(conditions_map) ? conditions_map[condname] : parsefun(condname))
             push!(parsed_conditions, cond)
-            binary_idx += 1
         else
             # Multi-valued conditions are stored as a group
-            condnames = (haskey(multivalued_info, i) ? multivalued_info[i] : [])
+            condnames = (haskey(multivalued_info, i_var) ? multivalued_info[i_var] : [])
             conds = map(parsefun, condnames)
             push!(parsed_conditions, conds)
         end
     end
 
-    @show syntaxstring.(parsed_conditions)
+    silent || @show syntaxstring.(parsed_conditions)
 
     # Process rows to build the formula
     disjuncts = []
     for row in rows
         parts = split(row, r" |\|")
-        @show parts
+        silent || @show parts
         binary_part = parts[1]
 
         if (total_vars == nbinary_vars)
@@ -399,12 +400,16 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
         # Process binary variables
         # Convert row values back into parsed_conditions
         for (idx, value) in enumerate(binary_part)
-            @show value            
+            # @show value            
             cond = parsed_conditions[idx]
             if value == '1'
                 push!(conjuncts, Literal(true, Atom(cond)))
             elseif value == '0'
                 push!(conjuncts, Literal(false, Atom(cond)))
+            elseif value == '-'
+                nothing
+            else
+                error("Unexpected truth value: '$(value)'.")
             end
         end
         
@@ -429,7 +434,10 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
 
     # Combine disjuncts into a disjunctive form
     φ = if !isempty(disjuncts)
-        map!(d->SoleData.scalar_simplification(d; force_scalar_range_conditions=false), disjuncts, disjuncts)
+        map!(d->SoleData.scalar_simplification(d;
+            force_scalar_range_conditions=false,
+            allow_scalar_range_conditions=false,
+        ), disjuncts, disjuncts)
         return SL.LeftmostDisjunctiveForm(disjuncts)
     else
         return ⊤  # True formula
@@ -437,7 +445,7 @@ function _pla_to_formula(pla::AbstractString, ilb_str = nothing, conditions = no
 end
 
 
-function formula_to_emacs(expr::SyntaxTree) end
+# function formula_to_emacs(expr::SyntaxTree) end
 
 
 end

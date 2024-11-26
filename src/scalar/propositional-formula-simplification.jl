@@ -16,22 +16,38 @@ function scalar_simplification(φ::SoleLogics.SyntaxLeaf; silent = false, kwargs
 end
 
 function scalar_simplification(φ::DNF, args...; kwargs...)
-    return map(d->scalar_simplification(d; args...), SoleLogics.disjuncts(φ)) |> LeftmostDisjunctiveForm
+    return map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.disjuncts(φ)) |> LeftmostDisjunctiveForm
 end
 function scalar_simplification(φ::CNF, args...; kwargs...)
-    return map(d->scalar_simplification(d; args...), SoleLogics.conjuncts(φ)) |> LeftmostConjunctiveForm
+    return map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.conjuncts(φ)) |> LeftmostConjunctiveForm
 end
 function scalar_simplification(
     φ::Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm};
     silent = false,
     force_scalar_range_conditions = false,
-    force_no_scalar_range_conditions = false,
+    # force_no_scalar_range_conditions = false,
     allow_scalar_range_conditions = true,
-    kwargs...,
 )
     # @show φ
     # @show typeof.(SoleLogics.grandchildren(φ))
     # @show all(c->c isa Atom{<:ScalarCondition}, SoleLogics.grandchildren(φ))
+    
+    φ = LeftmostLinearForm(SoleLogics.connective(φ), map(ch->begin
+        if ch isa Atom
+            ch
+        elseif ch isa Literal
+            if SoleLogics.ispos(ch)
+                atom(ch)
+            elseif SoleLogics.hasdual(atom(ch))
+                SoleLogics.dual(atom(ch))
+            else
+                ch
+            end
+        else
+            ch
+        end
+    end, SoleLogics.grandchildren(φ)))
+    
     if !all(c->c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}, SoleLogics.grandchildren(φ))
     # if (!all(c->c isa Atom{<:ScalarCondition}, SoleLogics.grandchildren(φ)))
         !silent && println("Cannot perform scalar simplification on linear form:\n$(syntaxstring(φ))\n on" *
@@ -69,14 +85,27 @@ function scalar_simplification(
     ch = collect(Iterators.flatten([begin
             conds = scalar_conditions[bitmask]
 
+            conds = [if cond isa ScalarCondition && (test_operator(cond) == (==))
+                        RangeScalarCondition(
+                            SoleData.feature(cond),
+                            SoleData.minval(cond),
+                            SoleData.maxval(cond),
+                            SoleData.minincluded(cond),
+                            SoleData.maxincluded(cond),
+                        )
+                    else
+                        cond
+                    end for cond in conds]
+
             conds = Iterators.flatten([
                 if cond isa ScalarCondition
                     [cond]
                 elseif cond isa RangeScalarCondition
-                    conds = []
-                    !isnothing(SoleData.minval(cond)) && push!(conds, ScalarCondition(feat, _isgreater_test_operator(cond), SoleData.minval(cond)))
-                    !isnothing(SoleData.maxval(cond)) && push!(conds, ScalarCondition(feat, _isless_test_operator(cond), SoleData.maxval(cond)))
-                    conds
+                    if conn_polarity
+                        conds = _rangescalarcond_to_scalarconds_in_conjunction(cond)
+                    else
+                        error("Cannot convert RangeScalarCondition to ScalarCondition: $(cond).")
+                    end
                 else
                     error("Unexpected condition: $(cond)")
                 end for cond in conds])

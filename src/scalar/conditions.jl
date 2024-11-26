@@ -5,6 +5,72 @@ const DEFAULT_SCALARCOND_FEATTYPE = SoleData.VarFeature
 
 abstract type AbstractScalarCondition{FT} <: AbstractCondition{FT} end
 
+
+_patchnothing(v, d) = isnothing(v) ? d : v
+function _scalarcondition_sortby(cond)
+    (syntaxstring(SoleData.feature(cond)),
+    _patchnothing(SoleData.minval(cond), -Inf),
+    !SoleData.minincluded(cond),
+    _patchnothing(SoleData.maxval(cond), Inf),
+    SoleData.maxincluded(cond)
+    )
+end
+
+_patchnothing(v, d) = isnothing(v) ? d : v
+
+function scalartiling(conditions::Vector, features = unique(SoleData.feature.(conditions)))
+    newconds = SoleData.AbstractScalarCondition[]
+    for feat in features
+        conds = filter(c->feature(c) == feat, conditions)
+        # @show syntaxstring.(conds)
+        minextremes = [(true, (SoleData.minval(cond), !SoleData.minincluded(cond))) for cond in conds]
+        maxextremes = [(false, (SoleData.maxval(cond), SoleData.maxincluded(cond))) for cond in conds]
+        extremes = [minextremes..., maxextremes...]
+        sort!(extremes, by=((ismin, (mv, mi)),)->(_patchnothing(mv, ismin ? -Inf : Inf), mi))
+        extremes = map(last, extremes)
+        extremes = unique(extremes)
+        @show extremes
+        for (minextreme,maxextreme) in zip(extremes[1:end-1], extremes[2:end])
+            # @show maxextreme
+            cond = SoleData.RangeScalarCondition(feat, minextreme[1], maxextreme[1], !minextreme[2], maxextreme[2])
+            push!(newconds, cond)
+        end
+    end
+    # @show syntaxstring.(newconds)
+    newconds
+end
+
+function tointervalset(a::AbstractScalarCondition) end
+
+function tointervalset(a::AbstractScalarCondition)
+    f1 = minincluded(a) ? :closed : :open
+    f2 = maxincluded(a) ? :closed : :open
+    IntervalSetsWrap.Interval{f1,f2}(isnothing(minval(a)) ? -Inf : minval(a), isnothing(maxval(a)) ? Inf : maxval(a))
+end
+
+function includes(a::AbstractScalarCondition, b::AbstractScalarCondition)
+    (feature(a) == feature(b)) || return false
+    return issubset(tointervalset(b),tointervalset(a))
+end
+
+function excludes(a::AbstractScalarCondition, b::AbstractScalarCondition)
+    (feature(a) == feature(b)) || return false
+    # @show tointervalset(a)
+    # @show tointervalset(b)
+    return isdisjoint(tointervalset(a),tointervalset(b))
+end
+
+function removeduals(values::Vector)
+    newvalues = similar(values, (0,))
+    for cond in values
+        if !SoleData.hasdual(cond) || !(SoleData.dual(cond) in newvalues)
+            push!(newvalues, cond)
+        end
+    end
+    newvalues
+end
+
+
 # TODO ScalarMetaCondition is more like... an Alphabet, than a Condition.
 """
     struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractScalarCondition{FT}
@@ -184,6 +250,51 @@ test_operator(c::ScalarCondition) = test_operator(metacond(c))
 hasdual(::ScalarCondition) = true
 dual(c::ScalarCondition) = ScalarCondition(dual(metacond(c)), threshold(c))
 
+function minval(c::ScalarCondition)
+    testop = test_operator(c)
+    pol = polarity(testop)
+    if pol == (==)
+        threshold(c)
+    elseif isnothing(pol)
+        error("Unknown minval for test_operator $(testop).")
+    else
+        pol ? threshold(c) : -Inf
+    end
+end
+function minincluded(c::ScalarCondition)
+    testop = test_operator(c)
+    pol = polarity(testop)
+    if pol == (==)
+        true
+    elseif isnothing(pol)
+        error("Unknown minincluded for test_operator $(testop).")
+    else
+        pol ? !isstrict(testop) : true
+    end
+end
+function maxval(c::ScalarCondition)
+    testop = test_operator(c)
+    pol = polarity(testop)
+    if pol == (==)
+        threshold(c)
+    elseif isnothing(pol)
+        error("Unknown maxval for test_operator $(testop).")
+    else
+        pol ? Inf : threshold(c)
+    end
+end
+function maxincluded(c::ScalarCondition)
+    testop = test_operator(c)
+    pol = polarity(testop)
+    if pol == (==)
+        true
+    elseif isnothing(pol)
+        error("Unknown maxincluded for test_operator $(testop).")
+    else
+        pol ? true : !isstrict(test_operator(c))
+    end
+end
+
 function checkcondition(c::ScalarCondition, args...; kwargs...)
     apply_test_operator(test_operator(c), featvalue(feature(c), args...; kwargs...), threshold(c))
 end
@@ -253,7 +364,7 @@ function _parsecondition(
     expr::AbstractString;
     kwargs...
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
-    r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\S+)\\s*\$")
+    r = Regex("^\\s*([^\\s><!=≥≤]+)\\s*([^\\s\\d]+)\\s*(\\S+)\\s*\$")
     slices = match(r, expr)
     
     if isnothing(slices) || length(slices) != 3
@@ -264,6 +375,7 @@ function _parsecondition(
     slices = string.(slices)
 
     feature = parsefeature(FT, slices[1]; featvaltype = U, kwargs...)
+    @show slices
     test_operator = eval(Meta.parse(slices[2]))
     threshold = eval(Meta.parse(slices[3]))
 
@@ -547,6 +659,13 @@ function hasdual(c::RangeScalarCondition)
     )
 end
 
+function _rangescalarcond_to_scalarconds_in_conjunction(cond)
+    conds = []
+    !isnothing(SoleData.minval(cond)) && push!(conds, ScalarCondition(feature(cond), _isgreater_test_operator(cond), SoleData.minval(cond)))
+    !isnothing(SoleData.maxval(cond)) && push!(conds, ScalarCondition(feature(cond), _isless_test_operator(cond), SoleData.maxval(cond)))
+    conds
+end
+
 module IntervalSetsWrap
 using IntervalSets: Interval
 end
@@ -566,29 +685,6 @@ end
 # function myisless(a::Nothing, aismin::Bool, b::Nothing, bismin::Bool)
 #     return aismin && !bismin
 # end
-
-function tointervalset(a::RangeScalarCondition)
-    f1 = minincluded(a) ? :closed : :open
-    f2 = maxincluded(a) ? :closed : :open
-    IntervalSetsWrap.Interval{f1,f2}(isnothing(minval(a)) ? -Inf : minval(a), isnothing(maxval(a)) ? Inf : maxval(a))
-end
-
-function includes(a::RangeScalarCondition, b::RangeScalarCondition)
-    (feature(a) == feature(b)) || return false
-    return issubset(tointervalset(b),tointervalset(a))
-    # return 
-    #         (minincluded(a) ? (!myisless(b.minval, true, a.minval, true)) : (myisless(a.minval, true, b.minval, true) || (!(minincluded(b)) && a.minval == b.minval))) &&
-    #         (maxincluded(a) ? (!myisless(a.maxval, false, b.maxval, false)) : (myisless(a.maxval, false, b.maxval, false) || (!(maxincluded(b)) && a.maxval == b.maxval)))
-end
-
-function excludes(a::RangeScalarCondition, b::RangeScalarCondition)
-    (feature(a) == feature(b)) || return false
-    return isdisjoint(tointervalset(a),tointervalset(b))
-    # intersect = 
-    #         (minincluded(a) ? (!myisless(b.maxval, false, a.minval, true) || ((maxincluded(b)) && a.minval == b.maxval)) : (myisless(a.minval, true, b.maxval, false))) ||
-    #         (maxincluded(a) ? (!myisless(a.maxval, false, b.minval, true) || ((minincluded(b)) && a.maxval == b.minval)) : (myisless(a.maxval, false, b.minval, true)))
-    # return !intersect
-end
 
 @inline function honors_minval(c::RangeScalarCondition, featval)
     isnothing(c.minval) || apply_test_operator(_isgreater_test_operator(c), featval, c.minval)
@@ -650,7 +746,7 @@ function _parsecondition(
     # r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\[|\\()\\s*(\\S+)\\s*,\\s*(\\S+)\\s*(\\]|\\))\\s*\$")
     slices = match(r, expr)
     if isnothing(slices) || length(slices) != 5
-        throw(ArgumentError("Could not parse ScalarCondition from " *
+        throw(ArgumentError("Could not parse RangeScalarCondition from " *
             "expression $(repr(expr)). Regex slices = $(slices)"))
     end
 
