@@ -16,8 +16,6 @@ function _scalarcondition_sortby(cond)
     )
 end
 
-_patchnothing(v, d) = isnothing(v) ? d : v
-
 function scalartiling(conditions::Vector, features = unique(SoleData.feature.(conditions)))
     newconds = SoleData.AbstractScalarCondition[]
     for feat in features
@@ -375,7 +373,7 @@ function _parsecondition(
     slices = string.(slices)
 
     feature = parsefeature(FT, slices[1]; featvaltype = U, kwargs...)
-    @show slices
+    # @show slices
     test_operator = eval(Meta.parse(slices[2]))
     threshold = eval(Meta.parse(slices[3]))
 
