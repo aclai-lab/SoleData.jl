@@ -38,8 +38,6 @@ function scalartiling(conditions::Vector, features = unique(SoleData.feature.(co
     newconds
 end
 
-function tointervalset(a::AbstractScalarCondition) end
-
 function tointervalset(a::AbstractScalarCondition)
     f1 = minincluded(a) ? :closed : :open
     f2 = maxincluded(a) ? :closed : :open
@@ -364,7 +362,7 @@ function _parsecondition(
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
     r = Regex("^\\s*([^\\s><!=≥≤]+)\\s*([^\\s\\d]+)\\s*(\\S+)\\s*\$")
     slices = match(r, expr)
-    
+
     if isnothing(slices) || length(slices) != 3
         throw(ArgumentError("Could not parse ScalarCondition from " *
             "expression $(repr(expr)). Regex slices = $(slices)"))
