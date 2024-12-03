@@ -11,7 +11,8 @@ Welcome to the documentation for [SoleData](https://github.com/aclai-lab/SoleDat
 
 # Logical foundations
 
-See [SoleLogics](https://github.com/aclai-lab/SoleLogics.jl) for more.
+Here are some core concepts for symbolic artificial intelligence with propositional and modal logics.o
+
 ```@docs
 SoleLogics.Atom
 SoleLogics.AbstractWorld
@@ -24,35 +25,45 @@ SoleLogics.accessibles
 minify
 ```
 
-# Logisets
+See [SoleLogics](https://github.com/aclai-lab/SoleLogics.jl) for more.
 
-```@autodocs
-Modules = [SoleData]
-Pages   = ["features.jl", "conditions.jl"]
-```
+# API
 
+Ontop of the logical layer, we define features, conditions on features, logisets, and memosets.
 ```@autodocs
 Modules = [SoleData]
-Pages   = ["representatives.jl"]
-```
-```@autodocs
-Modules = [SoleData]
-Pages   = ["logiset.jl"]
-```
-```@autodocs
-Modules = [SoleData]
-Pages   = ["memosets.jl"]
+Pages   = ["types/features.jl", "types/conditions.jl", "types/logiset.jl", "types/memoset.jl"]
 ```
 
 ```@docs
 AbstractModalLogiset
 AbstractScalarOneStepRelationalMemoset
+```
+
+# Utilities
+## Logisets
+
+```@autodocs
+Modules = [SoleData]
+Pages   = ["utils/features.jl", "utils/conditions.jl"]
+```
+
+```@autodocs
+Modules = [SoleData]
+Pages   = ["utils/logiset.jl", "utils/modal-logiset.jl"]
+```
+```@autodocs
+Modules = [SoleData]
+Pages   = ["utils/memoset.jl"]
+```
+
+```@docs
 ScalarOneStepMemoset
 ```
 
 ```@autodocs
 Modules = [SoleData]
-Pages   = ["supported-logiset.jl"]
+Pages   = ["utils/supported-logiset.jl"]
 ```
 
 ```@autodocs
@@ -60,7 +71,8 @@ Modules = [SoleData]
 Pages   = ["check.jl"]
 ```
 
-## Scalar Logisets
+### Scalar Logisets
+
 
 ```@autodocs
 Modules = [SoleData]
@@ -71,7 +83,6 @@ Pages   = [
 	"scalar/conditions.jl",
 	"scalar/templated-formulas.jl",
 	"scalar/random.jl",
-	"scalar/representatives.jl",
 	"scalar/canonical-conditions.jl",
 	"scalar/logiseed.jl",
 	"scalar/scalarlogiset.jl",
@@ -83,7 +94,7 @@ Pages   = [
 ]
 ```
 
-## Scalar Dimensional Logisets
+### Scalar Dimensional Logisets
 
 ```@autodocs
 Modules = [SoleData, SoleData.DimensionalDatasets]
@@ -98,9 +109,27 @@ Pages   = [
 ]
 ```
 
-# Multimodal Logisets
+## Multimodal Logisets
 
 ```@autodocs
 Modules = [SoleData]
-Pages   = ["multilogiset.jl",]
+Pages   = ["utils/multilogiset.jl",]
+```
+
+<!-- ## MLJ Integration
+
+```@autodocs
+Modules = [SoleData]
+Pages   = ["types/logiset-MLJ-interface.jl",]
+``` -->
+
+# Optimizations
+## Representatives
+
+```@autodocs
+Modules = [SoleData]
+Pages   = [
+	"types/representatives.jl",
+	"scalar/representatives.jl",
+]
 ```

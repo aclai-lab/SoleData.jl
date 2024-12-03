@@ -287,14 +287,14 @@ function SoleLogics.normalize(φ::MultiFormula{F}; kwargs...) where {F<:Formula}
     MultiFormula(Dict([i_modality => SoleLogics.normalize(f; kwargs...) for (i_modality,f) in pairs(modforms(φ))]))
 end
 
-natoms(φ::LeftmostConjunctiveForm{<:MultiFormula}) = natoms((children(φ)...,))
+natoms(φ::LeftmostConjunctiveForm{<:MultiFormula}) = natoms((SoleLogics.grandchildren(φ)...,))
 natoms(φ::MultiFormula{<:SyntaxTree}) =
     sum([natoms(modant) for (_,modant) in modforms(φ)])
 function natoms(children::NTuple{N,MultiFormula}) where {N}
     return sum([natoms(child) for child in children])
 end
 
-ntokens(φ::LeftmostConjunctiveForm{<:MultiFormula}) = ntokens((children(φ)...,))
+ntokens(φ::LeftmostConjunctiveForm{<:MultiFormula}) = ntokens((SoleLogics.grandchildren(φ)...,))
 ntokens(φ::MultiFormula{<:SyntaxTree}) =
     sum([ntokens(modant) for (_,modant) in modforms(φ)])
 function ntokens(children::NTuple{N,MultiFormula}) where {N}

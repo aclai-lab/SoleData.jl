@@ -8,7 +8,18 @@ import Tables: columnnames, rows, getcolumn, columns
 import MultiData: nvariables
 
 ############################################################################################
-#
+
+"""
+    abstract type AbstractLogiset <: AbstractInterpretationSet end
+
+Abstract type for logisets, that is, sets of logical interpretations
+onto which (formulas on) conditions can be checked.
+
+See also
+[`AbstractCondition`](@ref),
+[`AbstractFeature`](@ref),
+[`AbstractModalLogiset`](@ref).
+"""
 abstract type AbstractLogiset <: AbstractInterpretationSet end
 
 function ninstances(X::AbstractLogiset)
@@ -75,6 +86,11 @@ function nfeatures(X::AbstractLogiset)
     return error("Please, provide method nfeatures(::$(typeof(X))).")
 end
 
+
+############################################################################################
+
+hassupports(X) = false
+hassupports(X::AbstractLogiset) = false
 
 ############################################################################################
 

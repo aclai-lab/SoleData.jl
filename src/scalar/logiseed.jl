@@ -71,7 +71,7 @@ function islogiseed(dataset)
     false
 end
 function initlogiset(logiseed, features; kwargs...)
-    return error("Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...::$(typeof(kwargs))).")
+    return error("Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...{" * join(map(p->"$(p.first)::$(p.second)", kwargs), ", ") * "}).")
 end
 function ninstances(logiseed)
     return error("Please, provide method ninstances(logiseed::$(typeof(logiseed))).")
@@ -92,8 +92,16 @@ function varnames(logiseed)
     return error("Please, provide method varnames(logiseed::$(typeof(logiseed))).")
 end
 
-# Helper
-allworlds(dataset, i_instance::Integer) = allworlds(frame(dataset, i_instance))
+# # Helper
+# function allworlds(
+#     dataset,
+#     i_instance::Integer,
+#     args...;
+#     kwargs...
+# )
+#     @warn "Please, use allworlds(frame(...)) instead of allworlds(...). This sholtcut is deprecating."
+#     return allworlds(frame(dataset, i_instance, args...; kwargs...))
+# end
 
 # Multimodal dataset interface
 
@@ -187,4 +195,3 @@ function displaystructure(dataset; indent_str = "", include_ninstances = true, k
         return "?? dataset of type $(typeof(dataset)) ($(humansize(dataset))) ??\n$(dataset)\n" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
     end
 end
-

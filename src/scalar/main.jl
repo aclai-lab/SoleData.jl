@@ -8,6 +8,8 @@ include("test-operators.jl")
 # Alphabets of conditions on the features, to be used in logical datasets
 include("conditions.jl")
 
+include("scalarformula.jl")
+
 # Templates for formulas of scalar conditions (e.g., templates for ⊤, f ⋈ t, ⟨R⟩ f ⋈ t, etc.)
 include("templated-formulas.jl")
 
@@ -39,7 +41,7 @@ include("logiseed.jl")
 
 include("scalarlogiset.jl")
 
-include("memosets.jl")
+include("memoset.jl")
 
 include("onestep-memoset.jl")
 

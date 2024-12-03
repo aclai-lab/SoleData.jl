@@ -35,7 +35,7 @@ struct SupportedLogiset{
         @assert length(wrong_supports) == 0 "Cannot instantiate SupportedLogiset " *
             "with wrong support type(s): $(join(typeof.(wrong_supports), ", ")). " *
             "Only full and one-step memosets are allowed."
-        @assert !(base isa SupportedLogiset) "Cannot instantiate SupportedLogiset " *
+        @assert !(hassupports(base)) "Cannot instantiate SupportedLogiset " *
             "with a SupportedLogiset base."
         if length(supports) == 0
             full_memoset_type = default_full_memoset_type(base)
@@ -44,7 +44,7 @@ struct SupportedLogiset{
         supports = Tuple(vcat(map(supp->begin
             if supp isa AbstractVector{<:AbstractDict{<:Formula,<:Worlds}}
                 [FullMemoset(supp)]
-            elseif supp isa SupportedLogiset
+            elseif hassupports(supp)
                 @assert base == SoleData.base(supp) "Cannot inherit supports from " *
                     "SupportedLogiset with different base."
                 collect(SoleData.supports(supp))
@@ -163,6 +163,8 @@ struct SupportedLogiset{
         SupportedLogiset(base, supports)
     end
 end
+
+hassupports(X::SupportedLogiset) = true
 
 base(X::SupportedLogiset)     = X.base
 supports(X::SupportedLogiset) = X.supports

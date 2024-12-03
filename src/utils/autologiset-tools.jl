@@ -27,7 +27,7 @@ function defaultrelations(dataset, relations)
         SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}} where {W,U,FT,FR,L,N},
     }
         if relations == mlj_default_relations
-            MDT.relations(dataset)
+            relations(dataset)
         else
             error("Unexpected dataset type: $(typeof(dataset)).")
         end
@@ -67,9 +67,9 @@ function readrelations(model_relations, dataset)
             SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}} where {W,U,FT,FR,L,N},
         }
             rels = model_relations(dataset)
-            @assert issubset(rels, MDT.relations(dataset)) "Could not find " *
+            @assert issubset(rels, relations(dataset)) "Could not find " *
                 "specified relations $(SoleLogics.displaysyntaxvector(rels)) in " *
-                "logiset relations $(SoleLogics.displaysyntaxvector(MDT.relations(dataset)))."
+                "logiset relations $(SoleLogics.displaysyntaxvector(relations(dataset)))."
             rels
         else
             model_relations(dataset)
@@ -89,7 +89,7 @@ function defaultconditions(dataset)
         SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}} where {W,U,FT,FR,L,N},
         SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}} where {W,U,FT,FR,L,N},
     }
-        MDT.metaconditions(dataset)
+        metaconditions(dataset)
     elseif dataset isa UniformFullDimensionalLogiset
         vcat([
             [
@@ -128,9 +128,9 @@ function readconditions(
         SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}} where {W,U,FT,FR,L,N},
         SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}} where {W,U,FT,FR,L,N},
     }
-        @assert issubset(conditions, MDT.metaconditions(dataset)) "Could not find " *
+        @assert issubset(conditions, metaconditions(dataset)) "Could not find " *
             "specified conditions $(SoleLogics.displaysyntaxvector(conditions)) in " *
-            "logiset metaconditions $(SoleLogics.displaysyntaxvector(MDT.metaconditions(dataset)))."
+            "logiset metaconditions $(SoleLogics.displaysyntaxvector(metaconditions(dataset)))."
         conditions
     else
         # @show typeof(dataset)
@@ -235,7 +235,7 @@ function autologiset(
             allowedcoltypes = Union{Real,AbstractArray{<:Real,0},AbstractVector{<:Real},AbstractMatrix{<:Real}}
             wrong_columns = filter(((colname,c),)->!(eltype(c) <: allowedcoltypes), collect(zip(names(X), eachcol(X))))
             @assert length(wrong_columns) == 0 "Invalid columns " *
-                "encountered: `$(join(first.(wrong_columns), "`, `", "` and `"))`. $(MDT).jl only allows " *
+                "encountered: `$(join(first.(wrong_columns), "`, `", "` and `"))`. At the moment, Sole.jl only allows " *
                 "variables that are `Real` and `AbstractArray{<:Real,N}` with N ∈ {0,1,2}. " *
                 "Got: `$(join(eltype.(last.(wrong_columns)), "`, `", "` and `"))`" * (length(wrong_columns) > 1 ? ", respectively" : "") * "."
 

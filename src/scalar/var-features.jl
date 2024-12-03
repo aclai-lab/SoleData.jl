@@ -158,9 +158,16 @@ function variable_name(
         i_var isa Integer ? "$(variable_name_prefix)$(i_var)" : "$(i_var)"
     else
         if i_var isa Integer
-            "$(variable_names_map[i_var])"
+            i_var =i_var
         elseif i_var isa Symbol
-            "$(variable_names_map[findfirst(occursin.(string(i_var), variable_names_map))])"
+            i_var = findfirst(v->occursin(string(i_var), string(v)), variable_names_map)
+        end
+        if !(i_var in keys(variable_names_map))
+            @warn "Could not find variable $i_var in `variable_names_map`. ($(@show variable_names_map))"
+            variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
+            i_var isa Integer ? "?$(variable_name_prefix)$(i_var)?" : "?$(i_var)?"
+        else
+            "$(variable_names_map[i_var])"
         end
     end
 end
@@ -464,7 +471,7 @@ const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String,Base.Callable}(
 )
 
 """
-    parsefeature(FT::Type{<:VarFeature}, expr::String; kwargs...)
+    parsefeature(FT::Type{<:VarFeature}, expr::AbstractString; kwargs...)
 
 Parse a [`VarFeature`](@ref) of type `FT` from its [`syntaxstring`](@ref) representation.
 
@@ -499,7 +506,7 @@ See also [`VarFeature`](@ref), [`featvaltype`](@ref), [`parsecondition`](@ref).
 """
 function parsefeature(
     ::Type{FT},
-    expr::String;
+    expr::AbstractString;
     featvaltype::Union{Nothing,Type} = nothing,
     opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
     closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
@@ -541,32 +548,46 @@ function parsefeature(
         slices = match(r, expr)
 
         # Assert for malformed strings (e.g. "123.4<avg[V189]>250.2")
-        @assert !isnothing(slices) && length(slices) == 2 "Could not parse variable " *
-            "feature from expression $(repr(expr))."
+        if !isnothing(slices) && length(slices) == 2
+            slices = string.(slices)
+            (_feature, _variable) = (slices[1], slices[2])
 
-        slices = string.(slices)
-        (_feature, _variable) = (slices[1], slices[2])
-
-        feature = begin
-            i_var = begin
-                if isnothing(variable_names_map)
-                    parse(Int, _variable)
-                elseif variable_names_map isa Union{AbstractDict,AbstractVector}
-                    i_var = findfirst(variable_names_map, variable)
-                    @assert !isnothing(i_var) "Could not find variable $variable in the " *
-                        "specified map. ($(@show variable_names_map))"
-                else
-                    error("Unexpected variable_names_map of type $(typeof(variable_names_map)) " *
-                        "encountered.")
+            feature = begin
+                i_var = begin
+                    if isnothing(variable_names_map)
+                        parse(Int, _variable)
+                    elseif variable_names_map isa Union{AbstractDict,AbstractVector}
+                        i_var = findfirst(variable_names_map, variable)
+                        @assert !isnothing(i_var) "Could not find variable $variable in the " *
+                            "specified map. ($(@show variable_names_map))"
+                    else
+                        error("Unexpected variable_names_map of type $(typeof(variable_names_map)) " *
+                            "encountered.")
+                    end
                 end
-            end
-            if haskey(featdict, _feature)
-                # If it is a known feature get it as
-                #  a type (e.g., `VariableMin`), or Julia function (e.g., `minimum`).
-                feat_or_fun = featdict[_feature]
-                # If it is a function, wrap it into a UnivariateFeature
-                #  otherwise, it is a feature, and it is used as a constructor.
-                if feat_or_fun isa Function
+                if haskey(featdict, _feature)
+                    # If it is a known feature get it as
+                    #  a type (e.g., `VariableMin`), or Julia function (e.g., `minimum`).
+                    feat_or_fun = featdict[_feature]
+                    # If it is a function, wrap it into a UnivariateFeature
+                    #  otherwise, it is a feature, and it is used as a constructor.
+                    if feat_or_fun isa Function
+                        if isnothing(featvaltype)
+                            featvaltype = DEFAULT_VARFEATVALTYPE
+                            @warn "Please, specify a type for the feature values (featvaltype = ...). " *
+                                "$(featvaltype) will be used, but note that this may raise type errors. " *
+                                "(expression = $(repr(expr)))"
+                        end
+
+                        UnivariateFeature{featvaltype}(i_var, feat_or_fun)
+                    else
+                        feat_or_fun(i_var) # TODO do this
+                        # feat_or_fun{featvaltype}(i_var)
+                    end
+                else
+                    # If it is not a known feature, interpret it as a Julia function,
+                    #  and wrap it into a UnivariateFeature.
+                    f = eval(Meta.parse(_feature))
                     if isnothing(featvaltype)
                         featvaltype = DEFAULT_VARFEATVALTYPE
                         @warn "Please, specify a type for the feature values (featvaltype = ...). " *
@@ -574,31 +595,37 @@ function parsefeature(
                             "(expression = $(repr(expr)))"
                     end
 
-                    UnivariateFeature{featvaltype}(i_var, feat_or_fun)
-                else
-                    feat_or_fun(i_var) # TODO do this
-                    # feat_or_fun{featvaltype}(i_var)
+                    UnivariateFeature{featvaltype}(i_var, f)
                 end
-            else
-                # If it is not a known feature, interpret it as a Julia function,
-                #  and wrap it into a UnivariateFeature.
-                f = eval(Meta.parse(_feature))
-                if isnothing(featvaltype)
-                    featvaltype = DEFAULT_VARFEATVALTYPE
-                    @warn "Please, specify a type for the feature values (featvaltype = ...). " *
-                        "$(featvaltype) will be used, but note that this may raise type errors. " *
-                        "(expression = $(repr(expr)))"
-                end
-
-                UnivariateFeature{featvaltype}(i_var, f)
             end
+            return feature
         end
+
+        r = Regex("^\\s*$(variable_name_prefix)(\\S+)\\s*\$")
+        slices = match(r, expr)
+
+        # Assert for malformed strings (e.g. "V189")
+        if !isnothing(slices) && length(slices) == 1
+            i_variable = slices[1]
+            # if isnothing(featvaltype)
+            #     featvaltype = DEFAULT_VARFEATVALTYPE
+            #     @warn "Please, specify a type for the feature values (featvaltype = ...). " *
+            #         "$(featvaltype) will be used, but note that this may raise type errors. " *
+            #         "(expression = $(repr(expr)))"
+            # end
+            # @show VariableValue{featvaltype}
+            # @show (parse(Int64, i_variable))
+            # return VariableValue{featvaltype}(parse(Int64, i_variable))
+            return VariableValue(parse(Int64, i_variable))
+        end
+
+        throw(ArgumentError("Could not parse variable feature from expression $(repr(expr))."))
 
         # if !(feature isa FT)
         #     @warn "Could not parse expression $(repr(expr)) as feature of type $(FT); " *
         #         " $(typeof(feature)) was used."
         # end
 
-        return feature
+        # return feature
     end
 end

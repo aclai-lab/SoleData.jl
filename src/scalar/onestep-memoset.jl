@@ -13,18 +13,22 @@
     return (length(vs) == 0 ? aggregator_bottom(aggr, U) : aggr(vs))
 end
 
-function featchannel_onestep_aggregation(X::SupportedLogiset, args...)
-    onestep_supps = filter(supp->supp isa AbstractOneStepMemoset, supports(X))
-    if length(onestep_supps) > 0
-        @assert length(onestep_supps) == 1 "Currently, using more " *
-            "than one AbstractOneStepMemoset is not allowed."
-        featchannel_onestep_aggregation(base(X), onestep_supps[1], args...)
+function featchannel_onestep_aggregation(X::AbstractModalLogiset, args...)
+    if hassupports(X)
+        onestep_supps = filter(supp->supp isa AbstractOneStepMemoset, supports(X))
+        if length(onestep_supps) > 0
+            @assert length(onestep_supps) == 1 "Currently, using more " *
+                "than one AbstractOneStepMemoset is not allowed."
+            featchannel_onestep_aggregation(base(X), onestep_supps[1], args...)
+        else
+            featchannel_onestep_aggregation(base(X), args...)
+        end
     else
-        featchannel_onestep_aggregation(base(X), args...)
+        _featchannel_onestep_aggregation(X, args...)
     end
 end
 
-function featchannel_onestep_aggregation(
+function _featchannel_onestep_aggregation(
     X::AbstractModalLogiset,
     featchannel,
     i_instance,
@@ -37,7 +41,7 @@ function featchannel_onestep_aggregation(
     gamma = apply_aggregator(X, featchannel, accessible_worlds, f, aggregator)
 end
 
-function featchannel_onestep_aggregation(
+function _featchannel_onestep_aggregation(
     X::AbstractModalLogiset,
     featchannel,
     i_instance,
@@ -411,7 +415,7 @@ function grouped_metaconditions(
     end, groupbyfeature(metaconditions, features))
 end
 
-function featchannel_onestep_aggregation(
+function _featchannel_onestep_aggregation(
     X::AbstractModalLogiset{W,U},
     Xm::ScalarOneStepMemoset,
     featchannel,

@@ -8,24 +8,30 @@ import SoleData:
     islogiseed, initlogiset, frame,
     featchannel, readfeature, featvalue, vareltype, featvaltype
 
+using SoleLogics: nparameters
+
 function islogiseed(dataset::AbstractDimensionalDataset)
     ndims(eltype(dataset)) >= 1
 end
+
+DEFAULT_WORLDTYPE_BY_DIM = Dict{Int,Type{<:SoleLogics.AbstractWorld}}([
+    0 => OneWorld, 1 => Interval{Int64}, 2 => Interval2D{Int64}
+])
 
 """
     function initlogiset(
         dataset::AbstractDimensionalDataset,
         features::AbstractVector;
-        worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+        worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
     )::UniformFullDimensionalLogiset
 
 Given an [`AbstractDimensionalDataset`](@ref), build a
 [`UniformFullDimensionalLogiset`](@ref).
 
 # Keyword Arguments
-- worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing:
+- worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing:
 map between a dimensionality, as integer, and the [`AbstractWorld`](@ref) type associated;
-when unspecified, this is defaulted to `0 => OneWorld, 1 => Interval, 2 => Interval2D`.
+when unspecified, this is defaulted to `Dict(0 => OneWorld, 1 => Interval, 2 => Interval2D)`.
 
 See also [`AbstractDimensionalDataset`](@ref),
 SoleLogics.AbstractWorld,
@@ -35,10 +41,9 @@ MultiData.dimensionality,
 function initlogiset(
     dataset::AbstractDimensionalDataset,
     features::AbstractVector;
-    worldtype_by_dim::Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing
+    worldtype_by_dim::Union{Nothing,<:AbstractDict{<:Integer,<:Type}}=nothing
 )::UniformFullDimensionalLogiset
-    worldtype_by_dim = isnothing(worldtype_by_dim) ? Dict{Int,Type{<:AbstractWorld}}([
-        0 => OneWorld, 1 => Interval, 2 => Interval2D]) :
+    worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
         worldtype_by_dim
 
     _ninstances = ninstances(dataset)
@@ -69,18 +74,22 @@ function initlogiset(
     # @show typeof(dataset)
     U = Union{map(f->featvaltype(dataset, f), features)...}
 
+    repeatdim = N > 0 ? div(nparameters(W), N) : N
+
     if allequal(map(i_instance->channelsize(dataset, i_instance), 1:ninstances(dataset)))
         _maxchannelsize = maxchannelsize(dataset)
-        featstruct = Array{U,length(_maxchannelsize)*2+2}(
+
+        featstruct = Array{U,nparameters(W)+2}(
                 undef,
-                vcat([[s, s] for s in _maxchannelsize]...)...,
+                repeat(collect(_maxchannelsize), inner=repeatdim)...,
                 _ninstances,
                 length(features)
             )
-        # if !isconcretetype(U) # TODO only in this case but this breaks code
-            # @warn "Abstract featvaltype detected upon initializing UniformFullDimensionalLogiset logiset: $(U)."
+        if !isconcretetype(U) # TODO only in this case but this breaks code
+            @warn "Abstract featvaltype detected upon initializing UniformFullDimensionalLogiset logiset: $(U)."
             fill!(featstruct, 0)
-        # end
+        end
+
         return UniformFullDimensionalLogiset{U,W,N}(featstruct, features)
     else
         error("Different frames encountered for different dataset instances.")
@@ -96,9 +105,12 @@ end
 
 function frame(
     dataset::AbstractDimensionalDataset,
-    i_instance::Integer
+    i_instance::Integer;
+    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
+    kwargs...
 )
-    FullDimensionalFrame(channelsize(dataset, i_instance))
+    worldtype = !isnothing(worldtype_by_dim) ? worldtype_by_dim[dimensionality(dataset)] : nothing
+    FullDimensionalFrame(channelsize(dataset, i_instance), worldtype)
 end
 
 function featchannel(

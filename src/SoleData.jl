@@ -54,7 +54,10 @@ import SoleLogics: frame
 
 using SoleLogics: value
 
-using SoleLogics: OneWorld, Interval, Interval2D
+using SoleLogics: OneWorld
+using SoleLogics: Point, Point1D, Point2D, Point3D
+using SoleLogics: Interval, Interval2D
+
 using SoleLogics: Full0DFrame, Full1DFrame, Full2DFrame
 using SoleLogics: X, Y, Z
 using SoleLogics: AbstractWorld, IdentityRel
@@ -74,24 +77,43 @@ import MultiData: displaystructure
 
 import Tables: istable, rows, subset, getcolumn, columnnames, rowaccess
 
-
-export AbstractFeature, Feature
-
-export UnivariateNamedFeature,
-        UnivariateFeature,
-        VariableValue
-
-export computefeature
-
-export parsefeature
-
-export VarFeature,
-        VariableMin, VariableMax,
-        VariableSoftMin, VariableSoftMax,
-        MultivariateFeature
+export AbstractFeature, parsefeature
 
 # Features to be computed on worlds of dataset instances
-include("features.jl")
+include("types/features.jl")
+
+export parsecondition
+
+# Conditions on the features, to be wrapped in Atom's
+include("types/conditions.jl")
+
+export accessibles, allworlds, representatives
+
+# Interface for representative accessibles, for optimized model checking on specific frames
+include("types/representatives.jl")
+
+export ninstances, eachinstance
+export featvalue, displaystructure, isminifiable, minify
+export alphabet
+export features, nfeatures
+
+# Logical datasets, where the instances are logical interpretations on scalar alphabets
+include("types/logiset.jl")
+
+# Logical datasets, where the instances are Kripke structure on scalar alphabets
+include("types/modal-logiset.jl")
+
+# Memoization structures for logisets
+include("types/memoset.jl")
+
+export check
+
+# Model checking algorithms for logisets and multilogisets
+include("check.jl")
+
+################################################################################
+################################################################################
+################################################################################
 
 export ScalarMetaCondition
 
@@ -100,59 +122,56 @@ export MixedCondition, CanonicalCondition, canonical_geq, canonical_leq
 export canonical_geq_95, canonical_geq_90, canonical_geq_85, canonical_geq_80, canonical_geq_75, canonical_geq_70, canonical_geq_60,
        canonical_leq_95, canonical_leq_90, canonical_leq_85, canonical_leq_80, canonical_leq_75, canonical_leq_70, canonical_leq_60
 
-export parsecondition
-
 export ValueCondition, FunctionalCondition
-export parsecondition
 
-# Conditions on the features, to be wrapped in Atom's
-include("conditions.jl")
 
-# Templates for formulas of conditions (e.g., templates for ⊤, p, ⟨R⟩p, etc.)
-include("templated-formulas.jl")
+export Feature
 
-export accessibles, allworlds, representatives
+export UnivariateNamedFeature,
+        UnivariateFeature,
+        VariableValue
 
-# Interface for representative accessibles, for optimized model checking on specific frames
-include("representatives.jl")
+export VarFeature,
+        VariableMin, VariableMax,
+        VariableSoftMin, VariableSoftMax,
+        MultivariateFeature
 
-export ninstances, eachinstance
-export featvalue, displaystructure, isminifiable, minify
-export alphabet
 
-# Logical datasets, where the instances are Kripke structures with scalar alphabets
-include("logiset.jl")
+include("utils/features.jl")
 
-include("modal-logisets.jl")
-
-include("memosets.jl")
-
-include("supported-logiset.jl")
 
 export MultiLogiset, eachmodality, modality, nmodalities
-
 export MultiFormula, modforms
 
 # Multi-frame version of logisets, for representing multimodal datasets
-include("multilogiset.jl")
+include("utils/multilogiset.jl")
 
-export check
 
-# Model checking algorithms for logisets and multilogisets
-include("check.jl")
-
-export nfeatures
+export @scalarformula
 
 include("scalar/main.jl")
-
-# Tables interface for logiset's, so that it can be integrated with MLJ
-include("MLJ-interface.jl")
 
 export initlogiset, ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue
 
 export nvariables
 
+include("types/dimensional-structures.jl")
+
 include("dimensional-structures/main.jl")
+
+
+################################################################################
+
+include("utils/conditions.jl")
+
+# Templates for formulas of conditions (e.g., templates for ⊤, p, ⟨R⟩p, etc.)
+include("utils/templated-formulas.jl")
+
+include("utils/modal-logiset.jl")
+
+include("utils/memoset.jl")
+
+include("utils/supported-logiset.jl")
 
 function default_relmemoset_type(X::AbstractModalLogiset)
     # if X isa DimensionalDatasets.UniformFullDimensionalLogiset
@@ -185,14 +204,40 @@ function default_full_memoset_type(X::AbstractModalLogiset)
     # end
 end
 
-using .DimensionalDatasets: OneWorld, Interval, Interval2D
+using .DimensionalDatasets: OneWorld
+using .DimensionalDatasets: Point, Point1D, Point2D, Point3D
+using .DimensionalDatasets: Interval, Interval2D
 using .DimensionalDatasets: IARelations
 using .DimensionalDatasets: IA2DRelations
 using .DimensionalDatasets: identityrel
 using .DimensionalDatasets: globalrel
 
+# Tables interface for (modal) logiset's, so that it can be integrated with MLJ
+include("types/logiset-MLJ-interface.jl")
+
 include("utils/autologiset-tools.jl")
 
+"""
+Logical datasets with scalar features.
+"""
+const AbstractScalarLogiset{
+    W<:AbstractWorld,
+    U<:Number,
+    FT<:AbstractFeature,
+    FR<:AbstractFrame{W}
+} = AbstractModalLogiset{W,U,FT,FR}
+
+nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
+nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
+relations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = relations(supports(X)[1])
+relations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = relations(supports(X)[1])
+nmetaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nmetaconditions(supports(X)[1])
+nmetaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nmetaconditions(supports(X)[1])
+metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
+metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
+
+include("scalar-pla.jl")
+include("minimize.jl")
 include("deprecate.jl")
 
 end # module
