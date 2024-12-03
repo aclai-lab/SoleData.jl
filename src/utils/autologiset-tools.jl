@@ -207,8 +207,8 @@ function autologiset(
             else
                 MultiData.dimensional2dataframe(X)
             end
-        # elseif SoleData.hassupports(X)
-        #     X
+        elseif SoleData.hassupports(X)
+            X
         elseif X isa AbstractModalLogiset
             SupportedLogiset(X;
                 use_onestep_memoization = true,
