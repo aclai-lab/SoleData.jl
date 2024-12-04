@@ -1,3 +1,4 @@
+using Discretizers
 
 """
     function select_alphabet(
@@ -30,10 +31,10 @@ Select an alphabet, that is, a set of [`Item`](@ref)s wrapping `SoleData.Abstrac
 
 # Examples
 ```julia
-julia> using ModalAssociationRules
 julia> using Discretizers
 
-julia> X, _ = load_NATOPS()
+# an easy dataframe with 20 instances and only one column
+julia> X = [rand(10) for i in 1:20]
 
 # to generate an alphabet, we choose a variable (a column of X) and our metacondition
 julia> variable = 1
@@ -46,20 +47,20 @@ julia> nbins = 5
 julia> discretizer = Discretizers.DiscretizeQuantile(nbins)
 
 # we obtain one alphabet and pretty print it
-julia> alphabet1 = select_alphabet(X[1:30,variable], max_metacondition, discretizer)
-julia> syntaxstring.(alphabet1[_quantile_discretizer])
+julia> alphabet1 = select_alphabet(X[:,variable], max_metacondition, discretizer)
+julia> syntaxstring.(alphabet1)
 4-element Vector{String}:
- "max[V1] ≤ -0.63"
- "max[V1] ≤ -0.57"
- "max[V1] ≤ -0.5"
- "max[V1] ≤ -0.44"
+ "max[V1] ≤ 0.21"
+ "max[V1] ≤ 0.41"
+ "max[V1] ≤ 0.61"
+ "max[V1] ≤ 0.78"
 
 # for each time series in X (or for the only time series X), consider each possible
 # interval and apply the feature on it; if you are considering other kind of dimensional
 # data (e.g., spatial), adapt the following list comprehension.
 julia> max_applied_on_all_intervals = [
         SoleData.computeunivariatefeature(max_metacondition |> SoleData.feature, v[i:j])
-        for v in X[1:30, 1]
+        for v in X[:,variable]
         for i in 1:length(v)
         for j in i+1:length(v)
     ]
@@ -69,27 +70,17 @@ julia> alphabet2 = select_alphabet(
     max_applied_on_all_intervals, max_metacondition, discretizer)
 julia> syntaxstring.(alphabet2)
 4-element Vector{String}:
- "max[V1] ≤ -0.61"
- "max[V1] ≤ -0.53"
- "max[V1] ≤ -0.47"
- "max[V1] ≤ -0.4"
+ "max[V1] ≤ 0.64"
+ "max[V1] ≤ 0.74"
+ "max[V1] ≤ 0.87"
+ "max[V1] ≤ 0.97"
 
 # we can obtain the same result as before by simplying setting `consider_all_subintervals`
-julia> alphabet3 = select_alphabet(X[1:30,variable], max_metacondition, discretizer;
+julia> alphabet3 = select_alphabet(X[:,variable], max_metacondition, discretizer;
             consider_all_subintervals=true)
-julia> syntaxstring.(alphabet2)
-4-element Vector{String}:
- "max[V1] ≤ -0.61"
- "max[V1] ≤ -0.53"
- "max[V1] ≤ -0.47"
- "max[V1] ≤ -0.4"
+julia> syntaxstring.(alphabet3) == syntaxstring.(alphabet2)
+true
 ```
-
-!!! note
-    We could also consider an ad-hoc distribution for a certain feature type;
-    for example, when working with a `ScalarMetaCondition` `max[V1] ≤ ⍰` on a time series,
-    we could consider each possible sub-interval in the time series and apply `max` on it
-    before perform binning.
 
 See also `Discretizers.DiscretizationAlgorithm`, [`Item`](@ref),
 `SoleData.AbstractCondition`, `SoleData.ScalarMetaCondition`.
