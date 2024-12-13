@@ -285,7 +285,7 @@ struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
 end
 featurename(f::VariableValue) = ""
 
-function syntaxstring(f::VariableValue; variable_names_map = nothing, show_colon = false, kwargs...)
+function syntaxstring(f::VariableValue; variable_names_map=nothing, show_colon=false, kwargs...)
     if i_variable(f) isa Integer || !isnothing(variable_names_map)
         variable_name(f; variable_names_map = variable_names_map, kwargs...)
     else
