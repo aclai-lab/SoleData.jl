@@ -1,7 +1,7 @@
-
-
-using SoleData: discretize
 using Test
+
+using Discretizers
+using SoleData: discretize
 using Plots
 
 ############################################################################################
@@ -1099,3 +1099,40 @@ Xcol = [0.055,0.1,0.09,0.12,0.12,0.125,0.1,0.11,];                      y = [0,2
 @test discretize(Xcol, y) == [0.12]
 Xcol = [0.005,0.005,0.005,0.005,0.005,0.005];                           y = [4,2,2,3,3,2]
 @test discretize(Xcol, y) == []
+
+# an easy dataframe with 20 instances and only one column
+X = [rand(10) for i in 1:20]
+
+# to generate an alphabet, we choose a variable (a column of X) and our metacondition
+variable = 1
+max_metacondition = ScalarMetaCondition(VariableMax(variable), <=)
+ ScalarMetaCondition{VariableMax{Integer}, typeof(<=)}: max[V1] ≤ ⍰
+
+# we choose how we want to discretize the distribution of the variable
+nbins = 5
+# we specify a strategy to perform discretization
+discretizer = Discretizers.DiscretizeQuantile(nbins)
+
+# we obtain one alphabet and pretty print it
+alphabet1 = select_alphabet(X[:,variable], max_metacondition, discretizer)
+@test length(alphabet1) == 4
+
+# for each time series in X (or for the only time series X), consider each possible
+# interval and apply the feature on it; if you are considering other kind of dimensional
+# data (e.g., spatial), adapt the following list comprehension.
+max_applied_on_all_intervals = [
+        SoleData.computeunivariatefeature(max_metacondition |> SoleData.feature, v[i:j])
+        for v in X[:,variable]
+        for i in 1:length(v)
+        for j in i+1:length(v)
+    ]
+
+# now you can call `select_alphabet` with the new preprocessed time series.
+alphabet2 = select_alphabet(
+    max_applied_on_all_intervals, max_metacondition, discretizer)
+
+# we can obtain the same result as before by simplying setting `consider_all_subintervals`
+alphabet3 = select_alphabet(X[:,variable], max_metacondition, discretizer;
+            consider_all_subintervals=true)
+
+@test syntaxstring.(alphabet3) == syntaxstring.(alphabet2)
