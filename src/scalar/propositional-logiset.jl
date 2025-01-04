@@ -213,6 +213,7 @@ function alphabet(
     force_i_variables::Bool = false,
     test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
     discretizedomain::Bool = false,
+    unique::Bool = false,
     kwargs...
 )::MultivariateScalarAlphabet
     feats = collect(features(X; force_i_variables = force_i_variables))
@@ -221,7 +222,7 @@ function alphabet(
 
     domains = [begin
         domain = Tables.getcolumn(gettable(X), i_variable(feat))
-        if !discretizedomain
+        if unique && !discretizedomain
             domain = unique(domain)
         end
         domain
