@@ -1106,7 +1106,6 @@ X = [rand(10) for i in 1:20]
 # to generate an alphabet, we choose a variable (a column of X) and our metacondition
 variable = 1
 max_metacondition = ScalarMetaCondition(VariableMax(variable), <=)
- ScalarMetaCondition{VariableMax{Integer}, typeof(<=)}: max[V1] ≤ ⍰
 
 # we choose how we want to discretize the distribution of the variable
 nbins = 5
