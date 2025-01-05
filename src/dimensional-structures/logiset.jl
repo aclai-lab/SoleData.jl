@@ -447,7 +447,8 @@ end
 function allfeatvalues(
     X::UniformFullDimensionalLogiset,
 )
-    unique(X.featstruct)
+    error("TODO only look at upper half")
+    vec(X.featstruct)
 end
 
 function allfeatvalues(
@@ -461,10 +462,18 @@ end
 function allfeatvalues(
     X::UniformFullDimensionalLogiset,
     i_instance,
-    f,
+    f::AbstractFeature,
 )
     return error("Please, provide method allfeatvalues(::" *
         "$(typeof(X)), i_instance::$(typeof(i_instance)), f::$(typeof(f))).")
+end
+
+function allfeatvalues(
+    X::UniformFullDimensionalLogiset,
+    f::AbstractFeature,
+)
+    return error("Please, provide method allfeatvalues(::" *
+        "$(typeof(X)), f::$(typeof(f))).")
 end
 
 ############################################################################################

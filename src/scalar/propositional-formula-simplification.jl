@@ -190,5 +190,6 @@ function scalar_simplification(
             # # per una USC. Devo capire se tale intervallo è ⊤, ⊥, o corrisponde ad un solo valore.
         end for (feat, bitmask) in feature_groups]))
 
+    # @show SoleLogics.connective(φ)
     ψ = (length(ch) == 0 ? (⊤) : (length(ch) == 1 ? first(ch) : LeftmostLinearForm(SoleLogics.connective(φ), ch)))
 end
