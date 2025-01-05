@@ -134,6 +134,7 @@ export UnivariateNamedFeature,
 export VarFeature,
         VariableMin, VariableMax,
         VariableSoftMin, VariableSoftMax,
+        VariableAvg,
         MultivariateFeature
 
 
