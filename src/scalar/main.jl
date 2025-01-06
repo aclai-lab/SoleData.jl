@@ -18,7 +18,7 @@ include("random.jl")
 include("representatives.jl")
 
 # # Types for representing common associations between features and operators
-include("canonical-conditions.jl") # TODO remove
+# include("canonical-conditions.jl") # TODO remove
 
 
 struct PatchedFunction
@@ -26,8 +26,12 @@ struct PatchedFunction
     fname::String
 end
 
+"""
+A union type for all condition-inducing objects. An object of this type, coupled
+with a (e.g., dimensional) dataset will induce a set of conditions in [`scalarlogiset`](@ref).
+"""
 const MixedCondition = Union{
-    CanonicalCondition,
+    # CanonicalCondition,
     #
     <:SoleData.AbstractFeature,                                            # feature
     <:Base.Callable,                                                         # feature function (i.e., callables to be associated to all variables);

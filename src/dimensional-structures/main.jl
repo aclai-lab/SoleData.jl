@@ -23,7 +23,7 @@ using SoleData
 using MultiData: _isnan
 import MultiData: maxchannelsize, channelsize
 import MultiData: hasnans, nvariables
-import MultiData: instance, get_instance, concatdatasets
+import MultiData: instance, get_instance, displaystructure, concatdatasets
 import MultiData: displaystructure
 import MultiData: dimensionality
 

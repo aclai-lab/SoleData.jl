@@ -21,10 +21,22 @@ abstract type AbstractMemoset{
     FR<:AbstractFrame,
 } <: AbstractModalLogiset{W,U,FT,FR} end
 
+"""
+Return the capacity of a memoset, that is, the number of memoizable values (if finite).
+
+See also
+[`AbstractMemoset`](@ref).
+"""
 function capacity(Xm::AbstractMemoset)
     return error("Please, provide method capacity(::$(typeof(Xm))).")
 end
 
+"""
+Return the number of memoized values in a memoset.
+
+See also
+[`AbstractMemoset`](@ref).
+"""
 function nmemoizedvalues(Xm::AbstractMemoset)
     return error("Please, provide method nmemoizedvalues(::$(typeof(Xm))).")
 end

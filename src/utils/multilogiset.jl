@@ -186,10 +186,11 @@ import SoleLogics: normalize
         modforms::Dict{Int,F}
     end
 
-A symbolic antecedent that can be checked on a `MultiLogiset`, associating
-antecedents to modalities.
+A logical formula that can be checked on a `MultiLogiset`,
+representing the logical and between formulas across different modalities.
 
-See also [`MultiLogiset`](@ref)
+See also [`MultiLogiset`](@ref), [`eachmodality`](@ref),
+[`nmodalities`](@ref), [`modforms`](@ref).
 """
 struct MultiFormula{F<:Formula} <: AbstractSyntaxStructure
     modforms::Dict{Int,F}
@@ -202,6 +203,11 @@ function SoleLogics.tree(f::MultiFormula)
     return error("Cannot convert object of type $(typeof(f)) to a SyntaxTree.")
 end
 
+"""
+Return a dictionary associating different formulas to different dataset modalities. 
+
+See also [`MultiFormula`](@ref), [`MultiLogiset`](@ref).
+"""
 modforms(f::MultiFormula) = f.modforms
 
 Base.isequal(a::MultiFormula, b::MultiFormula) = allequal(Set.(keys.([modforms(a), modforms(b)]))) && all(k->Base.isequal(modforms(a)[k], modforms(b)[k]), keys(modforms(a)))
