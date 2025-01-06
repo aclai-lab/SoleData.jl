@@ -1,6 +1,6 @@
 using SoleData: AbstractMultiDataset
 import SoleData: ninstances, nvariables, nmodalities, eachmodality, displaystructure
-import SoleData: instances, concatdatasets
+import SoleData: instances, concatdatasets, displaystructure
 
 """
     islogiseed(dataset)::Bool
@@ -82,6 +82,13 @@ end
 function frame(logiseed, i_instance::Integer)
     return error("Please, provide method frame(logiseed::$(typeof(logiseed)), i_instance::Integer).")
 end
+"""
+    featvalue(feature, logiseed, i_instance, w)
+
+Return the value of a feature at world on an instance of a logiset.
+
+See [`islogiseed`](@ref).
+"""
 function featvalue(feature::AbstractFeature, logiseed, i_instance::Integer, w)
     return error("Please, provide method featvalue(feature::$(typeof(feature)), logiseed::$(typeof(logiseed)), i_instance::Integer, w::$(typeof(w))).")
 end

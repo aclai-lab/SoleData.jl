@@ -78,12 +78,12 @@ Pages   = ["check.jl"]
 Modules = [SoleData]
 Pages   = [
 	"scalar/main.jl",
+	"scalar/scalarformula.jl",
 	"scalar/var-features.jl",
 	"scalar/test-operators.jl",
 	"scalar/conditions.jl",
 	"scalar/templated-formulas.jl",
 	"scalar/random.jl",
-	"scalar/canonical-conditions.jl",
 	"scalar/logiseed.jl",
 	"scalar/scalarlogiset.jl",
 	"scalar/autologiset-tools.jl",

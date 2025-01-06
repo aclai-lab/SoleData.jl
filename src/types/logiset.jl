@@ -78,10 +78,21 @@ end
 ############################################################################################
 # Non mandatory
 
+"""
+Return the number of features for which instances in a logiset have value.
+Note that the set of features is not always defined for all logiset types.
+
+See also [`AbstractLogiset`](@ref), [`featvalue`](@ref).
+"""
 function features(X::AbstractLogiset)
     return error("Please, provide method features(::$(typeof(X))).")
 end
 
+"""
+Return the number of features in a logiset (if defined).
+
+See also [`features`](@ref).
+"""
 function nfeatures(X::AbstractLogiset)
     return error("Please, provide method nfeatures(::$(typeof(X))).")
 end
