@@ -27,7 +27,7 @@ function scalartiling(conditions::Vector, features = unique(SoleData.feature.(co
         sort!(extremes, by=((ismin, (mv, mi)),)->(_patchnothing(mv, ismin ? -Inf : Inf), mi))
         extremes = map(last, extremes)
         extremes = unique(extremes)
-        @show extremes
+        # @show extremes
         for (minextreme,maxextreme) in zip(extremes[1:end-1], extremes[2:end])
             # @show maxextreme
             cond = SoleData.RangeScalarCondition(feat, minextreme[1], maxextreme[1], !minextreme[2], maxextreme[2])
@@ -248,46 +248,58 @@ dual(c::ScalarCondition) = ScalarCondition(dual(metacond(c)), threshold(c))
 
 function minval(c::ScalarCondition)
     testop = test_operator(c)
-    pol = polarity(testop)
-    if pol == (==)
+    # @show pol, typeof(pol)
+    if testop == (==)
         threshold(c)
-    elseif isnothing(pol)
-        error("Unknown minval for test_operator $(testop).")
     else
-        pol ? threshold(c) : -Inf
+        pol = polarity(testop)
+        if isnothing(pol)
+            error("Unknown minval for test_operator $(testop).")
+        else
+            pol ? threshold(c) : -Inf
+        end
     end
 end
 function minincluded(c::ScalarCondition)
     testop = test_operator(c)
-    pol = polarity(testop)
-    if pol == (==)
+    # @show pol, typeof(pol)
+    if testop == (==)
         true
-    elseif isnothing(pol)
-        error("Unknown minincluded for test_operator $(testop).")
     else
-        pol ? !isstrict(testop) : true
+        pol = polarity(testop)
+        if isnothing(pol)
+            error("Unknown minincluded for test_operator $(testop).")
+        else
+            pol ? !isstrict(testop) : true
+        end
     end
 end
 function maxval(c::ScalarCondition)
     testop = test_operator(c)
-    pol = polarity(testop)
-    if pol == (==)
+    # @show pol, typeof(pol)
+    if testop == (==)
         threshold(c)
-    elseif isnothing(pol)
-        error("Unknown maxval for test_operator $(testop).")
     else
-        pol ? Inf : threshold(c)
+        pol = polarity(testop)
+        if isnothing(pol)
+            error("Unknown maxval for test_operator $(testop).")
+        else
+            pol ? Inf : threshold(c)
+        end
     end
 end
 function maxincluded(c::ScalarCondition)
     testop = test_operator(c)
-    pol = polarity(testop)
-    if pol == (==)
+    # @show pol, typeof(pol)
+    if testop == (==)
         true
-    elseif isnothing(pol)
-        error("Unknown maxincluded for test_operator $(testop).")
     else
-        pol ? true : !isstrict(test_operator(c))
+        pol = polarity(testop)
+        if isnothing(pol)
+            error("Unknown maxincluded for test_operator $(testop).")
+        else
+            pol ? true : !isstrict(test_operator(c))
+        end
     end
 end
 

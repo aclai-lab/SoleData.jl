@@ -6,10 +6,14 @@ function espresso_minimize(
     Sflag = nothing,
     eflag = nothing,
     args...;
+    espressobinary = nothing,
     otherflags = [],
     use_scalar_range_conditions = false,
     kwargs...
 )
+    if isnothing(espressobinary)
+        error("Please, specify the path to the espresso binary. Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.")
+    end
     dc_set = false
     pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(syntaxtree, dc_set, silent, args...; use_scalar_range_conditions, kwargs...)
 
@@ -34,7 +38,7 @@ function espresso_minimize(
     isnothing(Sflag) || push!(args, "-S$(Sflag)")
     isnothing(eflag) || push!(args, "-e$(eflag)")
     append!(otherflags, args)
-    cmd = pipeline(pipeline(echo_cmd, `./espresso $args`), stdout=out, stderr=err)
+    cmd = pipeline(pipeline(echo_cmd, `$espressobinary $args`), stdout=out, stderr=err)
     # cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
     try
         run(cmd)
