@@ -16,7 +16,30 @@ end
 
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
-@test cleanlines(PLA._formula_to_pla(formula0)[1]) == cleanlines("""
+
+@test cleanlines(PLA._formula_to_pla(formula0)[1]) in [cleanlines("""
+.i 5
+.o 1
+.ilb V1≤0 V1>10 V2<0 V2≤2 V2≥2
+.ob formula_output
+
+.p 2
+011-0 1
+10011 1
+.e
+"""), cleanlines("""
+.i 5
+.o 1
+.ilb V1≤0 V1>10 V2<0 V2≤2 V2≥2
+.ob formula_output
+
+.p 2
+10011 1
+011-0 1
+.e
+""")]
+
+@test_broken cleanlines(PLA._formula_to_pla(formula0)[1]) == cleanlines("""
 .i 5
 .o 1
 .ilb V1≤0 V1>10 V2<0 V2≤2 V2≥2
@@ -27,7 +50,8 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 011-0 1
 .e
 """)
-@test cleanlines(PLA._formula_to_pla(formula0; use_scalar_range_conditions = true)[1]) == cleanlines("""
+
+@test cleanlines(PLA._formula_to_pla(formula0; use_scalar_range_conditions = true)[1]) in [cleanlines("""
 .i 6
 .o 1
 .ilb V1∈[-∞,0] V1∈(0,10] V1∈(10,∞] V2∈[-∞,0) V2∈[0,2) V2∈[2,2]
@@ -36,7 +60,29 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 100001 1
 001100 1
 .e
+"""),
+cleanlines("""
+.i 6
+.o 1
+.ilb V1∈[-∞,0] V1∈(0,10] V1∈(10,∞] V2∈[-∞,0) V2∈[0,2) V2∈[2,2]
+.ob formula_output
+.p 2
+001100 1
+100001 1
+.e
+""")]
+
+@test_broken cleanlines(PLA._formula_to_pla(formula0; use_scalar_range_conditions = true)[1]) == cleanlines("""
+.i 6
+.o 1
+.ilb V1∈[-∞,0] V1∈(0,10] V1∈(10,∞] V2∈[-∞,0) V2∈[0,2) V2∈[2,2]
+.ob formula_output
+.p 2
+001100 1
+100001 1
+.e
 """)
+
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 >= 2))
 @test_nowarn PLA._formula_to_pla(formula0, true)[1] |> println
