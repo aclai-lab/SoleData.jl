@@ -72,7 +72,7 @@ cleanlines("""
 .e
 """)]
 
-@test_broken cleanlines(PLA._formula_to_pla(formula0; use_scalar_range_conditions = true)[1]) == cleanlines("""
+@test cleanlines(PLA._formula_to_pla(formula0; use_scalar_range_conditions = true)[1]) == cleanlines("""
 .i 6
 .o 1
 .ilb V1∈[-∞,0] V1∈(0,10] V1∈(10,∞] V2∈[-∞,0) V2∈[0,2) V2∈[2,2]
@@ -124,9 +124,9 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 
 f, args, kwargs = PLA._formula_to_pla(formula0)
 formula01 = tree(PLA._pla_to_formula(f, true, args...; kwargs...))
-formula0_min = my_espresso_minimize(formula0PLA._pla_to_formula
+formula0_min = my_espresso_minimize(formula0)
 
-formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0)))
+formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0))
 formula0 = SoleData.scalar_simplification(dnf(formula0, Atom))
 PLA._formula_to_pla(formula0)[1] |> println
 formula0_min = my_espresso_minimize(formula0)
