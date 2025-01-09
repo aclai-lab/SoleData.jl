@@ -40,7 +40,29 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 >= 2))
 @test_nowarn PLA._formula_to_pla(formula0, true)[1] |> println
-@test cleanlines(PLA._formula_to_pla(formula0, true)[1]) == cleanlines("""
+@test cleanlines(PLA._formula_to_pla(formula0, true)[1]) in [cleanlines("""
+.i 4
+.o 1
+.ilb V1≤0 V1>10 V2<0 V2≥2
+.ob formula_output
+
+.p 2
+0110 1
+1001 1
+.e
+"""), cleanlines("""
+.i 4
+.o 1
+.ilb V1≤0 V1>10 V2<0 V2≥2
+.ob formula_output
+
+.p 2
+1001 1
+0110 1
+.e
+""")]
+
+@test_broken cleanlines(PLA._formula_to_pla(formula0, true)[1]) == cleanlines("""
 .i 4
 .o 1
 .ilb V1≤0 V1>10 V2<0 V2≥2
@@ -51,6 +73,7 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 1001 1
 .e
 """)
+
 @test_nowarn SoleData.scalar_simplification(dnf(formula0, Atom))
 
 f, args, kwargs = PLA._formula_to_pla(formula0)
