@@ -7,7 +7,7 @@ import SoleLogics: interpret
 import SoleData: VariableValue, featvalue
 using SoleLogics: AbstractAssignment
 
-include("discretization.jl")
+include("discretization/fayyad.jl")
 
 ############################################################################################
 
@@ -235,11 +235,11 @@ function alphabet(
     _get_test_operators(::Val{nothing}, ::Type{<:Any}) = [(==), (≠)]
     _get_test_operators(::Val{:single}, ::Type{<:Number}) = [≤]
     _get_test_operators(::Val{:double}, ::Type{<:Any}) = [(==)]
-    
+
     testopss = [begin
         get_test_operators(test_operators, coltype)
     end for coltype in coltypes]
-    
+
     _multivariate_scalar_alphabet(feats, testopss, domains; sorted, discretizedomain, kwargs...)
 end
 

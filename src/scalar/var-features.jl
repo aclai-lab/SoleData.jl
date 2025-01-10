@@ -425,6 +425,36 @@ end
 
 ############################################################################################
 
+"""
+    struct VariableAvg{I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
+    end
+
+Univariate feature computing the average value for a given variable.
+
+See also [`SoleLogics.Interval`](@ref),
+[`SoleLogics.Interval2D`](@ref),
+[`AbstractUnivariateFeature`](@ref),
+[`VariableMax`](@ref), [`VariableMin`](@ref),
+[`VarFeature`](@ref), [`AbstractFeature`](@ref).
+"""
+struct VariableAvg{I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
+    function VariableAvg(f::VariableAvg)
+        return VariableAvg(i_variable(f))
+    end
+    function VariableAvg(i_variable::I) where {I<:VariableId}
+        return new{I}(i_variable)
+    end
+end
+featurename(f::VariableAvg) = "avg"
+
+function featvaltype(dataset, f::VariableAvg)
+    return vareltype(dataset, f.i_variable)
+end
+
+############################################################################################
+
 # These features collapse to a single value; it can be useful to know this
 is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax}) = true
 is_collapsing_univariate_feature(f::UnivariateFeature) = (f.f in [minimum, maximum, mean])
@@ -466,8 +496,8 @@ const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String,Base.Callable}(
     "maximum" => VariableMax,
     "max"     => VariableMax,
     #
-    "avg"     => StatsBase.mean,
-    "mean"    => StatsBase.mean,
+    "avg"     => VariableAvg,
+    "mean"    => VariableAvg,
 )
 
 """
