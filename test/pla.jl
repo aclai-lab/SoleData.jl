@@ -274,6 +274,7 @@ pla = """.i 3
 
 formula = PLA._pla_to_formula(pla)
 @test isa(formula, SoleLogics.LeftmostDisjunctiveForm)
+@test syntaxstring(formula) == "((V1 > 10) ∧ (V2 ≤ 2)) ∨ ((V1 ≤ 10) ∧ (V2 ≤ 2))"
 
 
 # Espresso minimization
