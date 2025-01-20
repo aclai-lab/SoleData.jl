@@ -11,9 +11,14 @@ function espresso_minimize(
     use_scalar_range_conditions = false,
     kwargs...
 )
+    # Determina il percorso del binario di espresso rispetto alla posizione di questo file
     if isnothing(espressobinary)
-        error("Please, specify the path to the espresso binary. Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.")
+        espressobinary = joinpath(@__DIR__, "espresso")
+        if !isfile(espressobinary)
+            error("Non è stato trovato il binario 'espresso' nella directory del modulo. Assicurati che 'espresso' sia presente in: $espressobinary")
+        end
     end
+
     dc_set = false
     pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(syntaxtree, dc_set, silent, args...; use_scalar_range_conditions, kwargs...)
 
