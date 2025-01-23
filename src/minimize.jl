@@ -1,4 +1,17 @@
-
+"""
+espresso_minimize(
+    syntaxtree::SoleLogics.Formula,
+    silent::Bool = true,
+    Dflag = "exact",
+    Sflag = nothing,
+    eflag = nothing,
+    args...;
+    espressobinary = nothing,
+    otherflags = [],
+    use_scalar_range_conditions = false,
+    kwargs...
+)
+"""
 function espresso_minimize(
     syntaxtree::SoleLogics.Formula,
     silent::Bool = true,
@@ -11,11 +24,13 @@ function espresso_minimize(
     use_scalar_range_conditions = false,
     kwargs...
 )
-    # Determina il percorso del binario di espresso rispetto alla posizione di questo file
+    # Determine the path of the espresso binary relative to the location of this file
+    println("============================================")
     if isnothing(espressobinary)
+        println("espressobinary go default")
         espressobinary = joinpath(@__DIR__, "espresso")
         if !isfile(espressobinary)
-            error("Non è stato trovato il binario 'espresso' nella directory del modulo. Assicurati che 'espresso' sia presente in: $espressobinary")
+            error("The 'espresso' binary was not found in the module directory. Ensure that 'espresso' is present at: $espressobinary")
         end
     end
 
