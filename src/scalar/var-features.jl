@@ -274,13 +274,26 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
+# struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
+#     i_variable::I
+#     function VariableValue(f::VariableValue)
+#         return VariableValue(i_variable(f))
+#     end
+#     function VariableValue(i_variable::I) where {I<:VariableId}
+#         return new{I}(i_variable)
+#     end
+# end
 struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
     i_variable::I
+    i_id::Int
     function VariableValue(f::VariableValue)
-        return VariableValue(i_variable(f))
+        return VariableValue(i_variable(f), i_id(f))
     end
     function VariableValue(i_variable::I) where {I<:VariableId}
-        return new{I}(i_variable)
+        return new{I}(i_variable, 0)
+    end
+    function VariableValue(i_variable::I, i_id::Int) where {I<:VariableId}
+        return new{I}(i_variable, i_id)
     end
 end
 featurename(f::VariableValue) = ""
