@@ -34,7 +34,8 @@ See also
 """
 abstract type VarFeature <: AbstractFeature end
 
-const VariableId = Union{Integer,Symbol}
+const VariableId = Integer
+const VariableName = Union{String,Symbol}
 
 DEFAULT_VARFEATVALTYPE = Real
 
@@ -283,17 +284,17 @@ See also [`SoleLogics.Interval`](@ref),
 #         return new{I}(i_variable)
 #     end
 # end
-struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
+struct VariableValue{I<:VariableId, N<:Union{VariableName, Nothing}} <: AbstractUnivariateFeature
     i_variable::I
-    i_id::Int
+    i_name::N
     function VariableValue(f::VariableValue)
-        return VariableValue(i_variable(f), i_id(f))
+        return VariableValue(i_variable(f), i_name(f))
     end
     function VariableValue(i_variable::I) where {I<:VariableId}
-        return new{I}(i_variable, 0)
+        return new{I,N}(i_variable, nothing)
     end
-    function VariableValue(i_variable::I, i_id::Int) where {I<:VariableId}
-        return new{I}(i_variable, i_id)
+    function VariableValue(i_variable::I, i_name::N) where {I<:VariableId, N<:VariableName}
+        return new{I,N}(i_variable, i_name)
     end
 end
 featurename(f::VariableValue) = ""
