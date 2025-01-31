@@ -35,6 +35,7 @@ See also
 abstract type VarFeature <: AbstractFeature end
 
 const VariableId = Union{Integer,Symbol}
+const VariableName = Union{String,Symbol}
 
 DEFAULT_VARFEATVALTYPE = Real
 
@@ -274,18 +275,29 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
+struct VariableValue{I<:VariableId, N<:Union{VariableName, Nothing}} <: AbstractUnivariateFeature
     i_variable::I
+    i_name::N
     function VariableValue(f::VariableValue)
         return VariableValue(i_variable(f))
     end
     function VariableValue(i_variable::I) where {I<:VariableId}
-        return new{I}(i_variable)
+        return new{I, Nothing}(i_variable, nothing)
+    end
+    function VariableValue(i_variable::I, i_name::N) where {I<:VariableId, N<:VariableName}
+        return new{I,N}(i_variable, i_name)
     end
 end
-featurename(f::VariableValue) = ""
+featurename(f::VariableValue) = !isnothing(f.i_name) ? f.i_name : ""
 
 function syntaxstring(f::VariableValue; variable_names_map = nothing, show_colon = false, kwargs...)
+    if !isnothing(f.i_name)
+        opening_parenthesis = UVF_OPENING_PARENTHESIS
+        closing_parenthesis = UVF_CLOSING_PARENTHESIS
+        n = f.i_name
+        return "$opening_parenthesis$n$closing_parenthesis"
+    end
+
     if i_variable(f) isa Integer || !isnothing(variable_names_map)
         variable_name(f; variable_names_map = variable_names_map, kwargs...)
     else
