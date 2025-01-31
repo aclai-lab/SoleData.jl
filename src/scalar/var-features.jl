@@ -34,8 +34,7 @@ See also
 """
 abstract type VarFeature <: AbstractFeature end
 
-const VariableId = Integer
-const VariableName = Union{String,Symbol}
+const VariableId = Union{Integer,Symbol}
 
 DEFAULT_VARFEATVALTYPE = Real
 
@@ -244,18 +243,28 @@ See also [`SoleLogics.Interval`](@ref),
 """
 struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
     i_variable::I
-    name::String
+    name::Union{Symbol, String}
     function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U<:Real}
         return UnivariateNamedFeature{U}(i_variable(f), f.name)
     end
-    function UnivariateNamedFeature{U}(i_variable::I, name::String) where {U<:Real,I<:VariableId}
+    function UnivariateNamedFeature{U}(i_variable::I, name::Union{Symbol, String}) where {U<:Real,I<:VariableId}
         return new{U,I}(i_variable, name)
     end
-    function UnivariateNamedFeature(i_variable::I, name::String) where {I<:VariableId}
+    function UnivariateNamedFeature(i_variable::I, name::Union{Symbol, String}) where {I<:VariableId}
         return new{DEFAULT_VARFEATVALTYPE,I}(i_variable, name)
     end
 end
 featurename(f::UnivariateNamedFeature) = f.name
+
+function syntaxstring(
+    f::UnivariateNamedFeature; 
+    opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
+    closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
+    kwargs...
+)
+    n = f.name
+    "$opening_parenthesis$n$closing_parenthesis"
+end
 
 function featvaltype(dataset, f::UnivariateNamedFeature{U}) where {U}
     return U
@@ -275,26 +284,13 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-# struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
-#     i_variable::I
-#     function VariableValue(f::VariableValue)
-#         return VariableValue(i_variable(f))
-#     end
-#     function VariableValue(i_variable::I) where {I<:VariableId}
-#         return new{I}(i_variable)
-#     end
-# end
-struct VariableValue{I<:VariableId, N<:Union{VariableName, Nothing}} <: AbstractUnivariateFeature
+struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
     i_variable::I
-    i_name::N
     function VariableValue(f::VariableValue)
-        return VariableValue(i_variable(f), i_name(f))
+        return VariableValue(i_variable(f))
     end
     function VariableValue(i_variable::I) where {I<:VariableId}
-        return new{I,N}(i_variable, nothing)
-    end
-    function VariableValue(i_variable::I, i_name::N) where {I<:VariableId, N<:VariableName}
-        return new{I,N}(i_variable, i_name)
+        return new{I}(i_variable)
     end
 end
 featurename(f::VariableValue) = ""
