@@ -167,6 +167,20 @@ function readfeature(
     featchannel
 end
 
+function readfeature(
+    X::UniformFullDimensionalLogiset{U,OneWorld},
+    featchannel::U,
+    w::Nothing,
+    f::AbstractFeature
+) where {U}
+    readfeature(
+        X,
+        featchannel,
+        OneWorld(),
+        f
+    )
+end
+
 @inline function featvalue(
     feature     :: AbstractFeature,
     X           :: UniformFullDimensionalLogiset{U,OneWorld},
