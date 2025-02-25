@@ -138,7 +138,6 @@ function _intervalbased_discretizealphabet(
 )
     if consider_all_subintervals
         _X = [
-                # TODO https://github.com/aclai-lab/SoleData.jl/pull/19
                 SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
                 # for each vector, we consider the superior triangular matrix
                 for v in X
