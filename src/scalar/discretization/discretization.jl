@@ -175,10 +175,11 @@ function discretizealphabet(
 end
 
 
-function discretizealphabet(
-    a::MultivariateScalarAlphabet,
-    discretizer::DiscretizationAlgorithm;
-    kwargs...
-)
-    return discretizedomain(thresholds(a), metacond(a), discretizer; kwargs...)
-end
+# TODO: could be a cool idea to unpack a MultivariateScalarAlphabet argument
+# see https://github.com/aclai-lab/SoleData.jl/pull/19
+# function discretizealphabet(
+#     a::MultivariateScalarAlphabet,
+#     discretizer::DiscretizationAlgorithm;
+#     kwargs...
+# )
+# end
