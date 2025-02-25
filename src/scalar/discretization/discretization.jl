@@ -1,13 +1,13 @@
 using Discretizers
 
 """
-    function select_alphabet(
+    function discretizedomain(
         X::Vector{<:Real},
         metacondition::Vector{<:AbstractCondition},
         discretizer::Vector{<:DiscretizationAlgorithm};
         cutextrema::Bool=true
     )
-    function select_alphabet(
+    function discretizedomain(
         X::Vector{<:Vector{<:Real}},
         metacondition::Vector{<:AbstractCondition},
         discretizer::Vector{<:DiscretizationAlgorithm};
@@ -47,7 +47,7 @@ julia> nbins = 5
 julia> discretizer = Discretizers.DiscretizeQuantile(nbins)
 
 # we obtain one alphabet and pretty print it
-julia> alphabet1 = select_alphabet(X[:,variable], max_metacondition, discretizer)
+julia> alphabet1 = discretizedomain(X[:,variable], max_metacondition, discretizer)
 julia> syntaxstring.(alphabet1)
 4-element Vector{String}:
  "max[V1] ≤ 0.21"
@@ -65,8 +65,8 @@ julia> max_applied_on_all_intervals = [
         for j in i+1:length(v)
     ]
 
-# now you can call `select_alphabet` with the new preprocessed time series.
-julia> alphabet2 = select_alphabet(
+# now you can call `discretizedomain` with the new preprocessed time series.
+julia> alphabet2 = discretizedomain(
     max_applied_on_all_intervals, max_metacondition, discretizer)
 julia> syntaxstring.(alphabet2)
 4-element Vector{String}:
@@ -76,7 +76,7 @@ julia> syntaxstring.(alphabet2)
  "max[V1] ≤ 0.97"
 
 # we can obtain the same result as before by simplying setting `consider_all_subintervals`
-julia> alphabet3 = select_alphabet(X[:,variable], max_metacondition, discretizer;
+julia> alphabet3 = discretizedomain(X[:,variable], max_metacondition, discretizer;
             consider_all_subintervals=true)
 julia> syntaxstring.(alphabet3) == syntaxstring.(alphabet2)
 true
@@ -85,11 +85,11 @@ true
 See also `Discretizers.DiscretizationAlgorithm`, [`Item`](@ref),
 `SoleData.AbstractCondition`, `SoleData.ScalarMetaCondition`.
 """
-function select_alphabet(
+function discretizedomain(
     X::Vector{<:Real},
     metacondition::AbstractCondition,
     discretizer::DiscretizationAlgorithm;
-    cutextrema::Bool=true
+    cutextrema::Bool=true # considerations in https://github.com/aclai-lab/SoleData.jl/pull/19
 )
     alphabet = Vector{AbstractCondition}()
 
@@ -117,7 +117,7 @@ function select_alphabet(
     return alphabet
 end
 
-function select_alphabet(
+function discretizedomain(
     X::Vector{<:Vector{<:Real}},
     metacondition::AbstractCondition,
     discretizer::DiscretizationAlgorithm;
@@ -126,6 +126,7 @@ function select_alphabet(
 )
     if consider_all_subintervals
         _X = [
+                # TODO https://github.com/aclai-lab/SoleData.jl/pull/19
                 SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
                 # for each vector, we consider the superior triangular matrix
                 for v in X
@@ -136,5 +137,24 @@ function select_alphabet(
         _X = reduce(vcat, X)
     end
 
-    return select_alphabet(_X, metacondition, discretizer; kwargs...)
+    return discretizedomain(_X, metacondition, discretizer; kwargs...)
+end
+
+"""
+    function discretizealphabet(
+        a::UnivariateScalarAlphabet,
+        discretizer::DiscretizationAlgorithm;
+        kwargs...
+    )
+
+Unpack `a`, then fallback to [`discretizedomain`](@ref).
+
+See also [`discretizedomain`](@ref), [`UnivariateScalarAlphabet`](@ref).
+"""
+function discretizealphabet(
+    a::UnivariateScalarAlphabet,
+    discretizer::DiscretizationAlgorithm;
+    kwargs...
+)
+    return discretizedomain(thresholds(a), metacond(a), discretizer; kwargs...)
 end

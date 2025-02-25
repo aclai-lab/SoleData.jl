@@ -162,7 +162,7 @@ include("dimensional-structures/main.jl")
 
 include("scalar/discretization/discretization.jl")
 
-export select_alphabet
+export discretizedoma, discretizealphabet
 
 ################################################################################
 

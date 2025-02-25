@@ -1113,7 +1113,7 @@ nbins = 5
 discretizer = Discretizers.DiscretizeQuantile(nbins)
 
 # we obtain one alphabet and pretty print it
-alphabet1 = select_alphabet(X[:,variable], max_metacondition, discretizer)
+alphabet1 = discretizedomain(X[:,variable], max_metacondition, discretizer)
 @test length(alphabet1) == 4
 
 # for each time series in X (or for the only time series X), consider each possible
@@ -1126,12 +1126,16 @@ max_applied_on_all_intervals = [
         for j in i+1:length(v)
     ]
 
-# now you can call `select_alphabet` with the new preprocessed time series.
-alphabet2 = select_alphabet(
+# now you can call `discretizedomain` with the new preprocessed time series.
+alphabet2 = discretizedomain(
     max_applied_on_all_intervals, max_metacondition, discretizer)
 
 # we can obtain the same result as before by simplying setting `consider_all_subintervals`
-alphabet3 = select_alphabet(X[:,variable], max_metacondition, discretizer;
+alphabet3 = discretizedomain(X[:,variable], max_metacondition, discretizer;
             consider_all_subintervals=true)
 
 @test syntaxstring.(alphabet3) == syntaxstring.(alphabet2)
+
+# we can also use discretizealphabet instead of discretizedomain
+alphabet4 = SoleData.UnivariateScalarAlphabet((max_metacondition, X[:,variable]))
+@test_nowarn discretizealphabet(alphabet4, discretizer)
