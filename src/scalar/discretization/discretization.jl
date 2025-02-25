@@ -156,12 +156,27 @@ end
         kwargs...
     )
 
+    function discretizealphabet(
+        a::MultivariateScalarAlphabet,
+        discretizer::DiscretizationAlgorithm;
+        kwargs...
+    )
+
 Unpack `a`, then fallback to [`discretizedomain`](@ref).
 
 See also [`discretizedomain`](@ref), [`UnivariateScalarAlphabet`](@ref).
 """
 function discretizealphabet(
     a::UnivariateScalarAlphabet,
+    discretizer::DiscretizationAlgorithm;
+    kwargs...
+)
+    return discretizedomain(thresholds(a), metacond(a), discretizer; kwargs...)
+end
+
+
+function discretizealphabet(
+    a::MultivariateScalarAlphabet,
     discretizer::DiscretizationAlgorithm;
     kwargs...
 )
