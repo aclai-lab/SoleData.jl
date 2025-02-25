@@ -24,6 +24,8 @@ Select an alphabet, that is, a set of [`Item`](@ref)s wrapping `SoleData.Abstrac
     (e.g., a generic "max[V1] ≤ ⍰" where "?" is a threshold that has to be defined);
 - `discretizer::Vector{<:DiscretizationAlgoritm}`: a strategy to perform binning over
     a distribution.
+
+# Keyword Arguments
 - `cutextrema::Bool=true`: remove the extrema obtained by the binning;
 - `consider_all_subintervals::Bool=false`: when true, each given vector is cutted in all
     its subintervals; `metacondition` is applied on such intervals, thus obtaining a new
@@ -124,6 +126,16 @@ function discretizedomain(
     consider_all_subintervals::Bool=false,
     kwargs...
 )
+    _X = _intervalbased_discretizealphabet(X, metacondition; kwargs...)
+
+    return discretizedomain(_X, metacondition, discretizer; kwargs...)
+end
+
+function _intervalbased_discretizealphabet(
+    X::Vector{<:Vector{<:Real}}, 
+    metacondition::AbstractCondition;
+    consider_all_subintervals::Bool=false
+)
     if consider_all_subintervals
         _X = [
                 # TODO https://github.com/aclai-lab/SoleData.jl/pull/19
@@ -136,8 +148,6 @@ function discretizedomain(
     else
         _X = reduce(vcat, X)
     end
-
-    return discretizedomain(_X, metacondition, discretizer; kwargs...)
 end
 
 """
