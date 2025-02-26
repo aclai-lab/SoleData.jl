@@ -461,6 +461,9 @@ struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
 end
 featurename(f::VariableDistance) = "Δ"
 
+reference(f::VariableDistance) = f.reference
+similarity(f::VariableDistance) = f.similarity
+
 function featvaltype(dataset, f::VariableDistance)
     return vareltype(dataset, f.i_variable)
 end
