@@ -54,3 +54,6 @@ end
 function computeunivariatefeature(f::VariableSoftMax, varchannel::T) where {T}
     varchannel
 end
+function computeunivariatefeature(f::VariableDistance, varchannel::T) where {T}
+    (similarity(f)(varchannel))
+end
