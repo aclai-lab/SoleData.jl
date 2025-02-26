@@ -2,7 +2,7 @@ freebsd_instance:
   image_family: freebsd-14-2
 task:
   name: FreeBSD
-  artifacts_cache:2
+  artifacts_cache:
     folder: ~/.julia/artifacts
   env:
     matrix:
