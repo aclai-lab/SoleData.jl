@@ -429,13 +429,13 @@ end
     struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
         i_variable::I
         reference::T
-        similarity::Function
+        distance::Function
     end
 
-Univariate feature computing a similarity function for a given variable,
+Univariate feature computing a distance function for a given variable,
 with respect to a certain `reference` structure.
 
-By default, the similarity function is a 
+By default, the distance function is a 
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
@@ -446,23 +446,23 @@ See also [`SoleLogics.Interval`](@ref),
 struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
     i_variable::I
     reference::T
-    similarity::Function
+    distance::Function
 
     function VariableDistance(
         i_variable::I, 
         reference::T;
-        similarity::Function=(
+        distance::Function=(
             # euclidean distance, but with no Distances.jl dependency
             x -> sqrt(sum([(x - reference)^2 for (x, reference) in zip(x,reference)]))
         )
     ) where {I<:VariableId,T}
-        return new{I,T}(i_variable, reference, similarity)
+        return new{I,T}(i_variable, reference, distance)
     end
 end
 featurename(f::VariableDistance) = "Δ"
 
 reference(f::VariableDistance) = f.reference
-similarity(f::VariableDistance) = f.similarity
+distance(f::VariableDistance) = f.distance
 
 function featvaltype(dataset, f::VariableDistance)
     return vareltype(dataset, f.i_variable)
