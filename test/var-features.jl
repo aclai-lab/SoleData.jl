@@ -14,5 +14,5 @@ vd = VariableDistance(1, motif_example) # id=1 is totally arbitrary
 @test computeunivariatefeature(vd, reference(vd)) == 0
 @test computeunivariatefeature(vd, my_motif) == 0.4
 
-vd_propositional = VariableDistance(1, 36)
-@test computeunivariatefeature(vd, 37) == 1.0
+propositional_vd = VariableDistance(1, 36)
+@test computeunivariatefeature(propositional_vd, 37) == 1.0
