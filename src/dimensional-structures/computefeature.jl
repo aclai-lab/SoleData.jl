@@ -37,6 +37,9 @@ end
 function computeunivariatefeature(f::VariableSoftMax, varchannel::AbstractArray{T}) where {T}
     SoleBase.softmaximum(varchannel, alpha(f))
 end
+function computeunivariatefeature(f::VariableDistance, varchannel::AbstractArray{T}) where {T}
+    (similarity(f)(varchannel))
+end
 
 # simplified propositional cases:
 function computeunivariatefeature(f::VariableMin, varchannel::T) where {T}
