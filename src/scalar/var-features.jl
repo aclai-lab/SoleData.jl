@@ -425,6 +425,48 @@ end
 
 ############################################################################################
 
+"""
+    struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
+        i_variable::I
+        reference::T
+        similarity::Function
+    end
+
+Univariate feature computing a similarity function for a given variable,
+with respect to a certain `reference` structure.
+
+By default, the similarity function is a 
+
+See also [`SoleLogics.Interval`](@ref),
+[`SoleLogics.Interval2D`](@ref),
+[`AbstractUnivariateFeature`](@ref),
+[`VariableMax`](@ref), [`VariableMin`](@ref),
+[`VarFeature`](@ref), [`AbstractFeature`](@ref).
+"""
+struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
+    i_variable::I
+    reference::T
+    similarity::Function
+
+    function VariableDistance(
+        i_variable::I, 
+        reference::T;
+        similarity::Function=(
+            # euclidean distance, but with no Distances.jl dependency
+            x -> sqrt(sum([(x - reference)^2 for (x, reference) in zip(x,reference)]))
+        )
+    ) where {I<:VariableId,T}
+        return new{I,T}(i_variable, reference, similarity)
+    end
+end
+featurename(f::VariableDistance) = "Δ"
+
+function featvaltype(dataset, f::VariableDistance)
+    return vareltype(dataset, f.i_variable)
+end
+
+############################################################################################
+
 # These features collapse to a single value; it can be useful to know this
 is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax}) = true
 is_collapsing_univariate_feature(f::UnivariateFeature) = (f.f in [minimum, maximum, mean])
