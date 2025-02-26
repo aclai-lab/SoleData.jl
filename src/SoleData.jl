@@ -130,8 +130,9 @@ export UnivariateNamedFeature,
         VariableValue
 
 export VarFeature,
-        VariableMin, VariableMax,
+        VariableMin, VariableMax, i_variable,
         VariableSoftMin, VariableSoftMax,
+        VariableDistance, reference, distance,
         MultivariateFeature
 
 
@@ -157,6 +158,7 @@ include("types/dimensional-structures.jl")
 
 include("dimensional-structures/main.jl")
 
+export computefeature, computeunivariatefeature 
 
 ################################################################################
 
