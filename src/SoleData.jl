@@ -158,6 +158,7 @@ include("types/dimensional-structures.jl")
 
 include("dimensional-structures/main.jl")
 
+export computefeature, computeunivariatefeature 
 
 ################################################################################
 
