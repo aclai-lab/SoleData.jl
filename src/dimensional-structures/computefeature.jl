@@ -59,3 +59,9 @@ end
 function computeunivariatefeature(f::VariableSoftMax, varchannel::T) where {T}
     varchannel
 end
+function computeunivariatefeature(f::VariableAvg, varchannel::T) where {T}
+    varchannel
+end
+function computeunivariatefeature(f::VariableDistance, varchannel::T) where {T}
+    (distance(f)(varchannel))
+end
