@@ -460,12 +460,29 @@ end
         i_variable::I
         reference::T
         distance::Function
+        featurename::Union{String,Symbol}
     end
 
 Univariate feature computing a distance function for a given variable,
 with respect to a certain `reference` structure.
 
-By default, the distance function is a
+By default, `distance` is set to be Euclidean distance.
+
+
+# Examples
+```julia
+julia> vd = VariableDistance(1, [1,2,3,4]; featurename="StrictMonotonicAscending");
+
+julia> syntaxstring(vd)
+"StrictMonotonicAscending[V1]"
+
+julia> computeunivariatefeature(vd, [1,2,3,4])
+0.0
+
+julia> computeunivariatefeature(vd, [2,3,4,5])
+2.0
+```
+
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
