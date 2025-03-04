@@ -24,7 +24,7 @@ test_suites = [
     #
     ("Conditions", [ "range-scalar-condition.jl", ]),
     ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
-    ("Features", [ "patchedfeatures.jl"]),
+    ("Features", [ "var-features.jl", "patchedfeatures.jl" ]),
     #
     ("MLJ", [ "MLJ.jl", ]),
     ("PLA", [ "pla.jl", ]),

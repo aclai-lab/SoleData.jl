@@ -369,10 +369,10 @@ function naturalconditions(
 
     def_test_operators = is_propositional ? [≥] : [≥, <]
 
-    univar_condition(i_var,cond::SoleData.CanonicalConditionGeq) = ([≥],VariableMin(i_var))
-    univar_condition(i_var,cond::SoleData.CanonicalConditionLeq) = ([<],VariableMax(i_var))
-    univar_condition(i_var,cond::SoleData.CanonicalConditionGeqSoft) = ([≥],VariableSoftMin(i_var, cond.alpha))
-    univar_condition(i_var,cond::SoleData.CanonicalConditionLeqSoft) = ([<],VariableSoftMax(i_var, cond.alpha))
+    # univar_condition(i_var,cond::SoleData.CanonicalConditionGeq) = ([≥],VariableMin(i_var))
+    # univar_condition(i_var,cond::SoleData.CanonicalConditionLeq) = ([<],VariableMax(i_var))
+    # univar_condition(i_var,cond::SoleData.CanonicalConditionGeqSoft) = ([≥],VariableSoftMin(i_var, cond.alpha))
+    # univar_condition(i_var,cond::SoleData.CanonicalConditionLeqSoft) = ([<],VariableSoftMax(i_var, cond.alpha))
     function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(identity)})
         return (test_ops,VariableValue(i_var))
     end
@@ -444,7 +444,7 @@ function naturalconditions(
         mixed_conditions,
     )
     variable_specific_conditions = filter(x->
-        isa(x, CanonicalCondition) ||
+        # isa(x, CanonicalCondition) ||
         isa(x, Tuple{AbstractVector,PatchedFunction}) ||
         # isa(x, Tuple{<:AbstractVector{<:TestOperator},Base.Callable}) ||
         (isa(x, Tuple{AbstractVector,Base.Callable}) && !isa(x, Tuple{AbstractVector,AbstractFeature})),

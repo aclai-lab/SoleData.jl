@@ -1,4 +1,17 @@
-
+"""
+espresso_minimize(
+    syntaxtree::SoleLogics.Formula,
+    silent::Bool = true,
+    Dflag = "exact",
+    Sflag = nothing,
+    eflag = nothing,
+    args...;
+    espressobinary = nothing,
+    otherflags = [],
+    use_scalar_range_conditions = false,
+    kwargs...
+)
+"""
 function espresso_minimize(
     syntaxtree::SoleLogics.Formula,
     silent::Bool = true,
@@ -6,10 +19,21 @@ function espresso_minimize(
     Sflag = nothing,
     eflag = nothing,
     args...;
+    espressobinary = nothing,
     otherflags = [],
     use_scalar_range_conditions = false,
     kwargs...
 )
+    # Determine the path of the espresso binary relative to the location of this file
+    println("============================================")
+    if isnothing(espressobinary)
+        println("espressobinary go default")
+        espressobinary = joinpath(@__DIR__, "espresso")
+        if !isfile(espressobinary)
+            error("The 'espresso' binary was not found in the module directory. Ensure that 'espresso' is present at: $espressobinary")
+        end
+    end
+
     dc_set = false
     pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(syntaxtree, dc_set, silent, args...; use_scalar_range_conditions, kwargs...)
 
@@ -34,7 +58,7 @@ function espresso_minimize(
     isnothing(Sflag) || push!(args, "-S$(Sflag)")
     isnothing(eflag) || push!(args, "-e$(eflag)")
     append!(otherflags, args)
-    cmd = pipeline(pipeline(echo_cmd, `./espresso $args`), stdout=out, stderr=err)
+    cmd = pipeline(pipeline(echo_cmd, `$espressobinary $args`), stdout=out, stderr=err)
     # cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
     try
         run(cmd)

@@ -66,7 +66,7 @@ import SoleLogics: syntaxstring
 using MultiData: _isnan
 import MultiData: maxchannelsize, channelsize
 import MultiData: hasnans, nvariables
-import MultiData: instance, get_instance, concatdatasets
+import MultiData: instance, get_instance, displaystructure, concatdatasets
 import MultiData: displaystructure
 import MultiData: dimensionality
 
@@ -117,10 +117,8 @@ include("check.jl")
 
 export ScalarMetaCondition
 
-export MixedCondition, CanonicalCondition, canonical_geq, canonical_leq
+export MixedCondition
 
-export canonical_geq_95, canonical_geq_90, canonical_geq_85, canonical_geq_80, canonical_geq_75, canonical_geq_70, canonical_geq_60,
-       canonical_leq_95, canonical_leq_90, canonical_leq_85, canonical_leq_80, canonical_leq_75, canonical_leq_70, canonical_leq_60
 
 export ValueCondition, FunctionalCondition
 
@@ -132,9 +130,10 @@ export UnivariateNamedFeature,
         VariableValue
 
 export VarFeature,
-        VariableMin, VariableMax,
+        VariableMin, VariableMax, i_variable,
         VariableSoftMin, VariableSoftMax,
         VariableAvg,
+        VariableDistance, reference, distance,
         MultivariateFeature
 
 
@@ -160,6 +159,7 @@ include("types/dimensional-structures.jl")
 
 include("dimensional-structures/main.jl")
 
+export computefeature, computeunivariatefeature
 include("scalar/discretization/discretization.jl")
 
 export discretizedomain, discretizealphabet

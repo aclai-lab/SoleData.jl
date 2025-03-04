@@ -186,8 +186,6 @@ function scalar_simplification(
             # else
             #     push!(reducered_conditions, reduceduni_conditions)
             # end
-            # # Adesso ho solo il numero minimo di atomi che mi servono a descrivere l' intervallo
-            # # per una USC. Devo capire se tale intervallo è ⊤, ⊥, o corrisponde ad un solo valore.
         end for (feat, bitmask) in feature_groups]))
 
     # @show SoleLogics.connective(φ)

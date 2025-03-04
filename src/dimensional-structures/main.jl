@@ -23,7 +23,7 @@ using SoleData
 using MultiData: _isnan
 import MultiData: maxchannelsize, channelsize
 import MultiData: hasnans, nvariables
-import MultiData: instance, get_instance, concatdatasets
+import MultiData: instance, get_instance, displaystructure, concatdatasets
 import MultiData: displaystructure
 import MultiData: dimensionality
 
@@ -32,7 +32,7 @@ using SoleData
 using SoleBase
 
 using SoleData: Aggregator, AbstractCondition
-using SoleData: UnivariateScalarAlphabet, UnionAlphabet
+using SoleData: UnivariateScalarAlphabet, UnionAlphabet, MultivariateScalarAlphabet
 using SoleData: AbstractModalLogiset, AbstractMultiModalFrame
 using SoleData: MultiLogiset, AbstractModalLogiset
 using SoleData: apply_test_operator, existential_aggregator, aggregator_bottom, aggregator_to_binary

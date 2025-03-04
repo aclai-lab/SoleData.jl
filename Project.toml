@@ -1,7 +1,7 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
 authors = ["Mauro MILELLA", "Giovanni PAGLIARINI", "Edoardo PONSANESI", "Riccardo PASINI"]
-version = "0.16.0"
+version = "0.16.1"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
@@ -38,7 +38,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 [compat]
 BenchmarkTools = "1"
 CSV = "0.10"
-Catch22 = "0.3 - 0.5"
+Catch22 = "0.3 - 0.7"
 CategoricalArrays = "0.10"
 DataFrames = "1"
 DataStructures = "0.18"
@@ -55,8 +55,8 @@ Random = "1"
 Reexport = "1"
 Revise = "3"
 ScientificTypes = "3"
-SoleBase = "0.12"
-SoleLogics = "0.9 - 0.11"
+SoleBase = "0.13"
+SoleLogics = "0.9 - 0.12"
 StatsBase = "0.30 - 0.34"
 Tables = "1"
 ThreadSafeDicts = "0.1"
