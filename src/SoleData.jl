@@ -132,6 +132,7 @@ export UnivariateNamedFeature,
 export VarFeature,
         VariableMin, VariableMax, i_variable,
         VariableSoftMin, VariableSoftMax,
+        VariableAvg,
         VariableDistance, reference, distance,
         MultivariateFeature
 
@@ -158,7 +159,10 @@ include("types/dimensional-structures.jl")
 
 include("dimensional-structures/main.jl")
 
-export computefeature, computeunivariatefeature 
+export computefeature, computeunivariatefeature
+include("scalar/discretization/discretization.jl")
+
+export discretizedomain, discretizealphabet
 
 ################################################################################
 

@@ -17,15 +17,15 @@ test_suites = [
     ("Logisets", [ "logisets.jl", ]),
     ("Propositional Logisets", [ "propositional-logisets.jl", ]),
     ("Memosets", [ "memosets.jl", ]),
-    # 
+    #
     ("Cube to Logiset", [ "cube2logiset.jl", ]),
     ("DataFrame to Logiset", [ "dataframe2logiset.jl", ]),
     ("MultiLogisets", [ "multilogisets.jl", ]),
-    # 
+    #
     ("Conditions", [ "range-scalar-condition.jl", ]),
     ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
     ("Features", [ "var-features.jl", "patchedfeatures.jl" ]),
-    # 
+    #
     ("MLJ", [ "MLJ.jl", ]),
     ("PLA", [ "pla.jl", ]),
     ("Minify", ["minify.jl"]),

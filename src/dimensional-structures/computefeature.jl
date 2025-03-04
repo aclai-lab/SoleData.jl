@@ -6,10 +6,12 @@ using SoleData: MultivariateFeature,
                     VariableMax,
                     VariableSoftMin,
                     VariableSoftMax,
+                    VariableAvg,
                     i_variable,
                     alpha
 
 import SoleData: computefeature, computeunivariatefeature
+using StatsBase: mean
 
 function computefeature(f::MultivariateFeature{U}, featchannel::Any) where {U}
     (f.f(featchannel))::U
@@ -37,6 +39,9 @@ end
 function computeunivariatefeature(f::VariableSoftMax, varchannel::AbstractArray{T}) where {T}
     SoleBase.softmaximum(varchannel, alpha(f))
 end
+function computeunivariatefeature(f::VariableAvg, varchannel::AbstractArray{T}) where {T}
+    (mean(varchannel))
+end
 function computeunivariatefeature(f::VariableDistance, varchannel::AbstractArray{T}) where {T}
     (distance(f)(varchannel))
 end
@@ -52,6 +57,9 @@ function computeunivariatefeature(f::VariableSoftMin, varchannel::T) where {T}
     varchannel
 end
 function computeunivariatefeature(f::VariableSoftMax, varchannel::T) where {T}
+    varchannel
+end
+function computeunivariatefeature(f::VariableAvg, varchannel::T) where {T}
     varchannel
 end
 function computeunivariatefeature(f::VariableDistance, varchannel::T) where {T}
