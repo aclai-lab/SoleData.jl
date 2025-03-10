@@ -447,8 +447,102 @@ end
 
 ############################################################################################
 
+"""
+    struct VariableAvg{I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
+    end
+
+Univariate feature computing the average value for a given variable.
+
+See also [`SoleLogics.Interval`](@ref),
+[`SoleLogics.Interval2D`](@ref),
+[`AbstractUnivariateFeature`](@ref),
+[`VariableMax`](@ref), [`VariableMin`](@ref),
+[`VarFeature`](@ref), [`AbstractFeature`](@ref).
+"""
+struct VariableAvg{I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
+    function VariableAvg(f::VariableAvg)
+        return VariableAvg(i_variable(f))
+    end
+    function VariableAvg(i_variable::I) where {I<:VariableId}
+        return new{I}(i_variable)
+    end
+end
+featurename(f::VariableAvg) = "avg"
+
+function featvaltype(dataset, f::VariableAvg)
+    return vareltype(dataset, f.i_variable)
+end
+
+############################################################################################
+
+"""
+    struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
+        i_variable::I
+        reference::T
+        distance::Function
+        featurename::Union{String,Symbol}
+    end
+
+Univariate feature computing a distance function for a given variable,
+with respect to a certain `reference` structure.
+
+By default, `distance` is set to be Euclidean distance.
+
+
+# Examples
+```julia
+julia> vd = VariableDistance(1, [1,2,3,4]; featurename="StrictMonotonicAscending");
+
+julia> syntaxstring(vd)
+"StrictMonotonicAscending[V1]"
+
+julia> computeunivariatefeature(vd, [1,2,3,4])
+0.0
+
+julia> computeunivariatefeature(vd, [2,3,4,5])
+2.0
+```
+
+
+See also [`SoleLogics.Interval`](@ref),
+[`SoleLogics.Interval2D`](@ref),
+[`AbstractUnivariateFeature`](@ref),
+[`VariableMax`](@ref), [`VariableMin`](@ref),
+[`VarFeature`](@ref), [`AbstractFeature`](@ref).
+"""
+struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
+    i_variable::I
+    reference::T
+    distance::Function
+    featurename::Union{String,Symbol}
+
+    function VariableDistance(
+        i_variable::I,
+        reference::T;
+        distance::Function=(
+            # euclidean distance, but with no Distances.jl dependency
+            x -> sqrt(sum([(x - reference)^2 for (x, reference) in zip(x,reference)]))
+        ),
+        featurename = "Δ"
+    ) where {I<:VariableId,T}
+        return new{I,T}(i_variable, reference, distance, featurename)
+    end
+end
+featurename(f::VariableDistance) = string(f.featurename)
+
+reference(f::VariableDistance) = f.reference
+distance(f::VariableDistance) = f.distance
+
+function featvaltype(dataset, f::VariableDistance)
+    return vareltype(dataset, f.i_variable)
+end
+
+############################################################################################
+
 # These features collapse to a single value; it can be useful to know this
-is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax}) = true
+is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax,VariableDistance}) = true
 is_collapsing_univariate_feature(f::UnivariateFeature) = (f.f in [minimum, maximum, mean])
 
 
@@ -488,8 +582,8 @@ const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String,Base.Callable}(
     "maximum" => VariableMax,
     "max"     => VariableMax,
     #
-    "avg"     => StatsBase.mean,
-    "mean"    => StatsBase.mean,
+    "avg"     => VariableAvg,
+    "mean"    => VariableAvg,
 )
 
 """
