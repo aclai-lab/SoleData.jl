@@ -18,8 +18,8 @@ generic_features = collect(Iterators.flatten([[VariableMax(i_var), VariableMin(i
 
 for (dataset, relations, features) in [
     # (Array(reshape(1.0:4.0, nvars,n_instances)), []),
-    # (Array(reshape(1.0:4.0, nvars,n_instances)), [globalrel], generic_features_oneworld),
-    # (Array(reshape(1.0:4.0, nvars,n_instances)), [globalrel], generic_features_oneworld_names),
+    (Array(reshape(1.0:4.0, nvars,n_instances)), [globalrel], generic_features_oneworld),
+    (Array(reshape(1.0:4.0, nvars,n_instances)), [globalrel], generic_features_oneworld_names),
     (Array(reshape(1.0:12.0, 3,nvars,n_instances)), [IARelations..., globalrel], generic_features),
     (Array(reshape(1.0:36.0, 3,3,nvars,n_instances)), [IA2DRelations..., globalrel], generic_features),
 ]
@@ -27,9 +27,9 @@ for (dataset, relations, features) in [
 dataset = eachslice(dataset; dims = ndims(dataset))
 @test nvars == nvariables(dataset)
 
-logiset = @test_nowarn scalarlogiset(dataset, features; use_full_memoization = false, use_onestep_memoization = false)
-
 logiset = @test_nowarn scalarlogiset(dataset; use_full_memoization = false, use_onestep_memoization = false)
+
+logiset = @test_nowarn scalarlogiset(dataset, features; use_full_memoization = false, use_onestep_memoization = false)
 
 local metaconditions = [ScalarMetaCondition(feature, >) for feature in features]
 @test_nowarn SupportedLogiset(logiset, ())
