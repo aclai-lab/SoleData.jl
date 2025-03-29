@@ -10,13 +10,16 @@ begin
 
 n_instances = 2
 nvars = 2
+vnames = ["V$i" for i in 1:nvars]
 
 generic_features_oneworld = collect(Iterators.flatten([[SoleData.VariableValue(i_var)] for i_var in 1:nvars]))
+generic_features_oneworld_names = collect(Iterators.flatten([[SoleData.VariableValue(i_var, name)] for (i_var, name) in enumerate(vnames)]))
 generic_features = collect(Iterators.flatten([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvars]))
 
 for (dataset, relations, features) in [
     # (Array(reshape(1.0:4.0, nvars,n_instances)), []),
-    (Array(reshape(1.0:4.0, nvars,n_instances)), [globalrel], generic_features_oneworld),
+    # (Array(reshape(1.0:4.0, nvars,n_instances)), [globalrel], generic_features_oneworld),
+    # (Array(reshape(1.0:4.0, nvars,n_instances)), [globalrel], generic_features_oneworld_names),
     (Array(reshape(1.0:12.0, 3,nvars,n_instances)), [IARelations..., globalrel], generic_features),
     (Array(reshape(1.0:36.0, 3,3,nvars,n_instances)), [IA2DRelations..., globalrel], generic_features),
 ]
