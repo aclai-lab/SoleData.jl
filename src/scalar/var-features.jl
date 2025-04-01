@@ -246,7 +246,6 @@ struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
     i_variable::I
     name::VariableName
     function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U<:Real}
-        @show "PASO"
         return UnivariateNamedFeature{U}(i_variable(f), f.name)
     end
     function UnivariateNamedFeature{U}(i_variable::I, name::VariableName) where {U<:Real,I<:VariableId}
