@@ -22,3 +22,12 @@ unf2 = UnivariateNamedFeature(var_id, var_name)
 @test i_variable(unf2) == 1
 @test featurename(unf2) == "feature_name"
 @test syntaxstring(unf2) == "[feature_name]"
+
+unf3 = UnivariateNamedFeature{U}(unf1)
+@test unf3 isa UnivariateNamedFeature{Float64, Int64}
+@test i_variable(unf3) == 1
+@test featurename(unf3) == "feature_name"
+@test syntaxstring(unf3) == "[feature_name]"
+
+dataset = [1.0, 2.0, 3.0]
+@test SoleData.featvaltype(dataset, unf3) == Float64
