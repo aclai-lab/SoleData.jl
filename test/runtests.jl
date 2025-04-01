@@ -31,6 +31,7 @@ test_suites = [
     ("Minify", ["minify.jl"]),
     ("Parse", ["parse.jl"]),
     ("Example Datasets", [ "example-datasets.jl", ]),
+    ("Variable Named Features", [ "var-features.jl", ]),
 ]
 
 @testset "SoleData.jl" begin
