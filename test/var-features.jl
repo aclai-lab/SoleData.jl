@@ -3,9 +3,12 @@ using SoleData
 
 # Tests for VariableDistance
 
-vnamed = VariableValue(1, "feature_name")
-@test i_variable(vnamed) == 1
-@test featurename(vnamed) == "feature_name"
+vnamed1 = VariableValue(1, "feature_name")
+@test i_variable(vnamed1) == 1
+@test featurename(vnamed1) == "feature_name"
+@test syntaxstring(vnamed1) == "[feature_name]"
+vnamed2 = VariableValue(vnamed1)
+@test syntaxstring(vnamed2) == "V1"
 
 U = Float64
 var_id::SoleData.VariableId = 1
@@ -29,5 +32,5 @@ unf3 = UnivariateNamedFeature{U}(unf1)
 @test featurename(unf3) == "feature_name"
 @test syntaxstring(unf3) == "[feature_name]"
 
-dataset = [1.0, 2.0, 3.0]
-@test SoleData.featvaltype(dataset, unf3) == Float64
+ds = [1.0, 2.0, 3.0]
+@test SoleData.featvaltype(ds, unf3) == Float64
