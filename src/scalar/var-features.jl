@@ -232,7 +232,7 @@ end
 """
     struct UnivariateNamedFeature{U<:Real,I<:VariableId} <: AbstractUnivariateFeature
         i_variable::I
-        name::Union{Symbol, String}
+        name::VariableName
     end
 
 A univariate feature solely identified by its name and reference variable.
@@ -244,14 +244,14 @@ See also [`SoleLogics.Interval`](@ref),
 """
 struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
     i_variable::I
-    name::Union{Symbol, String}
+    name::VariableName
     function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U<:Real}
         return UnivariateNamedFeature{U}(i_variable(f), f.name)
     end
-    function UnivariateNamedFeature{U}(i_variable::I, name::Union{Symbol, String}) where {U<:Real,I<:VariableId}
+    function UnivariateNamedFeature{U}(i_variable::I, name::VariableName) where {U<:Real,I<:VariableId}
         return new{U,I}(i_variable, name)
     end
-    function UnivariateNamedFeature(i_variable::I, name::Union{Symbol, String}) where {I<:VariableId}
+    function UnivariateNamedFeature(i_variable::I, name::VariableName) where {I<:VariableId}
         return new{DEFAULT_VARFEATVALTYPE,I}(i_variable, name)
     end
 end
@@ -279,7 +279,7 @@ end
         i_name::N
     end
 
-A simple feature, equal the value of a scalar variable.
+A simple feature, equal the value of a scalar variable and, optionally, its name.
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
