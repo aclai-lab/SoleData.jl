@@ -244,14 +244,14 @@ See also [`SoleLogics.Interval`](@ref),
 """
 struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
     i_variable::I
-    name::Union{Symbol, String}
+    name::VariableName
     function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U<:Real}
         return UnivariateNamedFeature{U}(i_variable(f), f.name)
     end
-    function UnivariateNamedFeature{U}(i_variable::I, name::Union{Symbol, String}) where {U<:Real,I<:VariableId}
+    function UnivariateNamedFeature{U}(i_variable::I, name::VariableName) where {U<:Real,I<:VariableId}
         return new{U,I}(i_variable, name)
     end
-    function UnivariateNamedFeature(i_variable::I, name::Union{Symbol, String}) where {I<:VariableId}
+    function UnivariateNamedFeature(i_variable::I, name::VariableName) where {I<:VariableId}
         return new{DEFAULT_VARFEATVALTYPE,I}(i_variable, name)
     end
 end
@@ -276,9 +276,10 @@ end
 """
     struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
         i_variable::I
+        i_name::N
     end
 
-A simple feature, equal the value of a scalar variable.
+A simple feature, equal the value of a scalar variable and, optionally, his name.
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
@@ -482,7 +483,7 @@ end
         i_variable::I
         reference::T
         distance::Function
-        featurename::Union{String,Symbol}
+        featurename::VariableName
     end
 
 Univariate feature computing a distance function for a given variable,
@@ -516,7 +517,7 @@ struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
     i_variable::I
     reference::T
     distance::Function
-    featurename::Union{String,Symbol}
+    featurename::VariableName
 
     function VariableDistance(
         i_variable::I,
