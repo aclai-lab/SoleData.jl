@@ -4,15 +4,16 @@ using SoleData
 # Tests for VariableDistance
 
 # let's consider a motif, that is, a little representative shapelet
-motif_example = [0.1, 0.2, 0.3, 0.4, 0.5]
-my_motif = [0.0, 0.0, 0.0, 0.3, 0.4, 0.5]
- 
-vd = VariableDistance(1, motif_example) # id=1 is totally arbitrary
-@test i_variable(vd) == 1
-@test reference(vd) == motif_example
+sequence = [0.1, 0.2, 0.3, 0.4, 0.5]
+sequences = [sequence, sequence.+1, sequence.+2]
+too_long_sequence = [0.0, 0.0, 0.0, 0.3, 0.4, 0.5]
 
-@test computeunivariatefeature(vd, reference(vd)) == 0
-@test computeunivariatefeature(vd, my_motif) == 0.4
+vd = VariableDistance(1, sequence) # id=1 is totally arbitrary
+@test i_variable(vd) == 1
+@test references(vd) == sequence
+
+@test computeunivariatefeature(vd, references(vd)) == 0
+@test_throws DimensionMismatch computeunivariatefeature(vd, too_long_sequence) == 0.4
 
 propositional_vd = VariableDistance(1, 36)
 @test computeunivariatefeature(propositional_vd, 37) == 1.0
@@ -36,3 +37,9 @@ unf2 = UnivariateNamedFeature(var_id, var_name)
 @test i_variable(unf2) == 1
 @test featurename(unf2) == "feature_name"
 @test syntaxstring(unf2) == "[feature_name]"
+
+
+# case in which a VariableDistance wraps multiple references
+vd = VariableDistance(1, sequences)
+@test references(vd) |> length == 3
+@test computeunivariatefeature(vd, sequence) == 0

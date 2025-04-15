@@ -258,7 +258,7 @@ end
 featurename(f::UnivariateNamedFeature) = f.name
 
 function syntaxstring(
-    f::UnivariateNamedFeature; 
+    f::UnivariateNamedFeature;
     opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
     closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
     kwargs...
@@ -481,19 +481,18 @@ end
 """
     struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
         i_variable::I
-        reference::T
+        references::Vector{<:T}
         distance::Function
         featurename::VariableName
     end
 
-Univariate feature computing a distance function for a given variable,
-with respect to a certain `reference` structure.
+Univariate feature computing a distance function for a given variable, with respect to all
 
-By default, `distance` is set to be Euclidean distance.
-
+By default, `distance` is set to be Euclidean distance and the lowest result is considered.
 
 # Examples
 ```julia
+# we only want to perform comparisons with one important representative signal (a reference)
 julia> vd = VariableDistance(1, [1,2,3,4]; featurename="StrictMonotonicAscending");
 
 julia> syntaxstring(vd)
@@ -504,8 +503,20 @@ julia> computeunivariatefeature(vd, [1,2,3,4])
 
 julia> computeunivariatefeature(vd, [2,3,4,5])
 2.0
-```
 
+# we consider multiple references
+julia> vd = VariableDistance(1, [
+        [0.1,1.8,3.0,3.2],
+        [1.1,1.3,2.3,3.8],
+        [0.8,1.4,2.5,4.1]
+    ];
+    featurename="StrictMonotonicAscending"
+);
+
+# return only the minimum distance w.r.t. all the references wrapped within vd
+julia> computeunivariatefeature(vd, [1,2,3,4])
+0.812403840463596
+```
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),
@@ -515,25 +526,23 @@ See also [`SoleLogics.Interval`](@ref),
 """
 struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
     i_variable::I
-    reference::T
+    references::Vector{<:T}
     distance::Function
     featurename::VariableName
 
     function VariableDistance(
         i_variable::I,
-        reference::T;
-        distance::Function=(
-            # euclidean distance, but with no Distances.jl dependency
-            x -> sqrt(sum([(x - reference)^2 for (x, reference) in zip(x,reference)]))
-        ),
+        references::Vector{<:T};
+        # euclidean distance, but with no Distances.jl dependency
+        distance::Function=(x,y) -> sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)])),
         featurename = "Δ"
     ) where {I<:VariableId,T}
-        return new{I,T}(i_variable, reference, distance, featurename)
+        return new{I,T}(i_variable, references, distance, featurename)
     end
 end
 featurename(f::VariableDistance) = string(f.featurename)
 
-reference(f::VariableDistance) = f.reference
+references(f::VariableDistance) = f.references
 distance(f::VariableDistance) = f.distance
 
 function featvaltype(dataset, f::VariableDistance)

@@ -43,7 +43,7 @@ function computeunivariatefeature(f::VariableAvg, varchannel::AbstractArray{T}) 
     (mean(varchannel))
 end
 function computeunivariatefeature(f::VariableDistance, varchannel::AbstractArray{T}) where {T}
-    (distance(f)(varchannel))
+    (map(reference -> distance(f)(varchannel,reference), references(f)) |> minimum)
 end
 
 # simplified propositional cases:
@@ -63,5 +63,5 @@ function computeunivariatefeature(f::VariableAvg, varchannel::T) where {T}
     varchannel
 end
 function computeunivariatefeature(f::VariableDistance, varchannel::T) where {T}
-    (distance(f)(varchannel))
+    (map(reference -> distance(f)(varchannel,reference), references(f)) |> minimum)
 end
