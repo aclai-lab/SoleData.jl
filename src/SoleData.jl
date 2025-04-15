@@ -133,7 +133,7 @@ export VarFeature,
         VariableMin, VariableMax, i_variable, featurename,
         VariableSoftMin, VariableSoftMax,
         VariableAvg,
-        VariableDistance, reference, distance,
+        VariableDistance, references, distance,
         MultivariateFeature
 
 
