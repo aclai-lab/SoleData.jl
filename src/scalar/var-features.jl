@@ -492,6 +492,7 @@ By default, `distance` is set to be Euclidean distance and the lowest result is 
 
 # Examples
 ```julia
+# we only want to perform comparisons with one important representative signal (a reference)
 julia> vd = VariableDistance(1, [1,2,3,4]; featurename="StrictMonotonicAscending");
 
 julia> syntaxstring(vd)
@@ -502,6 +503,19 @@ julia> computeunivariatefeature(vd, [1,2,3,4])
 
 julia> computeunivariatefeature(vd, [2,3,4,5])
 2.0
+
+# we consider multiple references
+julia> vd = VariableDistance(1, [
+        [0.1,1.8,3.0,3.2],
+        [1.1,1.3,2.3,3.8],
+        [0.8,1.4,2.5,4.1]
+    ];
+    featurename="StrictMonotonicAscending"
+);
+
+# return only the minimum distance w.r.t. all the references wrapped within vd
+julia> computeunivariatefeature(vd, [1,2,3,4])
+0.812403840463596
 ```
 
 See also [`SoleLogics.Interval`](@ref),
