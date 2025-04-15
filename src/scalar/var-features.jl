@@ -519,10 +519,8 @@ struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
     function VariableDistance(
         i_variable::I,
         references::Vector{<:T};
-        distance::Function=(
-            # euclidean distance, but with no Distances.jl dependency
-            x,y -> sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)]))
-        ),
+        # euclidean distance, but with no Distances.jl dependency
+        distance::Function=(x,y) -> sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)])),
         featurename = "Δ"
     ) where {I<:VariableId,T}
         return new{I,T}(i_variable, references, distance, featurename)
