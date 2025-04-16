@@ -12,7 +12,7 @@ vd = VariableDistance(1, sequence) # id=1 is totally arbitrary
 @test i_variable(vd) == 1
 @test references(vd) == sequence
 
-@test computeunivariatefeature(vd, references(vd)) == 0
+@test computeunivariatefeature(vd, references(vd)) == 0.0
 @test_throws DimensionMismatch computeunivariatefeature(vd, too_long_sequence) == 0.4
 
 propositional_vd = VariableDistance(1, 36)
