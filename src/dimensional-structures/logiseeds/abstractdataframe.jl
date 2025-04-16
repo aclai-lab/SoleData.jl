@@ -78,18 +78,60 @@ function featchannel(
     @views dataset[i_instance, SoleData.i_variable(f)]
 end
 
+function _get_wchannel(w::W, featchannel::Any) where {W<:AbstractWorld}
+    _interpret_world(
+        ::OneWorld,
+        varchannel::T
+    ) where {T} = varchannel
+
+    _interpret_world(
+        ::Point{N},
+        varchannel::AbstractArray{T,N}
+    ) where {T,N} = varchannel[w.xyz...]
+
+    _interpret_world(
+        w::Interval,
+        varchannel::AbstractArray{T,1}
+    ) where {T} = varchannel[w.x:w.y-1]
+
+    _interpret_world(
+        w::Interval2D,
+        varchannel::AbstractArray{T,2}
+    ) where {T} = varchannel[w.x.x:w.x.y-1,w.y.x:w.y.y-1]
+
+    return _interpret_world(w, featchannel)
+end
+
 function readfeature(
     dataset::AbstractDataFrame,
     featchannel::Any,
     w::W,
     f::AbstractUnivariateFeature,
 ) where {W<:AbstractWorld}
-    _interpret_world(::OneWorld, varchannel::T) where {T} = varchannel
-    _interpret_world(::Point{N}, varchannel::AbstractArray{T,N}) where {T,N} = varchannel[w.xyz...]
-    _interpret_world(w::Interval, varchannel::AbstractArray{T,1}) where {T} = varchannel[w.x:w.y-1]
-    _interpret_world(w::Interval2D, varchannel::AbstractArray{T,2}) where {T} = varchannel[w.x.x:w.x.y-1,w.y.x:w.y.y-1]
-    wchannel = _interpret_world(w, featchannel)
+    wchannel = _get_wchannel(w, featchannel)
     computeunivariatefeature(f, wchannel)
+end
+
+function readfeature(
+    dataset::AbstractDataFrame,
+    featchannel::Any,
+    w::W,
+    f::VariableDistance,
+) where {W<:AbstractWorld}
+    wchannel = _get_wchannel(w, featchannel)
+
+    # when we apply a the feature wrapped within VariableDistance, we expect its argument
+    # to be a channel of a specific size;
+    try
+        return computeunivariatefeature(f, wchannel)
+    catch _error
+        # when the property above is not true, just put a "nothing" placeholder
+        if isa(_error, DimensionMismatch)
+            return Inf
+        else
+            rethrow(_error)
+        end
+    end
 end
 
 function featvalue(
