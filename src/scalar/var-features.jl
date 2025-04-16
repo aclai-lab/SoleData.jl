@@ -492,19 +492,21 @@ By default, `distance` is set to be Euclidean distance and the lowest result is 
 
 # Examples
 ```julia
-# we only want to perform comparisons with one important representative signal (a reference)
-julia> vd = VariableDistance(1, [1,2,3,4]; featurename="StrictMonotonicAscending");
+# we only want to perform comparisons with one important representative signal;
+# we call such signal a reference, and encapsulate it within an array.
+julia> vd = VariableDistance(1, [[1,2,3,4]]; featurename="StrictMonotonicAscending");
 
 julia> syntaxstring(vd)
 "StrictMonotonicAscending[V1]"
 
+# compute the distance (euclidean by default) with the given signal
 julia> computeunivariatefeature(vd, [1,2,3,4])
 0.0
 
 julia> computeunivariatefeature(vd, [2,3,4,5])
 2.0
 
-# we consider multiple references
+# now we consider multiple references
 julia> vd = VariableDistance(1, [
         [0.1,1.8,3.0,3.2],
         [1.1,1.3,2.3,3.8],
@@ -516,6 +518,11 @@ julia> vd = VariableDistance(1, [
 # return only the minimum distance w.r.t. all the references wrapped within vd
 julia> computeunivariatefeature(vd, [1,2,3,4])
 0.812403840463596
+
+# we ask for the size of a generic reference
+julia> refsize(vd)
+(4,)
+
 ```
 
 See also [`SoleLogics.Interval`](@ref),
@@ -547,7 +554,7 @@ end
 featurename(f::VariableDistance) = string(f.featurename)
 
 references(f::VariableDistance) = f.references
-refsize(f::VariableDistance) = references(f) |> size
+refsize(f::VariableDistance) = references(f) |> first |> size
 distance(f::VariableDistance) = f.distance
 
 function featvaltype(dataset, f::VariableDistance)
