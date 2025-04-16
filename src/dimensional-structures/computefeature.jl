@@ -42,7 +42,10 @@ end
 function computeunivariatefeature(f::VariableAvg, varchannel::AbstractArray{T}) where {T}
     (mean(varchannel))
 end
-function computeunivariatefeature(f::VariableDistance, varchannel::AbstractArray{T}) where {T}
+function computeunivariatefeature(
+    f::VariableDistance,
+    varchannel::AbstractArray{T}
+) where {T}
     size(varchannel) == refsize(f) || throw(DimensionMismatch(
         "Trying to compare size $(size(varchannel)) with $(refsize(f))"))
 
