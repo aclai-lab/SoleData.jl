@@ -15,8 +15,12 @@ vd = VariableDistance(1, sequence) # id=1 is totally arbitrary
 @test computeunivariatefeature(vd, references(vd)) == 0.0
 @test_throws DimensionMismatch computeunivariatefeature(vd, too_long_sequence) == 0.4
 
-propositional_vd = VariableDistance(1, 36)
-@test computeunivariatefeature(propositional_vd, 37) == 1.0
+# in the degenerate case in which we wrap a single value inside a VariableDistance,
+# we do not want to consider it as a simple scalar, but as a signal containing only
+# one record.
+propositional_vd = VariableDistance(1, [[36]])
+@test_throws MethodError propositional_vd = VariableDistance(1, 36)
+@test computeunivariatefeature(propositional_vd, [37]) == 1.0
 
 vnamed = VariableValue(1, "feature_name")
 @test i_variable(vnamed) == 1
@@ -40,6 +44,7 @@ unf2 = UnivariateNamedFeature(var_id, var_name)
 
 
 # case in which a VariableDistance wraps multiple references
+@test_throws DimensionMismatch vd = VariableDistance(1, [sequences, too_long_sequence])
 vd = VariableDistance(1, sequences)
 @test references(vd) |> length == 3
 @test computeunivariatefeature(vd, sequence) == 0
