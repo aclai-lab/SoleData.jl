@@ -43,6 +43,9 @@ function computeunivariatefeature(f::VariableAvg, varchannel::AbstractArray{T}) 
     (mean(varchannel))
 end
 function computeunivariatefeature(f::VariableDistance, varchannel::AbstractArray{T}) where {T}
+    size(varchannel) == refsize(f) || throw(DimensionMismatch(
+        "Trying to compare size $(size(varchannel)) with $(refsize(f))"))
+
     (map(reference -> distance(f)(varchannel,reference), references(f)) |> minimum)
 end
 
@@ -61,7 +64,4 @@ function computeunivariatefeature(f::VariableSoftMax, varchannel::T) where {T}
 end
 function computeunivariatefeature(f::VariableAvg, varchannel::T) where {T}
     varchannel
-end
-function computeunivariatefeature(f::VariableDistance, varchannel::T) where {T}
-    (map(reference -> distance(f)(varchannel,reference), references(f)) |> minimum)
 end
