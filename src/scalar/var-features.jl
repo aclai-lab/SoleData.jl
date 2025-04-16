@@ -526,23 +526,28 @@ See also [`SoleLogics.Interval`](@ref),
 """
 struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
     i_variable::I
-    references::Vector{<:T}
+    references::AbstractArray{T}
     distance::Function
     featurename::VariableName
 
     function VariableDistance(
         i_variable::I,
-        references::Vector{<:T};
+        references::AbstractArray{T};
         # euclidean distance, but with no Distances.jl dependency
         distance::Function=(x,y) -> sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)])),
         featurename = "Δ"
     ) where {I<:VariableId,T}
+        if any(r -> size(r) != size(references |> first), references)
+            throw(DimensionMismatch("References' sizes are not unique."))
+        end
+
         return new{I,T}(i_variable, references, distance, featurename)
     end
 end
 featurename(f::VariableDistance) = string(f.featurename)
 
 references(f::VariableDistance) = f.references
+refsize(f::VariableDistance) = references(f) |> size
 distance(f::VariableDistance) = f.distance
 
 function featvaltype(dataset, f::VariableDistance)
