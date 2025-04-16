@@ -403,7 +403,7 @@ function naturalconditions(
         return (test_ops,cond)
     end
     univar_condition(i_var,::Any) = throw_n_log("Unknown mixed_feature type: $(cond), $(typeof(cond))")
-    
+
     # readymade conditions
     unpackcondition(cond::ScalarMetaCondition) = [cond]
     unpackcondition(feature::AbstractFeature) = [ScalarMetaCondition(feature, test_op) for test_op in def_test_operators]
@@ -417,7 +417,7 @@ function naturalconditions(
         [(test_ops, cond)]
     end
     unpackcondition(cond::Tuple{TestOperator,PatchedFunction}) = unpackcondition(cond[2], [cond[1]])
-    
+
     function unpackcondition(cond::Base.Callable, test_ops = def_test_operators)
         if fixcallablenans
             [([test_operator], nanpatchedfunction(cond,test_operator)) for test_operator in test_ops]
