@@ -9,7 +9,7 @@ function cleanlines(str::AbstractString)
 end
 
 function my_espresso_minimize(args...; kwargs...)
-  espressobinary = joinpath(dirname(pathof(SoleData)), "../test/espresso")
+  espressobinary = joinpath(dirname(pathof(SoleData)), "../src/espresso")
   return SoleData.espresso_minimize(args...; espressobinary = espressobinary, kwargs...)
 end
 
@@ -243,10 +243,10 @@ formula = @test_nowarn PLA._pla_to_formula(""".i 5
 
 
 
-@test cleanlines(PLA._formula_to_pla(@scalarformula ((V1 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 0)))[1]) == cleanlines("""
+@test cleanlines(PLA._formula_to_pla(@scalarformula ((V1 <= 0.0)) ∨ ((V1 <= 0.0) ∧ (V2 <= 0.0)))[1]) == cleanlines("""
 .i 2
 .o 1
-.ilb V1≤0 V2≤0
+.ilb V1≤0.0 V2≤0.0
 .ob formula_output
 .p 2
 1- 1

@@ -24,13 +24,14 @@ function espresso_minimize(
     use_scalar_range_conditions = false,
     kwargs...
 )
-    # Determine the path of the espresso binary relative to the location of this file
+    # Determine the path of the espresso binary relative to the location of this file 
+    # Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.
     println("============================================")
     if isnothing(espressobinary)
-        println("espressobinary go default")
+        println("Looking for espresso at $espressobinary")
         espressobinary = joinpath(@__DIR__, "espresso")
         if !isfile(espressobinary)
-            error("The 'espresso' binary was not found in the module directory. Ensure that 'espresso' is present at: $espressobinary")
+            error("The 'espresso' binary was not found in the module directory. Please provide espresso path via the espressobinary argument")
         end
     end
 
