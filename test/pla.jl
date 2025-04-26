@@ -243,16 +243,26 @@ formula = @test_nowarn PLA._pla_to_formula(""".i 5
 
 
 
-@test cleanlines(PLA._formula_to_pla(@scalarformula ((V1 <= 0.0)) ∨ ((V1 <= 0.0) ∧ (V2 <= 0.0)))[1]) == cleanlines("""
-.i 2
-.o 1
-.ilb V1≤0.0 V2≤0.0
-.ob formula_output
-.p 2
-11 1
-1- 1
-.e
-""")
+@test cleanlines((PLA._formula_to_pla(@scalarformula((V1 <= 0.0) ∨ (V1 <= 0.0) ∧ (V2 <= 0.0))))[1]) in [
+  cleanlines(".i 2
+  .o 1
+  .ilb V1≤0.0 V2≤0.0
+  .ob formula_output
+  .p 2
+  11 1
+  1- 1
+  .e
+  "),
+  cleanlines(".i 2
+  .o 1
+  .ilb V1≤0.0 V2≤0.0
+  .ob formula_output
+  .p 2
+  1- 1
+  11 1
+  .e
+  ")
+]
 
 formula = PLA._pla_to_formula(""".i 2
 .o 1
