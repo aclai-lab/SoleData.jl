@@ -249,8 +249,8 @@ formula = @test_nowarn PLA._pla_to_formula(""".i 5
 .ilb V1≤0.0 V2≤0.0
 .ob formula_output
 .p 2
-1- 1
 11 1
+1- 1
 .e
 """)
 
