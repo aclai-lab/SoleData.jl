@@ -59,7 +59,9 @@ function espresso_minimize(
     isnothing(Sflag) || push!(args, "-S$(Sflag)")
     isnothing(eflag) || push!(args, "-e$(eflag)")
     append!(otherflags, args)
-    cmd = pipeline(pipeline(echo_cmd, `$espressobinary $args`), stdout=out, stderr=err)
+    espresso_cmd = `$espressobinary $args`
+    silent || @show espresso_cmd
+    cmd = pipeline(pipeline(echo_cmd, espresso_cmd), stdout=out, stderr=err)
     # cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
     try
         run(cmd)
