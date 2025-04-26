@@ -1,7 +1,6 @@
-linux_container:
-  image: ubuntu:latest
-
 task:
+  container:
+    image: ubuntu:latest
   name: Julia Test
   artifacts_cache:
     folder: ~/.julia/artifacts
