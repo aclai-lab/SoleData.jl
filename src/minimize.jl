@@ -1,4 +1,17 @@
-
+"""
+espresso_minimize(
+    syntaxtree::SoleLogics.Formula,
+    silent::Bool = true,
+    Dflag = "exact",
+    Sflag = nothing,
+    eflag = nothing,
+    args...;
+    espressobinary = nothing,
+    otherflags = [],
+    use_scalar_range_conditions = false,
+    kwargs...
+)
+"""
 function espresso_minimize(
     syntaxtree::SoleLogics.Formula,
     silent::Bool = true,
@@ -11,9 +24,17 @@ function espresso_minimize(
     use_scalar_range_conditions = false,
     kwargs...
 )
+    # Determine the path of the espresso binary relative to the location of this file 
+    # Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.
+    println("============================================")
     if isnothing(espressobinary)
-        error("Please, specify the path to the espresso binary. Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.")
+        println("Looking for espresso at $espressobinary")
+        espressobinary = joinpath(@__DIR__, "espresso")
+        if !isfile(espressobinary)
+            error("The 'espresso' binary was not found in the module directory. Please provide espresso path via the espressobinary argument")
+        end
     end
+
     dc_set = false
     pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(syntaxtree, dc_set, silent, args...; use_scalar_range_conditions, kwargs...)
 
