@@ -105,6 +105,7 @@ bool_logiset_3layer = SupportedLogiset(
 # c4 = @test_nowarn [check(φ, bool_logiset_3layer, 1, w; perform_normalization = false) for φ in _formulas]
 
 # TODO fix this with StableRNG?
+
 # @test [check(φ, bool_logiset_3layer, 1, w; perform_normalization=false) for φ in _formulas] ==
 #     Bool[0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0]
 # @test SoleData.nmemoizedvalues(bool_logiset_3layer.supports[1].relmemoset) > 0

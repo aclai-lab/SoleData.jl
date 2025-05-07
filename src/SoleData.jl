@@ -44,8 +44,6 @@ export initlogiset, maxchannelsize, worldtype, dimensionality, frame, featvalue,
 
 export FullDimensionalFrame
 
-using ThreadSafeDicts
-
 @reexport using SoleLogics
 import SoleLogics: frame
 
