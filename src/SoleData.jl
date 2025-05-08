@@ -13,7 +13,7 @@ const DF = DataFrames
 const MD = MultiData
 
 using ThreadSafeDicts: ThreadSafeDict
-using ProgressMeter: Progress
+using ProgressMeter: Progress, next!
 
 ############################################################################################
 ############################################################################################

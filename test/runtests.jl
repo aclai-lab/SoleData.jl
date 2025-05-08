@@ -13,6 +13,7 @@ addprocs(2)
     using DataFrames
     using Graphs
     using Logging
+    using ThreadSafeDicts
     # using StableRNGs
 end
 
