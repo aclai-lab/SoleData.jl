@@ -1,7 +1,7 @@
 
-using Test
-using SoleData
-using SoleLogics
+# using Test
+# using SoleData
+# using SoleLogics
 
 @test_nowarn SoleData.RangeScalarCondition(parsefeature(VarFeature, "V1"), nothing,1,true,true)
 @test_broken SoleData.RangeScalarCondition(parsefeature(VarFeature, "V1"), nothing,nothing,true,true)

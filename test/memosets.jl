@@ -4,16 +4,17 @@
 
 using SoleData: ScalarMetaCondition
 using SoleData: ScalarOneStepRelationalMemoset, ScalarOneStepGlobalMemoset
+using SoleData: SoleData.ScalarOneStepMemoset
 
-using Test
-using StatsBase
-using SoleLogics
-using SoleData
-using Graphs
-using Random
-using ThreadSafeDicts
+# using Test
+# using StatsBase
+# using SoleLogics
+# using SoleData
+# using Graphs
+# using Random
+# using ThreadSafeDicts
 
-using Logging
+# using Logging
 
 features = SoleData.Feature.(string.('p':'r'))
 worlds = SoleLogics.World.(1:10)
@@ -36,22 +37,20 @@ bool_globalmemoset = @test_nowarn ScalarOneStepGlobalMemoset(bool_logiset, metac
 
 @test_throws MethodError SupportedLogiset(bool_logiset, bool_relationalmemoset)
 
-using SoleData: ScalarOneStepMemoset
-
 relations = [identityrel, globalrel]
 
-@test_broken ScalarOneStepMemoset(bool_relationalmemoset, bool_globalmemoset, metaconditions, relations)
-bool_onestepmemoset = @test_logs min_level=Logging.Error ScalarOneStepMemoset{Bool}(bool_relationalmemoset, bool_globalmemoset, metaconditions, relations)
+@test_broken SoleData.ScalarOneStepMemoset(bool_relationalmemoset, bool_globalmemoset, metaconditions, relations)
+bool_onestepmemoset = @test_logs min_level=Logging.Error SoleData.ScalarOneStepMemoset{Bool}(bool_relationalmemoset, bool_globalmemoset, metaconditions, relations)
 
 # TODO these block the execution for some reason...
-# @test_broken bool_onestepmemoset_empty = @test_logs (:warn,) ScalarOneStepMemoset(bool_logiset, metaconditions, relations; precompute_globmemoset = false, precompute_relmemoset = false, print_progress = true)
-# @test_broken bool_onestepmemoset_full = @test_logs (:warn,) ScalarOneStepMemoset(bool_logiset, metaconditions, relations; print_progress = true)
+# @test_broken bool_onestepmemoset_empty = @test_logs (:warn,) SoleData.ScalarOneStepMemoset(bool_logiset, metaconditions, relations; precompute_globmemoset = false, precompute_relmemoset = false, print_progress = true)
+# @test_broken bool_onestepmemoset_full = @test_logs (:warn,) SoleData.ScalarOneStepMemoset(bool_logiset, metaconditions, relations; print_progress = true)
 
-bool_onestepmemoset_empty = ScalarOneStepMemoset(bool_logiset, metaconditions, [globalrel]; precompute_globmemoset = false, precompute_relmemoset = false, print_progress = true)
-bool_onestepmemoset_full = ScalarOneStepMemoset(bool_logiset, metaconditions, [globalrel]; print_progress = true)
+bool_onestepmemoset_empty = SoleData.ScalarOneStepMemoset(bool_logiset, metaconditions, [globalrel]; precompute_globmemoset = false, precompute_relmemoset = false, print_progress = true)
+bool_onestepmemoset_full = SoleData.ScalarOneStepMemoset(bool_logiset, metaconditions, [globalrel]; print_progress = true)
 
 # TODO test:
-# bool_onestepmemoset_full = @test (@test_logs (:warn,) ScalarOneStepMemoset(bool_logiset, metaconditions, relations; precompute_globmemoset = true, precompute_relmemoset = true))
+# bool_onestepmemoset_full = @test (@test_logs (:warn,) SoleData.ScalarOneStepMemoset(bool_logiset, metaconditions, relations; precompute_globmemoset = true, precompute_relmemoset = true))
 
 @test_nowarn SupportedLogiset(bool_logiset, bool_onestepmemoset)
 @test_nowarn SupportedLogiset(bool_logiset, (bool_onestepmemoset,))

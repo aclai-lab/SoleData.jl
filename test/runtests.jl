@@ -1,7 +1,20 @@
-using SoleData
-using SoleLogics
-using Test
-using Random
+using Distributed
+addprocs(2)
+
+@everywhere begin
+    using SoleData
+    using Test
+    using Random
+    using StatsBase
+    using SoleData
+    using SoleLogics
+    using MLJ
+    using Tables
+    using DataFrames
+    using Graphs
+    using Logging
+    # using StableRNGs
+end
 
 function run_tests(list)
     println("\n" * ("#"^50))

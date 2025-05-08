@@ -1,8 +1,11 @@
-using Test
-using SoleData
-using MLJBase
+# using SoleData
+# using Test
+# using Random
+# using MLJ
+# using Tables
+# using DataFrames
 
-X = MLJBase.load_iris()
+X = MLJ.load_iris()
 X = PropositionalLogiset(X)
 alphabet(X) |> atoms .|> syntaxstring
 
@@ -27,12 +30,7 @@ c2 = check(φ, X)
 ############################################################################################
 ############################################################################################
 
-using DataFrames
-using Test
-using SoleData
-using MLJBase
-
-X = MLJBase.load_iris()
+X = MLJ.load_iris()
 X_df = DataFrame(collect(values(X)), collect(keys(X)))
 X = scalarlogiset(X_df; allow_propositional = true)
 
@@ -59,11 +57,6 @@ myalphabet_int = alphabet(X, test_operators = [<], force_i_variables = true)
 ############################################################################################
 ############################################################################################
 ############################################################################################
-
-using Test
-using SoleData
-using Tables
-using DataFrames
 
 df = DataFrame(x=[rand(10,10) for i in 1:4], y=[4:5, 3:4, 2:3, 1:2])
 @test_throws AssertionError PropositionalLogiset(df)
