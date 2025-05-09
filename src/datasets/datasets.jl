@@ -1,5 +1,11 @@
 module Datasets
 
+using ZipFile
+using DataFrames
+using CategoricalArrays
+
+using DataStructures: OrderedDict
+
 include("epilepsy-loader.jl")
 export load_epilepsy
 

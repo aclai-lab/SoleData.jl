@@ -1,9 +1,3 @@
-using ZipFile
-using DataFrames
-using CategoricalArrays
-
-using DataStructures: OrderedDict
-
 """
     function load_epilepsy(
         dirpath::S;
