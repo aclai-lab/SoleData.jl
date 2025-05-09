@@ -9,6 +9,8 @@ using DataFrames
 using MultiData
 using MultiData: AbstractDimensionalDataset
 
+using DataStructures: OrderedDict
+
 const DF = DataFrames
 const MD = MultiData
 
