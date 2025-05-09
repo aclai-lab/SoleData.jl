@@ -46,6 +46,7 @@ test_suites = [
     ("Parse", ["parse.jl"]),
     ("Example Datasets", [ "example-datasets.jl", ]),
     ("Variable Named Features", [ "var-features.jl", ]),
+    ("Simplification", [ "simplification.jl", ]),
 ]
 
 @testset "SoleData.jl" begin
