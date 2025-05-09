@@ -23,8 +23,8 @@ include("utils/minify.jl")
 
 include("MLJ-utils.jl")
 
-include("example-datasets.jl")
-
+include("datasets/datasets.jl")
+@reexport using .Datasets
 
 export atoms
 
