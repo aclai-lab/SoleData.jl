@@ -6,12 +6,6 @@ using UniqueVectors
 
 using SoleBase
 
-using SoleLogics
-using SoleLogics: Formula, AbstractWorld, AbstractRelation
-using SoleLogics: AbstractFrame, AbstractDimensionalFrame, FullDimensionalFrame
-import SoleLogics: worldtype, accessibles, allworlds, alphabet
-
-using SoleData
 using MultiData: _isnan
 import MultiData: maxchannelsize, channelsize
 import MultiData: hasnans, nvariables
@@ -19,9 +13,13 @@ import MultiData: instance, get_instance, displaystructure, concatdatasets
 import MultiData: displaystructure
 import MultiData: dimensionality
 
+using SoleLogics
+using SoleLogics: Formula, AbstractWorld, AbstractRelation
+using SoleLogics: AbstractFrame, AbstractDimensionalFrame, FullDimensionalFrame
+import SoleLogics: worldtype, accessibles, allworlds, alphabet
 
 using SoleData
-using SoleBase
+using SoleData: _in, _findfirst
 
 using SoleData: Aggregator, AbstractCondition
 using SoleData: UnivariateScalarAlphabet, UnionAlphabet, MultivariateScalarAlphabet

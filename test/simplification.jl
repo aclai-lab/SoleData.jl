@@ -1,5 +1,5 @@
 
-using SoleLogics
+# using SoleLogics
 using SoleLogics: Atom
 using SoleData:  AbstractFeature, ScalarCondition, VariableValue, LeftmostConjunctiveForm
 using SoleData: feature, value, test_operator, threshold, polarity

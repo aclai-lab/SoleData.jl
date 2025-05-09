@@ -1,5 +1,5 @@
-using Test
-using SoleData
+# using Test
+# using SoleData
 
 # Tests for VariableDistance
 

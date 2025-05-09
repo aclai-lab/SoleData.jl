@@ -1,10 +1,10 @@
-using Test
-using StatsBase
-using SoleLogics
-using SoleData
-using Graphs
-using Random
-using ThreadSafeDicts
+# using Test
+# using StatsBase
+# using SoleLogics
+# using SoleData
+# using Graphs
+# using Random
+# using ThreadSafeDicts
 
 features = SoleData.Feature.(string.('p':'z'))
 worlds = SoleLogics.World.(1:10)
