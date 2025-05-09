@@ -30,7 +30,7 @@ function load_NATOPS(
     dirpath::S;
     fileprefix::S="NATOPS",
     variablenames::Vector{S}=NATOPS_VARIABLENAMES
-)
+) where {S<:AbstractString}
     # A previous implementation of this loader was very kind with the user, and tried
     # to download NATOPS by internet if an error occurred locally:
     # try
