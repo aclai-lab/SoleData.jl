@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - fix_tests
+      - main
     tags: ['*']
   pull_request:
   workflow_dispatch:
