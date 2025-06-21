@@ -49,8 +49,8 @@ end
 function _load_NATOPS(dirpath::String, fileprefix::String)
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> SoleData.parseARFF,
-            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> Datasets.parseARFF,
         )
 
     X_train  = SoleData.fix_dataframe(X_train, variablenames)
