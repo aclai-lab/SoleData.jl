@@ -17,8 +17,8 @@ function _load_NATOPS(
 )
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> SoleData.parseARFF,
-            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> Datasets.parseARFF,
         )
 
     variablenames = ["X[Hand tip l]", "Y[Hand tip l]", "Z[Hand tip l]", "X[Hand tip r]", "Y[Hand tip r]", "Z[Hand tip r]", "X[Elbow l]", "Y[Elbow l]", "Z[Elbow l]", "X[Elbow r]", "Y[Elbow r]", "Z[Elbow r]", "X[Wrist l]", "Y[Wrist l]", "Z[Wrist l]", "X[Wrist r]", "Y[Wrist r]", "Z[Wrist r]", "X[Thumb l]", "Y[Thumb l]", "Z[Thumb l]", "X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]"]
