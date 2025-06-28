@@ -17,6 +17,8 @@ include("random.jl")
 
 include("representatives.jl")
 
+include("visualizations.jl")
+
 # # Types for representing common associations between features and operators
 # include("canonical-conditions.jl") # TODO remove
 
