@@ -9,9 +9,9 @@ using SoleData
   io = IOBuffer()
   show_scalardnf(
     io,
-      f;
-      show_unbounded=true,
-      colwidth=6,
+    f;
+    show_unbounded=true,
+    colwidth=6,
   )
 
   out = String(take!(io))

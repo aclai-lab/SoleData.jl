@@ -90,7 +90,7 @@ function show_scalardnf(
   formula::DNF;
   show_unbounded=true,
   colwidth=5,
-  body_char='=',
+  body_char='=', # alternatives: ■, ━
   print_disjuncts=false,
   palette=[:cyan, :green, :yellow, :magenta, :blue]
 )
