@@ -1,3 +1,5 @@
+export show_scalardnf
+
 using Printf: @sprintf
 using SoleData: AbstractScalarCondition
 
