@@ -8,15 +8,20 @@ using DataStructures: OrderedDict
 function load_arff_dataset(
     dataset_name,
     split = :all;
-    path = "http://www.timeseriesclassification.com/aeon-toolkit/$(dataset_name).zip"
+    # path = "http://www.timeseriesclassification.com/aeon-toolkit/$(dataset_name).zip"
+    path = joinpath(@__DIR__, "example_datasets", "$(dataset_name).zip")
 )
     @assert split in [:train, :test, :split, :all] "Unexpected value for split parameter: $(split). Allowed: :train, :test, :split, :all."
+    
+    isfile(path) || error("Dataset file not found: $(path)")
 
     # function load_arff_dataset(dataset_name, path = "../datasets/Multivariate_arff/$(dataset_name)")
     (X_train, y_train), (X_test, y_test) = begin
-        if(any(startswith.(path, ["https://", "http://"])))
-            r = HTTP.get(path);
-            z = ZipFile.Reader(IOBuffer(r.body))
+        # if(any(startswith.(path, ["https://", "http://"])))
+            # r = HTTP.get(path);
+            # z = ZipFile.Reader(IOBuffer(r.body))
+            file_content = read(path)
+            z = ZipFile.Reader(IOBuffer(file_content))
             # (
             #     ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TRAIN.arff" for f in z.files]][1]),
             #     ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TEST.arff" for f in z.files]][1]),
@@ -25,14 +30,14 @@ function load_arff_dataset(
                 read(z.files[[f.name == "$(dataset_name)_TRAIN.arff" for f in z.files]][1], String) |> parseARFF,
                 read(z.files[[f.name == "$(dataset_name)_TEST.arff" for f in z.files]][1], String) |> parseARFF,
             )
-        else
-            (
-                # ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TRAIN.arff"),
-                # ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TEST.arff"),
-                read("$(path)/$(dataset_name)_TEST.arff", String) |> parseARFF,
-                read("$(path)/$(dataset_name)_TRAIN.arff", String) |> parseARFF,
-            )
-        end
+        # else
+        #     (
+        #         # ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TRAIN.arff"),
+        #         # ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TEST.arff"),
+        #         read("$(path)/$(dataset_name)_TEST.arff", String) |> parseARFF,
+        #         read("$(path)/$(dataset_name)_TRAIN.arff", String) |> parseARFF,
+        #     )
+        # end
     end
 
     @assert dataset_name == "NATOPS" "This code is only for showcasing. Need to expand code to comprehend more datasets."
