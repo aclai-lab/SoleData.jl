@@ -354,7 +354,7 @@ function ensure_abc_binary(; force_rebuild = false)
             end
             
             # Compile with make
-            run(`make`)
+            run(`make ABC_USE_NO_READLINE=1`)
             
             # Copy compiled binary to final location
             compiled_binary = joinpath(abc_source_dir, "abc")
