@@ -1,0 +1,67 @@
+module SoleDataViz
+
+using SoleData
+using GLMakie, GeometryBasics
+
+
+
+function plot_scalardnf(
+    io::IO,
+    formula::DNF;
+    show_all_variables=false,
+    palette=[:cyan, :green, :yellow, :magenta, :blue],
+    body_char='=', # alternatives: ■, ━
+    gap = 0.0,
+    scale = Vec3f(1.0, 1.0, 0.5),
+)
+    formula = normalize(formula)
+    disjs = SoleLogics.disjuncts(formula)
+    all_intervals = [extract_intervals(d) for d in disjs]
+    # Gather all variables
+    all_vars = Set{Any}()
+    for intervals in all_intervals, v in keys(intervals)
+        push!(all_vars, v)
+    end
+    all_vars = sort(collect(all_vars))
+    all_thresholds = collect_thresholds(all_intervals)
+
+    cube = fill(false, (length(all_vars), length(all_thresholds) - 1, length(disjs)))
+    # For each disjunct, produce a set of colored bars
+    for (i, (d, intervals)) in enumerate(zip(disjs, all_intervals))
+        for (j, var) in enumerate(all_vars)
+            if !haskey(intervals, var)
+                continue
+            end
+            interval = intervals[var]
+            segmenttypes, first_idx, last_idx = SoleData.compute_segmenttypes(interval, all_thresholds)
+            cube[j,:,i] = map(x->x.full, segmenttypes)
+        end
+    end
+
+    transf = Transformation(; scale)  # anisotropic scaling
+
+    # Coloring index
+    color_index = [x for x in 1:size(cube, 1), y in 1:size(cube, 2), z in 1:size(cube, 3)]
+    color_data = ifelse.(cube, color_index, NaN)
+
+    # spacing = (1.5, 1.5, 2.0)  # X, Y, Z
+
+    fig = Figure()
+    ax = LScene(fig[1, 1], scenekw = (camera = cam3d!,))
+
+    voxels!(ax,
+              0 .. (size(cube, 1)-1),
+              0 .. (size(cube, 2)-1),
+              0 .. (size(cube, 3)-1),
+              color_data;
+              colormap = palette,
+              colorrange = (1, length(palette)),
+              gap
+              # transformation = transf
+          )
+
+    fig
+end
+
+
+end

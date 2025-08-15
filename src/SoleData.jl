@@ -147,6 +147,10 @@ include("utils/multilogiset.jl")
 
 export @scalarformula
 
+module IntervalSetsWrap
+using IntervalSets
+end
+
 include("scalar/main.jl")
 
 export initlogiset, ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue

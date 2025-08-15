@@ -2,7 +2,7 @@ import SoleData: AbstractFeature
 
 using MultiData: instance_channel
 
-import Base: show
+import Base: show, isless
 import SoleLogics: syntaxstring
 
 # Feature parentheses (e.g., for parsing/showing "main[V2]")
@@ -300,6 +300,8 @@ struct VariableValue{I<:VariableId, N<:Union{VariableName, Nothing}} <: Abstract
     end
 end
 featurename(f::VariableValue) = !isnothing(f.i_name) ? f.i_name : ""
+
+Base.isless(a::VariableValue, b::VariableValue) = isless(a.i_variable, b.i_variable)
 
 function syntaxstring(f::VariableValue; variable_names_map = nothing, show_colon = false, kwargs...)
     if !isnothing(f.i_name)
