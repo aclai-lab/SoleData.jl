@@ -29,8 +29,49 @@ _removewhitespaces = x->replace(x, (' ' => ""))
 
 
 # Function to encode a disjunct into a PLA row
+"""
+    encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, feat_condindxss) -> Vector{String}
+
+    Encode a logical disjunct into a Programmable Logic Array (PLA) row representation.
+
+    This function converts a logical disjunct (a conjunction of literals) into a PLA row format,
+    where each position corresponds to a condition and can be set to "1" (true), "0" (false), 
+    or "-" (don't care).
+
+    # Arguments
+    - `disjunct::LeftmostConjunctiveForm`: The logical disjunct to encode, containing literals
+    - `features::AbstractVector`: Vector of features used in the logical formula
+    - `conditions::AbstractVector`: Vector of all possible conditions 
+    - `includes`: Matrix-like structure defining inclusion relationships between conditions
+    - `excludes`: Matrix-like structure defining exclusion relationships between conditions
+    - `feat_condindxss`: Mapping from features to their corresponding condition indices
+
+    # Returns
+    - `Vector{String}`: PLA row representation where each element is "1", "0", or "-"
+
+    # Details
+    The function processes each literal in the disjunct:
+    - For positive literals, sets "1" for included conditions and "0" for excluded ones
+    - For negative literals, inverts the logic (sets "0" for included, "1" for excluded)
+    - Handles dual conditions when they exist by applying inverted logic
+    - Detects and warns about logical conflicts when contradictory values are assigned
+    - Preserves more restrictive values (NEG over POS) when conflicts occur
+
+    # Examples
+    ```julia
+    # Assuming appropriate data structures are set up
+    pla_row = encode_disjunct(my_disjunct, features, conditions, includes, excludes, feat_condindxss)
+    # Returns something like: ["1", "0", "-", "1", "0"]
+    ```
+
+    # Notes
+    - The function assumes that either the main condition or its dual exists in the conditions vector
+    - Warnings are issued when logical conflicts are detected during encoding
+    - The resulting PLA row uses "-" for don't-care positions that are not constrained by any literal
+"""
 function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, feat_condindxss)
     pla_row = fill("-", length(conditions))
+    
     # For each atom in the disjunct, add zeros or ones to relevants
     for lit in SoleLogics.grandchildren(disjunct)
         # @show syntaxstring(lit)
@@ -46,33 +87,150 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
         # @show feat_icond, feat_idualcond
         @assert !(isnothing(feat_icond) && isnothing(feat_idualcond))
 
-        # if ispos
-        #     @show excludes[i_feat]
-        #     if !isnothing(feat_icond)
-        #         @views pla_row[feat_condindxs][map(ic->includes[i_feat][feat_icond,ic], eachindex(feat_condindxs))] .= "1"
-        #         @views pla_row[feat_condindxs][map(ic->excludes[i_feat][feat_icond,ic], eachindex(feat_condindxs))] .= "0"
-        #     end
-        # else
-        #     # if !isnothing(feat_idualcond)
-        #     #     @views pla_row[feat_condindxs][map(ic->includes[i_feat][feat_idualcond,ic], eachindex(feat_condindxs))] .= "0"
-        #     #     @views pla_row[feat_condindxs][map(ic->excludes[i_feat][feat_idualcond,ic], eachindex(feat_condindxs))] .= "1"
-        #     # end
-        # end
         POS, NEG = ispos ? ("1", "0") : ("0", "1")
+        
+        # Manage the main condition
         if !isnothing(feat_icond)
-            @views pla_row[feat_condindxs][map(((ic,c),)->includes[i_feat][feat_icond,ic], enumerate(feat_condindxs))] .= POS
-            @views pla_row[feat_condindxs][map(((ic,c),)->excludes[i_feat][feat_icond,ic], enumerate(feat_condindxs))] .= NEG
+            # For each condition this includes, set POS if not already NEG
+            for (ic, c) in enumerate(feat_condindxs)
+                if includes[i_feat][feat_icond, ic]
+                    if pla_row[c] == "-"  # Only if it has not already been set
+                        pla_row[c] = POS
+                    elseif pla_row[c] == NEG && POS == "1"
+                        # Conflict: We already have a NEG but we should put POS
+                        # This indicates a logical problem in the formula
+                        @warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
+                        # Keep NEG (more restrictive)
+                    end
+                end
+            end
+            
+            # For any condition that this excludes, set NEG
+            for (ic, c) in enumerate(feat_condindxs)
+                if excludes[i_feat][feat_icond, ic]
+                    if pla_row[c] == "-"
+                        pla_row[c] = NEG
+                    elseif pla_row[c] == POS && NEG == "0"
+                        # Conflict: We already have a POS but we should put NEG
+                        @warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
+                        # Set NEG (more restrictive)
+                        pla_row[c] = NEG
+                    end
+                end
+            end
         end
+        
+        # Handle dual condition if exists
         if !isnothing(feat_idualcond)
-            @views pla_row[feat_condindxs][map(((ic,c),)->includes[i_feat][feat_idualcond,ic], enumerate(feat_condindxs))] .= NEG
-            @views pla_row[feat_condindxs][map(((ic,c),)->excludes[i_feat][feat_idualcond,ic], enumerate(feat_condindxs))] .= POS
+            # For dual condition, invert POS and NEG
+            for (ic, c) in enumerate(feat_condindxs)
+                if includes[i_feat][feat_idualcond, ic]
+                    if pla_row[c] == "-"
+                        pla_row[c] = NEG
+                    elseif pla_row[c] == POS && NEG == "0"
+                        @warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
+                        pla_row[c] = NEG
+                    end
+                end
+            end
+            
+            for (ic, c) in enumerate(feat_condindxs)
+                if excludes[i_feat][feat_idualcond, ic]
+                    if pla_row[c] == "-"
+                        pla_row[c] = POS
+                    elseif pla_row[c] == NEG && POS == "1"
+                        @warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
+                        # Keep NEG
+                    end
+                end
+            end
         end
     end
-    # println(pla_row)
+
     return pla_row
 end
 
 # Function to parse and process the formula into PLA
+"""
+        _formula_to_pla(formula::SoleLogics.Formula, dc_set=false, silent=true, args...; encoding=:univariate, use_scalar_range_conditions=false, kwargs...) -> (String, Tuple, NamedTuple)
+
+    Convert a logical formula into Programmable Logic Array (PLA) format representation.
+
+    This function transforms a logical formula into a PLA format suitable for digital logic synthesis
+    and hardware implementation. The conversion process involves normalizing the formula to Disjunctive
+    Normal Form (DNF), extracting conditions and features, and encoding the logic into a structured
+    PLA representation.
+
+    # Arguments
+    - `formula::SoleLogics.Formula`: The input logical formula to convert
+    - `dc_set::Bool=false`: Whether to include don't-care set in the output (currently unused)
+    - `silent::Bool=true`: If `false`, prints intermediate steps and debugging information
+    - `args...`: Additional positional arguments passed to underlying functions
+
+    # Keyword Arguments
+    - `encoding::Symbol=:univariate`: Encoding method for variables (`:univariate` or `:multivariate`)
+    - `use_scalar_range_conditions::Bool=false`: Whether to use scalar range conditions in the conversion
+    - `kwargs...`: Additional keyword arguments passed to DNF conversion and scalar simplification
+
+    # Returns
+    A tuple containing:
+    - `String`: The complete PLA format string ready for use with logic synthesis tools
+    - `Tuple`: A tuple containing `(nothing, conditions)` where conditions is the vector of extracted conditions
+    - `NamedTuple`: Configuration parameters used in the conversion including encoding method and other options
+
+    # Details
+    The conversion process follows these main steps:
+
+    1. **Formula Normalization**: Converts the input formula to DNF using specified profiles and atom flipping rules
+    2. **Scalar Simplification**: Applies scalar simplification techniques based on the configuration
+    3. **Condition Extraction**: Identifies unique conditions and features from the normalized formula
+    4. **Condition Processing**: Optionally applies scalar tiling and removes dual conditions
+    5. **Relationship Analysis**: Computes inclusion and exclusion relationships between conditions
+    6. **PLA Header Generation**: Creates appropriate headers based on encoding method:
+       - `:univariate`: Standard binary encoding with `.i`, `.o`, `.ilb` directives
+       - `:multivariate`: Multi-valued variable encoding with `.mv`, `.label` directives
+    7. **Row Encoding**: Converts each disjunct to PLA rows using the `encode_disjunct` function
+    8. **Output Assembly**: Combines headers, onset rows, and termination markers into final PLA format
+
+    # Encoding Methods
+    - **`:univariate`**: Each condition becomes a binary input variable (standard PLA format)
+    - **`:multivariate`**: Groups conditions by feature, supporting multi-valued variables (experimental)
+
+    # PLA Format Output
+    The generated PLA string includes:
+    - Variable declarations (`.i`, `.o` for univariate; `.mv` for multivariate)
+    - Input/output labels (`.ilb`, `.ob`, `.label`)
+    - Product term count (`.p`)
+    - Logic onset rows (condition patterns with output values)
+    - End marker (`.e`)
+
+    # Examples
+    ```julia
+    # Basic conversion with default settings
+    pla_string, conditions, config = _formula_to_pla(my_formula)
+
+    # Verbose conversion with multivariate encoding
+    pla_string, conditions, config = _formula_to_pla(
+        my_formula, 
+        false, 
+        false;  # silent=false for debugging output
+        encoding=:multivariate,
+        use_scalar_range_conditions=true
+    )
+    ```
+
+    # Notes
+    - The `:multivariate` encoding is experimental and may not be fully tested
+    - Scalar range conditions provide additional optimization opportunities but may increase complexity
+    - The function assumes the input formula can be successfully converted to DNF
+    - Conditions are automatically sorted and processed to remove redundancy
+    - The resulting PLA format is compatible with standard logic synthesis tools
+
+    # See Also
+    - `encode_disjunct`: Function used internally to encode individual disjuncts
+    - `SoleLogics.dnf`: DNF conversion functionality
+    - `SoleData.scalar_simplification`: Scalar simplification methods
+"""
 function _formula_to_pla(
     formula::SoleLogics.Formula,
     dc_set = false,
@@ -223,44 +381,6 @@ function _formula_to_pla(
 
     # # Generate DC-set rows for each disjunct
     pla_dcset_rows = []
-    # TODO remove
-    # @assert !(dc_set && encoding == :multivariate)
-    # if dc_set
-    #     for feat in features
-    #         feat_condindxs = findall(c->feature(c) == feat, conditions)
-    #         # feat_condindxs = collect(eachindex(conditions))
-    #         # cond_mask = map((c)->feature(c) == feat, conditions)
-    #         includes = [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
-    #         excludes = [SoleData.excludes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
-    #         for (i,cond_i) in enumerate(feat_condindxs)
-    #             for (j,cond_j) in enumerate(feat_condindxs)
-    #                 if includes[i, j]
-    #                     println("$(syntaxstring(conditions[cond_i])) -> $(syntaxstring(conditions[cond_j]))")
-    #                 end
-    #                 if excludes[j, i]
-    #                     println("$(syntaxstring(conditions[cond_i])) -> !$(syntaxstring(conditions[cond_j]))")
-    #                 end
-    #             end
-    #         end
-    #         print(includes)
-    #         print(excludes)
-    #         for (i,cond_i) in enumerate(feat_condindxs)
-    #             row = fill("-", length(conditions))
-    #             row[cond_i] = "1"
-    #             for (j,cond_j) in enumerate(feat_condindxs)
-    #                 if includes[j, i]
-    #                     row[cond_j] = "1"
-    #                 elseif excludes[j, i]
-    #                     row[cond_j] = NEG
-    #                 end
-    #             end
-    #             push!(pla_dcset_rows, "$(join(row, "")) -") # Append "-" for the DC-set output
-    #         end
-    #     end
-    #     println(pla_dcset_rows)
-    #     # readline()
-    # end
-
     # Combine PLA components
     pla_content = [
         join(pla_header, "\n"),
@@ -277,6 +397,119 @@ function _formula_to_pla(
     )
 end
 
+"""
+        _pla_to_formula(pla::AbstractString, silent=true, ilb_str=nothing, conditions=nothing; conditionstype=SoleData.ScalarCondition, featuretype=SoleData.VariableValue, featvaltype=nothing, kwargs...) -> SoleLogics.Formula
+    
+    Convert a Programmable Logic Array (PLA) format string back into a logical formula representation.
+    
+    This function performs the inverse operation of `_formula_to_pla`, parsing a PLA format string
+    and reconstructing the corresponding logical formula in Disjunctive Normal Form (DNF). It handles
+    both univariate (binary) and multivariate PLA formats, processing input variables, output
+    specifications, and logic rows to rebuild the original logical structure.
+    
+    # Arguments
+    - `pla::AbstractString`: The PLA format string to parse and convert
+    - `silent::Bool=true`: If `false`, prints debugging information during parsing
+    - `ilb_str::Union{String,Nothing}=nothing`: Expected input labels string for validation (optional)
+    - `conditions::Union{AbstractVector,Nothing}=nothing`: Pre-existing conditions to map against (optional)
+    
+    # Keyword Arguments
+    - `conditionstype::Type=SoleData.ScalarCondition`: Type constructor for creating new conditions
+    - `featuretype::Type=SoleData.VariableValue`: Type for feature representation
+    - `featvaltype::Union{Type,Nothing}=nothing`: Type for feature values (optional)
+    - `kwargs...`: Additional arguments passed to condition parsing functions
+    
+    # Returns
+    - `SoleLogics.Formula`: The reconstructed logical formula in DNF, or `⊤` (true) if no valid rows exist
+    
+    # Details
+    The conversion process follows these main steps:
+    
+    1. **PLA Parsing**: Processes the input string line by line, extracting:
+       - Variable declarations (`.i`, `.o`, `.mv`)
+       - Input/output labels (`.ilb`, `.ob`, `.label`)
+       - Logic rows and don't-care specifications
+       - Multi-valued variable metadata
+    
+    2. **Variable Mapping**: Maps PLA input variables to logical conditions:
+       - Uses provided `conditions` mapping if available
+       - Creates new conditions using `conditionstype` constructor
+       - Handles both binary and multi-valued variables
+    
+    3. **Row Processing**: Converts each PLA row into logical conjuncts:
+       - `'1'` values become positive literals
+       - `'0'` values become negative literals  
+       - `'-'` values are ignored (don't-care)
+       - Only processes ON-set rows (output = '1')
+    
+    4. **Formula Reconstruction**: Combines processed rows:
+       - Each row becomes a conjunctive clause (AND of literals)
+       - All clauses are combined disjunctively (OR of conjunctions)
+       - Applies scalar simplification to optimize the result
+    
+    # PLA Format Support
+    The function supports standard PLA directives:
+    - `.i N`: Number of input variables (univariate format)
+    - `.o N`: Number of output variables (must be 1)
+    - `.mv N B S1 S2...`: Multi-valued variable declaration (experimental)
+    - `.ilb labels`: Input variable labels
+    - `.ob label`: Output variable label
+    - `.label var=N labels`: Multi-valued variable labels
+    - `.p N`: Number of product terms (ignored)
+    - `.e`: End marker
+    
+    # Examples
+    ```julia
+    # Basic PLA to formula conversion
+    pla_string = \"""
+    .i 3
+    .o 1  
+    .ilb x y z
+    .ob output
+    11- 1
+    -01 1
+    .e
+    \"""
+    formula = _pla_to_formula(pla_string)
+    
+    # Conversion with pre-defined conditions
+    formula = _pla_to_formula(pla_string, true, nothing, my_conditions)
+    
+    # Verbose conversion with custom types
+    formula = _pla_to_formula(
+        pla_string, 
+        false;  # silent=false for debugging
+        conditionstype=MyConditionType,
+        featuretype=MyFeatureType
+    )
+    ```
+        
+    # Multi-valued Variable Support
+    For PLA files with multi-valued variables (`.mv` directive):
+    - Binary variables are processed first
+    - Multi-valued variables are grouped and processed separately
+    - Variable labels are extracted from `.label` directives
+    - Each multi-valued variable contributes one selected literal per row
+        
+    # Error Handling
+    The function validates:
+    - PLA format correctness and known directive support
+    - Consistency between provided and parsed input labels
+    - Single output variable requirement
+    - Valid truth values in logic rows
+    
+    # Notes
+    - Multi-valued variable support is experimental and may not be fully tested
+    - The function assumes well-formed PLA input with valid syntax
+    - Only ON-set rows (output='1') are processed; OFF-set and don't-care rows are ignored
+    - Scalar simplification is applied to optimize the reconstructed formula
+    - Returns `⊤` (tautology) if no valid logic rows are found
+    
+    # See Also
+    - `_formula_to_pla`: Inverse function for converting formulas to PLA format
+    - `SoleData.scalar_simplification`: Formula optimization functionality
+    - `parsecondition`: Condition parsing utilities
+"""
 function _pla_to_formula(
     pla::AbstractString,
     silent = true,
