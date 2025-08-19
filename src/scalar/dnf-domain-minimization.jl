@@ -254,7 +254,7 @@ function extract_term_bounds(conjunctive_form; silent::Bool=true)::Dict{Int,Vari
 end
 
 # ==============================================================================
-# Corrected Domination Logic
+# Domination Logic
 # ==============================================================================
 
 """
@@ -400,7 +400,7 @@ ensuring that any solution satisfying B will also satisfy A.
 """
 function refine_dnf(dnf_formula; silent::Bool=true) 
     
-    println("refine_dnf are running") # TODO REMOVE THIS PRINT LINE, IT IS ONLY FOR DEBUGGING
+    !silent &&  println("refine_dnf are running")
     
     terms = get_atoms(dnf_formula)
     n_terms = length(terms)
