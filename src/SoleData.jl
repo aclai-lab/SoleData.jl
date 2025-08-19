@@ -237,8 +237,8 @@ metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,
 include("scalar-pla.jl")
 
 
-export refine_dnf, refine_dnf_and_display      # TODO 
-include("scalar/dnf-domain-minimization.jl")  #     EVALUATE THIS . 
+export refine_dnf                                              # TODO 
+include("scalar/dnf-domain-minimization.jl")  # EVALUATE THIS . 
 
 
 include("minimize.jl")
