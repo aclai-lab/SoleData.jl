@@ -421,6 +421,7 @@ function refine_dnf(dnf_formula; silent::Bool=true)
         println("\n=== TERMS ANALYSIS ===")
         for (i, bounds) in enumerate(all_bounds)
             println("Term $i:")
+            println("dump(bounds)",dump(bounds)) # TODO notice is only for debug... maybe we can remove this?
         end
         println()
     end
