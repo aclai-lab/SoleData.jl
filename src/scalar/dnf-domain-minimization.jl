@@ -378,25 +378,27 @@ end
 # ==============================================================================
 # DNF Minimization
 # ==============================================================================
-
 """
-refine_dnf(dnf_formula; silent::Bool=true, config=nothing)
+    refine_dnf(dnf_formula; silent::Bool=true) → DNF
 
-Minimize DNF formula ensuring no solution space is lost.
+Perform logical minimization of a Disjunctive Normal Form (DNF) formula by eliminating 
+redundant terms while preserving the complete solution space through dominance analysis.
+
+The algorithm identifies and removes terms that are strictly dominated by other terms,
+where term A dominates term B if A's constraints are a proper subset of B's constraints,
+ensuring that any solution satisfying B will also satisfy A.
 
 # Arguments
 - `dnf_formula`: The DNF formula to minimize
-- `silent`: If false, prints detailed progress information
-- `config`: Compatibility parameter (ignored)
+- `silent::Bool=true`: Controls verbosity of the minimization process
+  - `true`: Silent execution with minimal output  
+  - `false`: Detailed progress reporting and term analysis
 
 # Returns
-- Minimized DNF formula with the same type as the input
-
-# Algorithm Complexity
-- Time: O(n² × m) where n = number of terms, m = average variables per term
-- Space: O(n × m) for storing bounds information
+- **DNF Formula**: Minimized formula of the same type as input, guaranteed to have
+  identical solution space but potentially fewer terms
 """
-function refine_dnf(dnf_formula; silent::Bool=true, config=nothing)
+function refine_dnf(dnf_formula; silent::Bool=true) 
     
     println("refine_dnf are running") # TODO REMOVE THIS PRINT LINE, IT IS ONLY FOR DEBUGGING
     
