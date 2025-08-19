@@ -400,7 +400,7 @@ ensuring that any solution satisfying B will also satisfy A.
 """
 function refine_dnf(dnf_formula; silent::Bool=true) 
     
-    !silent &&  println("refine_dnf are running")
+    !silent && println("refine_dnf are running")
     
     terms = get_atoms(dnf_formula)
     n_terms = length(terms)
