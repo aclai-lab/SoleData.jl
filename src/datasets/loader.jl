@@ -15,7 +15,7 @@ const ARTIFACTS_TOML = joinpath(@__DIR__, "Artifacts.toml")
 
 URLS = [
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz",
-
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz"
 ]
 
 """

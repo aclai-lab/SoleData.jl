@@ -1,3 +1,10 @@
+[libras]
+git-tree-sha1 = "e14dc9b52ef4d7016a29f7356ee4dcac595d8fd8"
+
+    [[libras.download]]
+    sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz"
+
 [natops]
 git-tree-sha1 = "87856b9b41a235ec57f36d1029d0467876660e6e"
 
