@@ -6,6 +6,8 @@ using CategoricalArrays
 
 using DataStructures: OrderedDict
 
+include("loader.jl")
+
 include("epilepsy-loader.jl")
 export load_epilepsy
 
