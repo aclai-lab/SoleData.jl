@@ -33,6 +33,7 @@ include("utils/artifact-utils.jl")
 
 export fill_artifacts
 
+# general loading logic, common to any AbstractLoader
 include("loaders.jl")
 
 export AbstractLoader, AbstractLoaderDataset, AbstractLoaderBinary
@@ -56,10 +57,8 @@ include("utils/dataset-utils.jl")
 export load_arff_dataset, parseARFF, fix_dataframe
 
 include("loaders/epilepsy-loader.jl")
-
 include("loaders/hugadb-loader.jl")
 include("loaders/libras-loader.jl")
-
 include("loaders/natops-loader.jl")
 
 export EpilepsyLoader
