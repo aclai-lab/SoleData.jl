@@ -27,8 +27,8 @@ function load(l::EpilepsyLoader)
 
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/Epilepsy_TEST.arff", String) |> Datasets.parseARFF,
-            read("$(dirpath)/Epilepsy_TRAIN.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/epilepsy_TEST.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/epilepsy_TRAIN.arff", String) |> Datasets.parseARFF,
         )
 
     X_train  = SoleData.fix_dataframe(X_train, variablenames)
@@ -37,5 +37,5 @@ function load(l::EpilepsyLoader)
     y_train = categorical(y_train)
     y_test = categorical(y_test)
 
-    vcat(X_train, X_test), vcat(y_train, y_test)
+    return vcat(X_train, X_test), vcat(y_train, y_test)
 end

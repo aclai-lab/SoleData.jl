@@ -1,55 +1,67 @@
-# Differently from other datasets, here there is no need to specify a variablenames vector
-# of strings, since each variable is named "x_frame_1", "x_frame_2", ..., by default.
-"""
-    function load_libras(
-        dirpath::S;
-        fileprefix::S="Epilepsy",
-        variablenames::Vector{S}=["x", "y", "z"]
-    ) where {S<:AbstractString}
+struct LibrasLoader <: AbstractLoaderDataset
+    name::String
+    url::String
+    path::String
 
-Loader for `Libras` dataset, available [here](https://timeseriesclassification.com/description.php?Dataset=Libras).
+    classes::Vector{String}
 
-# Arguments
-- `dirpath::S`: the directory in which all the .arff files are stored.
+    LibrasLoader() = new(
+        "libras",
+        "",
+        ARTIFACTS_PATH,
 
-# Keyword Arguments
-- `fileprefix::S="Libras"`: the prefix shared by both test and train parts of the dataset;
-    the default name for such files is Libras_TEST.arff and Libras_TRAIN.arff;
-"""
-function load_libras(
-    dirpath::S;
-    fileprefix::S="Libras"
-) where {S<:AbstractString}
-    _load_libras(dirpath, fileprefix)
+        # class names
+        [
+            "curved_swing",
+            "horizontal_swing",
+            "vertical_swing",
+            "anti_clockwise_arc",
+            "clokcwise_arc",
+            "circle",
+            "horizontal_straight_line",
+            "vertical_straight_line",
+            "horizontal_zigzag",
+            "vertical_zigzag",
+            "horizontal_wavy",
+            "vertical_wavy",
+            "face_up_curve",
+            "face_down_curve",
+            "tremble"
+        ]
+    )
 end
 
-function _load_libras(dirpath::String, fileprefix::String)
+"""
+    classes(l::LibrasLoader) = l.classes
+
+Retrieve the classes of Libras dataset.
+"""
+classes(l::LibrasLoader) = l.classes
+
+
+function load(l::LibrasLoader)
+    artifact_path = ensure_artifact_installed(name(l), path(l))
+
+    tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")
+
+    dirpath = begin
+        tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")
+        if isfile(tarfile)
+            extracted_path = extract_artifact(artifact_path, name(al))
+            return joinpath(extracted_path, "$(name(al))")
+        else
+            return joinpath(artifact_path, "$(name(al))")
+        end
+    end
+
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> Datasets.parseARFF,
-            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/libras_TEST.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/libras_TRAIN.arff", String) |> Datasets.parseARFF,
         )
 
-    class_names = [
-        "curved_swing",
-        "horizontal_swing",
-        "vertical_swing",
-        "anti_clockwise_arc",
-        "clokcwise_arc",
-        "circle",
-        "horizontal_straight_line",
-        "vertical_straight_line",
-        "horizontal_zigzag",
-        "vertical_zigzag",
-        "horizontal_wavy",
-        "vertical_wavy",
-        "face_up_curve",
-        "face_down_curve",
-        "tremble"
-    ]
-
     # convert from .arff class codes to string
-    fix_class_names(y) = class_names[round(Int, parse(Float64, y))]
+    fix_class_names(y) = classes(l)[round(Int, parse(Float64, y))]
 
     y_train = map(fix_class_names, y_train)
     y_test = map(fix_class_names, y_test)
@@ -57,5 +69,5 @@ function _load_libras(dirpath::String, fileprefix::String)
     y_train = categorical(y_train)
     y_test = categorical(y_test)
 
-    vcat(X_train, X_test), vcat(y_train, y_test)
+    return vcat(X_train, X_test), vcat(y_train, y_test)
 end
