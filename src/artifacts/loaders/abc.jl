@@ -11,7 +11,7 @@ struct ABCLoaderBinary <: AbstractLoaderBinary
     )
 end
 
-function artifact_loader(al::ABCLoaderBinary)
+function load(al::ABCLoaderBinary)
     artifact_path = ensure_artifact_installed(name(al), path(al))
 
     # Check if tar.gz file needs extraction

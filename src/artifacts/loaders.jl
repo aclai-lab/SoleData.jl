@@ -49,7 +49,14 @@ Specific [`AbstractLoader`](@ref) for datasets.
 """
 abstract type AbstractLoaderDataset <: AbstractLoader end
 
-artifact_loader(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
+"""
+    Artifacts.load(::T) where {T}
+
+Method to implement to load your custom artifact.
+
+See [`load(al::ABCLoaderBinary)`](@ref), [`load(al::MITESPRESSOLoaderBinary)`](@ref).
+"""
+load(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
 
 # Extract tar.gz file in the artifact directory (cross-platform);
@@ -105,8 +112,8 @@ Given an [`AbstractLoader`](@ref), download and extract it (if necessary).
 
 See [`AbstractLoader`](@ref).
 
-See also (the implementation of) [`artifact_loader(al::ABCLoaderBinary)`](@ref) or
-[`artifact_loader(al::MITESPRESSOLoaderBinary)`](@ref).
+See also (the implementation of) [`load(al::ABCLoaderBinary)`](@ref) or
+[`load(al::MITESPRESSOLoaderBinary)`](@ref).
 """
 function extract_artifact(loader::AbstractLoader)
     extract_artifact(path(loader), name(loader))
