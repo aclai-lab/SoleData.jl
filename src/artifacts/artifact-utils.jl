@@ -49,14 +49,25 @@ function fill_artifacts(url::String)
     # the argument passed to F is a temporary directory in which we must download our things
     # and, then, Pkg.Artifacts will move our things to a specific directory in
     # .julia/artifacts folder.
+
+    # download the file in a temporary location to compute its SHA256;
+    # WARNING: the file is created here... and then copied from here with cp!
+    temp_file = tempname()
+    Downloads.download(url, temp_file)
+    file_sha256 = bytes2hex(open(sha256, temp_file))
+
+    # create the artifact
     SHA1 = create_artifact(
         tmp_dir -> Downloads.download(url, joinpath(tmp_dir, filename_with_extension)))
 
+    # now we can clear the temporary file
+    rm(temp_file)
+
+    # and bind the artifact to let the user call the macro artifact"name"
     bind_artifact!(ARTIFACTS_PATH, filename_no_extension, SHA1; force=true)
 
-    # content of the ARTIFACTS_PATH
+    # proceed to update the Artifact.toml
     content = TOML.parsefile(ARTIFACTS_PATH)
-
     open(ARTIFACTS_PATH, "w") do tomlfile
         # eg: Dict{String, Any} with 1 entry:
         #  "natops" => Dict{String, Any}(
