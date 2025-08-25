@@ -1,29 +1,30 @@
-"""
-    function load_epilepsy(
-        dirpath::S;
-        fileprefix::S="Epilepsy",
-        variablenames::Vector{S}=["x", "y", "z"]
-    ) where {S<:AbstractString}
+struct EpilepsyLoader <: AbstractLoaderDataset
+    name::String
+    url::String
+    path::String
 
-Loader for `Epilepsy` dataset, available [here](https://timeseriesclassification.com/description.php?Dataset=Epilepsy).
+    EpilepsyLoader() = new(
+        "epilepsy",
+        "",
+        ARTIFACTS_PATH
+    )
+end
 
-# Arguments
-- `dirpath::S`: the directory in which all the .arff files are stored.
+function load(l::EpilepsyLoader)
+    artifact_path = ensure_artifact_installed(name(l), path(l))
 
-# Keyword Arguments
-- `fileprefix::S="Epilepsy"`: the prefix shared by both test and train parts of the dataset;
-    the default name for such files is Epilepsy_TEST.arff and Epilepsy_TRAIN.arff;
-- `variablenames::Vector{S}=["x", "y", "z"]`: the names of the columns.
-"""
-function load_epilepsy(
-    dirpath::S;
-    fileprefix::S="Epilepsy",
-    variablenames::Vector{S}=["x", "y", "z"]
-) where {S<:AbstractString}
+    tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")
+    if isfile(tarfile)
+        extracted_path = extract_artifact(artifact_path, name(l))
+        return  joinpath(extracted_path, "$(name(l))")
+    end
+
+    dirpath = joinpath(artifact_path, "$(name(l))")
+
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> Datasets.parseARFF,
-            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/Epilepsy_TEST.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/Epilepsy_TRAIN.arff", String) |> Datasets.parseARFF,
         )
 
     X_train  = SoleData.fix_dataframe(X_train, variablenames)
