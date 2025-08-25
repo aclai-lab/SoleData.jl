@@ -22,7 +22,7 @@ function load(al::MITESPRESSOLoaderBinary)
     if isfile(tarfile)
         extracted_path = extract_artifact(artifact_path, name(al))
         return  joinpath(extracted_path, "$(name(al))")
+    else
+        return joinpath(artifact_path, "$(name(al))")
     end
-
-    return joinpath(artifact_path, "$(name(al))")
 end
