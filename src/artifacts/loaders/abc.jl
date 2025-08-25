@@ -1,7 +1,7 @@
 struct ABCLoaderBinary <: AbstractLoaderBinary
     name::String    # Name of the artifact in Artifacts.toml
-    url::String           # Fallback download URL
-    path::String   # Path to the Artifacts.toml file
+    url::String     # Fallback download URL
+    path::String    # Path to the Artifacts.toml file
 
     # Internal constructor with default values
     ABCLoaderBinary() = new(
