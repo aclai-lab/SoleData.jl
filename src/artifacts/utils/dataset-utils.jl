@@ -1,3 +1,7 @@
+# This file is almost deprecated, with an exception for poarseARFF function;
+# TODO: when .Artifacts module is completed, forward all the calls to this load_arff_dataset
+# to the proper loader.
+
 using HTTP
 using ZipFile
 using DataFrames
@@ -162,11 +166,9 @@ const _ARFF_ESC         = UInt8('\\')
 const _ARFF_MISSING     = UInt8('?')
 const _ARFF_RELMARK     = UInt8('\'')
 
-# function readARFF(path::String)
-#     open(path, "r") do io
-#         df = DataFrame()
-#         classes = String[]
-#         lines = readlines(io) ...
+"""
+TODO: document this.
+"""
 function parseARFF(arffstring::String)
     df = DataFrame()
     classes = String[]
@@ -229,6 +231,9 @@ function parseARFF(arffstring::String)
     return df[p, :], classes[p]
 end
 
+"""
+TODO: document this.
+"""
 function fix_dataframe(df, variable_names = nothing)
     s = unique(size.(df[:,1]))
     @assert length(s) == 1 "$(s)"

@@ -24,7 +24,7 @@ ARTIFACT_URLS = [
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
 ]
 
-include("artifact-utils.jl")
+include("utils/artifact-utils.jl")
 
 export fill_artifacts
 
@@ -33,13 +33,23 @@ include("loaders.jl")
 export AbstractLoader, AbstractLoaderDataset, AbstractLoaderBinary
 export extract_artifact
 
+
+# Binaries
+
 include("loaders/abc.jl")
+
 export MITESPRESSOLoaderBinary
 
 include("loaders/mitespresso.jl")
+
 export MITESPRESSOLoaderBinary
 
-#### deprecated:
+
+## Datasets
+
+include("utils/dataset-utils.jl")
+
+export load_arff_dataset, parseARFF, fix_dataframe
 
 include("epilepsy-loader.jl")
 export load_epilepsy
