@@ -34,7 +34,7 @@ include("utils/artifact-utils.jl")
 export fill_artifacts
 
 # general loading logic, common to any AbstractLoader
-include("loaders.jl")
+include("loaders/loaders.jl")
 
 export AbstractLoader, AbstractLoaderDataset, AbstractLoaderBinary
 export name, url, path
