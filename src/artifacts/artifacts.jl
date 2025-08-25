@@ -12,8 +12,17 @@ using ZipFile
 
 using DataStructures: OrderedDict
 
+# Global variables related to the packages
+
 # Path to the Artifacts.toml configuration file
 const ARTIFACTS_PATH = joinpath(@__DIR__, "Artifacts.toml")
+
+# URLS from which to download the deafult artifacts of SoleData
+ARTIFACT_URLS = [
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
+]
 
 include("artifact-utils.jl")
 

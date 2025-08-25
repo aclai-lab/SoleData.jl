@@ -5,12 +5,6 @@
 # https://pkgdocs.julialang.org/v1/artifacts/#The-Pkg.Artifacts-API
 # https://pkgdocs.julialang.org/v1/api/#Artifacts-Reference
 
-# Insert your artifact urls here
-URLS = [
-    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz",
-    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz",
-    "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
-]
 
 """
     fill_artifacts(URLS::Vector{String})
