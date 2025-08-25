@@ -39,6 +39,11 @@ Retrieve the classes of Libras dataset.
 classes(l::LibrasLoader) = l.classes
 
 
+"""
+    function load(l::LibrasLoader)
+
+Load Libras dataset as specified by the [`LibrasLoader`](@ref).
+"""
 function load(l::LibrasLoader)
     artifact_path = ensure_artifact_installed(name(l), path(l))
 

@@ -10,6 +10,11 @@ struct EpilepsyLoader <: AbstractLoaderDataset
     )
 end
 
+"""
+    function load(l::EpilepsyLoader)
+
+Load Epilepsy dataset as specified by the [`EpilepsyLoader`](@ref).
+"""
 function load(l::EpilepsyLoader)
     artifact_path = ensure_artifact_installed(name(l), path(l))
 

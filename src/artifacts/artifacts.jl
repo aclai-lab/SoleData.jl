@@ -63,7 +63,7 @@ include("loaders/natops-loader.jl")
 
 export EpilepsyLoader
 export HuGaDBLoader
-export load_libras
-export load_NATOPS
+export LibrasLoader
+export NatopsLoader
 
 end

@@ -91,7 +91,7 @@ activity2id(l::HuGaDBLoader, class::String) = l.activity2id(class)
 
 # load a single instance of HuGaDB dataset;
 # driver code is load(::HuGaDBLoader)
-function load_hugadb(
+function _load_hugadb(
     dirpath::S,
     filename::S;
     variablenames::Vector{S}=HUGADB_VARIABLENAMES
@@ -133,13 +133,14 @@ function load_hugadb(
     return X, (activities, activity_ids), variablenames
 end
 
-# load multiple HuGaDB instances in one DataFrame
+
 """
-    function load_hugadb(l::HuGaDBLoader)
+    function load(l::HuGaDBLoader)
 
-Invoke the HuGaDBLoader, loading the files indicated by in expfiles(l).
+Load HuGaDB dataset, as specified by the [`HuGaDBLoader`](@ref);
+in particular, load the files returned by [`expfiles`](@ref).
 
-See also [`filter_hugadb`](@ref).
+See also [`expfiles(l::HuGaDBLoader)`], [`filter_hugadb`](@ref).
 """
 function load(l::HuGaDBLoader)
     artifact_path = ensure_artifact_installed(name(al), path(al))
@@ -156,15 +157,15 @@ function load(l::HuGaDBLoader)
 
     # leverage the first instance to get, once for all, the common outputs such as
     # the list of activities (as pairs string/id pairs) and the names of each column.
-    X, (activity_strings, activity_ids), variablenames = load_hugadb(
+    X, (activity_strings, activity_ids), variablenames = _load_hugadb(
         dirpath,
         expfiles(l)[1],
         variablenames=variablenames(l)
     )
 
-    # return the concatenation of each DataFrame obtained by a `load_hugadb` call
+    # return the concatenation of each DataFrame obtained by a `_load_hugadb` call
     return vcat([X, [
-            load_hugadb(dirpath, filename; kwargs...) |> first
+            _load_hugadb(dirpath, filename; kwargs...) |> first
             for filename in expfiles(l)[2:end]
         ]...]...), (activity_strings, activity_ids), variablenames(l)
 end
