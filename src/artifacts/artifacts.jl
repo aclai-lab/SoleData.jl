@@ -22,7 +22,15 @@ export fill_artifacts
 include("loaders.jl")
 
 export AbstractLoader, AbstractLoaderDataset, AbstractLoaderBinary
-export ABCLoaderBinary, MITESPRESSOLoaderBinary
+export extract_artifact, extract_artifact_safe
+
+include("loaders/abc.jl")
+export MITESPRESSOLoaderBinary
+
+include("loaders/mitespresso.jl")
+export MITESPRESSOLoaderBinary
+
+#### deprecated:
 
 include("epilepsy-loader.jl")
 export load_epilepsy
