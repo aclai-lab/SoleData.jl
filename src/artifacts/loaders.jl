@@ -33,6 +33,8 @@ url(al::AbstractLoader) = al.url
 
 Return the path in which the artifact associated with `al` is stored.
 """
+# TODO: this is always initialized to ARTIFACTS_PATH; can't we just use the global variable
+# Artifacts.ARTIFACTS_PATH?
 path(al::AbstractLoader) = al.path
 
 """
