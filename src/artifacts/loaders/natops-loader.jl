@@ -6,7 +6,7 @@ struct NatopsLoader <: AbstractLoaderDataset
     variablenames::Vector{String}
     classes::Vector{String}
 
-    EpilepsyLoader() = new(
+    NatopsLoader() = new(
         "epilepsy",
         "",
         ARTIFACTS_PATH,
@@ -35,6 +35,12 @@ struct NatopsLoader <: AbstractLoaderDataset
     )
 end
 
+
+"""
+    function load(l::NatopsLoader)
+
+Load NATOPS dataset as specified by the [`NatopsLoader`](@ref).
+"""
 function load(l::NatopsLoader)
     artifact_path = ensure_artifact_installed(name(al), path(al))
 
