@@ -1,39 +1,96 @@
-HUGADB_VARIABLENAMES = ["acc_rf_x","acc_rf_y","acc_rf_z",
-    "gyro_rf_x","gyro_rf_y","gyro_rf_z",
-    "acc_rs_x","acc_rs_y","acc_rs_z",
-    "gyro_rs_x","gyro_rs_y","gyro_rs_z",
-    "acc_rt_x","acc_rt_y","acc_rt_z",
-    "gyro_rt_x","gyro_rt_y","gyro_rt_z",
-    "acc_lf_x","acc_lf_y","acc_lf_z",
-    "gyro_lf_x","gyro_lf_y","gyro_lf_z",
-    "acc_ls_x","acc_ls_y","acc_ls_z",
-    "gyro_ls_x","gyro_ls_y","gyro_ls_z",
-    "acc_lt_x","acc_lt_y","acc_lt_z",
-    "gyro_lt_x","gyro_lt_y","gyro_lt_z",
-    "EMG_r","EMG_l","act",
-]
+struct HuGaDBLoader <: AbstractLoaderDataset
+    name::String
+    url::String
+    path::String
 
-# activity strings (labels) to ids as in the table at https://github.com/romanchereshnev/HuGaDB
-_activity2id = x -> findfirst(activity -> x == activity, [
-    "walking", "running", "going_up", "going_down", "sitting", "sitting_down",
-    "standing_up", "standing", "bicycling", "elevator_up", "elevator_down",
-    "sitting_car"
-])
+    # non-corrupted files, suitable to perform an experiment on Walk and Running classes;
+    # see https://github.com/romanchereshnev/HuGaDB
+    expfiles::Vector{String}
+
+    # column names
+    variablenames::Vector{String}
+
+    # lambda function to convert each variable name to a specific ID
+    activity2id::Function
+
+    HuGaDBLoader() = new(
+        "epilepsy",
+        "",
+        ARTIFACTS_PATH,
+
+        # expfiles
+        [
+            "HuGaDB_v2_various_02_00.txt", "HuGaDB_v2_various_02_01.txt",
+            "HuGaDB_v2_various_02_02.txt", "HuGaDB_v2_various_02_03.txt",
+            "HuGaDB_v2_various_02_04.txt", "HuGaDB_v2_various_02_05.txt",
+            "HuGaDB_v2_various_02_06.txt", "HuGaDB_v2_various_06_00.txt",
+            "HuGaDB_v2_various_06_01.txt", "HuGaDB_v2_various_06_02.txt",
+            "HuGaDB_v2_various_06_03.txt", "HuGaDB_v2_various_06_04.txt",
+            "HuGaDB_v2_various_06_05.txt", "HuGaDB_v2_various_06_06.txt",
+            "HuGaDB_v2_various_06_07.txt", "HuGaDB_v2_various_06_08.txt",
+            "HuGaDB_v2_various_06_09.txt", "HuGaDB_v2_various_06_10.txt",
+            "HuGaDB_v2_various_06_11.txt", "HuGaDB_v2_various_06_12.txt",
+            "HuGaDB_v2_various_06_13.txt", "HuGaDB_v2_various_06_14.txt",
+            "HuGaDB_v2_various_06_15.txt", "HuGaDB_v2_various_06_16.txt",
+            "HuGaDB_v2_various_06_17.txt", "HuGaDB_v2_various_06_18.txt",
+            "HuGaDB_v2_various_06_19.txt", "HuGaDB_v2_various_06_20.txt",
+            "HuGaDB_v2_various_06_21.txt", "HuGaDB_v2_various_06_22.txt",
+            "HuGaDB_v2_various_06_23.txt", "HuGaDB_v2_various_06_24.txt",
+            "HuGaDB_v2_various_06_25.txt",  "HuGaDB_v2_various_06_26.txt",
+            "HuGaDB_v2_various_06_27.txt"
+        ],
+
+        # variablenames
+        [
+            "acc_rf_x","acc_rf_y","acc_rf_z",
+            "gyro_rf_x","gyro_rf_y","gyro_rf_z",
+            "acc_rs_x","acc_rs_y","acc_rs_z",
+            "gyro_rs_x","gyro_rs_y","gyro_rs_z",
+            "acc_rt_x","acc_rt_y","acc_rt_z",
+            "gyro_rt_x","gyro_rt_y","gyro_rt_z",
+            "acc_lf_x","acc_lf_y","acc_lf_z",
+            "gyro_lf_x","gyro_lf_y","gyro_lf_z",
+            "acc_ls_x","acc_ls_y","acc_ls_z",
+            "gyro_ls_x","gyro_ls_y","gyro_ls_z",
+            "acc_lt_x","acc_lt_y","acc_lt_z",
+            "gyro_lt_x","gyro_lt_y","gyro_lt_z",
+            "EMG_r","EMG_l","act",
+        ],
+
+        # lambda function to assign a numerical ID to each activity/class
+        class -> findfirst(activity -> class == activity, [
+            "walking", "running", "going_up", "going_down", "sitting", "sitting_down",
+            "standing_up", "standing", "bicycling", "elevator_up", "elevator_down",
+            "sitting_car"
+        ])
+    )
+end
 
 """
-    function load_hugadb(dirpath::S, filename::S) where {S<:AbstractString}
+    expfiles(l::HuGaDBLoader)
 
-Loader for a single instance of `HuGaDB` dataset, available [here](https://github.com/romanchereshnev/HuGaDB).
-
-# Arguments
-- `dirpath::S`: the directory in which all the .txt files are stored;
-- `filename::S`: the specific filename associated with the instance, such as
-    HuGaDB_v2_various_01_00.txt.
-
-# Keyword Arguments
-- `variablenames::Vector{S}=["x_accelometer_right_foot", "y_accelerometer_right_foot", ...]`:
-    the names of the columns.
+Retrieve the specific files to be loaded.
 """
+expfiles(l::HuGaDBLoader) = l.expfiles
+
+"""
+    variablenames(l::HuGaDBLoader) = l.variablenames
+
+Retrieve all the names of the columns for HuGaDB dataset.
+"""
+variablenames(l::HuGaDBLoader) = l.variablenames
+
+"""
+    activity2id(l::HuGaDBLoader, class::String) = l.activity2id(class)
+
+Convert a specific variable name to an ID.
+For example, convert "acc_rf_x" to 1.
+"""
+activity2id(l::HuGaDBLoader, class::String) = l.activity2id(class)
+
+
+# load a single instance of HuGaDB dataset;
+# driver code is load(::HuGaDBLoader)
 function load_hugadb(
     dirpath::S,
     filename::S;
@@ -78,38 +135,40 @@ end
 
 # load multiple HuGaDB instances in one DataFrame
 """
-    function load_hugadb(
-        dirpath::S,
-        filenames::Vector{S};
-        kwargs...
-    ) where {S<:AbstractString}
+    function load_hugadb(l::HuGaDBLoader)
 
-Loader for multiple instances of `HuGaDB` dataset, each of which is identified by a file
-name (in `filenames` vector) inside the directory `dirpath`.
+Invoke the HuGaDBLoader, loading the files indicated by in expfiles(l).
 
-!!! note
-    The main purpose of this dispatch is to be picky about which instances to load and
-    which to discard, since some HuGaDB recordings are corrupted.
-    More info on [the official GitHub page](https://github.com/romanchereshnev/HuGaDB).
-
-See also the dispatch of this method which only considers one filename.
+See also [`filter_hugadb`](@ref).
 """
-function load_hugadb(
-    dirpath::S,
-    filenames::Vector{S};
-    kwargs...
-) where {S<:AbstractString}
+function load(l::HuGaDBLoader)
+    artifact_path = ensure_artifact_installed(name(al), path(al))
+
+    dirpath = begin
+        tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")
+        if isfile(tarfile)
+            extracted_path = extract_artifact(artifact_path, name(al))
+            return joinpath(extracted_path, "$(name(al))")
+        else
+            return joinpath(artifact_path, "$(name(al))")
+        end
+    end
+
     # leverage the first instance to get, once for all, the common outputs such as
     # the list of activities (as pairs string/id pairs) and the names of each column.
     X, (activity_strings, activity_ids), variablenames = load_hugadb(
-        dirpath, filenames[1], kwargs...)
+        dirpath,
+        expfiles(l)[1],
+        variablenames=variablenames(l)
+    )
 
     # return the concatenation of each DataFrame obtained by a `load_hugadb` call
     return vcat([X, [
             load_hugadb(dirpath, filename; kwargs...) |> first
-            for filename in filenames[2:end]
-        ]...]...), (activity_strings, activity_ids), variablenames
+            for filename in expfiles(l)[2:end]
+        ]...]...), (activity_strings, activity_ids), variablenames(l)
 end
+
 
 # in each instance, isolate the recorded part dedicated to `id` movement;
 # if no such part exists, discard the instance.
