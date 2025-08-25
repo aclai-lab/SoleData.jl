@@ -25,8 +25,8 @@ ARTIFACT_URLS = [
     # datasets
     "https://github.com/aclai-lab/Artifacts/blob/main/sole/datasets/epilepsy.tar.gz",
     "https://github.com/aclai-lab/Artifacts/blob/main/sole/datasets/hugadb.tar.gz",
-    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz",
-    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/libras.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/natops.tar.gz",
 ]
 
 include("utils/artifact-utils.jl")
