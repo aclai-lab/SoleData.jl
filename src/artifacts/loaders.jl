@@ -1,22 +1,68 @@
-# Define the abstract type hierarchy for different loader types
+"""
+Abstract type representing a generic configuration for loading an artifact resource.
+
+# Interface
+Every structure subtyping `AbstractLoader` must implement the following interface.
+- `name(obj::DummyConcreteLoader)::String`
+- `url(obj::DummyConcreteLoader)::String`
+- `path(obj::DummyConcreteLoader)::String`
+
+By default, the three methods above returns the fields `.name`, ``.url` and `.path`,
+respectively.
+
+See [`AbstractLoaderBinary`](@ref) and [`AbstractLoaderDataset`](@ref).
+"""
 abstract type AbstractLoader end
-abstract type AbstractLoaderDataset <: AbstractLoader end
+
+"""
+    name(al::AbstractLoader) = al.name
+
+Return the identifier name of the artifact associated with `al`.
+"""
+name(al::AbstractLoader) = al.name
+
+"""
+    url(al::AbstractLoader) = al.url
+
+Return a fallback url that could be used to download the artifact identified by `al`.
+"""
+url(al::AbstractLoader) = al.url
+
+"""
+    path(al::AbstractLoader) = al.path
+
+Return the path in which the artifact associated with `al` is stored.
+"""
+path(al::AbstractLoader) = al.path
+
+"""
+    abstract type AbstractLoaderBinary <: AbstractLoader end
+
+Specific [`AbstractLoader`](@ref) for binaries.
+"""
 abstract type AbstractLoaderBinary <: AbstractLoader end
+
+"""
+    abstract type AbstractLoaderDataset <: AbstractLoader end
+
+Specific [`AbstractLoader`](@ref) for datasets.
+"""
+abstract type AbstractLoaderDataset <: AbstractLoader end
 
 artifact_loader(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
 
 # Extract tar.gz file in the artifact directory (cross-platform);
 # see extract_artifact.
-function _extract_artifact(artifact_path::String, artifact_name::String)
-    tarfile = joinpath(artifact_path, "$(artifact_name).tar.gz")
+function _extract_artifact(path::String, name::String)
+    tarfile = joinpath(path, "$(name).tar.gz")
 
     if !isfile(tarfile)
         error("Artifact file $(tarfile) not found")
     end
 
     # Create a temporary directory for extraction
-    extract_dir = joinpath(artifact_path, "extracted")
+    extract_dir = joinpath(path, "extracted")
 
     # Remove existing extraction directory if it exists
     if isdir(extract_dir)
@@ -32,7 +78,7 @@ function _extract_artifact(artifact_path::String, artifact_name::String)
             tar_stream = GzipDecompressorStream(tar_gz)
             Tar.extract(tar_stream, extract_dir)
         end
-        @info "Successfully extracted $(artifact_name).tar.gz to $(extract_dir)"
+        @info "Successfully extracted $(name).tar.gz to $(extract_dir)"
 
         # Remove the original tar.gz file to save space (optional)
         # rm(tarfile)
@@ -49,31 +95,32 @@ function _extract_artifact(artifact_path::String, artifact_name::String)
 end
 
 """
-    extract_artifact(artifact_path::String, artifact_name::String)
+    extract_artifact(loader::AbstractLoader)
+    extract_artifact(path::String, name::String)
 
-Given the path from where to download an artifact resource and an identifier name,
-download and extract it (if necessary).
+Given an [`AbstractLoader`](@ref), download and extract it (if necessary).
 
 !!! warn
     This method expects the resource to be saved as a .tar.gz archive.
 
-TODO: what happens if the directory already exists, it is not empty, but the file
-    is not extracted because someone did a mess?
-    We need to test the if clause here.
+See [`AbstractLoader`](@ref).
 
 See also (the implementation of) [`artifact_loader(al::ABCLoaderBinary)`](@ref) or
 [`artifact_loader(al::MITESPRESSOLoaderBinary)`](@ref).
 """
-function extract_artifact(artifact_path::String, artifact_name::String)
-    tarfile = joinpath(artifact_path, "$(artifact_name).tar.gz")
-    extract_dir = joinpath(artifact_path, "extracted")
+function extract_artifact(loader::AbstractLoader)
+    extract_artifact(path(loader), name(loader))
+end
+function extract_artifact(path::String, name::String)
+    tarfile = joinpath(path, "$(name).tar.gz")
+    extract_dir = joinpath(path, "extracted")
 
     # If the extraction directory already exists and is not empty, assume extraction is done
     if isdir(extract_dir) && !isempty(readdir(extract_dir))
-        @info "Artifact $(artifact_name) already extracted at $(extract_dir)"
+        @info "Artifact $(name) already extracted at $(extract_dir)"
         return extract_dir
     else
         # Otherwise, proceed with extraction
-        return _extract_artifact(artifact_path, artifact_name)
+        return _extract_artifact(path, name)
     end
 end
