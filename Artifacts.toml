@@ -1,0 +1,27 @@
+[abc]
+git-tree-sha1 = "2fde6d24ce7bffccc0a66a5447787bd95a057cca"
+
+    [[abc.download]]
+    sha256 = "a52485c26d1c239f97921a1b726faad5f0e642470a592234bdca2334c9892b7c"
+    url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/generic/abc.tar.gz"
+
+[libras]
+git-tree-sha1 = "e14dc9b52ef4d7016a29f7356ee4dcac595d8fd8"
+
+    [[libras.download]]
+    sha256 = "16bb09552c3682aa351423cd1b74442e9932fd1899aebe2eecac4fef2eb2121f"
+    url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz"
+
+[natops]
+git-tree-sha1 = "87856b9b41a235ec57f36d1029d0467876660e6e"
+
+    [[natops.download]]
+    sha256 = "2586be714b4112b874d050dd3f873e12156d1921e5ded9bd8f66bf5bf8d9c2d1"
+    url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz"
+
+[mitespresso]
+git-tree-sha1 = "dbe79220f8352a25e5a79cdc3ede3c58abf9038f"
+
+    [[mitespresso.download]]
+    sha256 = "1b7655f5dc98f8484a6ec1fa709e03af16536cc98fc82a09eab1cb325d8234d5"
+    url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
