@@ -5,17 +5,11 @@
 # https://pkgdocs.julialang.org/v1/artifacts/#The-Pkg.Artifacts-API
 # https://pkgdocs.julialang.org/v1/api/#Artifacts-Reference
 
-using Downloads
-using Pkg.Artifacts
-using SHA
-using TOML
-
-
-const ARTIFACTS_TOML = joinpath(@__DIR__, "Artifacts.toml")
-
+# Insert your artifact urls here
 URLS = [
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz",
-    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz"
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/Libras.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
 ]
 
 """
@@ -58,12 +52,12 @@ function fill_artifacts(url::String)
     SHA1 = create_artifact(
         tmp_dir -> Downloads.download(url, joinpath(tmp_dir, filename_with_extension)))
 
-    bind_artifact!(ARTIFACTS_TOML, filename_no_extension, SHA1; force=true)
+    bind_artifact!(ARTIFACTS_PATH, filename_no_extension, SHA1; force=true)
 
-    # content of the ARTIFACTS_TOML
-    content = TOML.parsefile(ARTIFACTS_TOML)
+    # content of the ARTIFACTS_PATH
+    content = TOML.parsefile(ARTIFACTS_PATH)
 
-    open(ARTIFACTS_TOML, "w") do tomlfile
+    open(ARTIFACTS_PATH, "w") do tomlfile
         # eg: Dict{String, Any} with 1 entry:
         #  "natops" => Dict{String, Any}(
         #       "git-tree-sha1"=>"87856b9b41a235ec57f36d1029d0467876660e6e",

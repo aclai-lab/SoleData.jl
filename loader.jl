@@ -11,10 +11,10 @@ using SHA
 using TOML
 
 
-const ARTIFACTS_TOML = joinpath(@__DIR__, "Artifacts.toml")
+const ARTIFACTS_PATH = joinpath(@__DIR__, "Artifacts.toml")
 
 # INSERT HERE YOUR ARTIFACT URLS: es "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
-URLS = [ 
+URLS = [
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
 ]
 
@@ -54,7 +54,7 @@ function fill_artifacts(url::String)
     temp_file = tempname()
     Downloads.download(url, temp_file)
     file_sha256 = bytes2hex(open(sha256, temp_file))
-    
+
     # Ora crea l'artifact
     SHA1 = create_artifact(
         tmp_dir -> cp(temp_file, joinpath(tmp_dir, filename_with_extension)))
@@ -62,12 +62,12 @@ function fill_artifacts(url::String)
     # Pulisci il file temporaneo
     rm(temp_file)
 
-    bind_artifact!(ARTIFACTS_TOML, filename_no_extension, SHA1; force=true)
+    bind_artifact!(ARTIFACTS_PATH, filename_no_extension, SHA1; force=true)
 
-    # content of the ARTIFACTS_TOML
-    content = TOML.parsefile(ARTIFACTS_TOML)
+    # content of the ARTIFACTS_PATH
+    content = TOML.parsefile(ARTIFACTS_PATH)
 
-    open(ARTIFACTS_TOML, "w") do tomlfile
+    open(ARTIFACTS_PATH, "w") do tomlfile
         # eg: Dict{String, Any} with 1 entry:
         #  "natops" => Dict{String, Any}(
         #       "git-tree-sha1"=>"87856b9b41a235ec57f36d1029d0467876660e6e",
