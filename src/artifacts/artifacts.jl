@@ -36,6 +36,8 @@ export fill_artifacts
 include("loaders.jl")
 
 export AbstractLoader, AbstractLoaderDataset, AbstractLoaderBinary
+export name, url, path
+export load
 export extract_artifact
 
 
@@ -60,7 +62,7 @@ include("loaders/libras-loader.jl")
 
 include("loaders/natops-loader.jl")
 
-export load_epilepsy
+export EpilepsyLoader
 export load_hugadb
 export load_libras
 export load_NATOPS
