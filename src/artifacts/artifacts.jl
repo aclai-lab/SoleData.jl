@@ -37,12 +37,9 @@ export extract_artifact
 # Binaries
 
 include("loaders/abc.jl")
-
-export MITESPRESSOLoaderBinary
-
 include("loaders/mitespresso.jl")
 
-export MITESPRESSOLoaderBinary
+export ABCLoaderBinary, MITESPRESSOLoaderBinary
 
 
 ## Datasets
@@ -51,19 +48,16 @@ include("utils/dataset-utils.jl")
 
 export load_arff_dataset, parseARFF, fix_dataframe
 
-include("epilepsy-loader.jl")
+include("loaders/epilepsy-loader.jl")
+
+include("loaders/hugadb-loader.jl")
+include("loaders/libras-loader.jl")
+
+include("loaders/natops-loader.jl")
+
 export load_epilepsy
-
-include("hugadb-loader.jl")
 export load_hugadb
-
-include("libras-loader.jl")
 export load_libras
-
-include("natops-loader.jl")
 export load_NATOPS
-
-include("example-datasets.jl")
-export load_arff_dataset
 
 end
