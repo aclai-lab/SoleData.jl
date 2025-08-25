@@ -26,7 +26,6 @@ include("utils/minify.jl")
 include("MLJ-utils.jl")
 
 include("artifacts/artifacts.jl")
-@reexport using .Artifacts
 
 export atoms
 
