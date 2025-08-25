@@ -1,8 +1,10 @@
+"""
+    Loading configuration for MITESPRESSO minimizer.
+"""
 struct MITESPRESSOLoaderBinary <: AbstractLoaderBinary
     artifactname::String    # Name of the artifact in Artifacts.toml
-    path::String           # Fallback download URL
-    artifactpath::String   # Path to the Artifacts.toml file
-
+    url::String            # Fallback download URL
+    artifactpath::String    # Path to the Artifacts.toml file
 
     # Internal constructor with default values
     MITESPRESSOLoaderBinary() = new(
