@@ -16,16 +16,14 @@ function load(l::EpilepsyLoader)
     tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")
 
     dirpath = begin
-        extraction_path = artifact_path
-
+        tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")
         if isfile(tarfile)
-            extraction_path = extract_artifact(artifact_path, name(l))
+            extracted_path = extract_artifact(artifact_path, name(al))
+            return joinpath(extracted_path, "$(name(al))")
+        else
+            return joinpath(artifact_path, "$(name(al))")
         end
-
-        return joinpath(extraction_path, "$(name(l))")
     end
-
-    dirpath = joinpath(artifact_path, "$(name(l))")
 
     (X_train, y_train), (X_test, y_test) =
         (
