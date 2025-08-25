@@ -22,7 +22,7 @@ export fill_artifacts
 include("loaders.jl")
 
 export AbstractLoader, AbstractLoaderDataset, AbstractLoaderBinary
-export extract_artifact, extract_artifact_safe
+export extract_artifact
 
 include("loaders/abc.jl")
 export MITESPRESSOLoaderBinary

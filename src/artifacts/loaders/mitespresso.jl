@@ -18,7 +18,7 @@ function artifact_loader(al::MITESPRESSOLoaderBinary)
     # Check if tar.gz file needs extraction
     tarfile = joinpath(artifact_path, "$(al.artifactname).tar.gz")
     if isfile(tarfile)
-        extracted_path = extract_artifact_safe(artifact_path, al.artifactname)
+        extracted_path = extract_artifact(artifact_path, al.artifactname)
         return  joinpath(extracted_path, "$(al.artifactname)")
     end
 
