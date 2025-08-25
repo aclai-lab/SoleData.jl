@@ -1,7 +1,7 @@
 struct ABCLoaderBinary <: AbstractLoaderBinary
-    artifactname::String    # Name of the artifact in Artifacts.toml
+    name::String    # Name of the artifact in Artifacts.toml
     url::String           # Fallback download URL
-    artifactpath::String   # Path to the Artifacts.toml file
+    path::String   # Path to the Artifacts.toml file
 
     # Internal constructor with default values
     ABCLoaderBinary() = new(
@@ -12,14 +12,14 @@ struct ABCLoaderBinary <: AbstractLoaderBinary
 end
 
 function artifact_loader(al::ABCLoaderBinary)
-    artifact_path = ensure_artifact_installed(al.artifactname, al.artifactpath)
+    artifact_path = ensure_artifact_installed(name(al), path(al))
 
     # Check if tar.gz file needs extraction
-    tarfile = joinpath(artifact_path, "$(al.artifactname).tar.gz")
+    tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")
     if isfile(tarfile)
-        extracted_path = extract_artifact(artifact_path, al.artifactname)
-        return  joinpath(extracted_path, "$(al.artifactname)")
+        extracted_path = extract_artifact(artifact_path, name(al))
+        return  joinpath(extracted_path, "$(name(al))")
     end
 
-    return joinpath(artifact_path, "$(al.artifactname)")
+    return joinpath(artifact_path, "$(name(al))")
 end
