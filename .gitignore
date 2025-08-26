@@ -5,6 +5,3 @@
 /Manifest.toml
 /docs/build/
 /test/data/*
-src/espresso.linux
-src/abc
-src/boom.exe
