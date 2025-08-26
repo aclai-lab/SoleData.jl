@@ -99,7 +99,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
                     elseif pla_row[c] == NEG && POS == "1"
                         # Conflict: We already have a NEG but we should put POS
                         # This indicates a logical problem in the formula
-                        @warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
+                        #@warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
                         # Keep NEG (more restrictive)
                     end
                 end
@@ -112,7 +112,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
                         pla_row[c] = NEG
                     elseif pla_row[c] == POS && NEG == "0"
                         # Conflict: We already have a POS but we should put NEG
-                        @warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
+                        #@warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
                         # Set NEG (more restrictive)
                         pla_row[c] = NEG
                     end
@@ -128,7 +128,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
                     if pla_row[c] == "-"
                         pla_row[c] = NEG
                     elseif pla_row[c] == POS && NEG == "0"
-                        @warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
+                        #@warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
                         pla_row[c] = NEG
                     end
                 end
@@ -139,7 +139,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
                     if pla_row[c] == "-"
                         pla_row[c] = POS
                     elseif pla_row[c] == NEG && POS == "1"
-                        @warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
+                        #@warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
                         # Keep NEG
                     end
                 end

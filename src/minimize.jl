@@ -1,5 +1,11 @@
+###################
+using Downloads     # only for paper
+using Tar                  #    OLD
+###################
+
+include("artifactloader.jl")
+
 """
-by https://jackhack96.github.io/logic-synthesis/espresso.html. 
 espresso_minimize(
     syntaxtree::SoleLogics.Formula,
     silent::Bool = true,
@@ -12,6 +18,8 @@ espresso_minimize(
     use_scalar_range_conditions = false,
     kwargs...
 )
+
+by https://jackhack96.github.io/logic-synthesis/espresso.html. 
 """
 function espresso_minimize(
     syntaxtree::SoleLogics.Formula,
@@ -30,7 +38,11 @@ function espresso_minimize(
     println("============================================")
     if isnothing(espressobinary)
         println("Looking for espresso at $espressobinary")
-        espressobinary = joinpath(@__DIR__, "espresso")
+        espressoPath = artifact_loader(MITESPRESSOLoaderBinary())
+        @show espressoPath
+        espressobinary = joinpath(espressoPath, "espresso")
+        @show espressobinary
+        #espressobinary = joinpath(@__DIR__, "espresso") deprecate version
         if !isfile(espressobinary)
             error("The 'espresso' binary was not found in the module directory. Please provide espresso path via the espressobinary argument")
         end
@@ -84,16 +96,125 @@ function espresso_minimize(
 end
 
 """
-by  https://github.com/berkeley-abc/abc
-abc_minimize(
-    syntaxtree::SoleLogics.Formula,
-    silent::Bool = true,
-    args...;
-    abcbinary = nothing,
-    otherflags = [],
-    use_scalar_range_conditions = false,
-    kwargs...
-)
+    ensure_abc_binary(; force_rebuild = false)
+
+Download, compile, and setup the ABC binary for Boolean function minimization.
+Returns the path to the compiled ABC binary.
+
+# Arguments
+- `force_rebuild`: If true, forces recompilation even if binary already exists
+
+# Returns
+- Path to the ABC binary executable
+"""
+function ensure_abc_binary(; force_rebuild = false)
+    # Path to ABC binary directly in src/ directory
+    abc_binary = joinpath(@__DIR__, "abc")
+    
+    # Return existing binary if found and not forcing rebuild
+    if isfile(abc_binary) && !force_rebuild
+        @info "ABC binary already exists at: $abc_binary (skipping download/compilation)"
+        return abc_binary
+    end
+    
+    @info "Setting up ABC binary..."
+    
+    # Create unique temporary directory to avoid conflicts
+    abc_temp_dir = mktempdir(prefix="abc_build_")
+    
+    # ABC repository URL (compressed tarball)
+    abc_url = "https://github.com/berkeley-abc/abc/archive/refs/heads/master.tar.gz"
+    
+    try
+        # Download the source code
+        @info "Downloading ABC source code..."
+        tarfile = joinpath(abc_temp_dir, "abc-master.tar.gz")
+        Downloads.download(abc_url, tarfile)
+        
+        # Create subdirectory for extraction to avoid conflicts
+        extract_dir = joinpath(abc_temp_dir, "extract")
+        mkdir(extract_dir)
+        
+        # Extract the compressed tarball using system tar command
+        # This handles .tar.gz decompression automatically
+        @info "Extracting ABC source code..."
+        if success(`which tar`)
+            # Use system tar command (handles gzip compression)
+            run(`tar -xzf $tarfile -C $extract_dir`)
+        else
+            error("System tar command not found. Please install tar utilities.")
+        end
+
+        # Path to extracted source code
+        abc_source_dir = joinpath(extract_dir, "abc-master")
+        
+        if !isdir(abc_source_dir)
+            error("Failed to extract ABC source code - directory not found")
+        end
+        
+        # Compile ABC
+        @info "Compiling ABC... This may take a few minutes."
+        
+        # Change to source directory for compilation
+        old_dir = pwd()
+        cd(abc_source_dir)
+        
+        try
+            # Verify make is available
+            if !success(`which make`)
+                error("make command not found. Please install build tools (make, gcc, etc.)")
+            end
+            
+            # Compile with make
+            run(`make`)
+            
+            # Copy compiled binary to final location
+            compiled_binary = joinpath(abc_source_dir, "abc")
+            if isfile(compiled_binary)
+                cp(compiled_binary, abc_binary; force=true)
+                # Make executable
+                chmod(abc_binary, 0o755)
+                @info "ABC compiled successfully at: $abc_binary"
+            else
+                error("ABC compilation completed but binary not found")
+            end
+            
+        finally
+            # Always restore original directory
+            cd(old_dir)
+        end
+        
+        return abc_binary
+        
+    catch e
+        @error "Failed to download/compile ABC: $e. Consider downloading ABC manually from https://github.com/berkeley-abc/abc"
+        rethrow(e)
+    finally
+        # Always cleanup temporary directory
+        try
+            rm(abc_temp_dir; recursive=true, force=true)
+        catch cleanup_error
+            @warn "Failed to cleanup temporary directory: $cleanup_error"
+        end
+    end
+end
+
+"""
+    abc_minimize(syntaxtree, silent=true; kwargs...)
+
+Minimize a Boolean formula using the ABC tool with automatic setup.
+
+# Arguments
+- `syntaxtree`: SoleLogics.Formula to minimize
+- `silent`: If true, suppress output messages
+- `fast`: If true, use faster but less aggressive minimization
+- `abcbinary`: Path to ABC binary (auto-detected if nothing)
+- `force_rebuild_abc`: Force recompilation of ABC binary
+- `use_scalar_range_conditions`: Use range conditions for scalars
+- `otherflags`: Additional flags for ABC (currently unused)
+
+# Returns
+- Minimized formula or original formula if minimization fails
 """
 function abc_minimize(
     syntaxtree::SoleLogics.Formula,
@@ -103,33 +224,57 @@ function abc_minimize(
     abcbinary = nothing,
     otherflags = [],
     use_scalar_range_conditions = false,
+    force_rebuild_abc = false,
     kwargs...
 )
+    println("Using abc_minimize function with Artifact loader !!")
+    # Auto-setup ABC binary if not specified
     if isnothing(abcbinary)
-        # Determine the path of the abc binary relative to the location of this file 
-        # Consider downloading abc from https://github.com/berkeley-abc/abc.
-        abcbinary = joinpath(@__DIR__, "abc")
-        if !isfile(abcbinary)
-            error("abc binary not found at $abcbinary, provide path with abcbinary argument")
+        try
+            abcpath = artifact_loader(ABCLoaderBinary())
+            println("path: ",abcpath)
+            abcbinary = joinpath(abcpath, "abc")
+            #@show abcbinary
+            #abcbinary = ensure_abc_binary(; force_rebuild = force_rebuild_abc) deprecate version
+        catch e
+            error("Failed to setup ABC binary: $e")
         end
     end
+    
+    # Verify binary exists and is executable
+    if !isfile(abcbinary)
+        error("ABC binary not found at $abcbinary")
+    end
+    
+    # Test that ABC binary works
+    try
+        run(`$abcbinary -h`; wait=false)
+    catch e
+        @warn "ABC binary may not be working properly: $e"
+    end
 
-    # Funzione interna per rimuovere spazi da stringhe
+    # Internal utility to remove whitespace from strings
     removewhitespaces(s::AbstractString) = replace(s, r"\s+" => "")
 
-    # Converte formula in PLA string
+    # Convert formula to PLA string format
     dc_set = false
-    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(syntaxtree, dc_set, silent; use_scalar_range_conditions=use_scalar_range_conditions)
+    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(
+        syntaxtree, dc_set, silent; 
+        use_scalar_range_conditions=use_scalar_range_conditions
+    )
 
     silent || println("Input PLA:\n$pla_string\n")
 
-    # Validazione e correzione del formato PLA
+    """
+    Validate and fix PLA format issues, particularly input/output count mismatches.
+    """
     function validate_and_fix_pla(pla_content::String)
         lines = split(pla_content, '\n')
+        # Filter empty lines and fix Unicode symbols
         filtered_lines = filter(line -> !isempty(strip(line)), lines)
         filtered_lines = map(line -> replace(line, "≥" => ">="), filtered_lines)
         
-        # Trova le righe di intestazione
+        # Find header lines
         i_line_idx = findfirst(line -> startswith(line, ".i "), filtered_lines)
         o_line_idx = findfirst(line -> startswith(line, ".o "), filtered_lines)
         ilb_line_idx = findfirst(line -> startswith(line, ".ilb "), filtered_lines)
@@ -139,17 +284,17 @@ function abc_minimize(
             error("PLA format invalid: missing .i or .o lines")
         end
         
-        # Estrai il numero di input/output
+        # Extract declared input/output counts
         i_count = parse(Int, split(filtered_lines[i_line_idx])[2])
         o_count = parse(Int, split(filtered_lines[o_line_idx])[2])
         
-        # Conta le variabili effettive dai label se esistono
+        # Count actual variables from labels or product terms
         actual_inputs = 0
         if !isnothing(ilb_line_idx)
             ilb_parts = split(filtered_lines[ilb_line_idx])[2:end]
             actual_inputs = length(ilb_parts)
         else
-            # Se non ci sono label, conta dalle righe di prodotto
+            # Count from product terms if no labels
             product_lines = filter(line -> occursin(r"^[01\-]+ ", line), filtered_lines)
             if !isempty(product_lines)
                 first_product = split(product_lines[1])[1]
@@ -157,69 +302,63 @@ function abc_minimize(
             end
         end
         
-        # Correggi il mismatch se necessario
+        # Fix input count mismatch
         if actual_inputs > 0 && actual_inputs != i_count
             silent || println("Fixing input count mismatch: declared=$i_count, actual=$actual_inputs")
             filtered_lines[i_line_idx] = ".i $actual_inputs"
         end
         
-
         return join(filtered_lines, '\n')
     end
 
-    # Valida e correggi il PLA
+    # Validate and correct PLA format
     corrected_pla = validate_and_fix_pla(String(pla_string))
-    silent || println("corrected pls: \n",corrected_pla)
-    # File temporanei input e output
+    silent || println("Corrected PLA:\n$corrected_pla")
+    
+    # Create temporary files for input/output
     inputfile = tempname() * ".pla"
     outputfile = tempname() * ".pla"
 
     try
-        # Scrivi PLA corretto su file input
+        # Write corrected PLA to input file
         open(inputfile, "w") do f
             write(f, corrected_pla)
         end
 
-        silent || println("Corrected PLA written to: $inputfile")
+        silent || println("PLA written to: $inputfile")
 
-        # Comando abc
+        # Define ABC command sequence
         if fast
-        abc_commands = [
-            "read $inputfile",
-            "strash", 
-            "dc2",
-            "collapse",
-            "write $outputfile"             
-
-            #"read $inputfile",
-            #"strash",            # diretto in AIG
-            #"refactor -z",      # flag -z per velocità
-            #"rewrite -z", 
-            #"balance",
-            #"collapse",
-            #"write $outputfile"  # mantieni AIG ottimizzato
-        ]
+            # Fast minimization - basic optimization
+            abc_commands = [
+                "read $inputfile",
+                "strash",           # Convert to AIG
+                "collapse",         # Collapse to SOP
+                "write $outputfile"             
+            ]
         else
-        abc_commands = [
-            "read $inputfile",
-            "sop",
-            "strash",
-            "dc2",
-            "collapse",
-            "strash",
-            "dc2", 
-            "collapse",
-            "sop",              
-            "write $outputfile"
-        ]
+            # Thorough minimization - multiple optimization passes
+            abc_commands = [
+                "read $inputfile",
+                "sop",              # Convert to sum-of-products
+                "strash",           # Convert to AIG
+                "dc2",              # Don't-care minimization
+                "collapse",         # Collapse logic
+                "strash",           # Convert to AIG again
+                "dc2",              # Another DC pass
+                "collapse",         # Final collapse
+                "sop",              # Back to SOP
+                "write $outputfile"
+            ]
         end
         
+        # Build ABC command string
         abc_cmd_str = join(abc_commands, "; ")
         abc_cmd = `$abcbinary -c $abc_cmd_str`
         
         silent || println("Running ABC command: $abc_cmd")
         
-        # Esegui comando con cattura output/errori
+        # Execute ABC with error handling
         result = try
             run(abc_cmd)
             true
@@ -228,42 +367,48 @@ function abc_minimize(
             false
         end
         
+        # Check if ABC succeeded and produced output
         if !result || !isfile(outputfile)
             silent || println("ABC failed or output file not created, returning original formula")
             return syntaxtree
         end
 
-        # Leggi output minimizzato
+        # Read minimized PLA output
         minimized_pla_raw = read(outputfile, String)
         minimized_pla_raw = replace(minimized_pla_raw, ">=" => "≥")
 
-        silent || println("good minimze the king: ",minimized_pla_raw)
+        silent || println("Raw ABC output:\n$minimized_pla_raw")
 
+        # Check for empty output
         if isempty(strip(minimized_pla_raw))
             silent || println("Empty ABC output, returning original formula")
             return syntaxtree
         end
 
-        silent || println("Raw minimized PLA output:\n$minimized_pla_raw\n")
-
-        # Pulizia output
+        """
+        Clean ABC output by keeping only relevant PLA lines.
+        """
         function clean_abc_output(raw_pla::String)
             lines = split(raw_pla, '\n')
+            # Keep only PLA format lines (headers and product terms)
             pla_lines = filter(line -> !isempty(strip(line)) && 
                               (startswith(line, '.') || occursin(r"^[01\-]+ ", line)), lines)
             return join(pla_lines, '\n')
         end
 
         minimized_pla = clean_abc_output(minimized_pla_raw)
+        silent || println("Cleaned minimized PLA:\n$minimized_pla\n")
 
-        println("Cleaned minimized PLA:\n$minimized_pla\n")
-
+        # Determine condition type for conversion
         conditionstype = use_scalar_range_conditions ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
 
-        # Converti PLA minimizzato in formula
+        # Convert minimized PLA back to formula
         try
-            form = PLA._pla_to_formula(minimized_pla, silent, pla_args...; conditionstype, pla_kwargs...)
-            println("formula returned: ",form)
+            form = PLA._pla_to_formula(
+                minimized_pla, silent, pla_args...; 
+                conditionstype, pla_kwargs...
+            )
+            silent || println("Minimized formula: $form")
             return form
         catch e
             silent || println("Failed to convert minimized PLA back to formula: $e")
@@ -272,159 +417,53 @@ function abc_minimize(
         end
 
     finally
-        # Elimina file temporanei
+        # Always cleanup temporary files
         rm(inputfile; force=true)
         rm(outputfile; force=true)
     end
 end
 
-#=
-    function espressoTexas_minimize(
-        syntaxtree::SoleLogics.Formula,
-        silent::Bool = true,
-        args...;
-        espressobinary = nothing,
-        otherflags = [],
-        use_scalar_range_conditions = false,
-        kwargs...
-    )
-        if isnothing(espressobinary)
-            # Determine the path of the abc binary relative to the location of this file 
-            # Consider downloading abc from https://github.com/berkeley-abc/abc.
-            espressobinary = joinpath(@__DIR__, "espresso.linux")
-            if !isfile(espressobinary)
-                error("abc binary not found at $espressobinary, provide path with espressobinary argument")
-            end
-        end
+"""
+    cleanup_temp_abc_dirs()
 
-        # Funzione interna per rimuovere spazi da stringhe
-        removewhitespaces(s::AbstractString) = replace(s, r"\s+" => "")
-
-        # Converte formula in PLA string
-        dc_set = false
-        pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(syntaxtree, dc_set, silent; use_scalar_range_conditions=use_scalar_range_conditions)
-
-        silent || println("Input PLA:\n$pla_string\n")
-
-        # Validazione e correzione del formato PLA
-        function validate_and_fix_pla(pla_content::String)
-            lines = split(pla_content, '\n')
-            filtered_lines = filter(line -> !isempty(strip(line)), lines)
-            
-            # Trova le righe di intestazione
-            i_line_idx = findfirst(line -> startswith(line, ".i "), filtered_lines)
-            o_line_idx = findfirst(line -> startswith(line, ".o "), filtered_lines)
-            ilb_line_idx = findfirst(line -> startswith(line, ".ilb "), filtered_lines)
-            olb_line_idx = findfirst(line -> startswith(line, ".olb "), filtered_lines)
-            
-            if isnothing(i_line_idx) || isnothing(o_line_idx)
-                error("PLA format invalid: missing .i or .o lines")
-            end
-            
-            # Estrai il numero di input/output
-            i_count = parse(Int, split(filtered_lines[i_line_idx])[2])
-            o_count = parse(Int, split(filtered_lines[o_line_idx])[2])
-            
-            # Conta le variabili effettive dai label se esistono
-            actual_inputs = 0
-            if !isnothing(ilb_line_idx)
-                ilb_parts = split(filtered_lines[ilb_line_idx])[2:end]
-                actual_inputs = length(ilb_parts)
-            else
-                # Se non ci sono label, conta dalle righe di prodotto
-                product_lines = filter(line -> occursin(r"^[01\-]+ ", line), filtered_lines)
-                if !isempty(product_lines)
-                    first_product = split(product_lines[1])[1]
-                    actual_inputs = length(first_product)
+Clean up any leftover temporary ABC build directories.
+Useful for maintenance and debugging.
+"""
+function cleanup_temp_abc_dirs()
+    temp_pattern = r"abc_build_\w+"
+    temp_base = tempdir()
+    
+    for item in readdir(temp_base)
+        if occursin(temp_pattern, item)
+            full_path = joinpath(temp_base, item)
+            if isdir(full_path)
+                try
+                    rm(full_path; recursive=true, force=true)
+                    @info "Cleaned up leftover temp directory: $full_path"
+                catch e
+                    @warn "Could not clean $full_path: $e"
                 end
             end
-            
-            # Correggi il mismatch se necessario
-            if actual_inputs > 0 && actual_inputs != i_count
-                silent || println("Fixing input count mismatch: declared=$i_count, actual=$actual_inputs")
-                filtered_lines[i_line_idx] = ".i $actual_inputs"
-            end
-            
-
-            return join(filtered_lines, '\n')
         end
+    end
+end
 
-        # Valida e correggi il PLA
-        corrected_pla = validate_and_fix_pla(String(pla_string))
-        silent || println("corrected pls: \n",corrected_pla)
-        # File temporanei input e output
-        inputfile = tempname() * ".pla"
-        outputfile = tempname() * ".pla"
+"""
+    clean_abc_installation()
 
-        try
-            # Scrivi PLA corretto su file input
-            open(inputfile, "w") do f
-                write(f, corrected_pla)
-            end
+Remove the ABC binary installation from the source directory.
+Useful for forcing a fresh installation.
+"""
+function clean_abc_installation()
+    abc_binary = joinpath(@__DIR__, "abc")
+    if isfile(abc_binary)
+        rm(abc_binary; force=true)
+        @info "ABC binary removed from: $abc_binary"
+    else
+        @info "No ABC binary found to remove"
+    end
+end
 
-            silent || println("Corrected PLA written to: $inputfile")
-            
-            espresso_cmd = `$espressobinary  $inputfile`
-            
-            silent || println("Running ESPRESSO command: $espresso_cmd")
-            
-            # Esegui comando con cattura output/errori
-            result = try
-                run(espresso_cmd)
-                true
-            catch e
-                silent || println("ESPRESSO command failed: $e")
-                false
-            end
-            
-            if !result || !isfile(outputfile)
-                silent || println("ESPRESSO failed or output file not created, returning original formula")
-                return syntaxtree
-            end
-
-            # Leggi output minimizzato
-            minimized_pla_raw = read(outputfile, String)
-            minimized_pla_raw = replace(minimized_pla_raw, ">=" => "≥")
-
-            silent ||  println("good minimized the king: ",minimized_pla_raw)
-
-            if isempty(strip(minimized_pla_raw))
-                silent || println("Empty ESPRESSO output, returning original formula")
-                return syntaxtree
-            end
-
-            silent || println("Raw minimized PLA output:\n$minimized_pla_raw\n")
-
-            # Pulizia output
-            function clean_ESPRESSO_output(raw_pla::String)
-                lines = split(raw_pla, '\n')
-                pla_lines = filter(line -> !isempty(strip(line)) && 
-                                (startswith(line, '.') || occursin(r"^[01\-]+ ", line)), lines)
-                return join(pla_lines, '\n')
-            end
-
-            minimized_pla = clean_ESPRESSO_output(minimized_pla_raw)
-
-            silent || println("Cleaned minimized PLA:\n$minimized_pla\n")
-
-            conditionstype = use_scalar_range_conditions ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
-
-            # Converti PLA minimizzato in formula
-            try
-                return PLA._pla_to_formula(minimized_pla, silent, pla_args...; conditionstype, pla_kwargs...)
-            catch e
-                silent || println("Failed to convert minimized PLA back to formula: $e")
-                silent || println("Returning original formula")
-                return syntaxtree
-            end
-
-        finally
-            # Elimina file temporanei
-            rm(inputfile; force=true)
-            rm(outputfile; force=true)
-        end
-    end 
-=#
 
 function mktemp_pla()
     (f, io) = mktemp()
@@ -565,22 +604,22 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
         
         minimized_output = join(processed_lines, '\n')
         
-        println("=== Original PLA ===")
-        println(pla_string)
-        println("=== BOOM PLA Content (Corrected) ===")
-        println(minimized_output)
-        println("=== Debug Info ===")
-        println("pla_args: ", pla_args)
-        println("pla_kwargs: ", pla_kwargs)
-        println("original_ilb: ", original_ilb)
-        println("original_ob: ", original_ob)
-        println("==========================")
+        silent || println("=== Original PLA ===")
+        silent || println(pla_string)
+        silent || println("=== BOOM PLA Content (Corrected) ===")
+        silent || println(minimized_output)
+        silent || println("=== Debug Info ===")
+        silent || println("pla_args: ", pla_args)
+        silent || println("pla_kwargs: ", pla_kwargs)
+        silent || println("original_ilb: ", original_ilb)
+        silent || println("original_ob: ", original_ob)
+        silent || println("==========================")
         
         # Pass original arguments to maintain variable labels
         result = PLA._pla_to_formula(minimized_output, silent, pla_args...; pla_kwargs..., featvaltype=Float64)
-        println("=== Resulting Formula ===")
-        println(result)
-        println("==========================")
+        silent || println("=== Resulting Formula ===")
+        silent || println(result)
+        silent || println("==========================")
         return result
         
     finally
