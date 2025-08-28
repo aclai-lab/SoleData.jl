@@ -39,9 +39,9 @@ function espresso_minimize(
     if isnothing(espressobinary)
         println("Looking for espresso at $espressobinary")
         espressoPath = artifact_loader(MITESPRESSOLoaderBinary())
-        @show espressoPath
+        silent || @show espressoPath
         espressobinary = joinpath(espressoPath, "espresso")
-        @show espressobinary
+        silent || @show espressobinary
         #espressobinary = joinpath(@__DIR__, "espresso") deprecate version
         if !isfile(espressobinary)
             error("The 'espresso' binary was not found in the module directory. Please provide espresso path via the espressobinary argument")
@@ -232,9 +232,9 @@ function abc_minimize(
     if isnothing(abcbinary)
         try
             abcpath = artifact_loader(ABCLoaderBinary())
-            println("path: ",abcpath)
+            silent || @show abcpath
             abcbinary = joinpath(abcpath, "abc")
-            #@show abcbinary
+            silent || @show abcbinary
             #abcbinary = ensure_abc_binary(; force_rebuild = force_rebuild_abc) deprecate version
         catch e
             error("Failed to setup ABC binary: $e")
