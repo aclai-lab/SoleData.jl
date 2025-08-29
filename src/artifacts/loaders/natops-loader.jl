@@ -7,7 +7,7 @@ struct NatopsLoader <: AbstractLoaderDataset
     classes::Vector{String}
 
     NatopsLoader() = new(
-        "epilepsy",
+        "natops",
         "",
         ARTIFACTS_PATH,
 
