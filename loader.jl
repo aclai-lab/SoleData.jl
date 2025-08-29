@@ -19,16 +19,16 @@ URLS = [
 ]
 
 """
-    fill_artifacts(URLS::Vector{String})
+    fillartifacts(URLS::Vector{String})
 
-Map of [`fill_artifacts(url::String)`](@ref).
+Map of [`fillartifacts(url::String)`](@ref).
 """
-function fill_artifacts(URLS::Vector{String})
-    map(url -> fill_artifacts(url), URLS)
+function fillartifacts(URLS::Vector{String})
+    map(url -> fillartifacts(url), URLS)
 end
 
 """
-    function fill_artifacts(url::String)
+    function fillartifacts(url::String)
 
 Completely automatize the insertion of a new resource into the Artifacts.toml file.
 
@@ -37,7 +37,7 @@ note that the new entry is named with using the lowercase version of the resourc
 provided.
 
 ```julia
-julia> fill_artifacts("https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz")
+julia> fillartifacts("https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz")
 ```
 [natops]
 git-tree-sha1 = "87856b9b41a235ec57f36d1029d0467876660e6e"
@@ -46,7 +46,7 @@ git-tree-sha1 = "87856b9b41a235ec57f36d1029d0467876660e6e"
     url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/NATOPS.tar.gz"
     sha256 = "2586be714b4112b874d050dd3f873e12156d1921e5ded9bd8f66bf5bf8d9c2d1"
 """
-function fill_artifacts(url::String)
+function fillartifacts(url::String)
     filename_with_extension = split(url, "/")[end]
     filename_no_extension = split(filename_with_extension, ".")[1] |> lowercase
 

@@ -31,7 +31,7 @@ ARTIFACT_URLS = [
 
 include("utils/artifact-utils.jl")
 
-export fill_artifacts
+export fillartifacts
 
 # general loading logic, common to any AbstractLoader
 include("loaders/loaders.jl")
