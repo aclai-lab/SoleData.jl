@@ -47,7 +47,7 @@ export extract_artifact
 include("loaders/abc.jl")
 include("loaders/mitespresso.jl")
 
-export ABCLoaderBinary, MITESPRESSOLoaderBinary
+export ABCLoader, MITESPRESSOLoader
 
 
 # Datasets

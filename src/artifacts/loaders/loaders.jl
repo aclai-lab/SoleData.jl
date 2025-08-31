@@ -56,7 +56,7 @@ abstract type AbstractLoaderDataset <: AbstractLoader end
 
 Method to implement to load your custom artifact.
 
-See [`load(al::ABCLoaderBinary)`](@ref), [`load(al::MITESPRESSOLoaderBinary)`](@ref).
+See [`load(al::ABCLoader)`](@ref), [`load(al::MITESPRESSOLoader)`](@ref).
 """
 load(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
@@ -114,8 +114,8 @@ Given an [`AbstractLoader`](@ref), download and extract it (if necessary).
 
 See [`AbstractLoader`](@ref).
 
-See also (the implementation of) [`load(al::ABCLoaderBinary)`](@ref) or
-[`load(al::MITESPRESSOLoaderBinary)`](@ref).
+See also (the implementation of) [`load(al::ABCLoader)`](@ref) or
+[`load(al::MITESPRESSOLoader)`](@ref).
 """
 function extract_artifact(loader::AbstractLoader)
     extract_artifact(path(loader), name(loader))

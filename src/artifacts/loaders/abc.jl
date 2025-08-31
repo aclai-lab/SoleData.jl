@@ -1,17 +1,17 @@
-struct ABCLoaderBinary <: AbstractLoaderBinary
+struct ABCLoader <: AbstractLoaderBinary
     name::String    # Name of the artifact in Artifacts.toml
     url::String     # Fallback download URL
     path::String    # Path to the Artifacts.toml file
 
     # Internal constructor with default values
-    ABCLoaderBinary() = new(
+    ABCLoader() = new(
         "abc",
         "https://github.com/berkeley-abc/abc/archive/refs/heads/master.tar.gz",
         ARTIFACTS_PATH
     )
 end
 
-function load(al::ABCLoaderBinary)
+function load(al::ABCLoader)
     artifact_path = ensure_artifact_installed(name(al), path(al))
 
     # Check if tar.gz file needs extraction
