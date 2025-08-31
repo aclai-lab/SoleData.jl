@@ -46,11 +46,12 @@ function load(l::NatopsLoader)
 
     dirpath = begin
         tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")
+
         if isfile(tarfile)
             extracted_path = extract_artifact(artifact_path, name(l))
-            return joinpath(extracted_path, "$(name(l))")
+            joinpath(extracted_path, "$(name(l))")
         else
-            return joinpath(artifact_path, "$(name(l))")
+            joinpath(artifact_path, "$(name(l))")
         end
     end
 
