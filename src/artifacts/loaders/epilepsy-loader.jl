@@ -16,7 +16,7 @@ end
 Load Epilepsy dataset as specified by the [`EpilepsyLoader`](@ref).
 """
 function load(l::EpilepsyLoader)
-    artifact_path = ensure_artifact_installed(name(l), path(l))
+    artifact_path = ensure_artifact_installed(name(l), ARTIFACTS_PATH)
 
     tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")
 

@@ -42,7 +42,7 @@ end
 Load NATOPS dataset as specified by the [`NatopsLoader`](@ref).
 """
 function load(l::NatopsLoader)
-    artifact_path = ensure_artifact_installed(name(l), path(l))
+    artifact_path = ensure_artifact_installed(name(l), ARTIFACTS_PATH)
 
     dirpath = begin
         tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")

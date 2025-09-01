@@ -143,7 +143,7 @@ in particular, load the files returned by [`expfiles`](@ref).
 See also [`expfiles(l::HuGaDBLoader)`], [`filter_hugadb`](@ref).
 """
 function load(l::HuGaDBLoader)
-    artifact_path = ensure_artifact_installed(name(al), path(al))
+    artifact_path = ensure_artifact_installed(name(al), ARTIFACTS_PATH)
 
     dirpath = begin
         tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")

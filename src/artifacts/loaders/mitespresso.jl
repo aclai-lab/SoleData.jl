@@ -15,7 +15,7 @@ struct MITESPRESSOLoader <: AbstractLoaderBinary
 end
 
 function load(al::MITESPRESSOLoader)
-    artifact_path = ensure_artifact_installed(name(al), path(al))
+    artifact_path = ensure_artifact_installed(name(al), ARTIFACTS_PATH)
 
     # Check if tar.gz file needs extraction
     tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")

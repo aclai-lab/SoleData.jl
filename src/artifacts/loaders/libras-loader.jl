@@ -45,7 +45,7 @@ classes(l::LibrasLoader) = l.classes
 Load Libras dataset as specified by the [`LibrasLoader`](@ref).
 """
 function load(l::LibrasLoader)
-    artifact_path = ensure_artifact_installed(name(l), path(l))
+    artifact_path = ensure_artifact_installed(name(l), ARTIFACTS_PATH)
 
     tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")
 
