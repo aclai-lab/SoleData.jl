@@ -44,8 +44,8 @@ export extract_artifact
 
 # Binaries
 
-include("loaders/abc.jl")
-include("loaders/mitespresso.jl")
+include("loaders/abc-loader.jl")
+include("loaders/mitespresso-loader.jl")
 
 export ABCLoader, MITESPRESSOLoader
 
