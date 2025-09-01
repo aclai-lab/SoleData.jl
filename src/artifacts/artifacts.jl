@@ -20,11 +20,12 @@ const ARTIFACTS_PATH = joinpath(@__DIR__, "Artifacts.toml")
 # URLS from which to download the deafult artifacts of SoleData
 ARTIFACT_URLS = [
     # binaries
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/generic/abc.tar.gz",
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz",
 
     # datasets
-    "https://github.com/aclai-lab/Artifacts/blob/main/sole/datasets/epilepsy.tar.gz",
-    "https://github.com/aclai-lab/Artifacts/blob/main/sole/datasets/hugadb.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/epilepsy.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/hugadb.tar.gz",
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/libras.tar.gz",
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/natops.tar.gz",
 ]
