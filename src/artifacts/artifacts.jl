@@ -37,10 +37,11 @@ export fillartifacts
 include("loaders/loaders.jl")
 
 export AbstractLoader, AbstractLoaderDataset, AbstractLoaderBinary
-export name, url, path
+export name, url
 export load
 export extract_artifact
 
+export classes, variablenames
 
 # Binaries
 
