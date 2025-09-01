@@ -147,9 +147,9 @@ function load(l::HuGaDBLoader)
         tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")
         if isfile(tarfile)
             extracted_path = extract_artifact(artifact_path, name(al))
-            return joinpath(extracted_path, "$(name(al))")
+            joinpath(extracted_path, "$(name(al))")
         else
-            return joinpath(artifact_path, "$(name(al))")
+            joinpath(artifact_path, "$(name(al))")
         end
     end
 
