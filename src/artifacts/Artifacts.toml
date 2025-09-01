@@ -20,14 +20,14 @@ git-tree-sha1 = "dbe79220f8352a25e5a79cdc3ede3c58abf9038f"
     url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
 
 [epilepsy]
-git-tree-sha1 = "6b04106a48f434f6b2a396ebf0199294e2654e0d"
+git-tree-sha1 = "204406355e557724f2a19e3f368375b623f86491"
 
     [[epilepsy.download]]
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     url = "https://github.com/aclai-lab/Artifacts/blob/main/sole/datasets/epilepsy.tar.gz"
 
 [hugadb]
-git-tree-sha1 = "49e11464aaf970ae4503f6cd84eb318f131bef8b"
+git-tree-sha1 = "32ef209be17d599abc02e35079557230ffcf9ae9"
 
     [[hugadb.download]]
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
