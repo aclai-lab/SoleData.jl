@@ -33,6 +33,19 @@ struct NatopsLoader <: AbstractLoaderDataset
     )
 end
 
+"""
+    variablenames(l::NatopsLoader) = l.variablenames
+
+Retrieve the variable names of Natops dataset.
+"""
+variablenames(l::NatopsLoader) = l.variablenames
+
+"""
+    classes(l::NatopsLoader) = l.classes
+
+Retrieve the classes of Natops dataset.
+"""
+classes(l::NatopsLoader) = l.classes
 
 """
     function load(l::NatopsLoader)
@@ -60,6 +73,9 @@ function load(l::NatopsLoader)
         )
 
     fix_class_names(y) = classes(l)[round(Int, parse(Float64, y))]
+
+    X_train = fix_dataframe(X_train, variablenames(l))
+    X_test = fix_dataframe(X_test, variablenames(l))
 
     y_train = map(fix_class_names, y_train)
     y_test  = map(fix_class_names, y_test)
