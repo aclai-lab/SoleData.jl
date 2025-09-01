@@ -32,6 +32,7 @@ function fillartifacts()
 end
 function fillartifacts(URLS::Vector{String})
     map(url -> fillartifacts(url), URLS)
+    return # to avoid returning a vector of nothing
 end
 function fillartifacts(url::String)
     filename_with_extension = split(url, "/")[end]
@@ -83,5 +84,4 @@ function fillartifacts(url::String)
             TOML.print(content)
         end
     end
-
 end
