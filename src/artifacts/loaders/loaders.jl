@@ -45,9 +45,17 @@ abstract type AbstractLoaderDataset <: AbstractLoader end
 """
     Artifacts.load(::T) where {T}
 
-Method to implement to load your custom artifact.
+Method to implementing the loading logic for your custom artifact.
 
-See [`load(al::ABCLoader)`](@ref), [`load(al::MITESPRESSOLoader)`](@ref).
+!!! warning
+    When implementing this method for an [`AbstractLoader`](@ref), be sure that the
+    [`name`](@ref) getter for that particular loader has the same name of the resource you
+    want to load.
+
+See [`AbstractLoader`](@ref)
+
+See also the implementations of [`load(al::ABCLoader)`](@ref) and
+[`load(al::MITESPRESSOLoader)`](@ref).
 """
 load(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
