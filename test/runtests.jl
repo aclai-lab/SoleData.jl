@@ -17,21 +17,23 @@ test_suites = [
     ("Logisets", [ "logisets.jl", ]),
     ("Propositional Logisets", [ "propositional-logisets.jl", ]),
     ("Memosets", [ "memosets.jl", ]),
-    # 
+    #
     ("Cube to Logiset", [ "cube2logiset.jl", ]),
     ("DataFrame to Logiset", [ "dataframe2logiset.jl", ]),
     ("MultiLogisets", [ "multilogisets.jl", ]),
-    # 
+    #
     ("Conditions", [ "range-scalar-condition.jl", ]),
     ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
     ("Features", [ "patchedfeatures.jl"]),
-    # 
+    #
     ("MLJ", [ "MLJ.jl", ]),
     ("PLA", [ "pla.jl", ]),
     ("Minify", ["minify.jl"]),
     ("Parse", ["parse.jl"]),
     ("Example Datasets", [ "example-datasets.jl", ]),
     ("Variable Named Features", [ "var-features.jl", ]),
+    #
+    ("Artifacts", ["artifacts.jl"])
 ]
 
 @testset "SoleData.jl" begin
