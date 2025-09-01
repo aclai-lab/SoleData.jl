@@ -55,8 +55,8 @@ function load(l::NatopsLoader)
 
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/natops_TEST.arff", String) |> Datasets.parseARFF,
-            read("$(dirpath)/natops_TRAIN.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/natops_TEST.arff", String) |> parseARFF,
+            read("$(dirpath)/natops_TRAIN.arff", String) |> parseARFF,
         )
 
     fix_class_names(y) = classes(l)[round(Int, parse(Float64, y))]

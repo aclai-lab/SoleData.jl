@@ -59,8 +59,8 @@ function load(l::LibrasLoader)
 
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/libras_TEST.arff", String) |> Datasets.parseARFF,
-            read("$(dirpath)/libras_TRAIN.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/libras_TEST.arff", String) |> parseARFF,
+            read("$(dirpath)/libras_TRAIN.arff", String) |> parseARFF,
         )
 
     # convert from .arff class codes to string

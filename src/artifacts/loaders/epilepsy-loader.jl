@@ -30,8 +30,8 @@ function load(l::EpilepsyLoader)
 
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/epilepsy_TEST.arff", String) |> Datasets.parseARFF,
-            read("$(dirpath)/epilepsy_TRAIN.arff", String) |> Datasets.parseARFF,
+            read("$(dirpath)/epilepsy_TEST.arff", String) |> parseARFF,
+            read("$(dirpath)/epilepsy_TRAIN.arff", String) |> parseARFF,
         )
 
     X_train  = SoleData.fix_dataframe(X_train, variablenames)

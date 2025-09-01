@@ -1,12 +1,12 @@
 [libras]
-git-tree-sha1 = "6bdd27e8d0cc1f9e01691d81c5f6ff49443cc68f"
+git-tree-sha1 = "5c13bb56bcf0d6866d26c80fde16b27e6ad2e75f"
 
     [[libras.download]]
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/libras.tar.gz"
 
 [natops]
-git-tree-sha1 = "2ac1415fad4fe41768fcee1696ef3742aac42458"
+git-tree-sha1 = "3838ff4af3c2cf45a1cb6369a6138329f6362dcc"
 
     [[natops.download]]
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -20,14 +20,14 @@ git-tree-sha1 = "dbe79220f8352a25e5a79cdc3ede3c58abf9038f"
     url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz"
 
 [epilepsy]
-git-tree-sha1 = "86a199fb6dda5d8f770f517b5765df5c33c46fd8"
+git-tree-sha1 = "ce8955c95863c563797dd3f8376165a999258d9c"
 
     [[epilepsy.download]]
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     url = "https://github.com/aclai-lab/Artifacts/blob/main/sole/datasets/epilepsy.tar.gz"
 
 [hugadb]
-git-tree-sha1 = "5e6df2178a095e1f4dc0590307ae75752d584fb1"
+git-tree-sha1 = "0ff22a14e8fd1ab888eecd599a5bc7daf558da29"
 
     [[hugadb.download]]
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
