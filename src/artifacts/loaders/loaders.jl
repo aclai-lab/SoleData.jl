@@ -121,7 +121,6 @@ function extract_artifact(loader::AbstractLoader)
     extract_artifact(path(loader), name(loader))
 end
 function extract_artifact(path::String, name::String)
-    tarfile = joinpath(path, "$(name).tar.gz")
     extract_dir = joinpath(path, "extracted")
 
     # If the extraction directory already exists and is not empty, assume extraction is done
