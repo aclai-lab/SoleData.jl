@@ -1,6 +1,6 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-authors = ["Mauro MILELLA", "Giovanni PAGLIARINI", "Edoardo PONSANESI", "Riccardo PASINI","Marco PERROTTA"]
+authors = ["Mauro MILELLA", "Giovanni PAGLIARINI", "Edoardo PONSANESI", "Riccardo PASINI", "Marco PERROTTA"]
 version = "0.16.3"
 
 [deps]
@@ -34,6 +34,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 CategoricalArrays = "0.10, 1"
+CodecZlib = "0.7"
 DataFrames = "1"
 DataStructures = "0.18, 0.19"
 Graphs = "1.12"
