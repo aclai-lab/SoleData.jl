@@ -29,15 +29,6 @@ Return a fallback url that could be used to download the artifact identified by 
 url(al::AbstractLoader) = al.url
 
 """
-    path(al::AbstractLoader) = al.path
-
-Return the path in which the artifact associated with `al` is stored.
-"""
-# TODO: this is always initialized to ARTIFACTS_PATH; can't we just use the global variable
-# Artifacts.ARTIFACTS_PATH?
-path(al::AbstractLoader) = al.path
-
-"""
     abstract type AbstractLoaderBinary <: AbstractLoader end
 
 Specific [`AbstractLoader`](@ref) for binaries.

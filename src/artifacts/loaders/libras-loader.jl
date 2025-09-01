@@ -1,14 +1,12 @@
 struct LibrasLoader <: AbstractLoaderDataset
     name::String
     url::String
-    path::String
 
     classes::Vector{String}
 
     LibrasLoader() = new(
         "libras",
         "",
-        ARTIFACTS_PATH,
 
         # class names
         [

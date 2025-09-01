@@ -1,7 +1,6 @@
 struct HuGaDBLoader <: AbstractLoaderDataset
     name::String
     url::String
-    path::String
 
     # non-corrupted files, suitable to perform an experiment on Walk and Running classes;
     # see https://github.com/romanchereshnev/HuGaDB
@@ -16,7 +15,6 @@ struct HuGaDBLoader <: AbstractLoaderDataset
     HuGaDBLoader() = new(
         "epilepsy",
         "",
-        ARTIFACTS_PATH,
 
         # expfiles
         [

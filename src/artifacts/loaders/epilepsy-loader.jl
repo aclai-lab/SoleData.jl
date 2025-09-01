@@ -1,12 +1,10 @@
 struct EpilepsyLoader <: AbstractLoaderDataset
     name::String
     url::String
-    path::String
 
     EpilepsyLoader() = new(
         "epilepsy",
-        "",
-        ARTIFACTS_PATH
+        ""
     )
 end
 

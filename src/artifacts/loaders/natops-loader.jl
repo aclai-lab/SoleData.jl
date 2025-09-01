@@ -1,7 +1,6 @@
 struct NatopsLoader <: AbstractLoaderDataset
     name::String
     url::String
-    path::String
 
     variablenames::Vector{String}
     classes::Vector{String}
@@ -9,7 +8,6 @@ struct NatopsLoader <: AbstractLoaderDataset
     NatopsLoader() = new(
         "natops",
         "",
-        ARTIFACTS_PATH,
 
         # variablenames
         [

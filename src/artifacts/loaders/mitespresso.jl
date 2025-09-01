@@ -4,13 +4,11 @@
 struct MITESPRESSOLoader <: AbstractLoaderBinary
     name::String    # Name of the artifact in Artifacts.toml
     url::String     # Fallback download URL
-    path::String    # Path to the Artifacts.toml file
 
     # Internal constructor with default values
     MITESPRESSOLoader() = new(
         "mitespresso",
-        "https://jackhack96.github.io/logic-synthesis/espresso.html",
-        ARTIFACTS_PATH
+        "https://jackhack96.github.io/logic-synthesis/espresso.html"
     )
 end
 
