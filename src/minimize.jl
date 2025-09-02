@@ -3,7 +3,7 @@ using Downloads     # only for paper
 using Tar                  #    OLD
 ###################
 
-include("artifactloader.jl")
+using SoleData.Artifacts:load,MITESPRESSOLoader,ABCLoader
 
 """
 espresso_minimize(
@@ -38,7 +38,7 @@ function espresso_minimize(
     println("============================================")
     if isnothing(espressobinary)
         println("Looking for espresso at $espressobinary")
-        espressoPath = artifact_loader(MITESPRESSOLoaderBinary())
+        espressoPath = load(MITESPRESSOLoader())
         silent || @show espressoPath
         espressobinary = joinpath(espressoPath, "espresso")
         silent || @show espressobinary
@@ -231,7 +231,7 @@ function abc_minimize(
     # Auto-setup ABC binary if not specified
     if isnothing(abcbinary)
         try
-            abcpath = artifact_loader(ABCLoaderBinary())
+            abcpath = load(ABCLoader())
             silent || @show abcpath
             abcbinary = joinpath(abcpath, "abc")
             silent || @show abcbinary
