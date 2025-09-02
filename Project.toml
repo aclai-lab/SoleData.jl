@@ -1,7 +1,7 @@
 name = "SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
 authors = ["Mauro MILELLA", "Giovanni PAGLIARINI", "Edoardo PONSANESI", "Riccardo PASINI"]
-version = "0.16.2"
+version = "0.16.3"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -41,8 +41,10 @@ Graphs = "1.12"
 HTTP = "1.10"
 IntervalSets = "0.7"
 Lazy = "0.15"
+LinearAlgebra = "1"
 MLJModelInterface = "1.11"
 MultiData = "0.1"
+ProgressMeter = "1.10"
 Query = "1"
 Random = "1"
 Reexport = "1"
@@ -59,11 +61,11 @@ ZipFile = "0.10"
 julia = "1"
 
 [extras]
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
-MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-ThreadSafeDicts = "4239201d-c60e-5e0a-9702-85d713665ba7"
 
 [targets]
-test = ["Graphs", "Logging", "MLJBase", "Test", "ThreadSafeDicts"]
+test = ["Distributed", "Graphs", "Logging", "MLJ", "Test"]

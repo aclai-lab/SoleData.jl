@@ -4,16 +4,17 @@
 
 using SoleData: ScalarMetaCondition
 using SoleData: ScalarOneStepRelationalMemoset, ScalarOneStepGlobalMemoset
+using SoleData: SoleData.ScalarOneStepMemoset
 
-using Test
-using StatsBase
-using SoleLogics
-using SoleData
-using Graphs
-using Random
-using ThreadSafeDicts
+# using Test
+# using StatsBase
+# using SoleLogics
+# using SoleData
+# using Graphs
+# using Random
+# using ThreadSafeDicts
 
-using Logging
+# using Logging
 
 features = SoleData.Feature.(string.('p':'r'))
 worlds = SoleLogics.World.(1:10)
@@ -35,8 +36,6 @@ bool_relationalmemoset = @test_nowarn ScalarOneStepRelationalMemoset(bool_logise
 bool_globalmemoset = @test_nowarn ScalarOneStepGlobalMemoset(bool_logiset, metaconditions, perform_initialization)
 
 @test_throws MethodError SupportedLogiset(bool_logiset, bool_relationalmemoset)
-
-using SoleData: ScalarOneStepMemoset
 
 relations = [identityrel, globalrel]
 

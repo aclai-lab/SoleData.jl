@@ -1,4 +1,4 @@
-using Test
+# using Test
 using SoleData: minify
 
 A = randn(10000)

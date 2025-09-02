@@ -14,6 +14,9 @@ using DataStructures: OrderedDict
 const DF = DataFrames
 const MD = MultiData
 
+using ThreadSafeDicts: ThreadSafeDict
+using ProgressMeter: Progress, next!
+
 ############################################################################################
 ############################################################################################
 ############################################################################################
@@ -94,6 +97,8 @@ export alphabet
 export features, nfeatures
 
 # Logical datasets, where the instances are logical interpretations on scalar alphabets
+using UniqueVectors
+import Base: in, findfirst
 include("types/logiset.jl")
 
 # Logical datasets, where the instances are Kripke structure on scalar alphabets

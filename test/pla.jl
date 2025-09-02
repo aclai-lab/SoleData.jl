@@ -1,8 +1,8 @@
 
-using Test
-using SoleData
+# using Test
+# using SoleData
 using SoleData: PLA
-using SoleLogics
+# using SoleLogics
 
 function cleanlines(str::AbstractString)
   join(filter(!isempty, split(str, "\n")), "\n")
