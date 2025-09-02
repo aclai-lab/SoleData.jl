@@ -62,7 +62,7 @@ load(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
 # Extract tar.gz file in the artifact directory (cross-platform);
 # see extract_artifact.
-function _extract_artifact(path::String, name::String)
+function _extract_artifact(path::String, name::String;silent::bool = true)
     tarfile = joinpath(path, "$(name).tar.gz")
 
     if !isfile(tarfile)
@@ -86,7 +86,7 @@ function _extract_artifact(path::String, name::String)
             tar_stream = GzipDecompressorStream(tar_gz)
             Tar.extract(tar_stream, extract_dir)
         end
-        @info "Successfully extracted $(name).tar.gz to $(extract_dir)"
+        silent || println("Successfully extracted $(name).tar.gz to $(extract_dir)")
 
         # Remove the original tar.gz file to save space (optional)
         # rm(tarfile)
@@ -119,12 +119,12 @@ See also (the implementation of) [`load(al::ABCLoader)`](@ref) or
 function extract_artifact(loader::AbstractLoader)
     extract_artifact(path(loader), name(loader))
 end
-function extract_artifact(path::String, name::String)
+function extract_artifact(path::String, name::String;silent::Bool = true)
     extract_dir = joinpath(path, "extracted")
 
     # If the extraction directory already exists and is not empty, assume extraction is done
     if isdir(extract_dir) && !isempty(readdir(extract_dir))
-        @info "Artifact $(name) already extracted at $(extract_dir)"
+        silent || println("Artifact $(name) already extracted at $(extract_dir)")
         return extract_dir
     else
         # Otherwise, proceed with extraction
