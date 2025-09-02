@@ -62,7 +62,7 @@ load(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
 # Extract tar.gz file in the artifact directory (cross-platform);
 # see extract_artifact.
-function _extract_artifact(path::String, name::String;silent::bool = true)
+function _extract_artifact(path::String, name::String; silent::Bool = true)
     tarfile = joinpath(path, "$(name).tar.gz")
 
     if !isfile(tarfile)
