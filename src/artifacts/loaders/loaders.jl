@@ -52,7 +52,7 @@ Method to implementing the loading logic for your custom artifact.
     [`name`](@ref) getter for that particular loader has the same name of the resource you
     want to load.
 
-See [`AbstractLoader`](@ref)
+See [`AbstractLoader`](@ref).
 
 See also the implementations of [`load(al::ABCLoader)`](@ref) and
 [`load(al::MITESPRESSOLoader)`](@ref).
