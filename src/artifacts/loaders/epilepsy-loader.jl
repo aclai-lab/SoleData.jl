@@ -34,8 +34,8 @@ function load(l::EpilepsyLoader)
             read("$(dirpath)/epilepsy_TRAIN.arff", String) |> parseARFF,
         )
 
-    X_train  = SoleData.fix_dataframe(X_train, variablenames)
-    X_test   = SoleData.fix_dataframe(X_test, variablenames)
+    X_train  = fix_dataframe(X_train, variablenames)
+    X_test   = fix_dataframe(X_test, variablenames)
 
     y_train = categorical(y_train)
     y_test = categorical(y_test)
