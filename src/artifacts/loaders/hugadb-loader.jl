@@ -92,7 +92,7 @@ activity2id(l::HuGaDBLoader, class::String) = l.activity2id(class)
 function _load_hugadb(
     dirpath::S,
     filename::S;
-    variablenames::Vector{S}=HUGADB_VARIABLENAMES
+    _variablenames::Vector{S}=HUGADB_VARIABLENAMES
 ) where {S<:AbstractString}
     filepath = joinpath(dirpath, filename)
 
@@ -112,7 +112,7 @@ function _load_hugadb(
     # ignore #Date row
     readline(f)
 
-    # ignore the variable names, as we already explicited them in `variablenames`
+    # ignore the variable names, as we already explicited them in `_variablenames`
     readline(f)
 
     _substr2float = x -> parse(Float64, x)
@@ -123,12 +123,12 @@ function _load_hugadb(
     X = DataFrame([
         # get the i-th element from each line, and concatenate them together
         [[line[i] for line in lines]]
-        for i in 1:length(variablenames)
-    ], variablenames)
+        for i in 1:length(_variablenames)
+    ], _variablenames)
 
-    # variablenames is returned to help the user, for example to let him know our default
+    # _variablenames is returned to help the user, for example to let him know our default
     # values if he did not provide any.
-    return X, (activities, activity_ids), variablenames
+    return X, (activities, activity_ids), _variablenames
 end
 
 
@@ -141,24 +141,24 @@ in particular, load the files returned by [`expfiles`](@ref).
 See also [`expfiles(l::HuGaDBLoader)`], [`filter_hugadb`](@ref).
 """
 function load(l::HuGaDBLoader)
-    artifact_path = ensure_artifact_installed(name(al), ARTIFACTS_PATH)
+    artifact_path = ensure_artifact_installed(name(l), ARTIFACTS_PATH)
 
     dirpath = begin
-        tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")
+        tarfile = joinpath(artifact_path, "$(name(l)).tar.gz")
         if isfile(tarfile)
-            extracted_path = extract_artifact(artifact_path, name(al))
-            joinpath(extracted_path, "$(name(al))")
+            extracted_path = extract_artifact(artifact_path, name(l))
+            joinpath(extracted_path, "$(name(l))")
         else
-            joinpath(artifact_path, "$(name(al))")
+            joinpath(artifact_path, "$(name(l))")
         end
     end
 
     # leverage the first instance to get, once for all, the common outputs such as
     # the list of activities (as pairs string/id pairs) and the names of each column.
-    X, (activity_strings, activity_ids), variablenames = _load_hugadb(
+    X, (activity_strings, activity_ids), _ = _load_hugadb(
         dirpath,
         expfiles(l)[1],
-        variablenames=variablenames(l)
+        _variablenames=variablenames(l)
     )
 
     # return the concatenation of each DataFrame obtained by a `_load_hugadb` call

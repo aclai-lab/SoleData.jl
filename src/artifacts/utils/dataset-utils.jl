@@ -235,7 +235,7 @@ end
 """
 TODO: document this.
 """
-function fix_dataframe(df, variable_names = nothing)
+function fix_dataframe(df, _variablenames = nothing)
     s = unique(size.(df[:,1]))
     @assert length(s) == 1 "$(s)"
     @assert length(s[1]) == 1 "$(s[1])"
@@ -243,19 +243,17 @@ function fix_dataframe(df, variable_names = nothing)
     old_var_names = names(df)
     X = OrderedDict()
 
-    if isnothing(variable_names)
-        variable_names = ["V$(i_var)" for i_var in 1:nvars]
+    if isnothing(_variablenames)
+        _variablenames = ["V$(i_var)" for i_var in 1:nvars]
+
     end
 
-    @assert nvars == length(variable_names)
+    println(_variablenames)
+    @assert nvars == Base.length(_variablenames)
 
-    for (i_var,var) in enumerate(variable_names)
+    for (i_var,var) in enumerate(_variablenames)
         X[Symbol(var)] = [row[i_var] for row in eachrow(df)]
     end
 
     X = DataFrame(X)
-    # Y = df[:,end]
-
-    # X, string.(Y)
-    # X, Y
 end
