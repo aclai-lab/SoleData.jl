@@ -34,7 +34,7 @@ git-tree-sha1 = "d4a858762ece9feb48b15831b93069f638ac610a"
     url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/epilepsy.tar.gz"
 
 [hugadb]
-git-tree-sha1 = "71ea5aba1c2022f79cf805831f64d3e1a46d511a"
+git-tree-sha1 = "a59cc61429942aa77b0d6a0bc2ffcf6f47acf7e0"
 
     [[hugadb.download]]
     sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
