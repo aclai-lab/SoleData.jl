@@ -2,6 +2,14 @@ module DimensionalDatasets
 
 import Base: size, show, getindex, iterate, length, push!, eltype
 
+using ThreadSafeDicts
+
+# TODO remove
+using SoleData: _in, _findfirst
+
+
+# using BenchmarkTools
+using ProgressMeter
 using UniqueVectors
 
 using SoleBase
