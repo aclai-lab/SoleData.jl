@@ -1,6 +1,3 @@
-
-__precompile__()
-
 module SoleData
 
 using Reexport
@@ -12,8 +9,13 @@ using DataFrames
 using MultiData
 using MultiData: AbstractDimensionalDataset
 
+using DataStructures: OrderedDict
+
 const DF = DataFrames
 const MD = MultiData
+
+using ThreadSafeDicts: ThreadSafeDict
+using ProgressMeter: Progress, next!
 
 ############################################################################################
 ############################################################################################
@@ -26,8 +28,7 @@ include("utils/minify.jl")
 
 include("MLJ-utils.jl")
 
-include("example-datasets.jl")
-
+include("artifacts/artifacts.jl")
 
 export atoms
 
@@ -46,8 +47,6 @@ export scalarlogiset
 export initlogiset, maxchannelsize, worldtype, dimensionality, frame, featvalue, nvariables
 
 export FullDimensionalFrame
-
-using ThreadSafeDicts
 
 @reexport using SoleLogics
 import SoleLogics: frame
@@ -98,6 +97,8 @@ export alphabet
 export features, nfeatures
 
 # Logical datasets, where the instances are logical interpretations on scalar alphabets
+using UniqueVectors
+import Base: in, findfirst
 include("types/logiset.jl")
 
 # Logical datasets, where the instances are Kripke structure on scalar alphabets
@@ -241,6 +242,12 @@ metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}
 metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
 
 include("scalar-pla.jl")
+
+
+export refine_dnf                                              # TODO 
+include("scalar/dnf-domain-minimization.jl")  # EVALUATE THIS . 
+
+
 include("minimize.jl")
 include("deprecate.jl")
 

@@ -1,15 +1,17 @@
 
-using Test
-using SoleData
+# using Test
+# using SoleData
 using SoleData: PLA
-using SoleLogics
+# using SoleLogics
 
 function cleanlines(str::AbstractString)
   join(filter(!isempty, split(str, "\n")), "\n")
 end
 
 function my_espresso_minimize(args...; kwargs...)
-  espressobinary = joinpath(dirname(pathof(SoleData)), "../test/espresso")
+  espressoPath = artifact_loader(MITESPRESSOLoaderBinary())
+  @show espressoPath
+  espressobinary = joinpath(espressoPath, "espresso")
   return SoleData.espresso_minimize(args...; espressobinary = espressobinary, kwargs...)
 end
 
@@ -243,37 +245,24 @@ formula = @test_nowarn PLA._pla_to_formula(""".i 5
 
 
 
-@test cleanlines(PLA._formula_to_pla(@scalarformula ((V1 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 0)))[1]) in [cleanlines("""
-.i 2
+@test cleanlines((PLA._formula_to_pla(@scalarformula((V1 <= 0.0) ∨ (V1 <= 0.0) ∧ (V2 <= 0.0))))[1]) in [
+cleanlines(""".i 2
 .o 1
-.ilb V1≤0 V2≤0
+.ilb V1≤0.0 V2≤0.0
 .ob formula_output
 .p 2
 11 1
 1- 1
-.e
-"""),
-cleanlines("""
-.i 2
+.e"""),
+cleanlines(""".i 2
 .o 1
-.ilb V1≤0 V2≤0
+.ilb V1≤0.0 V2≤0.0
 .ob formula_output
 .p 2
 1- 1
 11 1
-.e
-""")]
-
-# @test_broken cleanlines(PLA._formula_to_pla(@scalarformula ((V1 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 0)))[1]) == cleanlines("""
-# .i 2
-# .o 1
-# .ilb V1≤0 V2≤0
-# .ob formula_output
-# .p 2
-# 1- 1
-# 11 1
-# .e
-# """)
+.e""")
+]
 
 formula = PLA._pla_to_formula(""".i 2
 .o 1

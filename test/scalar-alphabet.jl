@@ -1,9 +1,9 @@
-using DataFrames
-using Test
-using SoleData
-using MLJBase
+# using DataFrames
+# using Test
+# using SoleData
+# using MLJBase
 
-X..., y = MLJBase.load_iris()
+X..., y = MLJ.load_iris()
 X_df = DataFrame(collect(values(X)), collect(keys(X)))
 X = scalarlogiset(X_df; allow_propositional = true)
 

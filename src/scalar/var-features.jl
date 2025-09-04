@@ -230,9 +230,9 @@ function featvaltype(dataset, f::UnivariateFeature{U}) where {U}
 end
 
 """
-    struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
+    struct UnivariateNamedFeature{U<:Real,I<:VariableId} <: AbstractUnivariateFeature
         i_variable::I
-        name::String
+        name::VariableName
     end
 
 A univariate feature solely identified by its name and reference variable.
@@ -274,12 +274,12 @@ end
 ############################################################################################
 
 """
-    struct VariableValue{I<:VariableId} <: AbstractUnivariateFeature
+    struct VariableValue{I<:VariableId, N<:Union{VariableName, Nothing}} <: AbstractUnivariateFeature
         i_variable::I
         i_name::N
     end
 
-A simple feature, equal the value of a scalar variable and, optionally, his name.
+A simple feature, equal the value of a scalar variable and, optionally, its name.
 
 See also [`SoleLogics.Interval`](@ref),
 [`SoleLogics.Interval2D`](@ref),

@@ -1,7 +1,21 @@
-using SoleData
-using SoleLogics
-using Test
-using Random
+using Distributed
+addprocs(2)
+
+@everywhere begin
+    using SoleData
+    using Test
+    using Random
+    using StatsBase
+    using SoleData
+    using SoleLogics
+    using MLJ
+    using Tables
+    using DataFrames
+    using Graphs
+    using Logging
+    using ThreadSafeDicts
+    # using StableRNGs
+end
 
 function run_tests(list)
     println("\n" * ("#"^50))
@@ -31,6 +45,10 @@ test_suites = [
     ("Minify", ["minify.jl"]),
     ("Parse", ["parse.jl"]),
     ("Example Datasets", [ "example-datasets.jl", ]),
+    ("Variable Named Features", [ "var-features.jl", ]),
+    #
+    ("Artifacts", ["artifacts.jl"]),
+    ("Simplification", [ "simplification.jl", ]),
 ]
 
 @testset "SoleData.jl" begin

@@ -1,4 +1,4 @@
-const BoundedScalarConditions = MultivariateScalarAlphabet{ScalarCondition} 
+const BoundedScalarConditions = MultivariateScalarAlphabet{ScalarCondition}
 
 function BoundedScalarConditions(
     metaconditions::Vector{<:ScalarMetaCondition},
@@ -35,3 +35,6 @@ const UnivariateValue = VariableValue
 #     @warn "Base.findfirst(::$(typeof(p)), ::$(typeof(uv))) is defined by type piracy from UniqueVectors.jl. This method is deprecating."
 #     get(uv.lookup, p.x, nothing)
 # end
+
+import SoleData.Artifacts: load_arff_dataset
+@deprecate load_arff_dataset Artifacts.load_arff_dataset

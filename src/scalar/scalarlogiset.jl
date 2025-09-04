@@ -1,5 +1,5 @@
 using SoleLogics: worldtype, Point
-using ProgressMeter
+using Query
 
 """
     scalarlogiset(dataset, features; kwargs...)
@@ -575,9 +575,6 @@ function naturalgrouping(
 
     var_grouping
 end
-
-
-using Query
 
 """
     scalaralphabet(a::AbstractAlphabet{<:ScalarCondition}, args...; kwargs...)

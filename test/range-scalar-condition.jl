@@ -1,5 +1,5 @@
-using Test
-using SoleData
+# using Test
+# using SoleData
 using SoleData: RangeScalarCondition
 
 compareincludes(a,b) = (SoleData.includes(a,b), SoleData.includes(b,a))
@@ -14,14 +14,14 @@ compareexcludes(a,b) = (SoleData.excludes(a,b), SoleData.excludes(b,a))
     
     @test compareincludes(RangeScalarCondition(VariableValue(:b), 0, 1, true, true), RangeScalarCondition(VariableValue(:a), 0, 0.5, true, true)) == (false, false)
 
-    a = parsecondition(SoleData.RangeScalarCondition, "V2 ∈ [2,∞]")
-    b = parsecondition(SoleData.RangeScalarCondition, "V2 ∈ [-∞,0)")
+    a = parsecondition(RangeScalarCondition, "V2 ∈ [2,∞]")
+    b = parsecondition(RangeScalarCondition, "V2 ∈ [-∞,0)")
 
     @test SoleData.includes(a, b) == false
     @test SoleData.includes(b, a) == false
 
-    a = parsecondition(SoleData.RangeScalarCondition, "V1 ∈ (10,∞]")
-    b = parsecondition(SoleData.RangeScalarCondition, "V1 ∈ [-∞,0]")
+    a = parsecondition(RangeScalarCondition, "V1 ∈ (10,∞]")
+    b = parsecondition(RangeScalarCondition, "V1 ∈ [-∞,0]")
 
     @test SoleData.includes(a, b) == false
     @test SoleData.includes(b, a) == false

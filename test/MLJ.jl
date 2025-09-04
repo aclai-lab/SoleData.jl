@@ -1,4 +1,4 @@
-using MLJBase
+# using MLJ
 
 _nvars = 2
 n_instances = 20
@@ -21,9 +21,9 @@ X = @test_nowarn modality(multilogiset, 2)
 @test_nowarn selectrows(SoleData.base(X), 1:10)
 
 mod2 = modality(multilogiset, 2)
-mod2_part = modality(MLJBase.partition(multilogiset, 0.8)[1], 2)
+mod2_part = modality(MLJ.partition(multilogiset, 0.8)[1], 2)
 check(SyntaxTree(Atom(ScalarCondition(VariableMin(2), >, 301))), mod2_part, 1, SoleData.Interval(1,2))
 check((DiamondRelationalConnective(IA_L)(Atom(ScalarCondition(VariableMin(2), >, 0)))), mod2_part, 1, SoleData.Interval(1,2))
 
-@test mod2_part != MLJBase.partition(mod2, 0.8)[1]
-@test nmemoizedvalues(mod2_part) == nmemoizedvalues(MLJBase.partition(mod2, 0.8)[1])
+@test mod2_part != MLJ.partition(mod2, 0.8)[1]
+@test nmemoizedvalues(mod2_part) == nmemoizedvalues(MLJ.partition(mod2, 0.8)[1])
