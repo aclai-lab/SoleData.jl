@@ -13,7 +13,7 @@ struct HuGaDBLoader <: AbstractLoaderDataset
     activity2id::Function
 
     HuGaDBLoader() = new(
-        "epilepsy",
+        "hugadb",
         "",
 
         # expfiles
