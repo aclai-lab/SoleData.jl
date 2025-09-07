@@ -674,10 +674,6 @@ function _rangescalarcond_to_scalarconds_in_conjunction(cond)
     conds
 end
 
-module IntervalSetsWrap
-using IntervalSets: Interval
-end
-
 # function myisless(a::Number, aismin::Bool, b::Number, bismin::Bool)
 #     return a < b
 # end
