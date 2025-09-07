@@ -9,6 +9,8 @@ using DataFrames
 using MultiData
 using MultiData: AbstractDimensionalDataset
 
+using DataStructures: OrderedDict
+
 const DF = DataFrames
 const MD = MultiData
 
@@ -26,8 +28,7 @@ include("utils/minify.jl")
 
 include("MLJ-utils.jl")
 
-include("example-datasets.jl")
-
+include("artifacts/artifacts.jl")
 
 export atoms
 
@@ -132,6 +133,8 @@ export UnivariateNamedFeature,
 export VarFeature,
         VariableMin, VariableMax, i_variable, featurename,
         VariableSoftMin, VariableSoftMax,
+        VariableAvg,
+        VariableDistance, references, refsize, distance,
         MultivariateFeature
 
 
@@ -161,6 +164,10 @@ include("types/dimensional-structures.jl")
 
 include("dimensional-structures/main.jl")
 
+export computefeature, computeunivariatefeature
+include("scalar/discretization/discretization.jl")
+
+export discretizedomain, discretizealphabet
 
 ################################################################################
 
@@ -239,6 +246,12 @@ metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}
 metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
 
 include("scalar-pla.jl")
+
+
+export refine_dnf                                              # TODO 
+include("scalar/dnf-domain-minimization.jl")  # EVALUATE THIS . 
+
+
 include("minimize.jl")
 include("deprecate.jl")
 

@@ -1,0 +1,26 @@
+"""
+    Loading configuration for MITESPRESSO minimizer.
+"""
+struct MITESPRESSOLoader <: AbstractLoaderBinary
+    name::String    # Name of the artifact in Artifacts.toml
+    url::String     # Fallback download URL
+
+    # Internal constructor with default values
+    MITESPRESSOLoader() = new(
+        "mitespresso",
+        "https://jackhack96.github.io/logic-synthesis/espresso.html"
+    )
+end
+
+function load(al::MITESPRESSOLoader)
+    artifact_path = ensure_artifact_installed(name(al), ARTIFACTS_PATH)
+
+    # Check if tar.gz file needs extraction
+    tarfile = joinpath(artifact_path, "$(name(al)).tar.gz")
+    if isfile(tarfile)
+        extracted_path = extract_artifact(artifact_path, name(al))
+        return joinpath(extracted_path, "$(name(al))")
+    else
+        return joinpath(artifact_path, "$(name(al))")
+    end
+end

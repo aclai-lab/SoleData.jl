@@ -1,3 +1,7 @@
+# This file is almost deprecated, with an exception for poarseARFF function;
+# TODO: when .Artifacts module is completed, forward all the calls to this load_arff_dataset
+# to the proper loader.
+
 using HTTP
 using ZipFile
 using DataFrames
@@ -8,7 +12,8 @@ using DataStructures: OrderedDict
 function load_arff_dataset(
     dataset_name,
     split = :all;
-    path = "http://www.timeseriesclassification.com/aeon-toolkit/$(dataset_name).zip"
+    # path = "http://www.timeseriesclassification.com/aeon-toolkit/$(dataset_name).zip"
+    path = "https://github.com/PasoStudio73/datasets/raw/refs/heads/main/NATOPS.zip"
 )
     @assert split in [:train, :test, :split, :all] "Unexpected value for split parameter: $(split). Allowed: :train, :test, :split, :all."
 
@@ -162,11 +167,9 @@ const _ARFF_ESC         = UInt8('\\')
 const _ARFF_MISSING     = UInt8('?')
 const _ARFF_RELMARK     = UInt8('\'')
 
-# function readARFF(path::String)
-#     open(path, "r") do io
-#         df = DataFrame()
-#         classes = String[]
-#         lines = readlines(io) ...
+"""
+TODO: document this.
+"""
 function parseARFF(arffstring::String)
     df = DataFrame()
     classes = String[]
@@ -229,7 +232,10 @@ function parseARFF(arffstring::String)
     return df[p, :], classes[p]
 end
 
-function fix_dataframe(df, variable_names = nothing)
+"""
+TODO: document this.
+"""
+function fix_dataframe(df, _variablenames = nothing)
     s = unique(size.(df[:,1]))
     @assert length(s) == 1 "$(s)"
     @assert length(s[1]) == 1 "$(s[1])"
@@ -237,19 +243,16 @@ function fix_dataframe(df, variable_names = nothing)
     old_var_names = names(df)
     X = OrderedDict()
 
-    if isnothing(variable_names)
-        variable_names = ["V$(i_var)" for i_var in 1:nvars]
+    if isnothing(_variablenames)
+        _variablenames = ["V$(i_var)" for i_var in 1:nvars]
+
     end
 
-    @assert nvars == length(variable_names)
+    @assert nvars == Base.length(_variablenames)
 
-    for (i_var,var) in enumerate(variable_names)
+    for (i_var,var) in enumerate(_variablenames)
         X[Symbol(var)] = [row[i_var] for row in eachrow(df)]
     end
 
     X = DataFrame(X)
-    # Y = df[:,end]
-
-    # X, string.(Y)
-    # X, Y
 end

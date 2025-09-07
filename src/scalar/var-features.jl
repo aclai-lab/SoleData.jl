@@ -258,7 +258,7 @@ end
 featurename(f::UnivariateNamedFeature) = f.name
 
 function syntaxstring(
-    f::UnivariateNamedFeature; 
+    f::UnivariateNamedFeature;
     opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
     closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
     kwargs...
@@ -310,7 +310,7 @@ function syntaxstring(f::VariableValue; variable_names_map = nothing, show_colon
         n = f.i_name
         return "$opening_parenthesis$n$closing_parenthesis"
     end
-    
+
     if i_variable(f) isa Integer || !isnothing(variable_names_map)
         variable_name(f; variable_names_map = variable_names_map, kwargs...)
     else
@@ -450,8 +450,123 @@ end
 
 ############################################################################################
 
+"""
+    struct VariableAvg{I<:VariableId} <: AbstractUnivariateFeature
+        i_variable::I
+    end
+
+Univariate feature computing the average value for a given variable.
+
+See also [`SoleLogics.Interval`](@ref),
+[`SoleLogics.Interval2D`](@ref),
+[`AbstractUnivariateFeature`](@ref),
+[`VariableMax`](@ref), [`VariableMin`](@ref),
+[`VarFeature`](@ref), [`AbstractFeature`](@ref).
+"""
+struct VariableAvg{I<:VariableId} <: AbstractUnivariateFeature
+    i_variable::I
+    function VariableAvg(f::VariableAvg)
+        return VariableAvg(i_variable(f))
+    end
+    function VariableAvg(i_variable::I) where {I<:VariableId}
+        return new{I}(i_variable)
+    end
+end
+featurename(f::VariableAvg) = "avg"
+
+function featvaltype(dataset, f::VariableAvg)
+    return vareltype(dataset, f.i_variable)
+end
+
+############################################################################################
+
+"""
+    struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
+        i_variable::I
+        references::Vector{<:T}
+        distance::Function
+        featurename::VariableName
+    end
+
+Univariate feature computing a distance function for a given variable, with respect to all
+
+By default, `distance` is set to be Euclidean distance and the lowest result is considered.
+
+# Examples
+```julia
+# we only want to perform comparisons with one important representative signal;
+# we call such signal a reference, and encapsulate it within an array.
+julia> vd = VariableDistance(1, [[1,2,3,4]]; featurename="StrictMonotonicAscending");
+
+julia> syntaxstring(vd)
+"StrictMonotonicAscending[V1]"
+
+# compute the distance (euclidean by default) with the given signal
+julia> computeunivariatefeature(vd, [1,2,3,4])
+0.0
+
+julia> computeunivariatefeature(vd, [2,3,4,5])
+2.0
+
+# now we consider multiple references
+julia> vd = VariableDistance(1, [
+        [0.1,1.8,3.0,3.2],
+        [1.1,1.3,2.3,3.8],
+        [0.8,1.4,2.5,4.1]
+    ];
+    featurename="StrictMonotonicAscending"
+);
+
+# return only the minimum distance w.r.t. all the references wrapped within vd
+julia> computeunivariatefeature(vd, [1,2,3,4])
+0.812403840463596
+
+# we ask for the size of a generic reference
+julia> refsize(vd)
+(4,)
+
+```
+
+See also [`SoleLogics.Interval`](@ref),
+[`SoleLogics.Interval2D`](@ref),
+[`AbstractUnivariateFeature`](@ref),
+[`VariableMax`](@ref), [`VariableMin`](@ref),
+[`VarFeature`](@ref), [`AbstractFeature`](@ref).
+"""
+struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
+    i_variable::I
+    references::AbstractArray{T}
+    distance::Function
+    featurename::VariableName
+
+    function VariableDistance(
+        i_variable::I,
+        references::AbstractArray{T};
+        # euclidean distance, but with no Distances.jl dependency
+        distance::Function=(x,y) -> sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)])),
+        featurename = "Δ"
+    ) where {I<:VariableId,T}
+        if any(r -> size(r) != size(references |> first), references)
+            throw(DimensionMismatch("References' sizes are not unique."))
+        end
+
+        return new{I,T}(i_variable, references, distance, featurename)
+    end
+end
+featurename(f::VariableDistance) = string(f.featurename)
+
+references(f::VariableDistance) = f.references
+refsize(f::VariableDistance) = references(f) |> first |> size
+distance(f::VariableDistance) = f.distance
+
+function featvaltype(dataset, f::VariableDistance)
+    return vareltype(dataset, f.i_variable)
+end
+
+############################################################################################
+
 # These features collapse to a single value; it can be useful to know this
-is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax}) = true
+is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax,VariableDistance}) = true
 is_collapsing_univariate_feature(f::UnivariateFeature) = (f.f in [minimum, maximum, mean])
 
 
@@ -491,8 +606,8 @@ const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String,Base.Callable}(
     "maximum" => VariableMax,
     "max"     => VariableMax,
     #
-    "avg"     => StatsBase.mean,
-    "mean"    => StatsBase.mean,
+    "avg"     => VariableAvg,
+    "mean"    => VariableAvg,
 )
 
 """

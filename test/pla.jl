@@ -9,7 +9,9 @@ function cleanlines(str::AbstractString)
 end
 
 function my_espresso_minimize(args...; kwargs...)
-  espressobinary = joinpath(dirname(pathof(SoleData)), "../src/espresso")
+  espressoPath = artifact_loader(MITESPRESSOLoaderBinary())
+  @show espressoPath
+  espressobinary = joinpath(espressoPath, "espresso")
   return SoleData.espresso_minimize(args...; espressobinary = espressobinary, kwargs...)
 end
 
