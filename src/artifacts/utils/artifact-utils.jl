@@ -76,7 +76,7 @@ function fillartifacts(url::String)
             # to do so, we could iterate some kwargs here.
             new_entry = Dict{String,Any}()
             content[filename_no_extension]["download"] = [new_entry]
-            new_entry["sha256"] = bytes2hex(open(sha256, artifact_path(SHA1)))
+            new_entry["sha256"] = file_sha256
             new_entry["url"] = url
         end
 
