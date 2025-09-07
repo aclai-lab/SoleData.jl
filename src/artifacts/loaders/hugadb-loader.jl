@@ -103,7 +103,12 @@ function _load_hugadb(
     activities = split(readline(f), " ")[1:end-1]
     activities[1] = activities[1][11:end] # remove the initial "#Activity\t"
 
-
+    # activity strings to ids as in the table at https://github.com/romanchereshnev/HuGaDB
+    _activity2id = x -> findfirst(activity -> x == activity, [
+        "walking", "running", "going_up", "going_down", "sitting", "sitting_down",
+        "standing_up", "standing", "bicycling", "elevator_up", "elevator_down",
+        "sitting_car"
+    ])
     activity_ids = [_activity2id(activity) for activity in activities]
 
     # ignore #ActivityID array (we only keep the string version instead of integer IDs)
