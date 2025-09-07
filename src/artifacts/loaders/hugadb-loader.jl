@@ -168,7 +168,7 @@ function load(l::HuGaDBLoader)
 
     # return the concatenation of each DataFrame obtained by a `_load_hugadb` call
     return vcat([X, [
-            _load_hugadb(dirpath, filename; kwargs...) |> first
+            _load_hugadb(dirpath, filename) |> first
             for filename in expfiles(l)[2:end]
         ]...]...), (activity_strings, activity_ids), variablenames(l)
 end
