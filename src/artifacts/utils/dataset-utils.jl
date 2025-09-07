@@ -248,7 +248,6 @@ function fix_dataframe(df, _variablenames = nothing)
 
     end
 
-    println(_variablenames)
     @assert nvars == Base.length(_variablenames)
 
     for (i_var,var) in enumerate(_variablenames)
