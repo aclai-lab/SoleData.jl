@@ -92,7 +92,7 @@ activity2id(l::HuGaDBLoader, class::String) = l.activity2id(class)
 function _load_hugadb(
     dirpath::S,
     filename::S;
-    _variablenames::Vector{S}=HUGADB_VARIABLENAMES
+    _variablenames::Vector{S}
 ) where {S<:AbstractString}
     filepath = joinpath(dirpath, filename)
 
@@ -168,7 +168,7 @@ function load(l::HuGaDBLoader)
 
     # return the concatenation of each DataFrame obtained by a `_load_hugadb` call
     return vcat([X, [
-            _load_hugadb(dirpath, filename) |> first
+            _load_hugadb(dirpath, filename; _variablenames=variablenames(l)) |> first
             for filename in expfiles(l)[2:end]
         ]...]...), (activity_strings, activity_ids), variablenames(l)
 end
