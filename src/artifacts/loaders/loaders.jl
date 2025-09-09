@@ -119,7 +119,7 @@ See also (the implementation of) [`load(al::ABCLoader)`](@ref) or
 function extract_artifact(loader::AbstractLoader)
     extract_artifact(path(loader), name(loader))
 end
-function extract_artifact(path::String, name::String;silent::Bool = true)
+function extract_artifact(path::String, name::String; silent::Bool = true)
     extract_dir = joinpath(path, "extracted")
 
     # If the extraction directory already exists and is not empty, assume extraction is done
