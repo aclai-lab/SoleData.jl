@@ -122,12 +122,27 @@ end
 function extract_artifact(path::String, name::String; silent::Bool = true)
     extract_dir = joinpath(path, "extracted")
 
-    # If the extraction directory already exists and is not empty, assume extraction is done
-    if isdir(extract_dir) && !isempty(readdir(extract_dir))
-        silent || println("Artifact $(name) already extracted at $(extract_dir)")
-        return extract_dir
-    else
-        # Otherwise, proceed with extraction
-        return _extract_artifact(path, name)
+    # if the extraction directory already exists and is not empty, assume extraction is done
+    try
+        if isdir(extract_dir) && !isempty(readdir(extract_dir))
+            silent || println("Artifact $(name) already extracted at $(extract_dir)")
+            return extract_dir
+        else
+            # otherwise, if it exists but is empty, proceed with extraction
+            return _extract_artifact(path, name)
+        end
+
+    # if the "extracted" folder does not exist, then "readdir" (above) will trigger an error
+    catch e
+        if e isa SystemError
+            throw(SystemError(
+                "The extraction of $(name) artifact has failed; " *
+                "you probably need to run SoleData.Artifacts.fillartifacts()"
+            ))
+        else
+            rethrow()
+        end
+
     end
+
 end
