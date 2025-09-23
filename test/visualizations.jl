@@ -1,10 +1,12 @@
 using SoleData
 
-@testset "Visualizations" begin
-  f = @scalarformula(
-    ((V1 < 5.85) ∧ (V1 ≥ 5.65) ∧ (V2 < 2.85) ∧ (V3 < 4.55) ∧ (V3 ≥ 4.45)) ∨
-    ((V1 < 5.3) ∧ (V2 ≥ 2.85) ∧ (V3 < 5.05) ∧ (V3 ≥ 4.85) ∧ (V4 < 0.35))
-  ) |> dnf
+@testset "Scalar DNF Visualizations" begin
+    
+    # Create a test formula with multiple disjuncts and overlapping constraints
+    test_formula = @scalarformula(
+        ((V1 < 5.85) ∧ (V1 ≥ 5.65) ∧ (V2 < 2.85) ∧ (V3 < 4.55) ∧ (V3 ≥ 4.45)) ∨
+        ((V1 < 5.3) ∧ (V2 ≥ 2.85) ∧ (V3 < 5.05) ∧ (V3 ≥ 4.85) ∧ (V4 < 0.35))
+    ) |> dnf
 
   check_same(a, b) = myclean(a) == myclean(b)
   function myclean(s)
@@ -17,7 +19,7 @@ using SoleData
       io = IOBuffer()
       show_scalardnf(
         io,
-        f;
+        test_formula;
         colwidth=6,
       )
       String(take!(io))
@@ -39,7 +41,7 @@ using SoleData
       io = IOBuffer()
       show_scalardnf(
         io,
-        f;
+        test_formula;
         show_all_variables=true,
         colwidth=6,
       )
