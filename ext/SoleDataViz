@@ -3,17 +3,29 @@ module SoleDataViz
 using SoleData
 using GLMakie, GeometryBasics
 
+"""
+    plot_scalardnf(formula; kwargs...)::GLMakie.Figure
 
+Plot a 3D voxel visualization of a scalar DNF formula. Each disjunct is represented as a separate layer, with variables on the x-axis and threshold intervals on the y-axis.
 
+# Keyword Arguments
+- `show_all_variables`: Whether to show all variables (default: false)
+- `palette`: Color palette for different variables (default: [:cyan, :green, :yellow, :magenta, :blue])
+- `body_char`: Character for body representation (default: =)
+- `gap`: Gap between voxels (default: 0.0)
+- `scale`: 3D scaling vector (default: Vec3f(1.0, 1.0, 0.5))
+
+# Returns
+- `Figure`: A GLMakie figure containing the 3D voxel plot
+"""
 function plot_scalardnf(
-    io::IO,
     formula::DNF;
     show_all_variables=false,
     palette=[:cyan, :green, :yellow, :magenta, :blue],
     body_char='=', # alternatives: ■, ━
     gap = 0.0,
     scale = Vec3f(1.0, 1.0, 0.5),
-)
+)::GLMakie.Figure
     formula = normalize(formula)
     disjs = SoleLogics.disjuncts(formula)
     all_intervals = [extract_intervals(d) for d in disjs]
@@ -50,15 +62,15 @@ function plot_scalardnf(
     ax = LScene(fig[1, 1], scenekw = (camera = cam3d!,))
 
     voxels!(ax,
-              0 .. (size(cube, 1)-1),
-              0 .. (size(cube, 2)-1),
-              0 .. (size(cube, 3)-1),
-              color_data;
-              colormap = palette,
-              colorrange = (1, length(palette)),
-              gap
-              # transformation = transf
-          )
+        0 .. (size(cube, 1)-1),
+        0 .. (size(cube, 2)-1),
+        0 .. (size(cube, 3)-1),
+        color_data;
+        colormap = palette,
+        colorrange = (1, length(palette)),
+        gap
+        # transformation = transf
+    )
 
     fig
 end
