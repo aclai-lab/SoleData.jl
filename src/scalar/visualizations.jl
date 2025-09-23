@@ -10,7 +10,7 @@ export show_scalardnf
 using Printf: @sprintf
 using SoleData: AbstractScalarCondition
 
-using .IntervalSetsWrap: infimum, supremum, isleftopen, isrightopen, :(..)
+using .IntervalSetsWrap: infimum, supremum, isleftopen, isrightopen
 
 # ============================================================================================
 # Interval Extraction Functions
@@ -380,7 +380,7 @@ function show_scalardnf(
             if !haskey(intervals, v)
                 if show_all_variables
                     # Variable is unconstrained (always true)
-                    interval = IntervalSetsWrap.Interval(-Inf .. Inf)
+                    interval = IntervalSetsWrap.Interval(-Inf, Inf)
                 else
                     # Skip unconstrained variables
                     continue
@@ -390,7 +390,7 @@ function show_scalardnf(
             end
 
             # Skip infinite intervals unless explicitly requested
-            if interval == IntervalSetsWrap.Interval(-Inf .. Inf) && !show_all_variables
+            if interval == IntervalSetsWrap.Interval(-Inf, Inf) && !show_all_variables
                 continue
             end
 
