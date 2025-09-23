@@ -3,7 +3,7 @@ using Downloads     # only for paper
 using Tar                  #    OLD
 ###################
 
-using SoleData.Artifacts:load,MITESPRESSOLoader,ABCLoader
+using SoleData.Artifacts: load, MITESPRESSOLoader, ABCLoader
 
 """
 espresso_minimize(

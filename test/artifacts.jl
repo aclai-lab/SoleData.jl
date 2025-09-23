@@ -1,4 +1,5 @@
 using SoleData.Artifacts
+using SoleData.Artifacts: load
 
 # fill your Artifacts.toml file;
 @test_nowarn fillartifacts()
