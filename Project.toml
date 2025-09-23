@@ -39,7 +39,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 [compat]
 CategoricalArrays = "0.10, 1"
 DataFrames = "1"
-DataStructures = "0.18"
+DataStructures = "0.18, 0.19"
 Discretizers = "3.2.4"
 Downloads = "1.6.0"
 Graphs = "1.12"
