@@ -5,20 +5,20 @@ using SoleData: AbstractScalarCondition
 
 using .IntervalSetsWrap: infimum, supremum, isleftopen, isrightopen, :(..)
 
-function extract_intervals(conjunction::LeftmostConjunctiveForm)
+function extract_intervals(conjunction::LeftmostConjunctiveForm)::Dict{Any, IntervalSetsWrap.Interval}
     _extract_intervals(SoleLogics.conjuncts(conjunction), true)
 end
-function extract_intervals(disjunction::LeftmostDisjunctiveForm)
+function extract_intervals(disjunction::LeftmostDisjunctiveForm)::Dict{Any, IntervalSetsWrap.Interval}
     _extract_intervals(SoleLogics.disjuncts(disjunction), false)
 end
 
 # polarity = true computes the intersection
 # polarity = false computes the union
-function _extract_intervals(atoms::Vector, polarity::Bool)
+function _extract_intervals(atoms::Vector, polarity::Bool)::Dict{Any, IntervalSetsWrap.Interval}
     by_var = Dict{Any, IntervalSetsWrap.Interval}()
     
     for atom in atoms
-        @assert atom isa Atom
+        @assert atom isa Atom "Cannot handle non-Atom leaves; got $(typeof(atom)) instead."
         cond = SoleLogics.value(atom)
         @assert cond isa AbstractScalarCondition typeof(cond)
         feat = SoleData.feature(cond)
@@ -34,11 +34,11 @@ function _extract_intervals(atoms::Vector, polarity::Bool)
             interval
         end
     end
-    return by_var
+    by_var
 end
 
 
-function collect_thresholds(all_intervals)
+function collect_thresholds(all_intervals::Dict{Any, IntervalSetsWrap.Interval})::Vector{Any}
     thresholds = Set{Number}()
     for intervals in all_intervals
         for interval in values(intervals)
@@ -46,7 +46,7 @@ function collect_thresholds(all_intervals)
             push!(thresholds, supremum(interval))
         end
     end
-    return sort(collect(thresholds))
+    sort(collect(thresholds))
 end
 
 mutable struct IntervalType
@@ -79,7 +79,7 @@ function compute_segmenttypes(interval, thresholds)
     if !maxi && last_idx !== nothing
         segmenttypes[last_idx].right_closed = false
     end
-    return segmenttypes, first_idx, last_idx
+    segmenttypes, first_idx, last_idx
 end
 
 function draw_bar(segmenttypes, first_idx, last_idx; colwidth=5, body_char = "=")
@@ -105,7 +105,7 @@ function draw_bar(segmenttypes, first_idx, last_idx; colwidth=5, body_char = "="
         end
     end
 
-    return  " " ^ colwidth * join(segments_str)
+     " " ^ colwidth * join(segments_str)
 end
 
 
