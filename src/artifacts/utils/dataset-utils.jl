@@ -256,3 +256,80 @@ function fix_dataframe(df, _variablenames = nothing)
 
     X = DataFrame(X)
 end
+
+"""
+    available_datasets()
+
+Return a list of all available dataset names in SoleData.
+
+# Example
+```julia
+julia> using SoleData.Artifacts
+julia> available_datasets()
+4-element Vector{String}:
+ "epilepsy"
+ "hugadb"
+ "libras"
+ "natops"
+```
+"""
+function available_datasets()::AbstractVector{<:AbstractString}
+    dataset_loader_types = subtypes(AbstractLoaderDataset)
+
+    return [name(T()) for T in dataset_loader_types]
+end
+
+"""
+    get_dataset_loader(dataset_name::AbstractString)
+
+Get the appropriate loader for a dataset by name.
+
+# Arguments
+- `dataset_name::AbstractString`: Name of the dataset (e.g., "natops", "libras")
+
+# Returns
+The corresponding loader instance.
+
+# Example
+```julia
+julia> using SoleData.Artifacts
+julia> loader = get_dataset_loader("natops")
+julia> X, y = load(loader)
+```
+"""
+function get_dataset_loader(dataset_name::AbstractString)::AbstractLoaderDataset
+    dataset_name = lowercase(dataset_name)
+
+    for T in subtypes(AbstractLoaderDataset)
+        if name(T()) == dataset_name
+            return T()
+        end
+    end
+
+    available = join(available_datasets(), ", ")
+    throw(ArgumentError("Unknown dataset: '$dataset_name'. Available datasets: $available"))
+end
+
+"""
+    load_dataset(dataset_name::AbstractString)::Tuple{<:AbstractDataFrame, <:CategoricalArray}
+
+Load a dataset by name. This is a convenience function that combines `get_dataset_loader` and `load`.
+
+# Arguments
+- `dataset_name::AbstractString`: Name of the dataset (e.g., "natops", "libras")
+
+# Returns
+A tuple `(X, y)` where:
+- `X`: Feature data (AbstractDataFrame)
+- `y`: Labels (CategoricalArray)
+
+# Example
+```julia
+julia> using SoleData.Artifacts
+julia> X, y = load_dataset("natops")
+```
+"""
+function load_dataset(dataset_name::AbstractString)::Tuple{<:AbstractDataFrame, <:CategoricalArray}
+    loader = get_dataset_loader(dataset_name)
+    return load(loader)
+end

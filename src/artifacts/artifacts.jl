@@ -9,6 +9,7 @@ using SHA
 using Tar
 using TOML
 using ZipFile
+using InteractiveUtils
 
 using DataStructures: OrderedDict
 
@@ -56,7 +57,7 @@ include("loaders/mitespresso-loader.jl")
 
 # Datasets
 
-export load_arff_dataset, parseARFF, fix_dataframe
+export load_arff_dataset, parseARFF, fix_dataframe, available_datasets, load_dataset
 include("utils/dataset-utils.jl")
 
 export EpilepsyLoader
