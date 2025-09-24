@@ -49,7 +49,7 @@ inverse_test_operator(::typeof(>))  = ≤
 inverse_test_operator(::typeof(==)) = !=
 inverse_test_operator(::typeof(!=)) = ==
 
-function SoleData.isordered(op::TestOperator)
+function isordered(op::TestOperator)
     return op in [≥, ≤, <, >]
 end
 
