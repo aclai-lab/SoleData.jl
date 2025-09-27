@@ -1,12 +1,11 @@
-# using Test
-# using Logging
-# using SoleData
-
+using Test
+using SoleData
 
 using SoleData: AbstractUnivariateFeature, Feature
 using SoleData: ScalarCondition
 using SoleData: feature
 
+using Logging
 
 @test_nowarn parsefeature(VarFeature, "min[V1]")
 @test_nowarn parsefeature(VarFeature, "min[V1]"; featvaltype = Float64)

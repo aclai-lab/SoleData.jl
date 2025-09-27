@@ -1,6 +1,7 @@
+using Test
+using SoleData
 
-# using Test
-# using SoleData
+using SoleData.Artifacts
 using SoleData: PLA
 # using SoleLogics
 
@@ -9,12 +10,11 @@ function cleanlines(str::AbstractString)
 end
 
 function my_espresso_minimize(args...; kwargs...)
-  espressoPath = artifact_loader(MITESPRESSOLoaderBinary())
+  espressoPath = SoleData.load(MITESPRESSOLoader())
   @show espressoPath
   espressobinary = joinpath(espressoPath, "espresso")
   return SoleData.espresso_minimize(args...; espressobinary = espressobinary, kwargs...)
 end
-
 
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))

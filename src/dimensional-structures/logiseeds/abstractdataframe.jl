@@ -35,17 +35,18 @@ function frame(
     dataset::AbstractDataFrame,
     column::Vector,
     i_instance::Integer;
-    worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
+    # worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing
 )
     v = column[i_instance]
     if v == ()
         OneWorld()
     else
-        worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
-            worldtype_by_dim
-        N = dimensionality(dataset)
-        W = worldtype_by_dim[N]
-        FullDimensionalFrame{N,W}(size(v))# _worldtype(eltype(dataset)))
+        # worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
+        #     worldtype_by_dim
+        # N = dimensionality(dataset)
+        # W = worldtype_by_dim[N]
+        # FullDimensionalFrame{N,W}(size(v))# _worldtype(eltype(dataset)))
+        FullDimensionalFrame(size(v))
     end
 end
 

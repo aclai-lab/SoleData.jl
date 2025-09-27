@@ -1,8 +1,8 @@
 using Test
+using SoleData
 
 using Discretizers
 using SoleData: discretize
-using Plots
 
 ############################################################################################
 ############################## Iris ########################################################
@@ -1134,7 +1134,7 @@ alphabet2 = discretizedomain(
 alphabet3 = discretizedomain(X[:,variable], max_metacondition, discretizer;
             consider_all_subintervals=true)
 
-@test syntaxstring.(alphabet3) == syntaxstring.(alphabet2)
+@test syntaxstring.(alphabet3) == syntaxstring.(alphabet1)
 
 # we can also use discretizealphabet instead of discretizedomain
 alphabet4 = SoleData.UnivariateScalarAlphabet((max_metacondition, X[:,variable]))

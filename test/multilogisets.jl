@@ -1,10 +1,12 @@
-# using Test
-# using StatsBase
-# using Random
-# using SoleLogics
-# using SoleData
-# using Logging
-# using SoleData.DimensionalDatasets
+using Test
+using SoleData
+
+using SoleData.DimensionalDatasets
+
+using StatsBase
+using Random
+using SoleLogics
+using Logging
 
 @test !SoleData.ismultilogiseed([rand(1,2,3)])
 @test !SoleData.ismultilogiseed([])

@@ -1,5 +1,6 @@
-# using Test
-# using SoleData
+using Test
+using SoleData
+
 using SoleData: RangeScalarCondition
 
 compareincludes(a,b) = (SoleData.includes(a,b), SoleData.includes(b,a))

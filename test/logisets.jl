@@ -1,21 +1,22 @@
-# using Test
-# using StatsBase
-# using SoleLogics
-# using SoleData
-# using Graphs
-# using Random
-# using ThreadSafeDicts
+using Test
+using SoleData
+
+using Graphs
+using Random
+using SoleLogics
+using StatsBase
+using ThreadSafeDicts
 
 features = SoleData.Feature.(string.('p':'z'))
 worlds = SoleLogics.World.(1:10)
-fr = SoleLogics.ExplicitCrispUniModalFrame(worlds, SimpleDiGraph(length(worlds), 4))
+fr = SoleLogics.ExplicitCrispUniModalFrame(worlds, Graphs.SimpleDiGraph(length(worlds), 4))
 
 i_instance = 1
 
 # Boolean
 rng = Random.MersenneTwister(1)
 bool_logiset = SoleData.ExplicitBooleanModalLogiset([(
-    Dict([w => sample(rng, features, 2, replace=false) for w in worlds]), fr)])
+    Dict([w => StatsBase.sample(rng, features, 2, replace=false) for w in worlds]), fr)])
 bool_condition = SoleData.ValueCondition(features[1])
 
 # TODO fix with StableRNG?
@@ -48,9 +49,21 @@ nonscalar_condition = SoleData.FunctionalCondition(features[1], (vals)->length(v
 multilogiset = MultiLogiset([bool_logiset, scalar_logiset, nonscalar_logiset])
 
 @test SoleData.modalitytype(multilogiset) <:
-SoleData.AbstractModalLogiset{SoleLogics.World{Int64}, U, SoleData.Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U
+SoleData.AbstractModalLogiset{
+    SoleLogics.World{Int64}, U, SoleData.Feature{String},
+    SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64},
+    Graphs.SimpleDiGraph{Int64}}
+} where U
 
-SoleData.AbstractModalLogiset{SoleLogics.World{Int64}, U, Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U <: SoleData.AbstractModalLogiset{SoleLogics.World{Int64}, U, Feature{String}, SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64}, SimpleDiGraph{Int64}}} where U
+SoleData.AbstractModalLogiset{
+    SoleLogics.World{Int64}, U, Feature{String},
+    SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64},
+    Graphs.SimpleDiGraph{Int64}}
+} where U <: SoleData.AbstractModalLogiset{
+    SoleLogics.World{Int64}, U, Feature{String},
+    SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64},
+    SimpleDiGraph{Int64}}
+} where U
 
 
 @test_nowarn displaystructure(bool_logiset)

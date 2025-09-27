@@ -1,4 +1,4 @@
-# This file is almost deprecated, with an exception for poarseARFF function;
+# This file is almost deprecated, with an exception for parseARFF function;
 # TODO: when .Artifacts module is completed, forward all the calls to this load_arff_dataset
 # to the proper loader.
 
