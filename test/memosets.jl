@@ -2,19 +2,20 @@
 # Scalar memoset's
 ############################################################################################
 
+using Test
+using SoleData
+
 using SoleData: ScalarMetaCondition
 using SoleData: ScalarOneStepRelationalMemoset, ScalarOneStepGlobalMemoset
 using SoleData: SoleData.ScalarOneStepMemoset
 
-# using Test
-# using StatsBase
-# using SoleLogics
-# using SoleData
-# using Graphs
-# using Random
-# using ThreadSafeDicts
 
-# using Logging
+using StatsBase
+using SoleLogics
+using Graphs
+using Random
+using ThreadSafeDicts
+using Logging
 
 features = SoleData.Feature.(string.('p':'r'))
 worlds = SoleLogics.World.(1:10)

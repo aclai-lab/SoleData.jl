@@ -1,5 +1,7 @@
-# using SoleData
-# using DataFrames
+using Test
+using SoleData
+
+using DataFrames
 
 f=min
 

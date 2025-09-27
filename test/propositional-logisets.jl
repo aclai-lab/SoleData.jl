@@ -1,9 +1,10 @@
-# using SoleData
-# using Test
-# using Random
-# using MLJ
-# using Tables
-# using DataFrames
+using Test
+using SoleData
+
+using Random
+using MLJ
+using Tables
+using DataFrames
 
 X = MLJ.load_iris()
 X = PropositionalLogiset(X)

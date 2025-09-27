@@ -1,4 +1,7 @@
-# using MLJ
+using Test
+using SoleData
+
+using MLJ
 
 _nvars = 2
 n_instances = 20

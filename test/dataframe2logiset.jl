@@ -1,10 +1,12 @@
-# using Test
-# using StatsBase
-# using Random
-# using SoleLogics
-# using SoleData
-# using DataFrames
-# using SoleData.DimensionalDatasets
+using Test
+using SoleData
+
+using SoleData.DimensionalDatasets
+
+using StatsBase
+using Random
+using SoleLogics
+using DataFrames
 
 n_instances = 2
 _nvars = 2

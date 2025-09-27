@@ -1,7 +1,8 @@
-# using DataFrames
-# using Test
-# using SoleData
-# using MLJBase
+using Test
+using SoleData
+
+using DataFrames
+using MLJBase
 
 X..., y = MLJ.load_iris()
 X_df = DataFrame(collect(values(X)), collect(keys(X)))

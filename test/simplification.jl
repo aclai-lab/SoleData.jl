@@ -1,3 +1,5 @@
+using Test
+using SoleData
 
 # using SoleLogics
 using SoleLogics: Atom
