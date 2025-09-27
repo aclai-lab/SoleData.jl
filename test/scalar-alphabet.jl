@@ -2,7 +2,7 @@ using Test
 using SoleData
 
 using DataFrames
-using MLJBase
+using MLJ
 
 X..., y = MLJ.load_iris()
 X_df = DataFrame(collect(values(X)), collect(keys(X)))
