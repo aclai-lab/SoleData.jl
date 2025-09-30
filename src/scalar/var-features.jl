@@ -555,10 +555,7 @@ featurename(f::VariableDistance) = string(f.featurename)
 
 references(f::VariableDistance) = f.references
 
-function refsize(f::VariableDistance)
-    r = references(f)
-    return r isa AbstractVector{<:AbstractVector} ? size(first(r)) : size(r)
-end
+refsize(f::VariableDistance) = references(f) |> first |> size
 
 distance(f::VariableDistance) = f.distance
 
