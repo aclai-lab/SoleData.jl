@@ -19,7 +19,7 @@ espresso_minimize(
     kwargs...
 )
 
-by https://jackhack96.github.io/logic-synthesis/espresso.html. 
+by https://jackhack96.github.io/logic-synthesis/espresso.html.
 """
 function espresso_minimize(
     syntaxtree::SoleLogics.Formula,
@@ -33,7 +33,7 @@ function espresso_minimize(
     use_scalar_range_conditions = false,
     kwargs...
 )
-    # Determine the path of the espresso binary relative to the location of this file 
+    # Determine the path of the espresso binary relative to the location of this file
     # Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.
     println("============================================")
     if isnothing(espressobinary)
@@ -110,31 +110,31 @@ Returns the path to the compiled ABC binary.
 function ensure_abc_binary(; force_rebuild = false)
     # Path to ABC binary directly in src/ directory
     abc_binary = joinpath(@__DIR__, "abc")
-    
+
     # Return existing binary if found and not forcing rebuild
     if isfile(abc_binary) && !force_rebuild
         @info "ABC binary already exists at: $abc_binary (skipping download/compilation)"
         return abc_binary
     end
-    
+
     @info "Setting up ABC binary..."
-    
+
     # Create unique temporary directory to avoid conflicts
     abc_temp_dir = mktempdir(prefix="abc_build_")
-    
+
     # ABC repository URL (compressed tarball)
     abc_url = "https://github.com/berkeley-abc/abc/archive/refs/heads/master.tar.gz"
-    
+
     try
         # Download the source code
         @info "Downloading ABC source code..."
         tarfile = joinpath(abc_temp_dir, "abc-master.tar.gz")
         Downloads.download(abc_url, tarfile)
-        
+
         # Create subdirectory for extraction to avoid conflicts
         extract_dir = joinpath(abc_temp_dir, "extract")
         mkdir(extract_dir)
-        
+
         # Extract the compressed tarball using system tar command
         # This handles .tar.gz decompression automatically
         @info "Extracting ABC source code..."
@@ -147,27 +147,27 @@ function ensure_abc_binary(; force_rebuild = false)
 
         # Path to extracted source code
         abc_source_dir = joinpath(extract_dir, "abc-master")
-        
+
         if !isdir(abc_source_dir)
             error("Failed to extract ABC source code - directory not found")
         end
-        
+
         # Compile ABC
         @info "Compiling ABC... This may take a few minutes."
-        
+
         # Change to source directory for compilation
         old_dir = pwd()
         cd(abc_source_dir)
-        
+
         try
             # Verify make is available
             if !success(`which make`)
                 error("make command not found. Please install build tools (make, gcc, etc.)")
             end
-            
+
             # Compile with make
             run(`make`)
-            
+
             # Copy compiled binary to final location
             compiled_binary = joinpath(abc_source_dir, "abc")
             if isfile(compiled_binary)
@@ -178,14 +178,14 @@ function ensure_abc_binary(; force_rebuild = false)
             else
                 error("ABC compilation completed but binary not found")
             end
-            
+
         finally
             # Always restore original directory
             cd(old_dir)
         end
-        
+
         return abc_binary
-        
+
     catch e
         @error "Failed to download/compile ABC: $e. Consider downloading ABC manually from https://github.com/berkeley-abc/abc"
         rethrow(e)
@@ -240,12 +240,12 @@ function abc_minimize(
             error("Failed to setup ABC binary: $e")
         end
     end
-    
+
     # Verify binary exists and is executable
     if !isfile(abcbinary)
         error("ABC binary not found at $abcbinary")
     end
-    
+
     # Test that ABC binary works
     try
         run(`$abcbinary -h`; wait=false)
@@ -259,7 +259,7 @@ function abc_minimize(
     # Convert formula to PLA string format
     dc_set = false
     pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(
-        syntaxtree, dc_set, silent; 
+        syntaxtree, dc_set, silent;
         use_scalar_range_conditions=use_scalar_range_conditions
     )
 
@@ -273,21 +273,21 @@ function abc_minimize(
         # Filter empty lines and fix Unicode symbols
         filtered_lines = filter(line -> !isempty(strip(line)), lines)
         filtered_lines = map(line -> replace(line, "≥" => ">="), filtered_lines)
-        
+
         # Find header lines
         i_line_idx = findfirst(line -> startswith(line, ".i "), filtered_lines)
         o_line_idx = findfirst(line -> startswith(line, ".o "), filtered_lines)
         ilb_line_idx = findfirst(line -> startswith(line, ".ilb "), filtered_lines)
         olb_line_idx = findfirst(line -> startswith(line, ".olb "), filtered_lines)
-        
+
         if isnothing(i_line_idx) || isnothing(o_line_idx)
             error("PLA format invalid: missing .i or .o lines")
         end
-        
+
         # Extract declared input/output counts
         i_count = parse(Int, split(filtered_lines[i_line_idx])[2])
         o_count = parse(Int, split(filtered_lines[o_line_idx])[2])
-        
+
         # Count actual variables from labels or product terms
         actual_inputs = 0
         if !isnothing(ilb_line_idx)
@@ -301,20 +301,20 @@ function abc_minimize(
                 actual_inputs = length(first_product)
             end
         end
-        
+
         # Fix input count mismatch
         if actual_inputs > 0 && actual_inputs != i_count
             silent || println("Fixing input count mismatch: declared=$i_count, actual=$actual_inputs")
             filtered_lines[i_line_idx] = ".i $actual_inputs"
         end
-        
+
         return join(filtered_lines, '\n')
     end
 
     # Validate and correct PLA format
     corrected_pla = validate_and_fix_pla(String(pla_string))
     silent || println("Corrected PLA:\n$corrected_pla")
-    
+
     # Create temporary files for input/output
     inputfile = tempname() * ".pla"
     outputfile = tempname() * ".pla"
@@ -334,7 +334,7 @@ function abc_minimize(
                 "read $inputfile",
                 "strash",           # Convert to AIG
                 "collapse",         # Collapse to SOP
-                "write $outputfile"             
+                "write $outputfile"
             ]
         else
             # Thorough minimization - multiple optimization passes
@@ -351,13 +351,13 @@ function abc_minimize(
                 "write $outputfile"
             ]
         end
-        
+
         # Build ABC command string
         abc_cmd_str = join(abc_commands, "; ")
         abc_cmd = `$abcbinary -c $abc_cmd_str`
-        
+
         silent || println("Running ABC command: $abc_cmd")
-        
+
         # Execute ABC with error handling
         result = try
             run(abc_cmd)
@@ -366,7 +366,7 @@ function abc_minimize(
             silent || println("ABC command failed: $e")
             false
         end
-        
+
         # Check if ABC succeeded and produced output
         if !result || !isfile(outputfile)
             silent || println("ABC failed or output file not created, returning original formula")
@@ -391,7 +391,7 @@ function abc_minimize(
         function clean_abc_output(raw_pla::String)
             lines = split(raw_pla, '\n')
             # Keep only PLA format lines (headers and product terms)
-            pla_lines = filter(line -> !isempty(strip(line)) && 
+            pla_lines = filter(line -> !isempty(strip(line)) &&
                               (startswith(line, '.') || occursin(r"^[01\-]+ ", line)), lines)
             return join(pla_lines, '\n')
         end
@@ -405,7 +405,7 @@ function abc_minimize(
         # Convert minimized PLA back to formula
         try
             form = PLA._pla_to_formula(
-                minimized_pla, silent, pla_args...; 
+                minimized_pla, silent, pla_args...;
                 conditionstype, pla_kwargs...
             )
             silent || println("Minimized formula: $form")
@@ -432,7 +432,7 @@ Useful for maintenance and debugging.
 function cleanup_temp_abc_dirs()
     temp_pattern = r"abc_build_\w+"
     temp_base = tempdir()
-    
+
     for item in readdir(temp_base)
         if occursin(temp_pattern, item)
             full_path = joinpath(temp_base, item)
@@ -477,7 +477,7 @@ end
 
 function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", silent::Bool = true; kwargs...)
     #print(dump(f))
-    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(f, false, silent; necessary_type=true, kwargs...) 
+    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(f, false, silent; necessary_type=true, kwargs...)
 
     (infile, infile_io) = mktemp_pla()
     (outfile, outfile_io) = mktemp_pla()
@@ -492,18 +492,18 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
         run(sh_cmd)
 
         minimized_output = read(outfile, String)
-        
+
         # Remove .type line that causes parser issues
         minimized_output = replace(minimized_output, r"\.type.*\n" => "")
-        
+
         # ===== PLA FORMAT NORMALIZATION =====
         # Convert "000000 1" format to "0000001" for compatibility with _pla_to_formula parser
         lines = split(minimized_output, '\n')
         normalized_lines = String[]
-        
+
         for line in lines
             line = strip(line)
-            
+
             # If line contains binary pattern + space + output, normalize it
             if match(r"^[01-]+\s+[01]$", line) !== nothing
                 parts = split(line)
@@ -517,15 +517,15 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
                 push!(normalized_lines, line)
             end
         end
-        
+
         minimized_output = join(normalized_lines, '\n')
-        
+
         # ===== MAIN CORRECTION =====
         # Extract variable labels from original PLA
         original_lines = split(pla_string, '\n')
         original_ilb = ""
         original_ob = ""
-        
+
         for line in original_lines
             line = strip(line)
             if startswith(line, ".ilb ")
@@ -534,18 +534,18 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
                 original_ob = line
             end
         end
-        
+
         # Handle special case where BOOM minimizes everything to "always true"
         lines = split(minimized_output, '\n')
         processed_lines = String[]
-        
+
         # Add original labels if missing
         ilb_added = false
         ob_added = false
-        
+
         for line in lines
             line = strip(line)
-            
+
             # Add .ilb after .i if not present
             if startswith(line, ".i ") && !ilb_added && !isempty(original_ilb)
                 push!(processed_lines, line)
@@ -553,22 +553,22 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
                 ilb_added = true
                 continue
             end
-            
-            # Add .ob after .o if not present  
+
+            # Add .ob after .o if not present
             if startswith(line, ".o ") && !ob_added && !isempty(original_ob)
                 push!(processed_lines, line)
                 push!(processed_lines, original_ob)
                 ob_added = true
                 continue
             end
-            
+
             # Handle tautology case (all don't-care followed by output)
             if match(r"^-+\s*(\d+)\s*$", line) !== nothing
                 # BOOM minimized everything to "always true" (tautology)
                 # Replace with simple rule without don't care
                 m = match(r"^-+\s*(\d+)\s*$", line)
                 output = m.captures[1]
-                
+
                 # Extract number of input variables from original PLA
                 i_count = 0
                 for orig_line in original_lines
@@ -577,11 +577,11 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
                         break
                     end
                 end
-                
+
                 # Create rule with all 0s (or first valid combination)
                 zeros_pattern = repeat("0", i_count)
                 push!(processed_lines, "$zeros_pattern$output")
-                
+
             elseif occursin("-", line) && match(r"^[01-]+\s*\d+", line) !== nothing
                 # Keep don't care rules for now, but could expand all combinations
                 push!(processed_lines, line)
@@ -589,7 +589,7 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
                 push!(processed_lines, line)
             end
         end
-        
+
         # Update .p count if necessary
         rule_count = count(x -> match(r"^[01-]+\d+", x) !== nothing, processed_lines)
         if rule_count > 0
@@ -601,9 +601,9 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
                 end
             end
         end
-        
+
         minimized_output = join(processed_lines, '\n')
-        
+
         silent || println("=== Original PLA ===")
         silent || println(pla_string)
         silent || println("=== BOOM PLA Content (Corrected) ===")
@@ -614,14 +614,14 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
         silent || println("original_ilb: ", original_ilb)
         silent || println("original_ob: ", original_ob)
         silent || println("==========================")
-        
+
         # Pass original arguments to maintain variable labels
         result = PLA._pla_to_formula(minimized_output, silent, pla_args...; pla_kwargs..., featvaltype=Float64)
         silent || println("=== Resulting Formula ===")
         silent || println(result)
         silent || println("==========================")
         return result
-        
+
     finally
         isfile(infile) && rm(infile; force=true)
         isfile(outfile) && rm(outfile; force=true)

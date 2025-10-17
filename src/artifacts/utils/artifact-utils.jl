@@ -34,6 +34,7 @@ function fillartifacts(URLS::Vector{String})
     map(url -> fillartifacts(url), URLS)
     return # to avoid returning a vector of nothing
 end
+
 function fillartifacts(url::String)
     filename_with_extension = split(url, "/")[end]
     filename_no_extension = split(filename_with_extension, ".")[1] |> lowercase
