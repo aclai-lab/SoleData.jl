@@ -516,29 +516,37 @@ function _multivariate_scalar_alphabet(
 
     grouped_sas = map(((feat,testops,domain),) ->begin
 
-            discretizedomain && (domain = discretize(domain, y))
+        # @Edo dopo la discretuzzazione sono già ordinate (?)
+        discretizedomain && (domain = discretize(domain, y))
 
-            sub_alphabets = begin
-                if sorted && !allequal(polarity, testops) # Different domain
-                    [begin
-                        mc = ScalarMetaCondition(feat, test_op)
-                        this_domain = sort(domain, rev = (!isnothing(polarity(test_op)) && truerfirst == !polarity(test_op)))
-                        UnivariateScalarAlphabet((mc, this_domain))
-                    end for test_op in testops]
-                else
-                    this_domain = sorted ? sort(domain, rev = (!isnothing(polarity(testops[1])) && truerfirst == !polarity(testops[1]))) : domain
-                    [begin
-                        mc = ScalarMetaCondition(feat, test_op)
-                        UnivariateScalarAlphabet((mc, this_domain))
-                    end for test_op in testops]
-                end
+        sub_alphabets = begin
+            if sorted && !allequal(polarity, testops) # Different domain
+                [begin
+                    mc = ScalarMetaCondition(feat, test_op)
+                    this_domain = sort(domain, rev = (!isnothing(polarity(test_op)) && truerfirst == !polarity(test_op)))
+                    UnivariateScalarAlphabet((mc, this_domain))
+                end for test_op in testops]
+            else
+                this_domain = sorted ? sort(domain, rev = (!isnothing(polarity(testops[1])) && truerfirst == !polarity(testops[1]))) : domain
+                [begin
+                    mc = ScalarMetaCondition(feat, test_op)
+                    UnivariateScalarAlphabet((mc, this_domain))
+                end for test_op in testops]
             end
+        end
 
-            sub_alphabets
-        end, zip(feats,testopss, domains))
+        sub_alphabets
+    end, zip(feats,testopss, domains))
+
     sas = vcat(grouped_sas...)
     return UnionAlphabet(sas)
 end
+
+# polarity(::Any) = nothing
+# polarity(::typeof(≥)) = true
+# polarity(::typeof(≤)) = false
+# polarity(::typeof(<)) = false
+# polarity(::typeof(>)) = true
 
 ############################################################################################
 
