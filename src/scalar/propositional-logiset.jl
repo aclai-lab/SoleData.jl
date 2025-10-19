@@ -208,8 +208,7 @@ Constructs an alphabet based on the provided `PropositionalLogiset` `X`, with op
 Returns a `UnionAlphabet` containing `ScalarCondition` and `UnivariateScalarAlphabet`.
 """
 function alphabet(
-    X::PropositionalLogiset,
-    sorted = true;
+    X::PropositionalLogiset;
     force_i_variables::Bool = false,
     test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
     discretizedomain::Bool = false,
@@ -239,7 +238,7 @@ function alphabet(
         get_test_operators(test_operators, coltype)
     end for coltype in coltypes]
 
-    _multivariate_scalar_alphabet(feats, testopss, domains; sorted, discretizedomain, kwargs...)
+    _multivariate_scalar_alphabet(feats, testopss, domains; discretizedomain, kwargs...)
 end
 
 # Note that this method is important and very fast!

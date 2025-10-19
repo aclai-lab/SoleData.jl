@@ -503,9 +503,10 @@ function _multivariate_scalar_alphabet(
     feats::AbstractVector{<:AbstractFeature},
     testopss::AbstractVector{<:AbstractVector},
     domains::AbstractVector{<:AbstractVector};
-    sorted = true,
-    truerfirst = true,
+    # sorted = true,
+    # truerfirst = true,
     # skipextremes::Bool = true, # TODO
+    sortingmode::Union{Nothing, Symbol} = nothing,
     discretizedomain::Bool = false, # TODO default behavior should depend on test_operator
     y::Union{Nothing,AbstractVector} = nothing,
 )::MultivariateScalarAlphabet
@@ -513,40 +514,53 @@ function _multivariate_scalar_alphabet(
     if discretizedomain && isnothing(y)
         throw(ArgumentError("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm."))
     end
+    
+    @assert sortingmode in [nothing, :ascending, :descending, :generalfirst]
+    
+    function sortdomain(values, mode, test_op)
+        (isnothing(polarity(test_op)) || isnothing(mode)) && return values
+        return sort(values, 
+                rev = mode == :generalfirst ? !polarity(test_op) :
+                        mode == :descending   ? true : 
+                        false)
+    end
 
-    grouped_sas = map(((feat,testops,domain),) ->begin
+    function build_univariate_alphabets(feat, testops, domain)
 
-        # @Edo dopo la discretuzzazione sono già ordinate (?)
-        discretizedomain && (domain = discretize(domain, y))
+        @show feat
+        isnothing(sortingmode) && return [
+            UnivariateScalarAlphabet((ScalarMetaCondition(feat, t), domain)) 
+            for t in testops]
 
         sub_alphabets = begin
-            if sorted && !allequal(polarity, testops) # Different domain
+            if !allequal(polarity, testops) # Different domain
                 [begin
                     mc = ScalarMetaCondition(feat, test_op)
-                    this_domain = sort(domain, rev = (!isnothing(polarity(test_op)) && truerfirst == !polarity(test_op)))
-                    UnivariateScalarAlphabet((mc, this_domain))
+                    UnivariateScalarAlphabet((mc, sortdomain(domain, sortingmode, test_op)))
                 end for test_op in testops]
             else
-                this_domain = sorted ? sort(domain, rev = (!isnothing(polarity(testops[1])) && truerfirst == !polarity(testops[1]))) : domain
+                this_domain = sortdomain(domain, sortingmode, testops[1])
                 [begin
                     mc = ScalarMetaCondition(feat, test_op)
                     UnivariateScalarAlphabet((mc, this_domain))
                 end for test_op in testops]
             end
         end
+        return sub_alphabets
+    end
 
-        sub_alphabets
+
+
+    grouped_sas = map(((feat,testops,domain),) ->begin
+        discretizedomain && (domain = discretize(domain, y))
+        build_univariate_alphabets(feat, testops, domain)
+
     end, zip(feats,testopss, domains))
 
     sas = vcat(grouped_sas...)
     return UnionAlphabet(sas)
 end
 
-# polarity(::Any) = nothing
-# polarity(::typeof(≥)) = true
-# polarity(::typeof(≤)) = false
-# polarity(::typeof(<)) = false
-# polarity(::typeof(>)) = true
 
 ############################################################################################
 
