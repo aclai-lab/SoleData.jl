@@ -503,8 +503,6 @@ function _multivariate_scalar_alphabet(
     feats::AbstractVector{<:AbstractFeature},
     testopss::AbstractVector{<:AbstractVector},
     domains::AbstractVector{<:AbstractVector};
-    # sorted = true,
-    # truerfirst = true,
     # skipextremes::Bool = true, # TODO
     sortingmode::Union{Nothing, Symbol} = nothing,
     discretizedomain::Bool = false, # TODO default behavior should depend on test_operator
@@ -527,7 +525,8 @@ function _multivariate_scalar_alphabet(
 
     function build_univariate_alphabets(feat, testops, domain)
 
-        @show feat
+        discretizedomain && (domain = discretize(domain, y))
+
         isnothing(sortingmode) && return [
             UnivariateScalarAlphabet((ScalarMetaCondition(feat, t), domain)) 
             for t in testops]
@@ -549,14 +548,11 @@ function _multivariate_scalar_alphabet(
         return sub_alphabets
     end
 
+    # grouped_sas = map(((feat,testops,domain),) ->begin
+    #     build_univariate_alphabets(feat, testops, domain)
+    # end, zip(feats,testopss, domains))
 
-
-    grouped_sas = map(((feat,testops,domain),) ->begin
-        discretizedomain && (domain = discretize(domain, y))
-        build_univariate_alphabets(feat, testops, domain)
-
-    end, zip(feats,testopss, domains))
-
+    grouped_sas = map(build_univariate_alphabets, feats, testopss, domains)
     sas = vcat(grouped_sas...)
     return UnionAlphabet(sas)
 end
