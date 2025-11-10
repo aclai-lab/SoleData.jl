@@ -31,7 +31,7 @@ function fillartifacts()
     fillartifacts(ARTIFACT_URLS)
 end
 function fillartifacts(URLS::Vector{String})
-    map(url -> fillartifacts(url), URLS)
+    @showprogress map(url -> fillartifacts(url), URLS)
     return # to avoid returning a vector of nothing
 end
 
