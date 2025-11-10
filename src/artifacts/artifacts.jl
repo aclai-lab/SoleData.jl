@@ -5,6 +5,7 @@ using CodecZlib
 using DataFrames
 using Downloads
 using Pkg.Artifacts
+using ProgressMeter
 using SHA
 using Tar
 using TOML
