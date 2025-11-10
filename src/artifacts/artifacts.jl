@@ -25,10 +25,12 @@ ARTIFACT_URLS = [
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/minimizers/mitespresso.tar.gz",
 
     # datasets
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/enzymes.tar.gz",
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/epilepsy.tar.gz",
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/hugadb.tar.gz",
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/libras.tar.gz",
     "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/natops.tar.gz",
+    "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/paviauni.tar.gz",
 ]
 
 include("utils/artifact-utils.jl")
