@@ -5,6 +5,13 @@ git-tree-sha1 = "2fde6d24ce7bffccc0a66a5447787bd95a057cca"
     sha256 = "a52485c26d1c239f97921a1b726faad5f0e642470a592234bdca2334c9892b7c"
     url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/generic/abc.tar.gz"
 
+[enzymes]
+git-tree-sha1 = "df53cf90725e109caefe33fcb4e74ce64d509d78"
+
+    [[enzymes.download]]
+    sha256 = "72b4e3eceb02fe32c61bdace195da7e09d1a78ce8f9034876052adea44e5183a"
+    url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/enzymes.tar.gz"
+
 [libras]
 git-tree-sha1 = "5c13bb56bcf0d6866d26c80fde16b27e6ad2e75f"
 
@@ -39,3 +46,10 @@ git-tree-sha1 = "a59cc61429942aa77b0d6a0bc2ffcf6f47acf7e0"
     [[hugadb.download]]
     sha256 = "e34ccf94cb1830cfda0c3007fbdb8a8810bcdde3e0219a12815fecff61798541"
     url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/hugadb.tar.gz"
+
+[paviauni]
+git-tree-sha1 = "81396e68a00447706e3578371c010ca1e324037c"
+
+    [[paviauni.download]]
+    sha256 = "6c85460493385829630c275cdfa658c7eaf7a6c9618f95438137db55d533fcad"
+    url = "https://github.com/aclai-lab/Artifacts/raw/main/sole/datasets/paviauni.tar.gz"
