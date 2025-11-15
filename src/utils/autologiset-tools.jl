@@ -138,19 +138,6 @@ function readconditions(
     end
 end
 
-
-
-
-# UNI
-# AbstractArray -> scalarlogiset -> supportedlogiset
-# SupportedLogiset -> supportedlogiset
-# AbstractModalLogiset -> supportedlogiset
-
-# MULTI
-# SoleData.MultiDataset -> multilogiset
-# AbstractDataFrame -> naturalgrouping -> multilogiset
-# MultiLogiset -> multilogiset
-
 function autologiset(
     X;
     force_var_grouping::Union{Nothing,AbstractVector{<:AbstractVector}} = nothing,
@@ -191,7 +178,7 @@ function autologiset(
     end
 
     X = begin
-        if X isa AbstractDimensionalDataset
+        if X isa MultiData.AbstractDimensionalDataset
             X = downsize.(eachinstance(X))
 
             if !passive_mode
@@ -224,11 +211,6 @@ function autologiset(
         end
     end
 
-    # @show X
-    # @show collect.(X)
-    # readline()
-
-    # DataFrame -> MultiDataset + variable grouping (needed for printing)
     X, var_grouping = begin
         if X isa AbstractDataFrame
 
@@ -254,10 +236,10 @@ function autologiset(
                 end
             end
 
-            md = MultiDataset(X, var_grouping)
+            md = MultiData.MultiDataset(X, var_grouping)
 
             # Downsize
-            md = MultiDataset([begin
+            md = MultiData.MultiDataset([begin
                 mod, varnames = dataframe2dimensional(mod)
                 mod = downsize.(eachinstance(mod))
                 SoleData.dimensional2dataframe(mod, varnames)
@@ -376,7 +358,7 @@ end
 using StatsBase
 using StatsBase: mean
 using SoleBase: movingwindow
-using SoleData: AbstractDimensionalDataset
+using SoleData: MultiData.AbstractDimensionalDataset
 
 DOWNSIZE_MSG = "If this process gets killed, please downsize your dataset beforehand."
 
@@ -503,7 +485,7 @@ function moving_average(
     return new_instance
 end
 
-function moving_average(dataset::AbstractDimensionalDataset, args...; kwargs...)
+function moving_average(dataset::MultiData.AbstractDimensionalDataset, args...; kwargs...)
     return map(instance->moving_average(instance, args...; kwargs...), eachinstance(dataset))
 end
 

@@ -24,7 +24,7 @@ B = randn(10,10,10)
 A = Dict([i => r for (i,r) in enumerate(randn(1000))])
 B = Dict([i => r for (i,r) in enumerate(randn(1000))])
 (minA, minB), b = minify([A, B])
-@test sortperm(collect(values(minA))) == sortperm(collect(values(A)))
+@test sortperm(collect(Base.values(minA))) == sortperm(collect(Base.values(A)))
 @test Dict([i => b(r) for (i,r) in minA]) == A
-@test sortperm(collect(values(minB))) == sortperm(collect(values(B)))
+@test sortperm(collect(Base.values(minB))) == sortperm(collect(Base.values(B)))
 @test Dict([i => b(r) for (i,r) in minB]) == B

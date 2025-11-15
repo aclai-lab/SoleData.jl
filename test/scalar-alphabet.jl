@@ -5,7 +5,7 @@ using DataFrames
 using MLJ
 
 X..., y = MLJ.load_iris()
-X_df = DataFrame(collect(values(X)), collect(keys(X)))
+X_df = DataFrame(collect(Base.values(X)), collect(keys(X)))
 X = scalarlogiset(X_df; allow_propositional = true)
 
 myalphabet_int = alphabet(X, test_operators = [<], force_i_variables = true)
