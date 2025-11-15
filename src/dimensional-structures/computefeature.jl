@@ -60,6 +60,8 @@ function computeunivariatefeature(
     size(varchannel) == refsize(f) || throw(DimensionMismatch(
         "Trying to compare size $(size(varchannel)) with $(refsize(f))"))
 
+    # TODO: this can probably be optimized using @inbounds and mapreduce to avoid
+    # unnecessarily allocations.
     (map(reference -> distance(f)(varchannel,reference), references(f)) |> aggregator)
 end
 
