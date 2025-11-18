@@ -4,7 +4,7 @@ using SoleData
 using SoleData.Artifacts
 
 # fill your Artifacts.toml file;
-@test_nowarn fillartifacts()
+fillartifacts()
 
 
 # Loader lists

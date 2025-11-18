@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - devPaso
     tags: ['*']
   pull_request:
   workflow_dispatch:
@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1'
-          # - 'lts'
+          - '1.12'
+          - 'lts'
           # - 'pre'
         os:
           - ubuntu-latest

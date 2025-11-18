@@ -9,6 +9,17 @@ using DataFrames
 using MultiData
 using MultiData: AbstractDimensionalDataset
 
+using MultiData: _isnan
+
+import MultiData: maxchannelsize, channelsize
+import MultiData: hasnans
+import MultiData: instance, get_instance, instances
+import MultiData: displaystructure
+import MultiData: dimensionality
+import MultiData: modality, eachmodality, nmodalities
+import MultiData: ninstances, nvariables
+import MultiData: concatdatasets
+
 using DataStructures: OrderedDict
 
 const DF = DataFrames
@@ -61,18 +72,6 @@ using SoleLogics: Full0DFrame, Full1DFrame, Full2DFrame
 using SoleLogics: X, Y, Z
 using SoleLogics: AbstractWorld, IdentityRel
 import SoleLogics: syntaxstring
-
-using MultiData: _isnan
-import MultiData: maxchannelsize, channelsize
-import MultiData: hasnans, nvariables
-import MultiData: instance, get_instance, displaystructure, concatdatasets
-import MultiData: displaystructure
-import MultiData: dimensionality
-
-import MultiData: ninstances
-import MultiData: _isnan
-import MultiData: hasnans, instances, concatdatasets
-import MultiData: displaystructure
 
 import Tables: istable, rows, subset, getcolumn, columnnames, rowaccess
 

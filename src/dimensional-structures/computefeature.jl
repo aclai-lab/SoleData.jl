@@ -42,14 +42,27 @@ end
 function computeunivariatefeature(f::VariableAvg, varchannel::AbstractArray{T}) where {T}
     (mean(varchannel))
 end
+
+"""
+    function computeunivariatefeature(
+        f::VariableDistance,
+        varchannel::AbstractArray{T};
+        aggregator::Function=minimum
+    ) where {T}
+
+Return `aggregator( [distance(f)(r, varchannel) for r in references(f)] )`.
+"""
 function computeunivariatefeature(
     f::VariableDistance,
-    varchannel::AbstractArray{T}
+    varchannel::AbstractArray{T};
+    aggregator::Function=minimum
 ) where {T}
     size(varchannel) == refsize(f) || throw(DimensionMismatch(
         "Trying to compare size $(size(varchannel)) with $(refsize(f))"))
 
-    (map(reference -> distance(f)(varchannel,reference), references(f)) |> minimum)
+    # TODO: this can probably be optimized using @inbounds and mapreduce to avoid
+    # unnecessarily allocations.
+    (map(reference -> distance(f)(varchannel,reference), references(f)) |> aggregator)
 end
 
 # simplified propositional cases:
