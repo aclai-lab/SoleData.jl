@@ -6,6 +6,7 @@ using HTTP
 using ZipFile
 using DataFrames
 using CategoricalArrays
+using InteractiveUtils
 
 using DataStructures: OrderedDict
 
@@ -274,7 +275,7 @@ julia> available_datasets()
 ```
 """
 function available_datasets()::AbstractVector{<:AbstractString}
-    dataset_loader_types = subtypes(AbstractLoaderDataset)
+    dataset_loader_types = InteractiveUtils.subtypes(AbstractLoaderDataset)
 
     return [name(T()) for T in dataset_loader_types]
 end
