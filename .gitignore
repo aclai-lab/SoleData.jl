@@ -2,7 +2,7 @@
 *.jl.cov
 *.jl.mem
 /src/tempfile.jl
-/Manifest.toml
+**/Manifest.toml
 /docs/build/
 /test/data/*
 abc.history
