@@ -3,7 +3,7 @@ using SoleLogics: intervals_in, short_intervals_in
 using SoleLogics: _IA_A, _IA_L, _IA_B, _IA_E, _IA_D, _IA_O,
                   _IA_Ai, _IA_Li, _IA_Bi, _IA_Ei, _IA_Di, _IA_Oi
 
-using SoleLogics: _IA_AorO, _IA_AiorOi, _IA_DorBorE, _IA_DiorBiorEi, _IA_I, IA72IARelations
+using SoleLogics: _IA_AorO, _IA_AiorOi, _IA_DorBorE, _IA_DiorBiorEi, _IA_I, IA72IARelations, IA32IARelations
 
 # TODO remove:
 # Note: only needed for a smooth definition of IA2DRelations
@@ -140,4 +140,5 @@ representatives(fr::Full1DFrame, w::Interval, r::_IA_AorO,        f::AbstractFea
 representatives(fr::Full1DFrame, w::Interval, r::_IA_AiorOi,      f::AbstractFeature, a::Aggregator) = Iterators.flatten([representatives(fr, w, r, f, a) for r in IA72IARelations(IA_AiorOi)])
 representatives(fr::Full1DFrame, w::Interval, r::_IA_DorBorE,     f::AbstractFeature, a::Aggregator) = Iterators.flatten([representatives(fr, w, r, f, a) for r in IA72IARelations(IA_DorBorE)])
 representatives(fr::Full1DFrame, w::Interval, r::_IA_DiorBiorEi,  f::AbstractFeature, a::Aggregator) = Iterators.flatten([representatives(fr, w, r, f, a) for r in IA72IARelations(IA_DiorBiorEi)])
-representatives(fr::Full1DFrame, w::Interval, r::_IA_I,           f::AbstractFeature, a::Aggregator) = Iterators.flatten([representatives(fr, w, r, f, a) for r in IA72IARelations(IA_I)])
+
+representatives(fr::Full1DFrame, w::Interval, r::_IA_I,           f::AbstractFeature, a::Aggregator) = Iterators.flatten([representatives(fr, w, r, f, a) for r in IA32IARelations(IA_I)])
