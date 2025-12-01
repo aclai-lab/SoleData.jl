@@ -33,3 +33,11 @@ for l in LOADERS
     # if they exist, they are called by the loading logic.
     @test_nowarn SoleData.load(l)
 end
+
+for ds in available_datasets()
+    # printstyled("Available dataset: $ds\n", color=:blue)
+    println(ds)
+    @test ds isa AbstractString
+
+    load_dataset(ds)
+end
