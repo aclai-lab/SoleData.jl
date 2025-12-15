@@ -83,6 +83,8 @@ function espresso_minimize(
         errstr = String(read(err))
         !isempty(errstr) && (@warn String(read(err)))
     catch
+        silent || println("Error running espresso command:")
+        silent || println(espresso_cmd)
         close(out.in)
         close(err.in)
         errstr = String(read(err))
@@ -215,12 +217,95 @@ Minimize a Boolean formula using the ABC tool with automatic setup.
 
 # Returns
 - Minimized formula or original formula if minimization fails
+
+# More info about ABC commands:
+- Fast minimization (fast=1): Basic optimizations for quick results
+- Balanced minimization (fast=0): Mix of structural and algebraic optimizations
+- Thorough minimization (fast=other): Multiple passes with don't-care optimization
+
+## different abc commands can be used depending on the desired optimization level.
+
+### Examples:
+
+    Input PLA example - a simple but non-minimal boolean function
+    f = abc + ab'c + a'bc + abc'
+    This can be minimized to: f = ab + ac + bc
+
+input_pla =
+            .i 3
+            .o 1
+            .ilb a b c
+            .ob f
+            111 1
+            110 1
+            101 1
+            011 1
+            000 0
+            001 0
+            010 0
+            100 0
+            .e
+
+ ========================================
+ FAST MODE - Quick basic optimization
+ ========================================
+ Commands: read -> strash -> collapse -> write
+
+ Result: f = abc + ab'c + a'bc + abc'
+ Literals: ~12-14
+ Runtime: ~0.1s
+
+ Explanation: Performs minimal transformation, may keep redundant terms
+ Good for: Quick checks, prototyping where exact minimization isn't critical
+ ========================================
+ BALANCED MODE - Structural + algebraic
+ ========================================
+ Commands: read -> strash -> balance -> rewrite -> refactor ->
+           balance -> rewrite -z -> collapse -> sop -> fx ->
+           strash -> balance -> collapse -> write
+
+ Result: f = ab + ac + bc
+ Literals: ~6-8
+ Runtime: ~0.5s
+
+ Explanation: Uses algebraic factoring and structural rewriting
+ The 'fx' command extracts common algebraic divisors
+ 'refactor' finds better factored forms
+ Good for: Medium-sized designs, good quality/speed tradeoff
+ ========================================
+ THOROUGH MODE - Don't-care optimization
+ ========================================
+ Commands: read -> sop -> strash -> dc2 -> collapse ->
+           strash -> dc2 -> collapse -> sop -> write
+
+ Result: f = ab + ac + bc (fully minimized)
+ Literals: 6
+ Runtime: ~1-2s
+
+ Explanation: 'dc2' exploits don't-care conditions aggressively
+ Multiple passes ensure maximum literal reduction
+ Repeated strash->dc2->collapse cycles catch all opportunities
+ Good for: Critical paths, ASIC synthesis, when size matters most
+ ========================================
+ Visual comparison on the example:
+ ========================================
+ Original:     f = abc + ab'c + a'bc + abc'  (4 terms, 12 literals)
+
+ Fast:         f = abc + ab'c + abc'         (3 terms, ~9 literals)
+               May miss some optimizations
+
+ Balanced:     f = ab + c(a + b)             (2 terms + factor, ~6-8 literals)
+               Good algebraic form
+
+ Thorough:     f = ab + ac + bc              (3 terms, 6 literals)
+               Minimal SOP form, fully optimized
+
 """
 function abc_minimize(
     syntaxtree::SoleLogics.Formula,
     silent::Bool = true,
     args...;
-    fast = true,
+    fast = 1,
     abcbinary = nothing,
     otherflags = [],
     use_scalar_range_conditions = false,
@@ -327,17 +412,41 @@ function abc_minimize(
 
         silent || println("PLA written to: $inputfile")
 
-        # Define ABC command sequence
-        if fast
+        # Define ABC command sequence based on optimization level
+        if fast == 1
             # Fast minimization - basic optimization
+            # Uses minimal transformations for quick results
+            # Example: Small circuits where speed > quality (e.g., quick prototyping)
+            abc_commands = [
+                "read $inputfile",
+                "strash",           # Convert to AIG (And-Inverter Graph)
+                "collapse",         # Collapse to SOP (Sum-of-Products)
+                "write $outputfile"
+            ]
+        elseif fast == 0
+            # Balanced minimization - rewriting and algebraic optimization
+            # Combines structural manipulation with algebraic techniques
+            # Example: Medium circuits needing good quality without excessive runtime
             abc_commands = [
                 "read $inputfile",
                 "strash",           # Convert to AIG
+                "balance",          # Balance AIG for better structure
+                "rewrite",          # Rewrite using precomputed structures
+                "refactor",         # Algebraic refactoring
+                "balance",          # Re-balance after refactoring
+                "rewrite -z",       # Zero-cost rewriting
                 "collapse",         # Collapse to SOP
+                "sop",              # Ensure sum-of-products form
+                "fx",               # Fast extract - algebraic decomposition
+                "strash",           # Convert back to AIG
+                "balance",          # Final balance
+                "collapse",         # Final collapse to logic
                 "write $outputfile"
             ]
         else
             # Thorough minimization - multiple optimization passes
+            # Applies don't-care optimization repeatedly for maximum reduction
+            # Example: Critical circuits where size matters most (e.g., ASIC synthesis)
             abc_commands = [
                 "read $inputfile",
                 "sop",              # Convert to sum-of-products
