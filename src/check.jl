@@ -2,8 +2,10 @@ import SoleLogics: check
 using SoleLogics: normalize
 using SoleLogics: AnyWorld
 using SoleLogics: value
+using SoleLogics: DefaultCheckAlgorithm
 
 function check(
+    ::DefaultCheckAlgorithm,
     φ::Atom{<:AbstractCondition},
     i::SoleLogics.LogicalInstance{<:AbstractLogiset},
     args...;
@@ -15,6 +17,7 @@ function check(
 end
 
 function check(
+    ::DefaultCheckAlgorithm,
     φ::Atom{<:AbstractCondition},
     i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
     w::Union{Nothing,AnyWorld,<:AbstractWorld} = nothing,
@@ -26,7 +29,6 @@ function check(
     cond = SoleLogics.value(φ)
     return checkcondition(cond, X, i_instance, w, args...)
 end
-
 
 """
     check(
