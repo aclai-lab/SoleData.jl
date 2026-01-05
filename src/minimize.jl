@@ -312,15 +312,11 @@ function abc_minimize(
     force_rebuild_abc = false,
     kwargs...
 )
-    println("Using abc_minimize function with Artifact loader !!")
+    println("Using abc_minimize function with auto-setup")
     # Auto-setup ABC binary if not specified
     if isnothing(abcbinary)
         try
-            abcpath = load(ABCLoader())
-            silent || @show abcpath
-            abcbinary = joinpath(abcpath, "abc")
-            silent || @show abcbinary
-            #abcbinary = ensure_abc_binary(; force_rebuild = force_rebuild_abc) deprecate version
+            abcbinary = ensure_abc_binary(; force_rebuild = force_rebuild_abc)
         catch e
             error("Failed to setup ABC binary: $e")
         end
