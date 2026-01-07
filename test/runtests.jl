@@ -15,6 +15,7 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("Logisets", [ "logisets.jl", ]),
+    
     ("Propositional Logisets", [ "propositional-logisets.jl", ]),
     ("Memosets", [ "memosets.jl", ]),
     #
