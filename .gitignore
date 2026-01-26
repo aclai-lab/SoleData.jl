@@ -4,5 +4,6 @@
 /src/tempfile.jl
 /Manifest.toml
 /docs/build/
+/docs/Manifest.toml
 /test/data/*
 abc.history
