@@ -1,3 +1,12 @@
+using SoleLogics: Atom, Literal
+using SoleLogics: LeftmostConjunctiveForm
+using SoleLogics: Formula, DNF, dnf
+
+using SoleData:   ScalarCondition
+using SoleData:   VariableValue
+
+using SoleModels: Label
+
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
@@ -221,11 +230,11 @@ end
 # ---------------------------------------------------------------------------- #
 #                                formula to pla                                #
 # ---------------------------------------------------------------------------- #
-formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
-    formula_to_pla(SoleLogics.dnf(formula, Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
+formula_to_pla(formula::Formula; kwargs...) =
+    formula_to_pla(dnf(formula, Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
 
 function formula_to_pla(
-    dnfformula              :: SoleLogics.DNF;
+    dnfformula              :: DNF;
     scalar_range_conditions :: Bool=false,
     kwargs...
 )
