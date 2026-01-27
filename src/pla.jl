@@ -1,11 +1,6 @@
-using SoleLogics: Atom, Literal
-using SoleLogics: LeftmostConjunctiveForm
-using SoleLogics: Formula, DNF, dnf
-
-using SoleData:   ScalarCondition
-using SoleData:   VariableValue
-
-using SoleModels: Label
+using SoleLogics
+using SoleData
+using SoleModels
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
@@ -17,9 +12,9 @@ const LiteralBool = Dict('1' => true, '0' => false)
 # ---------------------------------------------------------------------------- #
 """
     _encode_disjunct(
-        disjunct::LeftmostConjunctiveForm{Literal},
-        features::Vector{<:VariableValue},
-        conditions::Vector{<:ScalarCondition},
+        disjunct::SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
+        features::Vector{<:SoleData.VariableValue},
+        conditions::Vector{<:SoleData.ScalarCondition},
         includes::Vector{BitMatrix},
         excludes::Vector{BitMatrix},
         feat_condindxss::Vector{Vector{Int64}}
@@ -32,9 +27,9 @@ const LiteralBool = Dict('1' => true, '0' => false)
     or "-" (don't care).
 
     # Arguments
-    - `disjunct::LeftmostConjunctiveForm{Literal}`: The logical disjunct to encode, containing literals
-    - `features::Vector{<:VariableValue}`: Vector of features used in the logical formula
-    - `conditions::Vector{<:ScalarCondition}`: Vector of all possible conditions 
+    - `disjunct::SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal}`: The logical disjunct to encode, containing literals
+    - `features::Vector{<:SoleData.VariableValue}`: Vector of features used in the logical formula
+    - `conditions::Vector{<:SoleData.ScalarCondition}`: Vector of all possible conditions 
     - `includes::Vector{BitMatrix}`: Matrix-like structure defining inclusion relationships between conditions
     - `excludes::Vector{BitMatrix}`: Matrix-like structure defining exclusion relationships between conditions
     - `feat_condindxss::Vector{Vector{Int64}}`: Mapping from features to their corresponding condition indices
@@ -54,9 +49,9 @@ const LiteralBool = Dict('1' => true, '0' => false)
     - The resulting PLA row uses "-" for don't-care positions that are not constrained by any literal
 """
 function _encode_disjunct(
-    disjunct        :: LeftmostConjunctiveForm{Literal},
-    features        :: Vector{<:VariableValue},
-    conditions      :: Vector{<:ScalarCondition},
+    disjunct        :: SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
+    features        :: Vector{<:SoleData.VariableValue},
+    conditions      :: Vector{<:SoleData.ScalarCondition},
     includes        :: Vector{BitMatrix},
     excludes        :: Vector{BitMatrix},
     feat_condindxss :: Vector{Vector{Int64}}
@@ -106,22 +101,22 @@ end
     _read_conditions(
         line::AbstractString,
         conditionstype::Type,
-        fnames::Vector{<:Label}
-    ) -> Vector{Atom}
+        fnames::Vector{<:SoleModels.Label}
+    ) -> Vector{SoleLogics.Atom}
 
 Parse a PLA input label line (`.ilb`) and extract scalar conditions as atoms.
 
 This function processes a single line from a Programmable Logic Array (PLA) file that 
 defines input variable labels and their associated conditions. It parses each condition 
-specification and creates corresponding `Atom` objects.
+specification and creates corresponding `SoleLogics.Atom` objects.
 
 # Arguments
 - `line::AbstractString`: The `.ilb` command line from a PLA file, containing space-separated condition specifications
-- `conditionstype::Type`: The type of condition to create (e.g., `ScalarCondition`, `RangeScalarCondition`)
-- `fnames::Vector{<:Label}`: Vector of feature names used to resolve variable indices for `VariableValue` structs
+- `conditionstype::Type`: The type of condition to create (e.g., `SoleData.ScalarCondition`, `RangeScalarCondition`)
+- `fnames::Vector{<:SoleModels.Label}`: Vector of feature names used to resolve variable indices for `SoleData.VariableValue` structs
 
 # Returns
-- `Vector{Atom}`: Vector of atoms, each containing a scalar condition parsed from the input line
+- `Vector{SoleLogics.Atom}`: Vector of atoms, each containing a scalar condition parsed from the input line
 
 # Format
 Each condition in the line follows the pattern: `[feature_name]operator threshold`
@@ -136,8 +131,8 @@ The function:
    - Feature name (between `[` and `]`)
    - Operator (`<` or `≥`)
    - Threshold value (remaining string parsed as Float64)
-3. Creates a `VariableValue` from the feature name and its index
-4. Constructs a condition object and wraps it in an `Atom`
+3. Creates a `SoleData.VariableValue` from the feature name and its index
+4. Constructs a condition object and wraps it in an `SoleLogics.Atom`
 
 # Notes
 - The feature name must exist in `fnames` to determine the variable index
@@ -145,7 +140,7 @@ The function:
 function _read_conditions(
     line           :: AbstractString,
     conditionstype :: Type,
-    fnames         :: Vector{<:Label}
+    fnames         :: Vector{<:SoleModels.Label}
 )
     parts = split(line, ' ')[2:end]  # skip '.ilb' command
     
@@ -156,7 +151,7 @@ function _read_conditions(
         # extract feature, between '[]'
         varname   = Symbol(part[2:close_bracket_idx-1])
         i_var     = findfirst(==(varname), fnames)
-        value     = VariableValue(i_var, varname)
+        value     = SoleData.VariableValue(i_var, varname)
         
         # extract operator, character after ']'
         op_start  = nextind(part, close_bracket_idx)
@@ -168,14 +163,14 @@ function _read_conditions(
 
         condition = conditionstype(value, operator, threshold)
 
-        return Atom{typeof(condition)}(condition)
+        return SoleLogics.Atom{typeof(condition)}(condition)
     end
 end
 
 # ---------------------------------------------------------------------------- #
 #                               univariate utils                               #
 # ---------------------------------------------------------------------------- #
-function header(conditions::Vector{<:ScalarCondition}, feat_condnames::Vector{Vector{String}})
+function header(conditions::Vector{<:SoleData.ScalarCondition}, feat_condnames::Vector{Vector{String}})
     num_outputs = 1
     num_vars = length(conditions)
     ilb_str = join(vcat(feat_condnames...), " ")
@@ -230,11 +225,11 @@ end
 # ---------------------------------------------------------------------------- #
 #                                formula to pla                                #
 # ---------------------------------------------------------------------------- #
-formula_to_pla(formula::Formula; kwargs...) =
-    formula_to_pla(dnf(formula, Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
+formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
+    formula_to_pla(SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
 
 function formula_to_pla(
-    dnfformula              :: DNF;
+    dnfformula              :: SoleLogics.DNF;
     scalar_range_conditions :: Bool=false,
     kwargs...
 )
@@ -250,11 +245,11 @@ function formula_to_pla(
         dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
     end
 
-    formula_to_pla(atoms(dnfformula), SoleLogics.disjuncts(dnfformula); kwargs...)
+    formula_to_pla(atoms(dnfformula); kwargs...)
 end
 
 function formula_to_pla(
-    atoms :: Vector{Vector{Atom}};
+    atoms :: Vector{Vector{SoleLogics.Atom}};
     encoding                :: Symbol=:univariate,
     scalar_range_conditions :: Bool=false
 )
@@ -320,22 +315,21 @@ end
 # ---------------------------------------------------------------------------- #
 function pla_to_formula(
     pla            :: String,
-    fnames         :: Vector{<:Label};
-    conditionstype :: Type=SoleData.ScalarCondition,
-    featuretype    :: Type=SoleData.VariableValue,
+    fnames         :: Vector{<:SoleModels.Label};
+    conditionstype :: Type=SoleData.SoleData.ScalarCondition,
 )
     lines             = split(pla, '\n')
-    parsed_conditions = Atom[]
+    parsed_conditions = SoleLogics.Atom[]
     binaries          = String[]
 
     for line in lines
-        startswith(line, ".ilb") && append!(parsed_conditions, _read_conditions(line, conditionstype, featuretype, fnames))
+        startswith(line, ".ilb") && append!(parsed_conditions, _read_conditions(line, conditionstype, fnames))
         startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:end-2]])
     end
 
     disjuncts = [
-        LeftmostConjunctiveForm([
-            Literal(LiteralBool[value], parsed_conditions[idx])
+        SoleLogics.LeftmostConjunctiveForm([
+            SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx])
             for (idx, value) in enumerate(binary)
             if value ∈ ['1', '0']
         ])
