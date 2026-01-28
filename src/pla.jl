@@ -243,24 +243,24 @@ formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
 
 function formula_to_pla(
     dnfformula              :: SoleLogics.DNF;
-    scalar_range_conditions :: Bool=false,
+    scalar_range :: Bool=false,
     kwargs...
 )
     scalar_simplification_kwargs = (;
-        force_scalar_range = scalar_range_conditions, 
-        allow_scalar_range = scalar_range_conditions,
+        force_scalar_range = scalar_range, 
+        allow_scalar_range = scalar_range,
     )
 
     dnfformula = scalar_simplification(dnfformula; scalar_simplification_kwargs...)
     dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
 
-    formula_to_pla(collect.(atoms(dnfformula).it); scalar_range_conditions, kwargs...)
+    formula_to_pla(collect.(atoms(dnfformula).it); scalar_range, kwargs...)
 end
 
 function formula_to_pla(
-    atoms :: Vector{Vector{SoleLogics.Atom}};
-    encoding                :: Symbol=:univariate,
-    scalar_range_conditions :: Bool=false
+    atoms        :: Vector{Vector{SoleLogics.Atom}};
+    encoding     :: Symbol=:univariate,
+    scalar_range :: Bool=false
 )
     @assert encoding in [:univariate, :multivariate]
 
@@ -274,7 +274,7 @@ function formula_to_pla(
     conditions = SoleData.removeduals(conditions)
 
     # TODO check and test it
-    if scalar_range_conditions
+    if scalar_range
         original_conditions = conditions
         conditions = SoleData.scalartiling(conditions, features)
         @assert length(setdiff(original_conditions, conditions)) == 0 "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
@@ -370,11 +370,11 @@ my_isless(::typeof(≤), ::typeof(≤)) = false
 # ---------------------------------------------------------------------------- #
 #                            scalar simplification                             #
 # ---------------------------------------------------------------------------- #
-scalar_simplification(φ::DNF, args...; kwargs...) =
-    map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.disjuncts(φ)) |> LeftmostDisjunctiveForm
+scalar_simplification(φ::DNF; kwargs...) =
+    map(d->scalar_simplification(d; kwargs...), SoleLogics.disjuncts(φ)) |> LeftmostDisjunctiveForm
 
-scalar_simplification(φ::CNF, args...; kwargs...) =
-    map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.conjuncts(φ)) |> LeftmostConjunctiveForm
+scalar_simplification(φ::CNF; kwargs...) =
+    map(d->scalar_simplification(d; kwargs...), SoleLogics.conjuncts(φ)) |> LeftmostConjunctiveForm
 
 function scalar_simplification(
     φ :: Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm};
@@ -409,15 +409,15 @@ function scalar_simplification(
     force_scalar_range :: Bool=false,
     allow_scalar_range :: Bool=true,
 )
-    scalar_conditions = SoleLogics.value.(atomslist)
-    feats = SoleData.feature.(scalar_conditions)
+    scalar_conds = SoleLogics.value.(atomslist)
+    feats        = SoleData.feature.(scalar_conds)
 
     feature_groups = [(f, map(x->x==f, feats)) for f in unique(feats)]
 
     conn_polarity = (conn == SoleLogics.CONJUNCTION)
 
     ch = collect(Iterators.flatten([begin
-            conds = scalar_conditions[bitmask]
+            conds = scalar_conds[bitmask]
 
             conds = [if cond isa ScalarCondition && (SoleData.test_operator(cond) == (==))
                         SoleData.RangeScalarCondition(
@@ -447,10 +447,13 @@ function scalar_simplification(
             min_domain = nothing
             max_domain = nothing
             T = eltype(SoleData.threshold.(conds))
+
             for cond in conds
                 @assert !SoleData.isordered(SoleData.test_operator) "Unexpected test operator: $(SoleData.test_operator)."
+
                 this_domain = (SoleData.test_operator(cond), SoleData.threshold(cond))
                 p = SoleData.polarity(SoleData.test_operator(cond))
+
                 if isnothing(p)
                     throw(ArgumentError("Cannot simplify scalar formula with test operator = $(SoleData.test_operator(cond))"))
                 elseif !p
@@ -471,7 +474,8 @@ function scalar_simplification(
                     end
                 end
             end
-            out = []
+            
+            out = Atom[]
 
             if !isnothing(max_domain) && !isnothing(min_domain) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
                 nothing
@@ -479,8 +483,8 @@ function scalar_simplification(
                 nothing
             else
                 if force_scalar_range
-                    min_domain = isnothing(min_domain) ? (>=, nothing #= typemin(T) =#) : min_domain
-                    max_domain = isnothing(max_domain) ? (<=, nothing #= typemax(T) =#) : max_domain
+                    min_domain = isnothing(min_domain) ? (≥, nothing) : min_domain
+                    max_domain = isnothing(max_domain) ? (≤, nothing) : max_domain
                 end
                 if allow_scalar_range && (!isnothing(min_domain) && !isnothing(max_domain))
                     minincluded = (!SoleData.isstrict(min_domain[1])) || isnothing(min_domain[2])
