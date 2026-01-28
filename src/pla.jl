@@ -2,10 +2,23 @@ using SoleLogics
 using SoleData
 using SoleModels
 
+using SoleData: PLA
+
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 const LiteralBool = Dict('1' => true, '0' => false)
+
+# ---------------------------------------------------------------------------- #
+#                                get conjuncts                                 #
+# ---------------------------------------------------------------------------- #
+@inline  get_conjuncts(a::Vector{Vector{Atom}}) = get_conjuncts.(a)
+@inline  get_conjuncts(a::Vector{Atom}) = isempty(a) ? ⊤ : LeftmostConjunctiveForm{Literal}(Literal.(a))
+
+# ---------------------------------------------------------------------------- #
+#                                 print utils                                  #
+# ---------------------------------------------------------------------------- #
+_featurename(f::SoleData.VariableValue) = isnothing(f.i_name) ? "V$(f.i_variable)" : "[$(f.i_name)]"
 
 # ---------------------------------------------------------------------------- #
 #                             disjuncts encoding                               #
@@ -170,19 +183,19 @@ end
 # ---------------------------------------------------------------------------- #
 #                               univariate utils                               #
 # ---------------------------------------------------------------------------- #
-function header(conditions::Vector{<:SoleData.ScalarCondition}, feat_condnames::Vector{Vector{String}})
+function _header(conditions::Vector{<:SoleData.ScalarCondition}, feat_condnames::Vector{Vector{String}})
     num_outputs = 1
     num_vars = length(conditions)
     ilb_str = join(vcat(feat_condnames...), " ")
     return [".i $(num_vars)\n.o $(num_outputs)\n.ilb $(ilb_str)\n.ob formula_output"]
 end
 
-onset_rows(row::Vector{String}) = "$(join(row, "")) 1" # Append "1" for the ON-set output
+_onset_rows(row::Vector{String}) = "$(join(row, "")) 1" # Append "1" for the ON-set output
 
 # ---------------------------------------------------------------------------- #
 #                              multivariate utils                              #
 # ---------------------------------------------------------------------------- #
-function header(feat_nconds::Vector{Int64}, feat_condnames::Vector{Vector{String}})
+function _header(feat_nconds::Vector{Int64}, feat_condnames::Vector{Vector{String}})
     num_binary_vars = sum(feat_nconds .== 1)
     num_nonbinary_vars = sum(feat_nconds .> 1) + 1
     num_vars = num_binary_vars + num_nonbinary_vars
@@ -204,7 +217,7 @@ function header(feat_nconds::Vector{Int64}, feat_condnames::Vector{Vector{String
     return pla_header
 end
 
-function onset_rows(feat_nconds::Vector{Int64}, row::Vector{String})
+function _onset_rows(feat_nconds::Vector{Int64}, row::Vector{String})
     num_binary_vars = sum(feat_nconds .== 1)
 
     # generate on-set rows for each disjunct    
@@ -233,19 +246,17 @@ function formula_to_pla(
     scalar_range_conditions :: Bool=false,
     kwargs...
 )
-    if scalar_range_conditions
-        scalar_simplification_kwargs = (;
-            force_scalar_range_conditions = scalar_range_conditions, 
-            allow_scalar_range_conditions = scalar_range_conditions,
-        )
-    
-        dnfformula = SoleData.scalar_simplification(dnfformula;
-            scalar_simplification_kwargs...
-        )
-        dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
-    end
+    scalar_simplification_kwargs = (;
+        force_scalar_range_conditions = scalar_range_conditions, 
+        allow_scalar_range_conditions = scalar_range_conditions,
+    )
 
-    formula_to_pla(atoms(dnfformula); kwargs...)
+    dnfformula = SoleData.scalar_simplification(dnfformula;
+        scalar_simplification_kwargs...
+    )
+    dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
+
+    formula_to_pla([collect(atoms(dnfformula))]; scalar_range_conditions, kwargs...)
 end
 
 function formula_to_pla(
@@ -278,7 +289,7 @@ function formula_to_pla(
     @inbounds for (i, feat) in enumerate(features)
         feat_condindxs = findall(c->SoleData.feature(c) == feat, conditions)
         conds          = filter(c->SoleData.feature(c)  == feat, conditions)
-        condname = [string("[", SoleData.featurename(SoleData.feature(c)),"]", SoleData.test_operator(c), SoleData.threshold(c)) for c in conds]
+        condname = [string(_featurename(SoleData.feature(c)), SoleData.test_operator(c), SoleData.threshold(c)) for c in conds]
         
         feat_condindxss[i] = feat_condindxs
         feat_condnames[i]  = condname
@@ -293,15 +304,15 @@ function formula_to_pla(
         excludes[i] = BitMatrix([SoleData.excludes(conditions[cond_j], conditions[cond_i]) for cond_i in feat_condindxs, cond_j in feat_condindxs])
     end
 
-    # generate pla header
-    pla_header = encoding == :multivariate ? header(feat_nconds, feat_condnames) : header(conditions, feat_condnames)
+    # generate pla _header
+    pla_header = encoding == :multivariate ? _header(feat_nconds, feat_condnames) : _header(conditions, feat_condnames)
 
     conjuncts      = get_conjuncts(atoms)
     pla_onset_rows = Vector{String}(undef, length(conjuncts))
 
     Threads.@threads for i in eachindex(conjuncts)
         row = _encode_disjunct(conjuncts[i], features, conditions, includes, excludes, feat_condindxss)
-        pla_onset_rows[i] = encoding == :multivariate ? onset_rows(feat_nconds, row) : onset_rows(row)
+        pla_onset_rows[i] = encoding == :multivariate ? _onset_rows(feat_nconds, row) : _onset_rows(row)
     end
 
     # Combine PLA components
@@ -340,3 +351,12 @@ function pla_to_formula(
         collect(SoleData.scalar_simplification(d; force_scalar_range_conditions=false, allow_scalar_range_conditions=false) for d in disjuncts) :
         ⊤
 end
+
+formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
+
+@show SoleData.PLA._formula_to_pla(formula0)[1]
+@show formula_to_pla(formula0)
+
+# ".i 5\n.o 1\n.ilb V1≤0 V1>10 V2<0 V2≤2 V2≥2\n.ob formula_output\n\n.p 2\n10011 1\n011-0 1\n.e"
+# ".i 5\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2\n.ob formula_output\n.p 1\n00010 1\n.e"
+
