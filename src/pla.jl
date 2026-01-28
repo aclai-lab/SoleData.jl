@@ -356,14 +356,14 @@ end
 mostspecific(cs::AbstractVector{<:Real}, ::typeof(<=)) = findmin(cs)[1]
 mostspecific(cs::AbstractVector{<:Real}, ::typeof(>=)) = findmax(cs)[1]
 
-my_isless(::T, ::T) where T = false
-my_isless(::typeof(<), ::typeof(<=)) = true
-my_isless(::typeof(<=), ::typeof(<)) = false
-my_isless(::typeof(>), ::typeof(>=)) = false
-my_isless(::typeof(>=), ::typeof(>)) = true
+my_isless(::T, ::T) where T           = false
+my_isless(::typeof(<),  ::typeof(<=)) = true
+my_isless(::typeof(<=), ::typeof(<))  = false
+my_isless(::typeof(>),  ::typeof(>=)) = false
+my_isless(::typeof(>=), ::typeof(>))  = true
 
-my_isless(::typeof(<), ::typeof(>)) = false
-my_isless(::typeof(>), ::typeof(<)) = false
+my_isless(::typeof(<),  ::typeof(>))  = false
+my_isless(::typeof(>),  ::typeof(<))  = false
 my_isless(::typeof(>=), ::typeof(>=)) = false
 my_isless(::typeof(<=), ::typeof(<=)) = false
 
