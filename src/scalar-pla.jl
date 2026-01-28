@@ -254,7 +254,7 @@ function _formula_to_pla(
         allow_scalar_range_conditions = use_scalar_range_conditions,
     )
     silent || @show dnfformula
-    
+
     dnfformula = SoleData.scalar_simplification(dnfformula;
         scalar_simplification_kwargs...
     )
@@ -320,7 +320,6 @@ function _formula_to_pla(
         push!(includes, this_includes)
         push!(excludes, this_excludes)
     end
-
     # silent || @show ilb_str
     # Generate PLA header
     pla_header = []
@@ -378,7 +377,7 @@ function _formula_to_pla(
             push!(pla_onset_rows, "$(join(row, "")) 1")  # Append "1" for the ON-set output
         end
     end
-
+@show pla_onset_rows
     # # Generate DC-set rows for each disjunct
     pla_dcset_rows = []
     # Combine PLA components

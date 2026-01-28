@@ -12,8 +12,8 @@ const LiteralBool = Dict('1' => true, '0' => false)
 # ---------------------------------------------------------------------------- #
 #                                get conjuncts                                 #
 # ---------------------------------------------------------------------------- #
-@inline  get_conjuncts(a::Vector{Vector{Atom}}) = get_conjuncts.(a)
-@inline  get_conjuncts(a::Vector{Atom}) = isempty(a) ? ⊤ : LeftmostConjunctiveForm{Literal}(Literal.(a))
+@inline  _get_conjuncts(a::Vector{Vector{Atom}}) = _get_conjuncts.(a)
+@inline  _get_conjuncts(a::Vector{Atom}) = isempty(a) ? ⊤ : LeftmostConjunctiveForm{Literal}(Literal.(a))
 
 # ---------------------------------------------------------------------------- #
 #                                 print utils                                  #
@@ -247,16 +247,14 @@ function formula_to_pla(
     kwargs...
 )
     scalar_simplification_kwargs = (;
-        force_scalar_range_conditions = scalar_range_conditions, 
-        allow_scalar_range_conditions = scalar_range_conditions,
+        force_scalar_range = scalar_range_conditions, 
+        allow_scalar_range = scalar_range_conditions,
     )
 
-    dnfformula = SoleData.scalar_simplification(dnfformula;
-        scalar_simplification_kwargs...
-    )
+    dnfformula = scalar_simplification(dnfformula; scalar_simplification_kwargs...)
     dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
 
-    formula_to_pla([collect(atoms(dnfformula))]; scalar_range_conditions, kwargs...)
+    formula_to_pla(collect.(atoms(dnfformula).it); scalar_range_conditions, kwargs...)
 end
 
 function formula_to_pla(
@@ -307,7 +305,7 @@ function formula_to_pla(
     # generate pla _header
     pla_header = encoding == :multivariate ? _header(feat_nconds, feat_condnames) : _header(conditions, feat_condnames)
 
-    conjuncts      = get_conjuncts(atoms)
+    conjuncts      = _get_conjuncts(atoms)
     pla_onset_rows = Vector{String}(undef, length(conjuncts))
 
     Threads.@threads for i in eachindex(conjuncts)
@@ -348,8 +346,157 @@ function pla_to_formula(
     ]
 
     return !isempty(disjuncts) ?
-        collect(SoleData.scalar_simplification(d; force_scalar_range_conditions=false, allow_scalar_range_conditions=false) for d in disjuncts) :
+        collect(scalar_simplification(d; force_scalar_range=false, allow_scalar_range=false) for d in disjuncts) :
         ⊤
+end
+
+# ---------------------------------------------------------------------------- #
+#                            scalar simplification                             #
+# ---------------------------------------------------------------------------- #
+scalar_simplification(φ::DNF, args...; kwargs...) =
+    map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.disjuncts(φ)) |> LeftmostDisjunctiveForm
+
+scalar_simplification(φ::CNF, args...; kwargs...) =
+    map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.conjuncts(φ)) |> LeftmostConjunctiveForm
+
+function scalar_simplification(
+    φ :: Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm};
+    kwargs...
+)
+    φ = LeftmostLinearForm(SoleLogics.connective(φ), map(ch->begin
+        if ch isa Atom
+            ch
+        elseif ch isa Literal
+            if SoleLogics.ispos(ch)
+                atom(ch)
+            elseif SoleLogics.hasdual(atom(ch))
+                SoleLogics.dual(atom(ch))
+            else
+                ch
+            end
+        else
+            ch
+        end
+    end, SoleLogics.grandchildren(φ)))
+
+    if !all(c->c isa Atom{<:Union{SoleData.ScalarCondition,SoleData.RangeScalarCondition}}, SoleLogics.grandchildren(φ))
+        return φ
+    end
+
+    scalar_simplification(SoleLogics.atoms(φ), SoleLogics.connective(φ); kwargs...)
+end
+
+function scalar_simplification(
+    atomslist          :: Vector{SoleLogics.Atom},
+    conn               :: SoleLogics.NamedConnective;
+    force_scalar_range :: Bool=false,
+    allow_scalar_range :: Bool=true,
+)
+    scalar_conditions = SoleLogics.value.(atomslist)
+    feats = SoleData.feature.(scalar_conditions)
+
+    feature_groups = [(f, map(x->x==f, feats)) for f in unique(feats)]
+
+    conn_polarity = (conn == SoleLogics.CONJUNCTION)
+
+    mostspecific(cs::AbstractVector{<:Real}, ::typeof(<=)) = findmin(cs)[1]
+    mostspecific(cs::AbstractVector{<:Real}, ::typeof(>=)) = findmax(cs)[1]
+
+    my_isless(::T, ::T) where T = false
+    my_isless(::typeof(<), ::typeof(<=)) = true
+    my_isless(::typeof(<=), ::typeof(<)) = false
+    my_isless(::typeof(>), ::typeof(>=)) = false
+    my_isless(::typeof(>=), ::typeof(>)) = true
+
+    my_isless(::typeof(<), ::typeof(>)) = false
+    my_isless(::typeof(>), ::typeof(<)) = false
+    my_isless(::typeof(>=), ::typeof(>=)) = false
+    my_isless(::typeof(<=), ::typeof(<=)) = false
+
+    ch = collect(Iterators.flatten([begin
+            conds = scalar_conditions[bitmask]
+
+            conds = [if cond isa ScalarCondition && (SoleData.test_operator(cond) == (==))
+                        SoleData.RangeScalarCondition(
+                            SoleData.feature(cond),
+                            SoleData.minval(cond),
+                            SoleData.maxval(cond),
+                            SoleData.minincluded(cond),
+                            SoleData.maxincluded(cond),
+                        )
+                    else
+                        cond
+                    end for cond in conds]
+
+            conds = Iterators.flatten([
+                if cond isa ScalarCondition
+                    [cond]
+                elseif cond isa SoleData.RangeScalarCondition
+                    if conn_polarity
+                        conds = SoleData._rangescalarcond_to_scalarconds_in_conjunction(cond)
+                    else
+                        error("Cannot convert SoleData.RangeScalarCondition to ScalarCondition: $(cond).")
+                    end
+                else
+                    error("Unexpected condition: $(cond)")
+                end for cond in conds])
+
+            min_domain = nothing
+            max_domain = nothing
+            T = eltype(SoleData.threshold.(conds))
+            for cond in conds
+                @assert !SoleData.isordered(SoleData.test_operator) "Unexpected test operator: $(SoleData.test_operator)."
+                this_domain = (SoleData.test_operator(cond), SoleData.threshold(cond))
+                p = SoleData.polarity(SoleData.test_operator(cond))
+                if isnothing(p)
+                    throw(ArgumentError("Cannot simplify scalar formula with test operator = $(SoleData.test_operator(cond))"))
+                elseif !p
+                    if isnothing(max_domain) ||
+                        (
+                            (isless(this_domain[2], max_domain[2]) ||
+                                (==(this_domain[2], max_domain[2]) && my_isless(this_domain[1], max_domain[1]))
+                                ) == conn_polarity)
+                        max_domain = this_domain
+                    end
+                else
+                    if isnothing(min_domain) ||
+                        (
+                            (!(isless(this_domain[2], min_domain[2])) ||
+                                (==(this_domain[2], min_domain[2]) && my_isless(this_domain[1], min_domain[1]))
+                                ) == conn_polarity)
+                        min_domain = this_domain
+                    end
+                end
+            end
+            out = []
+
+            if !isnothing(max_domain) && !isnothing(min_domain) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
+                nothing
+            elseif isnothing(min_domain) && isnothing(max_domain)
+                nothing
+            else
+                if force_scalar_range
+                    min_domain = isnothing(min_domain) ? (>=, nothing #= typemin(T) =#) : min_domain
+                    max_domain = isnothing(max_domain) ? (<=, nothing #= typemax(T) =#) : max_domain
+                end
+                if allow_scalar_range && (!isnothing(min_domain) && !isnothing(max_domain))
+                    minincluded = (!SoleData.isstrict(min_domain[1])) || isnothing(min_domain[2])
+                    maxincluded = (!SoleData.isstrict(max_domain[1])) || isnothing(max_domain[2])
+                    push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], minincluded, maxincluded)))
+                else
+                    if !isnothing(min_domain)
+                        push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
+                    end
+                    if !isnothing(max_domain)
+                        push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
+                    end
+                end
+            end
+
+            out
+        end for (feat, bitmask) in feature_groups]))
+
+    return (length(ch) == 0 ? (⊤) : (length(ch) == 1 ? first(ch) : LeftmostLinearForm(conn, ch)))
 end
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
@@ -359,4 +506,3 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 
 # ".i 5\n.o 1\n.ilb V1≤0 V1>10 V2<0 V2≤2 V2≥2\n.ob formula_output\n\n.p 2\n10011 1\n011-0 1\n.e"
 # ".i 5\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2\n.ob formula_output\n.p 1\n00010 1\n.e"
-
