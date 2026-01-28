@@ -351,6 +351,23 @@ function pla_to_formula(
 end
 
 # ---------------------------------------------------------------------------- #
+#                         scalar simplification utils                          #
+# ---------------------------------------------------------------------------- #
+mostspecific(cs::AbstractVector{<:Real}, ::typeof(<=)) = findmin(cs)[1]
+mostspecific(cs::AbstractVector{<:Real}, ::typeof(>=)) = findmax(cs)[1]
+
+my_isless(::T, ::T) where T = false
+my_isless(::typeof(<), ::typeof(<=)) = true
+my_isless(::typeof(<=), ::typeof(<)) = false
+my_isless(::typeof(>), ::typeof(>=)) = false
+my_isless(::typeof(>=), ::typeof(>)) = true
+
+my_isless(::typeof(<), ::typeof(>)) = false
+my_isless(::typeof(>), ::typeof(<)) = false
+my_isless(::typeof(>=), ::typeof(>=)) = false
+my_isless(::typeof(<=), ::typeof(<=)) = false
+
+# ---------------------------------------------------------------------------- #
 #                            scalar simplification                             #
 # ---------------------------------------------------------------------------- #
 scalar_simplification(φ::DNF, args...; kwargs...) =
@@ -398,20 +415,6 @@ function scalar_simplification(
     feature_groups = [(f, map(x->x==f, feats)) for f in unique(feats)]
 
     conn_polarity = (conn == SoleLogics.CONJUNCTION)
-
-    mostspecific(cs::AbstractVector{<:Real}, ::typeof(<=)) = findmin(cs)[1]
-    mostspecific(cs::AbstractVector{<:Real}, ::typeof(>=)) = findmax(cs)[1]
-
-    my_isless(::T, ::T) where T = false
-    my_isless(::typeof(<), ::typeof(<=)) = true
-    my_isless(::typeof(<=), ::typeof(<)) = false
-    my_isless(::typeof(>), ::typeof(>=)) = false
-    my_isless(::typeof(>=), ::typeof(>)) = true
-
-    my_isless(::typeof(<), ::typeof(>)) = false
-    my_isless(::typeof(>), ::typeof(<)) = false
-    my_isless(::typeof(>=), ::typeof(>=)) = false
-    my_isless(::typeof(<=), ::typeof(<=)) = false
 
     ch = collect(Iterators.flatten([begin
             conds = scalar_conditions[bitmask]
