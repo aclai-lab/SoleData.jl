@@ -319,6 +319,8 @@ function formula_to_pla(
     return pla_content
 end
 
+scalar_simplification(a::SoleLogics.Atom; kwargs...) = a
+
 # ---------------------------------------------------------------------------- #
 #                                pla to formula                                #
 # ---------------------------------------------------------------------------- #

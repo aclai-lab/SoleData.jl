@@ -28,7 +28,7 @@ function scalar_simplification(
     # force_no_scalar_range_conditions = false,
     allow_scalar_range_conditions = true,
 )
-    @show φ
+    # @show φ
     # @show typeof.(SoleLogics.grandchildren(φ))
     # @show all(c->c isa Atom{<:ScalarCondition}, SoleLogics.grandchildren(φ))
     
