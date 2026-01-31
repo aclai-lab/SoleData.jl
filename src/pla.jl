@@ -64,7 +64,7 @@ _featurename(f::SoleData.VariableValue) = isnothing(f.i_name) ? "V$(f.i_variable
 function _encode_disjunct(
     disjunct        :: SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
     features        :: Vector{<:SoleData.VariableValue},
-    conditions      :: Vector{<:SoleData.ScalarCondition},
+    conditions      :: Vector{<:SoleData.AbstractScalarCondition},
     includes        :: Vector{BitMatrix},
     excludes        :: Vector{BitMatrix},
     feat_condindxss :: Vector{Vector{Int64}}
@@ -163,6 +163,7 @@ function _read_conditions(
         
         # extract feature, between '[]'
         varname   = Symbol(part[2:close_bracket_idx-1])
+        @show varname
         i_var     = findfirst(==(varname), fnames)
         value     = SoleData.VariableValue(i_var, varname)
         
@@ -183,7 +184,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                               univariate utils                               #
 # ---------------------------------------------------------------------------- #
-function _header(conditions::Vector{<:SoleData.ScalarCondition}, feat_condnames::Vector{Vector{String}})
+function _header(conditions::Vector{<:SoleData.AbstractScalarCondition}, feat_condnames::Vector{Vector{String}})
     num_outputs = 1
     num_vars = length(conditions)
     ilb_str = join(vcat(feat_condnames...), " ")
@@ -242,19 +243,19 @@ formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
     formula_to_pla(SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
 
 function formula_to_pla(
-    dnfformula              :: SoleLogics.DNF;
+    dnfformula   :: SoleLogics.DNF;
+    encoding     :: Symbol=:univariate,
     scalar_range :: Bool=false,
     kwargs...
 )
-    scalar_simplification_kwargs = (;
-        force_scalar_range = scalar_range, 
-        allow_scalar_range = scalar_range,
-    )
-
-    dnfformula = scalar_simplification(dnfformula; scalar_simplification_kwargs...)
+    dnfformula = scalar_simplification(dnfformula; scalar_range)
     dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
 
-    formula_to_pla(collect.(atoms(dnfformula).it); scalar_range, kwargs...)
+    atoms_per_disjunct = Vector{Vector{SoleLogics.Atom}}([
+        collect(SoleLogics.atoms(d)) for d in SoleLogics.disjuncts(dnfformula)
+    ])
+
+    formula_to_pla(atoms_per_disjunct; encoding, scalar_range=scalar_range, kwargs...)
 end
 
 function formula_to_pla(
@@ -271,14 +272,13 @@ function formula_to_pla(
     sort!(conditions, by=SoleData._scalarcondition_sortby)
     sort!(features, by=syntaxstring)
 
-    conditions = SoleData.removeduals(conditions)
-
-    # TODO check and test it
     if scalar_range
         original_conditions = conditions
         conditions = SoleData.scalartiling(conditions, features)
         @assert length(setdiff(original_conditions, conditions)) == 0 "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
     end
+
+    conditions = SoleData.removeduals(conditions)
 
     # for each feature, derive the conditions, and their names
     feat_condindxss = Vector{Vector{Int64}}(undef, length(features))
@@ -287,8 +287,8 @@ function formula_to_pla(
     @inbounds for (i, feat) in enumerate(features)
         feat_condindxs = findall(c->SoleData.feature(c) == feat, conditions)
         conds          = filter(c->SoleData.feature(c)  == feat, conditions)
-        condname = [string(_featurename(SoleData.feature(c)), SoleData.test_operator(c), SoleData.threshold(c)) for c in conds]
-        
+        # condname = [string("[", SoleData.featurename(SoleData.feature(c)),"]", SoleData.test_operator(c), SoleData.threshold(c)) for c in conds]
+        condname = SoleLogics.syntaxstring.(conds; parentesize=true, removewhitespaces=true)
         feat_condindxss[i] = feat_condindxs
         feat_condnames[i]  = condname
     end
@@ -348,26 +348,51 @@ function pla_to_formula(
     ]
 
     return !isempty(disjuncts) ?
-        collect(scalar_simplification(d; force_scalar_range=false, allow_scalar_range=false) for d in disjuncts) :
+        collect(scalar_simplification(d; scalar_range=false) for d in disjuncts) :
         ⊤
 end
 
 # ---------------------------------------------------------------------------- #
 #                         scalar simplification utils                          #
 # ---------------------------------------------------------------------------- #
-mostspecific(cs::AbstractVector{<:Real}, ::typeof(<=)) = findmin(cs)[1]
-mostspecific(cs::AbstractVector{<:Real}, ::typeof(>=)) = findmax(cs)[1]
+_isless(::T, ::T) where T         = false
+_isless(::typeof(<), ::typeof(≤)) = true
+_isless(::typeof(≤), ::typeof(<)) = false
+_isless(::typeof(>), ::typeof(≥)) = false
+_isless(::typeof(≥), ::typeof(>)) = true
 
-my_isless(::T, ::T) where T         = false
-my_isless(::typeof(<), ::typeof(≤)) = true
-my_isless(::typeof(≤), ::typeof(<)) = false
-my_isless(::typeof(>), ::typeof(≥)) = false
-my_isless(::typeof(≥), ::typeof(>)) = true
+_isless(::typeof(<), ::typeof(>)) = false
+_isless(::typeof(>), ::typeof(<)) = false
+_isless(::typeof(≥), ::typeof(≥)) = false
+_isless(::typeof(≤), ::typeof(≤)) = false
 
-my_isless(::typeof(<), ::typeof(>)) = false
-my_isless(::typeof(>), ::typeof(<)) = false
-my_isless(::typeof(≥), ::typeof(≥)) = false
-my_isless(::typeof(≤), ::typeof(≤)) = false
+# ---------------------------------------------------------------------------- #
+#                             update mixmax domain                             #
+# ---------------------------------------------------------------------------- #
+function mixmax_domain(min_domain, max_domain, cond, conn_polarity)
+    @assert !SoleData.isordered(SoleData.test_operator) "Unexpected test operator: $(SoleData.test_operator)."
+
+    this_domain = (SoleData.test_operator(cond), SoleData.threshold(cond))
+    p = SoleData.polarity(SoleData.test_operator(cond))
+
+    isnothing(p) && throw(ArgumentError("Cannot simplify scalar formula with test operator = $(SoleData.test_operator(cond))"))
+
+    if !p && (
+        (isless(this_domain[2], max_domain[2]) ||
+            (==(this_domain[2], max_domain[2]) && _isless(this_domain[1], max_domain[1]))
+        ) == conn_polarity)
+        max_domain = this_domain
+    end
+
+    if p && (
+        (!(isless(this_domain[2], min_domain[2])) ||
+            (==(this_domain[2], min_domain[2]) && _isless(this_domain[1], min_domain[1]))
+        ) == conn_polarity)
+        min_domain = this_domain
+    end
+
+    return min_domain, max_domain
+end
 
 # ---------------------------------------------------------------------------- #
 #                            scalar simplification                             #
@@ -408,8 +433,7 @@ end
 function scalar_simplification(
     atomslist          :: Vector{SoleLogics.Atom},
     conn               :: SoleLogics.NamedConnective;
-    force_scalar_range :: Bool=false,
-    allow_scalar_range :: Bool=true,
+    scalar_range :: Bool=false
 )
     scalar_conds = SoleLogics.value.(atomslist)
     feats        = SoleData.feature.(scalar_conds)
@@ -419,99 +443,256 @@ function scalar_simplification(
     conn_polarity = (conn == SoleLogics.CONJUNCTION)
 
     ch = collect(Iterators.flatten([begin
-            conds = scalar_conds[bitmask]
+        conds = scalar_conds[bitmask]
 
-            conds = [if cond isa ScalarCondition && (SoleData.test_operator(cond) == (==))
-                        SoleData.RangeScalarCondition(
-                            SoleData.feature(cond),
-                            SoleData.minval(cond),
-                            SoleData.maxval(cond),
-                            SoleData.minincluded(cond),
-                            SoleData.maxincluded(cond),
-                        )
-                    else
-                        cond
-                    end for cond in conds]
+        min_domain = (≥, Real(-Inf))
+        max_domain = (≤, Real(Inf))
+        T = eltype(SoleData.threshold.(conds))
 
-            conds = Iterators.flatten([
-                if cond isa ScalarCondition
-                    [cond]
-                elseif cond isa SoleData.RangeScalarCondition
-                    if conn_polarity
-                        conds = SoleData._rangescalarcond_to_scalarconds_in_conjunction(cond)
-                    else
-                        error("Cannot convert SoleData.RangeScalarCondition to ScalarCondition: $(cond).")
-                    end
-                else
-                    error("Unexpected condition: $(cond)")
-                end for cond in conds])
-
-            min_domain = nothing
-            max_domain = nothing
-            T = eltype(SoleData.threshold.(conds))
-
-            for cond in conds
-                @assert !SoleData.isordered(SoleData.test_operator) "Unexpected test operator: $(SoleData.test_operator)."
-
-                this_domain = (SoleData.test_operator(cond), SoleData.threshold(cond))
-                p = SoleData.polarity(SoleData.test_operator(cond))
-
-                if isnothing(p)
-                    throw(ArgumentError("Cannot simplify scalar formula with test operator = $(SoleData.test_operator(cond))"))
-                elseif !p
-                    if isnothing(max_domain) ||
-                        (
-                            (isless(this_domain[2], max_domain[2]) ||
-                                (==(this_domain[2], max_domain[2]) && my_isless(this_domain[1], max_domain[1]))
-                                ) == conn_polarity)
-                        max_domain = this_domain
-                    end
-                else
-                    if isnothing(min_domain) ||
-                        (
-                            (!(isless(this_domain[2], min_domain[2])) ||
-                                (==(this_domain[2], min_domain[2]) && my_isless(this_domain[1], min_domain[1]))
-                                ) == conn_polarity)
-                        min_domain = this_domain
-                    end
-                end
+        for cond in conds
+            cond isa ScalarCondition && (SoleData.test_operator(cond) == (==)) && begin
+                cond = SoleData.RangeScalarCondition(
+                    SoleData.feature(cond),
+                    SoleData.minval(cond),
+                    SoleData.maxval(cond),
+                    SoleData.minincluded(cond),
+                    SoleData.maxincluded(cond),
+                )
             end
-            
-            out = Atom[]
 
-            if !isnothing(max_domain) && !isnothing(min_domain) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
-                nothing
-            elseif isnothing(min_domain) && isnothing(max_domain)
-                nothing
+            min_domain, max_domain = if cond isa SoleData.RangeScalarCondition
+                conn_polarity ? begin
+                    rconds = SoleData._rangescalarcond_to_scalarconds_in_conjunction(cond)
+                    rminmax = [mixmax_domain(min_domain, max_domain, c, conn_polarity) for c in rconds]
+                    min_domain, max_domain = last(last(rminmax)), first(first(rminmax))
+                end :
+                    error("Cannot convert SoleData.RangeScalarCondition to ScalarCondition: $(cond).")
             else
-                if force_scalar_range
-                    min_domain = isnothing(min_domain) ? (≥, nothing) : min_domain
-                    max_domain = isnothing(max_domain) ? (≤, nothing) : max_domain
+                min_domain, max_domain = mixmax_domain(min_domain, max_domain, cond, conn_polarity)
+            end
+        end
+
+        out = Atom[]
+
+        if !(max_domain[2] == Inf) && !(min_domain[2] == -Inf) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
+            nothing
+        elseif (min_domain[2] == -Inf) && (max_domain[2] == Inf)
+            nothing
+        else
+            if scalar_range
+                min_domain = (min_domain[2] == -Inf) ? (≥, -Inf) : min_domain
+                max_domain = (max_domain[2] == Inf) ? (≤, Inf)   : max_domain
+
+                minincluded = (!SoleData.isstrict(min_domain[1])) || (min_domain[2] == -Inf)
+                maxincluded = (!SoleData.isstrict(max_domain[1])) || (max_domain[2] == Inf)
+
+                push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], minincluded, maxincluded)))
+            else
+                if !(min_domain[2] == -Inf)
+                    push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
                 end
-                if allow_scalar_range && (!isnothing(min_domain) && !isnothing(max_domain))
-                    minincluded = (!SoleData.isstrict(min_domain[1])) || isnothing(min_domain[2])
-                    maxincluded = (!SoleData.isstrict(max_domain[1])) || isnothing(max_domain[2])
-                    push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], minincluded, maxincluded)))
-                else
-                    if !isnothing(min_domain)
-                        push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
-                    end
-                    if !isnothing(max_domain)
-                        push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
-                    end
+                if !(max_domain[2] == Inf)
+                    push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
                 end
             end
+        end
 
-            out
-        end for (feat, bitmask) in feature_groups]))
+        out
+    end for (feat, bitmask) in feature_groups]))
 
     return (length(ch) == 0 ? (⊤) : (length(ch) == 1 ? first(ch) : LeftmostLinearForm(conn, ch)))
 end
 
+scalar_simplification(a::SoleLogics.Atom; kwargs...) = a
+
+###################################################################################
+function cleanlines(str::AbstractString)
+  join(filter(!isempty, split(str, "\n")), " ")
+end
+
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
 
-@show SoleData.PLA._formula_to_pla(formula0)[1]
-@show formula_to_pla(formula0)
+pla = cleanlines(formula_to_pla(formula0))
+# @test pla == ".i 5 .o 1 .ilb V1≤0 V1>10 V2<0 V2≤2 V2≥2 .ob formula_output .p 2 011-0 1 10011 1 .e"
+# @test_nowarn formula_to_pla(formula0) |> println
 
-# ".i 5\n.o 1\n.ilb V1≤0 V1>10 V2<0 V2≤2 V2≥2\n.ob formula_output\n\n.p 2\n10011 1\n011-0 1\n.e"
-# ".i 5\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2\n.ob formula_output\n.p 1\n00010 1\n.e"
+# pla = cleanlines(formula_to_pla(formula0; scalar_range=true))
+# @test pla == ".i 6 .o 1 .ilb V1∈[-Inf,0] V1∈(0,10] V1∈(10,Inf] V2∈[-Inf,0) V2∈[0,2) V2∈[2,2] .ob formula_output .p 2 001100 1 100001 1 .e"
+
+# @test_nowarn scalar_simplification(SoleData.dnf(formula0, Atom))
+
+# formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
+# pla = formula_to_pla(formula0)
+# fnames = [:V1, :V2]
+# formula0 = pla_to_formula(pla, fnames)
+
+###################################################################################
+
+# f, args, kwargs = PLA._formula_to_pla(formula0)
+# formula01 = tree(PLA._pla_to_formula(f, true, args...; kwargs...))
+# formula0_min = my_espresso_minimize(formula0)
+
+# formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0))
+# formula0 = SoleData.scalar_simplification(dnf(formula0, Atom))
+# PLA._formula_to_pla(formula0)[1] |> println
+# formula0_min = my_espresso_minimize(formula0)
+# println(formula0); println(formula0_min);
+# @test_nowarn SoleData.scalar_simplification(formula0_min)
+
+
+# formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0)) ∨ (V1 <= 0) ∧ (V2 < 0) ∧ (V1 <= 10) ∧ (V3 > 10))
+# formula0 = SoleData.scalar_simplification(dnf(formula0, Atom))
+# PLA._formula_to_pla(formula0)[1] |> println
+# formula0_min = my_espresso_minimize(formula0)
+# println(formula0); println(formula0_min);
+
+
+
+# φ = @scalarformula (V4 < 0.7 && V2 ≥ 2.6500000000000004 && V3 ≥ 5.0) ||
+# (V4 < 0.7 && V2 < 2.6500000000000004 && V3 ≥ 5.0) ||
+# (V4 < 0.7 && V2 ≥ 2.6500000000000004 && V3 < 5.0 && V3 ≥ 4.95) ||
+# (V4 < 0.7 && V2 < 2.6500000000000004 && V3 < 5.0 && V3 ≥ 4.95) ||
+# (V4 < 0.7 && V2 ≥ 2.6500000000000004 && V3 < 4.95) ||
+# (V4 < 0.7 && V2 < 2.6500000000000004 && V3 < 4.95)
+# # φ_min = my_espresso_minimize(φ, false; encoding = :univariate)
+# φ_min = my_espresso_minimize(φ; encoding = :univariate)
+# φ_min = my_espresso_minimize(φ, false, "exact"; encoding = :univariate)
+
+# println(φ); println(φ_min);
+# @test syntaxstring(φ_min) == syntaxstring(@scalarformula (V4 < 0.7))
+
+# # φ_min = my_espresso_minimize(φ, false; encoding = :multivariate)
+# # println(φ); println(φ_min);
+# # @test syntaxstring(φ_min) == syntaxstring(@scalarformula (V4 < 0.7))
+
+
+# φ = @scalarformula (V4 ≥ 1.7000000000000002) ∧ (V2 ≥ 2.6500000000000004) ∧ (V3 ≥ 5.0) ∨
+# (V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 ≥ 5.0) ∨
+# (V4 ≥ 1.7000000000000002) ∧ (V2 ≥ 2.6500000000000004) ∧ (V3 < 5.0) ∧ (V3 ≥ 4.95) ∨
+# (V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 < 5.0) ∧ (V3 ≥ 4.95) ∨
+# (V4 ≥ 1.7000000000000002) ∧ (V2 ≥ 2.6500000000000004) ∧ (V3 < 4.95) ∨
+# (V4 ≥ 1.7000000000000002) ∧ (V2 < 2.6500000000000004) ∧ (V3 < 4.95)
+# φ_min = my_espresso_minimize(φ)
+# # φ_min = my_espresso_minimize(φ, false)
+# println(φ); println(φ_min);
+# @test syntaxstring(φ_min) == syntaxstring(@scalarformula (V4 ≥ 1.7000000000000002))
+
+# # φ_min = my_espresso_minimize(φ, false; encoding = :multivariate)
+# # println(φ); println(φ_min);
+# # @test syntaxstring(φ_min) == syntaxstring(@scalarformula (V4 ≥ 1.7000000000000002))
+
+
+# # Looks okay?
+
+# using Test
+
+# pla = """
+# .i 1
+# .o 1
+# .ilb V1>10
+# .ob formula_output
+# 1 1
+# .e
+# """
+
+# @test_nowarn formula = PLA._pla_to_formula(pla; featvaltype = Float64)
+# @test_nowarn formula = PLA._pla_to_formula(""".i 5
+# .o 1
+# .ilb V1>10 V2<0 V2<=2 V3>10 V4!=10
+# .p 2
+# 01--0 1
+# 01-1- 1
+# .e
+# """; featvaltype = Float64)
+
+# @test_nowarn formula = PLA._pla_to_formula(""".i 5
+# .o 1
+# .ilb V1>10 V2<0 V2<=2 V3>10 V4>=10
+# .p 2
+# 01--0 1
+# 01-1- 1
+# .e
+# """, featvaltype = Float32)
+
+
+
+# formula = @test_nowarn PLA._pla_to_formula(""".i 5
+# .o 1
+# .ilb V1>10 V2<0 V2<=2 V3>10 V4>=10
+# 01010 1
+# 01110 1
+# 01011 1
+# 01111 1
+# 01010 1
+# 01000 1
+# 01100 1
+# .e
+# """, featvaltype = Float32)
+
+# @test syntaxstring(formula) == "((V1 ≤ 10) ∧ (V3 > 10) ∧ (V4 < 10)) ∨ ((V1 ≤ 10) ∧ (V2 < 0) ∧ (V3 > 10) ∧ (V4 < 10)) ∨ ((V1 ≤ 10) ∧ (V3 > 10) ∧ (V4 ≥ 10)) ∨ ((V1 ≤ 10) ∧ (V2 < 0) ∧ (V3 > 10) ∧ (V4 ≥ 10)) ∨ ((V1 ≤ 10) ∧ (V3 > 10) ∧ (V4 < 10)) ∨ ((V1 ≤ 10) ∧ (V3 ≤ 10) ∧ (V4 < 10)) ∨ ((V1 ≤ 10) ∧ (V2 < 0) ∧ (V3 ≤ 10) ∧ (V4 < 10))"
+
+# @test cleanlines(PLA._formula_to_pla(formula)[1]) == cleanlines("""
+# .i 4
+# .o 1
+# .ilb V1≤10 V2<0 V3≤10 V4<10
+# .ob formula_output
+
+# .p 6
+# 1-01 1
+# 1101 1
+# 1-00 1
+# 1100 1
+# 1-11 1
+# 1111 1
+# .e
+# """)
+
+
+
+# @test cleanlines((PLA._formula_to_pla(@scalarformula((V1 <= 0.0) ∨ (V1 <= 0.0) ∧ (V2 <= 0.0))))[1]) in [
+# cleanlines(""".i 2
+# .o 1
+# .ilb V1≤0.0 V2≤0.0
+# .ob formula_output
+# .p 2
+# 11 1
+# 1- 1
+# .e"""),
+# cleanlines(""".i 2
+# .o 1
+# .ilb V1≤0.0 V2≤0.0
+# .ob formula_output
+# .p 2
+# 1- 1
+# 11 1
+# .e""")
+# ]
+
+# formula = PLA._pla_to_formula(""".i 2
+# .o 1
+# .ilb V1>0 V2>0
+# .ob formula_output
+# .p 1
+# 0- 1
+# .e""")
+
+# PLA._formula_to_pla(@scalarformula ((V1 <= 0)) ∨ (¬(V1 <= 0) ∧ (V2 <= 0)))
+
+# pla = """.i 3
+# .o 1
+# .ilb V1>10 V2<0 V2<=2
+# .ob formula_output
+# 1-1 1
+# 0-1 1
+# .e"""
+
+# formula = PLA._pla_to_formula(pla)
+# @test isa(formula, SoleLogics.LeftmostDisjunctiveForm)
+# @test syntaxstring(formula) == "((V1 > 10) ∧ (V2 ≤ 2)) ∨ ((V1 ≤ 10) ∧ (V2 ≤ 2))"
+
+
+# # Espresso minimization
+
+# @test_nowarn my_espresso_minimize(@scalarformula ((V1 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 0)))
+
+# @test syntaxstring(my_espresso_minimize(@scalarformula ((V1 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 0)))) == "V1 ≤ 0"

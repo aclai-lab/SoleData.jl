@@ -377,7 +377,7 @@ function _formula_to_pla(
             push!(pla_onset_rows, "$(join(row, "")) 1")  # Append "1" for the ON-set output
         end
     end
-@show pla_onset_rows
+
     # # Generate DC-set rows for each disjunct
     pla_dcset_rows = []
     # Combine PLA components

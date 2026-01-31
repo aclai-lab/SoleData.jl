@@ -109,20 +109,31 @@ dual(m::ScalarMetaCondition) = ScalarMetaCondition(feature(m), inverse_test_oper
 syntaxstring(m::ScalarMetaCondition; kwargs...) =
     "$(_syntaxstring_metacondition(m; kwargs...)) ⍰"
 
-function _syntaxstring_metacondition(
+_syntaxstring_metacondition(
     m::ScalarMetaCondition;
     use_feature_abbreviations::Bool = false,
     kwargs...,
-)
-    if use_feature_abbreviations
-        _st_featop_abbr(feature(m), test_operator(m); kwargs...)
-    else
+) =
+    use_feature_abbreviations ?
+        _st_featop_abbr(feature(m), test_operator(m); kwargs...) :
         _st_featop_name(feature(m), test_operator(m); kwargs...)
-    end
-end
 
-function _st_featop_name(feature::AbstractFeature,   test_operator::TestOperator; style = false, kwargs...)
-    unstyled_str = "$(syntaxstring(feature; style, kwargs...)) $(_st_testop_name(test_operator))"
+function _st_featop_name(
+    feature::AbstractFeature,
+    test_operator::TestOperator;
+    style = false,
+    parentesize::Bool=false,
+    removewhitespaces::Bool=false,
+    kwargs...
+)
+    unstyled_feat = parentesize ?
+        "[$(syntaxstring(feature; style, kwargs...))]" :
+        "$(syntaxstring(feature; style, kwargs...))"
+
+    unstyled_str = removewhitespaces ? 
+        "$unstyled_feat$(_st_testop_name(test_operator))" :
+        "$unstyled_feat $(_st_testop_name(test_operator))"
+
     if style != false && haskey(style, :featurestyle)
         if style.featurestyle == :bold
             "\e[1m" * unstyled_str * "\e[0m"
@@ -311,10 +322,12 @@ function syntaxstring(
     m::ScalarCondition;
     threshold_digits::Union{Nothing,Integer} = nothing,
     threshold_display_method::Union{Nothing,Base.Callable} = nothing,
+    removewhitespaces::Bool=false,
     kwargs...
 )
     threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
-    string(_syntaxstring_metacondition(metacond(m); kwargs...)) * " " *
+    string(_syntaxstring_metacondition(metacond(m); removewhitespaces, kwargs...)) *
+    (removewhitespaces ? "" : " ") *
     string(threshold_display_method(threshold(m)))
 end
 
@@ -668,10 +681,10 @@ function hasdual(c::RangeScalarCondition)
 end
 
 function _rangescalarcond_to_scalarconds_in_conjunction(cond)
-    conds = []
+    conds = ScalarCondition[]
     !isnothing(SoleData.minval(cond)) && push!(conds, ScalarCondition(feature(cond), _isgreater_test_operator(cond), SoleData.minval(cond)))
     !isnothing(SoleData.maxval(cond)) && push!(conds, ScalarCondition(feature(cond), _isless_test_operator(cond), SoleData.maxval(cond)))
-    conds
+    return conds
 end
 
 module IntervalSetsWrap
