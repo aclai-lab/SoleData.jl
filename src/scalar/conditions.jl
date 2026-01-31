@@ -122,17 +122,12 @@ function _st_featop_name(
     feature::AbstractFeature,
     test_operator::TestOperator;
     style = false,
-    parentesize::Bool=false,
     removewhitespaces::Bool=false,
     kwargs...
 )
-    unstyled_feat = parentesize ?
-        "[$(syntaxstring(feature; style, kwargs...))]" :
-        "$(syntaxstring(feature; style, kwargs...))"
-
     unstyled_str = removewhitespaces ? 
-        "$unstyled_feat$(_st_testop_name(test_operator))" :
-        "$unstyled_feat $(_st_testop_name(test_operator))"
+        "$(syntaxstring(feature; style, kwargs...))$(_st_testop_name(test_operator))" :
+        "$(syntaxstring(feature; style, kwargs...)) $(_st_testop_name(test_operator))"
 
     if style != false && haskey(style, :featurestyle)
         if style.featurestyle == :bold

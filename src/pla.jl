@@ -244,7 +244,6 @@ formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
 
 function formula_to_pla(
     dnfformula   :: SoleLogics.DNF;
-    encoding     :: Symbol=:univariate,
     scalar_range :: Bool=false,
     kwargs...
 )
@@ -255,13 +254,14 @@ function formula_to_pla(
         collect(SoleLogics.atoms(d)) for d in SoleLogics.disjuncts(dnfformula)
     ])
 
-    formula_to_pla(atoms_per_disjunct; encoding, scalar_range=scalar_range, kwargs...)
+    formula_to_pla(atoms_per_disjunct; scalar_range, kwargs...)
 end
 
 function formula_to_pla(
-    atoms        :: Vector{Vector{SoleLogics.Atom}};
-    encoding     :: Symbol=:univariate,
-    scalar_range :: Bool=false
+    atoms             :: Vector{Vector{SoleLogics.Atom}};
+    encoding          :: Symbol=:univariate,
+    scalar_range      :: Bool=false,
+    removewhitespaces :: Bool=true
 )
     @assert encoding in [:univariate, :multivariate]
 
@@ -287,8 +287,9 @@ function formula_to_pla(
     @inbounds for (i, feat) in enumerate(features)
         feat_condindxs = findall(c->SoleData.feature(c) == feat, conditions)
         conds          = filter(c->SoleData.feature(c)  == feat, conditions)
-        # condname = [string("[", SoleData.featurename(SoleData.feature(c)),"]", SoleData.test_operator(c), SoleData.threshold(c)) for c in conds]
-        condname = SoleLogics.syntaxstring.(conds; parentesize=true, removewhitespaces=true)
+
+        condname = SoleLogics.syntaxstring.(conds; removewhitespaces)
+
         feat_condindxss[i] = feat_condindxs
         feat_condnames[i]  = condname
     end
@@ -319,8 +320,6 @@ function formula_to_pla(
     return pla_content
 end
 
-scalar_simplification(a::SoleLogics.Atom; kwargs...) = a
-
 # ---------------------------------------------------------------------------- #
 #                                pla to formula                                #
 # ---------------------------------------------------------------------------- #
@@ -338,18 +337,23 @@ function pla_to_formula(
         startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:end-2]])
     end
 
-    disjuncts = [
-        SoleLogics.LeftmostConjunctiveForm([
-            SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx])
-            for (idx, value) in enumerate(binary)
-            if value ∈ ['1', '0']
-        ])
-        for binary in binaries
-    ]
+    isempty(binaries) && return ⊤
 
-    return !isempty(disjuncts) ?
-        collect(scalar_simplification(d; scalar_range=false) for d in disjuncts) :
-        ⊤
+    disjuncts = Vector{SyntaxStructure}(undef, length(binaries))
+
+    Threads.@threads for i in eachindex(binaries)
+        binary = binaries[i]
+        disjuncts[i] = scalar_simplification(
+                SoleLogics.LeftmostConjunctiveForm([
+                SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx])
+                for (idx, value) in enumerate(binary)
+                if value ∈ ['1', '0']
+            ]);
+            scalar_range=false
+        )
+    end
+
+    return disjuncts
 end
 
 # ---------------------------------------------------------------------------- #
