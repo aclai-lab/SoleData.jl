@@ -17,7 +17,7 @@ function _scalarcondition_sortby(cond)
 end
 
 function scalartiling(conditions::Vector, features = unique(SoleData.feature.(conditions)))
-    newconds = SoleData.AbstractScalarCondition[]
+    newconds = SoleData.RangeScalarCondition[]
     for feat in features
         conds = filter(c->feature(c) == feat, conditions)
         # @show syntaxstring.(conds)
@@ -106,24 +106,6 @@ test_operator(m::ScalarMetaCondition) = m.test_operator
 hasdual(::ScalarMetaCondition) = true
 dual(m::ScalarMetaCondition) = ScalarMetaCondition(feature(m), inverse_test_operator(test_operator(m)))
 
-"""
-    syntaxstring(m::ScalarMetaCondition; 
-                style=false, removewhitespaces::Bool=false, 
-                pretty_op::Bool=true, kwargs...)::String
-
-Generate a formatted string representation of a feature, test operator and threshold combination.
-
-# Keyword Arguments
-- `style::Union{Bool,Dict}=false`: Style options for formatting. If a dict with key 
-  `:featurestyle` is provided, applies styling (`:bold` supported). Default `false` means no styling.
-- `removewhitespaces::Bool=false`: If `true`, removes spaces between feature, operator and threshold. 
-  Useful for generating output suitable for PLA (Programmable Logic Array) applications.
-  Default is `false` (includes space).
-- `pretty_op::Bool=true`: If `true`, uses pretty mathematical symbols (≥, ≤) instead of 
-  ASCII operators (>=, <=). Set to `false` to generate output suitable for PLA applications
-  that require ASCII operators. Default is `true`.
-- `kwargs...`: Additional keyword arguments
-"""
 syntaxstring(m::ScalarMetaCondition; kwargs...) =
     "$(_syntaxstring_metacondition(m; kwargs...)) ⍰"
 
@@ -332,6 +314,28 @@ function checkcondition(c::ScalarCondition, args...; kwargs...)
     apply_test_operator(test_operator(c), featvalue(feature(c), args...; kwargs...), threshold(c))
 end
 
+"""
+    syntaxstring(m::ScalarCondition; 
+                style=false, removewhitespaces::Bool=false, 
+                pretty_op::Bool=true, kwargs...)::String
+
+Generate a formatted string representation of a feature, test operator and threshold combination.
+
+# Keyword Arguments
+- `threshold_digits::Union{Nothing,Integer}=nothing`: If set, rounds the threshold value to the
+  specified number of digits (via `round(...; digits=threshold_digits)`).
+- `threshold_display_method::Union{Nothing,Base.Callable}=nothing`: A function applied to the
+  threshold value before string conversion. If provided, it takes precedence over `threshold_digits`.
+- `style::Union{Bool,Dict}=false`: Style options for formatting. If a dict with key 
+  `:featurestyle` is provided, applies styling (`:bold` supported). Default `false` means no styling.
+- `removewhitespaces::Bool=false`: If `true`, removes spaces between feature, operator and threshold. 
+  Useful for generating output suitable for PLA (Programmable Logic Array) applications.
+  Default is `false` (includes space).
+- `pretty_op::Bool=true`: If `true`, uses pretty mathematical symbols (≥, ≤) instead of 
+  ASCII operators (>=, <=). Set to `false` to generate output suitable for PLA applications
+  that require ASCII operators. Default is `true`.
+- `kwargs...`: Additional keyword arguments
+"""
 function syntaxstring(
     m::ScalarCondition;
     threshold_digits::Union{Nothing,Integer} = nothing,
@@ -736,6 +740,7 @@ function syntaxstring(
     m::RangeScalarCondition;
     threshold_digits::Union{Nothing,Integer} = nothing,
     threshold_display_method::Union{Nothing,Base.Callable} = nothing,
+    removewhitespaces::Bool=false,
     kwargs...
 )
     threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
@@ -743,7 +748,9 @@ function syntaxstring(
     _max = string(isnothing(m.maxval) ? "∞" : threshold_display_method(m.maxval))
     _parmin = minincluded(m) ? "[" : "("
     _parmax = maxincluded(m) ? "]" : ")"
-    "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
+    removewhitespaces ?
+        "$(syntaxstring(m.feature; kwargs...))∈$(_parmin)$(_min),$(_max)$(_parmax)" :
+        "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
 end
 
 # TODO remove repetition with other parsecondition method.
