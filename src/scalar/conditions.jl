@@ -106,6 +106,24 @@ test_operator(m::ScalarMetaCondition) = m.test_operator
 hasdual(::ScalarMetaCondition) = true
 dual(m::ScalarMetaCondition) = ScalarMetaCondition(feature(m), inverse_test_operator(test_operator(m)))
 
+"""
+    syntaxstring(m::ScalarMetaCondition; 
+                style=false, removewhitespaces::Bool=false, 
+                pretty_op::Bool=true, kwargs...)::String
+
+Generate a formatted string representation of a feature, test operator and threshold combination.
+
+# Keyword Arguments
+- `style::Union{Bool,Dict}=false`: Style options for formatting. If a dict with key 
+  `:featurestyle` is provided, applies styling (`:bold` supported). Default `false` means no styling.
+- `removewhitespaces::Bool=false`: If `true`, removes spaces between feature, operator and threshold. 
+  Useful for generating output suitable for PLA (Programmable Logic Array) applications.
+  Default is `false` (includes space).
+- `pretty_op::Bool=true`: If `true`, uses pretty mathematical symbols (≥, ≤) instead of 
+  ASCII operators (>=, <=). Set to `false` to generate output suitable for PLA applications
+  that require ASCII operators. Default is `true`.
+- `kwargs...`: Additional keyword arguments
+"""
 syntaxstring(m::ScalarMetaCondition; kwargs...) =
     "$(_syntaxstring_metacondition(m; kwargs...)) ⍰"
 
@@ -123,11 +141,12 @@ function _st_featop_name(
     test_operator::TestOperator;
     style = false,
     removewhitespaces::Bool=false,
+    pretty_op::Bool=true,
     kwargs...
 )
     unstyled_str = removewhitespaces ? 
-        "$(syntaxstring(feature; style, kwargs...))$(_st_testop_name(test_operator))" :
-        "$(syntaxstring(feature; style, kwargs...)) $(_st_testop_name(test_operator))"
+        "$(syntaxstring(feature; style, kwargs...))$(_st_testop_name(test_operator; pretty_op))" :
+        "$(syntaxstring(feature; style, kwargs...)) $(_st_testop_name(test_operator; pretty_op))"
 
     if style != false && haskey(style, :featurestyle)
         if style.featurestyle == :bold
@@ -140,9 +159,9 @@ function _st_featop_name(
     end
 end
 
-_st_testop_name(test_op::Any) = "$(test_op)"
-_st_testop_name(::typeof(>=)) = "≥"
-_st_testop_name(::typeof(<=)) = "≤"
+_st_testop_name(test_op::Any; kwargs...) = "$(test_op)"
+_st_testop_name(::typeof(>=); pretty_op::Bool=true) = pretty_op ? "≥" : ">="
+_st_testop_name(::typeof(<=); pretty_op::Bool=true) = pretty_op ? "≤" : "<="
 
 # Abbreviations
 
