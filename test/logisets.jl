@@ -2,7 +2,7 @@ using Test
 using SoleData
 
 using Graphs
-using Random
+using StableRNGs
 using SoleLogics
 using StatsBase
 using ThreadSafeDicts
@@ -14,38 +14,25 @@ fr = SoleLogics.ExplicitCrispUniModalFrame(worlds, Graphs.SimpleDiGraph(length(w
 i_instance = 1
 
 # Boolean
-rng = Random.MersenneTwister(1)
+rng = StableRNG(1)
 bool_logiset = SoleData.ExplicitBooleanModalLogiset([(
     Dict([w => StatsBase.sample(rng, features, 2, replace=false) for w in worlds]), fr)])
 bool_condition = SoleData.ValueCondition(features[1])
-
-# TODO fix with StableRNG?
-
-# @test [SoleData.checkcondition(bool_condition, bool_logiset, i_instance, w)
-#     for w in worlds] == Bool[0, 1, 1, 1, 0, 0, 0, 0, 0, 0]
+@test_nowarn displaystructure(bool_logiset)
 
 # Scalar (Float)
-rng = Random.MersenneTwister(1)
+rng = StableRNG(1)
 scalar_logiset = SoleData.ExplicitModalLogiset([(Dict([w => Dict([f => rand(rng) for f in features]) for w in worlds]), fr)])
 scalar_condition = SoleData.ScalarCondition(features[1], >, 0.5)
-
-# TODO fix with StableRNG?
-
-# @test [SoleData.checkcondition(scalar_condition, scalar_logiset, i_instance, w)
-#     for w in worlds] == Bool[0, 0, 1, 1, 0, 1, 0, 1, 0, 0]
+@test_nowarn displaystructure(scalar_logiset)
 
 # Non-scalar (Vector{Float})
-rng = Random.MersenneTwister(2)
+rng = StableRNG(2)
 nonscalar_logiset = SoleData.ExplicitModalLogiset([(Dict([w => Dict([f => rand(rng, rand(rng, 1:3)) for f in features]) for w in worlds]), fr)])
-
 nonscalar_condition = SoleData.FunctionalCondition(features[1], (vals)->length(vals) >= 2)
+@test_nowarn displaystructure(multilogiset)
 
-# TODO fix with StableRNG?
-
-# @test [SoleData.checkcondition(nonscalar_condition, nonscalar_logiset, i_instance, w)
-#     for w in worlds] == Bool[0, 1, 0, 0, 1, 1, 1, 0, 1, 1]
-
-
+# build multilogiset using above logisets
 multilogiset = MultiLogiset([bool_logiset, scalar_logiset, nonscalar_logiset])
 
 @test SoleData.modalitytype(multilogiset) <:
@@ -55,7 +42,7 @@ SoleData.AbstractModalLogiset{
     Graphs.SimpleDiGraph{Int64}}
 } where U
 
-SoleData.AbstractModalLogiset{
+@test_nowarn SoleData.AbstractModalLogiset{
     SoleLogics.World{Int64}, U, Feature{String},
     SoleLogics.ExplicitCrispUniModalFrame{SoleLogics.World{Int64},
     Graphs.SimpleDiGraph{Int64}}
@@ -65,14 +52,7 @@ SoleData.AbstractModalLogiset{
     SimpleDiGraph{Int64}}
 } where U
 
-
-@test_nowarn displaystructure(bool_logiset)
-@test_nowarn displaystructure(scalar_logiset)
-@test_nowarn displaystructure(multilogiset)
-
-
-############################################################################################
-
+# ---------------------------------------------------------------------------- #
 for w in worlds
     @test accessibles(fr, w) == accessibles(scalar_logiset, 1, w)
     @test representatives(fr, w, scalar_condition) == representatives(scalar_logiset, 1, w, scalar_condition)
@@ -169,7 +149,7 @@ bool_supported_logiset2 = @test_nowarn SupportedLogiset(bool_logiset, [memoset])
 @test_nowarn SupportedLogiset(bool_logiset, [bool_supported_logiset2])
 
 
-rng = Random.MersenneTwister(1)
+rng = StableRNG(1)
 alph = ExplicitAlphabet([SoleData.ScalarCondition(rand(rng, features), rand(rng, [>, <]), rand(rng)) for i in 1:10])
 syntaxstring.(alph)
 _formulas = [randformula(
@@ -195,3 +175,12 @@ memoset = [ThreadSafeDict{SyntaxTree,Worlds{W}}() for i_instance in 1:ninstances
 @test_throws AssertionError check(φ, scalar_logiset, 1; use_memo = nothing)
 @time check(φ, scalar_logiset, 1, w; use_memo = nothing)
 @time check(φ, scalar_logiset, 1, w; use_memo = memoset)
+
+# julia> SoleLogics.LogicalInstance
+# SoleLogics.LogicalInstance
+
+# julia> supertype(SoleLogics.LogicalInstance)
+# Interpretation
+
+# julia> supertype(supertype(SoleLogics.LogicalInstance))
+# Any
