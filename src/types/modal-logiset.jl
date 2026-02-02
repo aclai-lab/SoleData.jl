@@ -66,6 +66,15 @@ function featvalue(
     readfeature(X, featchannel(X, i_instance, feature), args..., feature; kwargs...)
 end
 
+function featvalue(
+    feature::AbstractFeature,
+    X::Interpretation,
+    args...;
+    kwargs...
+)
+    readfeature(X, featchannel(X, feature), args..., feature; kwargs...)
+end
+
 function featvalue!(
     feature::AbstractFeature,
     X::AbstractModalLogiset{W},

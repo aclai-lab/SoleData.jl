@@ -2,10 +2,10 @@ import SoleLogics: check
 using SoleLogics: normalize
 using SoleLogics: AnyWorld
 using SoleLogics: value
-using SoleLogics: DefaultCheckAlgorithm
+using SoleLogics: CheckAlgorithm
 
 function check(
-    ::DefaultCheckAlgorithm,
+    ::CheckAlgorithm,
     φ::Atom{<:AbstractCondition},
     i::SoleLogics.LogicalInstance{<:AbstractLogiset},
     args...;
@@ -17,7 +17,7 @@ function check(
 end
 
 function check(
-    ::DefaultCheckAlgorithm,
+    ::CheckAlgorithm,
     φ::Atom{<:AbstractCondition},
     i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
     w::Union{Nothing,AnyWorld,<:AbstractWorld} = nothing,
@@ -58,7 +58,8 @@ If `X` supports onestep memoization, then it will be used for specific diamond f
 
 """
 function check(
-    φ::SoleLogics.SyntaxTree,
+    ::CheckAlgorithm, 
+    φ::SoleLogics.SyntaxBranch,
     i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
     w::Union{Nothing,AnyWorld,<:AbstractWorld} = nothing;
     use_memo::Union{Nothing,AbstractMemoset{<:AbstractWorld},AbstractVector{<:AbstractDict{<:FT,<:AbstractWorlds}}} = nothing,

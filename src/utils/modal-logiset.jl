@@ -204,6 +204,13 @@ function featchannel(
     X.d[i_instance][1]
 end
 
+function featchannel(
+    X::LogicalInstance,
+    feature::AbstractFeature,
+)
+    X.s.d[1][1]
+end
+
 function readfeature(
     X::ExplicitModalLogiset{W},
     featchannel::Any,
