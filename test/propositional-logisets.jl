@@ -105,7 +105,7 @@ sb = randformula(3, [a,b,c,d], [NEGATION, CONJUNCTION])
 @test_nowarn interpret(sb, X, 1)
 
 # test interpret - Truth
-@test_broken interpret(TOP, X)
+@test_nowarn interpret(TOP, X)
 @test_nowarn interpret(TOP, SoleLogics.LogicalInstance(X, 1))
 @test_nowarn interpret(TOP, X, 1)
 
@@ -121,7 +121,7 @@ sb = randformula(3, [a,b,c,d], [NEGATION, CONJUNCTION])
 @test_nowarn check(sb, X, 1)
 
 # test check - Truth
-@test_broken check(TOP, X)
-@test_broken check(TOP, SoleLogics.LogicalInstance(X, 1))
-@test_broken check(TOP, X, 1)
+@test_nowarn check(TOP, X)
+@test_nowarn check(TOP, SoleLogics.LogicalInstance(X, 1))
+@test_nowarn check(TOP, X, 1)
 

@@ -185,3 +185,13 @@ function check(
 
     return ret
 end
+
+function check(
+    ::CheckAlgorithm,
+    φ::Truth,
+    i::LogicalInstance,
+    args...;
+    kwargs...
+)
+    return istop(interpret(φ, i, args...; kwargs...))
+end
