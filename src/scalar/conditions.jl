@@ -109,45 +109,27 @@ dual(m::ScalarMetaCondition) = ScalarMetaCondition(feature(m), inverse_test_oper
 syntaxstring(m::ScalarMetaCondition; kwargs...) =
     "$(_syntaxstring_metacondition(m; kwargs...)) ⍰"
 
-_syntaxstring_metacondition(
+function _syntaxstring_metacondition(
     m::ScalarMetaCondition;
-    use_feature_abbreviations::Bool = false,
-    kwargs...,
-) =
-    use_feature_abbreviations ?
-        _st_featop_abbr(feature(m), test_operator(m); kwargs...) :
-        _st_featop_name(feature(m), test_operator(m); kwargs...)
-
-function _st_featop_name(
-    feature::AbstractFeature,
-    test_operator::TestOperator;
     style = false,
     removewhitespaces::Bool=false,
     pretty_op::Bool=true,
-    kwargs...
+    kwargs...,
 )
-    unstyled_str = removewhitespaces ? 
-        "$(syntaxstring(feature; style, kwargs...))$(_st_testop_name(test_operator; pretty_op))" :
-        "$(syntaxstring(feature; style, kwargs...)) $(_st_testop_name(test_operator; pretty_op))"
+    f, t = feature(m), test_operator(m)
 
-    if style != false && haskey(style, :featurestyle)
-        if style.featurestyle == :bold
-            "\e[1m" * unstyled_str * "\e[0m"
-        else
-            error("Unknown featurestyle: $(style.featurestyle).")
-        end
-    else
+    unstyled_str = removewhitespaces ? 
+        "$(syntaxstring(f; style, kwargs...))$(_st_testop_name(t; pretty_op))" :
+        "$(syntaxstring(f; style, kwargs...)) $(_st_testop_name(t; pretty_op))"
+
+    return style ?
+        "\e[1m" * unstyled_str * "\e[0m" :
         unstyled_str
-    end
 end
 
 _st_testop_name(test_op::Any; kwargs...) = "$(test_op)"
 _st_testop_name(::typeof(>=); pretty_op::Bool=true) = pretty_op ? "≥" : ">="
 _st_testop_name(::typeof(<=); pretty_op::Bool=true) = pretty_op ? "≤" : "<="
-
-# Abbreviations
-
-_st_featop_abbr(feature::AbstractFeature,   test_operator::TestOperator; kwargs...)     = _st_featop_name(feature, test_operator; kwargs...)
 
 ############################################################################################
 

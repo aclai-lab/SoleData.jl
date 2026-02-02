@@ -36,6 +36,8 @@ test_suites = [
     ("Artifacts", ["artifacts.jl"]),
     #
     ("Relations", ["relations.jl", ]),
+    #
+    ("Conditions", ["conditions.jl", ]),
 ]
 
 @testset "SoleData.jl" begin
