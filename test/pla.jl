@@ -19,89 +19,42 @@ end
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
 
 pla, fnames = PLA.formula_to_pla(formula0)
-@test cleanlines(pla) in [cleanlines("""
-.i 5
-.o 1
-.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2
-.ob formula_output
-
-.p 2
-011-0 1
-10011 1
-.e
-"""), cleanlines("""
-.i 5
-.o 1
-.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2
-.ob formula_output
-
-.p 2
-10011 1
-011-0 1
-.e
-""")]
+@test pla == ".i 5\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2\n.ob formula_output\n.p 2\n011-0 1\n10011 1\n.e"
+@test fnames == [VariableValue(1), VariableValue(2)]
 
 pla, fnames = PLA.formula_to_pla(formula0; scalar_range=true)
-@test cleanlines(pla) in [cleanlines("""
-.i 6
-.o 1
-.ilb V1∈[-Inf,0] V1∈(0,10] V1∈(10,Inf] V2∈[-Inf,0) V2∈[0,2) V2∈[2,2]
-.ob formula_output
-.p 2
-100001 1
-001100 1
-.e
-"""),
-cleanlines("""
-.i 6
-.o 1
-.ilb V1∈[-Inf,0] V1∈(0,10] V1∈(10,Inf] V2∈[-Inf,0) V2∈[0,2) V2∈[2,2]
-.ob formula_output
-.p 2
-001100 1
-100001 1
-.e
-""")]
+@test pla == ".i 6\n.o 1\n.ilb V1∈[-Inf,0] V1∈(0,10] V1∈(10,Inf] V2∈[-Inf,0) V2∈[0,2) V2∈[2,2]\n.ob formula_output\n.p 2\n001100 1\n100001 1\n.e"
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 >= 2))
+
 pla, fnames = PLA.formula_to_pla(formula0)
-@test pla == ".i 4\n.o 1\n.ilb V1<=0 V1>10 V2<0 V3>10\n.ob formula_output\n\n.p 3\n011- 1\n1011 1\n101- 1\n.e"
-@test cleanlines(PLA.formula_to_pla(formula0)) in [cleanlines("""
-.i 4
-.o 1
-.ilb V1<=0 V1>10 V2<0 V2>=2
-.ob formula_output
+@test pla == ".i 4\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2>=2\n.ob formula_output\n.p 2\n1001 1\n0110 1\n.e"
+@test fnames == [VariableValue(1), VariableValue(2)]
 
-.p 2
-0110 1
-1001 1
-.e
-"""), cleanlines("""
-.i 4
-.o 1
-.ilb V<=0 V1>10 V2<0 V2>=2
-.ob formula_output
+simplify = SoleData.scalar_simplification(dnf(formula0))
+@test syntaxstring(simplify) == "((V1 ≤ 0) ∧ (V2 ≥ 2)) ∨ ((V2 < 0) ∧ (V1 > 10))"
 
-.p 2
-1001 1
-0110 1
-.e
-""")]
+pla, fnames = PLA.formula_to_pla(formula0)
+formula01 = PLA.pla_to_formula(pla, fnames)
+@test syntaxstring.(formula01) == ["([V1] ≤ 0.0) ∧ ([V2] ≥ 2.0)", "([V1] > 10.0) ∧ ([V2] < 0.0)"]
 
-@test_nowarn SoleData.scalar_simplification(dnf(formula0, Atom))
-
-f = PLA.formula_to_pla(formula0)
-fnames = [:V1, :V2]
-formula01 = PLA.pla_to_formula(f, fnames)
 tree01 = tree(LeftmostDisjunctiveForm(formula0))
 formula0_min = my_espresso_minimize(tree01)
+@test syntaxstring.(formula0_min) == syntaxstring.(formula01)
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0))
-formula0 = SoleData.scalar_simplification(dnf(formula0, Atom))
-PLA.formula_to_pla(formula0)[1] |> println
+
+formula0 = SoleData.scalar_simplification(dnf(formula0))
+@test syntaxstring(formula0) == "((V2 < 0) ∧ (V1 > 10)) ∨ ((V2 < 0) ∧ (V1 ≤ 0))"
+
+pla, fnames = PLA.formula_to_pla(formula0)
+@test pla == ".i 3\n.o 1\n.ilb V1<=0 V1>10 V2<0\n.ob formula_output\n.p 2\n011 1\n101 1\n.e"
+
 formula0_min = my_espresso_minimize(formula0)
-println(formula0); println(formula0_min);
-@test_nowarn SoleData.scalar_simplification(formula0_min)
+@test syntaxstring.(formula0_min) == ["([V1] > 10.0) ∧ ([V2] < 0.0)", "([V1] ≤ 0.0) ∧ ([V2] < 0.0)"]
+
+
+simplify = SoleData.scalar_simplification(formula0_min)
 
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0) ∨ ((V1 <= 0) ∧ (V2 <= 10) ∧ ((V1 <= 3)) ∧ (V2 < 0)) ∨ (V1 <= 0) ∧ (V2 < 0) ∧ (V1 <= 10) ∧ (V3 > 10))
