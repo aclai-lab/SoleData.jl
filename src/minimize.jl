@@ -94,9 +94,7 @@ function espresso_minimize(
     minimized_pla = String(read(out))
     silent || println(minimized_pla)
     conditionstype = scalar_range ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
-    @show minimized_pla
-    @show fnames
-    return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
+    return PLA.pla_to_formula(minimized_pla, fnames; conditionstype, conjunct=true)
 end
 
 """

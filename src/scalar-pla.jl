@@ -270,15 +270,6 @@ function formula_to_pla(
     formula_to_pla(atoms_per_disjunct; scalar_range, kwargs...)
 end
 
-# function formula_to_pla(
-#     tree::SyntaxBranch;
-#     scalar_range :: Bool=false,
-#     kwargs...
-# )
-#     formula = scalar_simplification(SoleLogics.atoms(tree), SoleLogics.connective(LeftmostLinearForm(tree)); scalar_range)
-#     formula_to_pla(formula; kwargs...)
-# end
-
 function formula_to_pla(
     atoms             :: Vector{Vector{SoleLogics.Atom}};
     encoding          :: Symbol=:univariate,
@@ -350,6 +341,7 @@ function pla_to_formula(
     pla            :: String,
     fnames         :: Vector{<:VariableValue};
     conditionstype :: Type=SoleData.SoleData.ScalarCondition,
+    conjunct       :: Bool=false
 )
     lines             = split(pla, '\n')
     parsed_conditions = SoleLogics.Atom[]
@@ -376,7 +368,7 @@ function pla_to_formula(
         )
     end
 
-    return disjuncts
+    return conjunct ? LeftmostDisjunctiveForm(disjuncts) : disjuncts
 end
 
 end

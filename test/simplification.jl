@@ -32,5 +32,5 @@ atomslist = [x_u1, x_u2, x_u3, x_u4, x_l1, x_l2, y_u1, y_u2, y_u3, y_u4]
 @test_nowarn SoleData.scalar_simplification(φ)
 @test_nowarn (φ)
 
-@test_nowarn SoleData.scalar_simplification(φ; allow_scalar_range_conditions = true)
+@test_nowarn SoleData.scalar_simplification(φ; scalar_range = true)
 @test_nowarn (φ)
