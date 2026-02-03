@@ -1,4 +1,4 @@
-<div align="center"><a href="https://github.com/aclai-lab/Sole.jl"><img src="logo.png" alt="" title="This package is part of Sole.jl" width="200"></a></div>
+<div align="center"><a href="https://github.com/aclai-lab/Sole.jl"><img src="logo_transparent.png" alt="" title="This package is part of Sole.jl" width="200"></a></div>
 
 # SoleData.jl – Datasets for data-driven symbolic AI
 
