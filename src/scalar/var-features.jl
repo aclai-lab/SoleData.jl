@@ -299,7 +299,7 @@ struct VariableValue{I<:VariableId, N<:Union{VariableName, Nothing}} <: Abstract
         return new{I,N}(i_variable, i_name)
     end
 end
-featurename(f::VariableValue) = !isnothing(f.i_name) ? f.i_name : ""
+featurename(f::VariableValue) = !isnothing(f.i_name) ? f.i_name : "V$(f.i_variable)"
 
 function syntaxstring(f::VariableValue; variable_names_map = nothing, show_colon = false, kwargs...)
     if !isnothing(f.i_name)

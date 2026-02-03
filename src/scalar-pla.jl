@@ -1,36 +1,52 @@
 module PLA
 
 using SoleData
-using SoleData: test_operator, feature, threshold
 using SoleLogics
-import SoleLogics as SL
-using DataStructures: OrderedDict
 
-_removewhitespaces = x->replace(x, (' ' => ""))
+# ---------------------------------------------------------------------------- #
+#                                   types                                      #
+# ---------------------------------------------------------------------------- #
+const OPERATORS = "<=|>=|==|!=|<|≤|>|≥|≠|∈|∉"
+const OP_REGEX = Regex("^\\[?(.+?)\\]?(" * OPERATORS * ")(.+)\$")
+const OPERATOR_MAP = Dict(
+    "<"  => (<),
+    "<=" => (<=),
+    "≤"  => (≤),
+    ">"  => (>),
+    ">=" => (>=),
+    "≥"  => (≥),
+    "==" => (==),
+    "!=" => (!=),
+    "≠"  => (!=),
+    "∈"  => (∈),
+    "∉"  => (∉),
+)
 
-# # Function to extract thresholds and build domains for each variable
-# function extract_domains(conds::AbstractVector{<:SoleData.AbstractCondition})
-#     # @assert all(a->test_operator(a) in [(<), (<=), (>), (>=), (==), (!=)], conds)
-#     domains = OrderedDict{SoleData.AbstractFeature,Set}()
-#     map(conds) do cond
-#         if cond isa SoleData.ScalarCondition
-#             push!(get!(domains, feature(cond), Set()), threshold(cond))
-#         elseif cond isa SoleData.RangeScalarCondition
-#             let x = SoleData.minval(cond)
-#                 !isnothing(x) && push!(get!(domains, feature(cond), Set()), x)
-#             end
-#             let x = SoleData.maxval(cond)
-#                 !isnothing(x) && push!(get!(domains, feature(cond), Set()), x)
-#             end
-#         end
-#     end
-#     return OrderedDict(k => sort(collect(v)) for (k, v) in domains)
-# end
+const LiteralBool = Dict('1' => true, '0' => false)
 
+# ---------------------------------------------------------------------------- #
+#                                get conjuncts                                 #
+# ---------------------------------------------------------------------------- #
+@inline  _get_conjuncts(a::Vector{Vector{Atom}}) = _get_conjuncts.(a)
+@inline  _get_conjuncts(a::Vector{Atom}) = isempty(a) ? ⊤ : LeftmostConjunctiveForm{Literal}(Literal.(a))
 
-# Function to encode a disjunct into a PLA row
+# ---------------------------------------------------------------------------- #
+#                                 print utils                                  #
+# ---------------------------------------------------------------------------- #
+_featurename(f::SoleData.VariableValue) = isnothing(f.i_name) ? "V$(f.i_variable)" : "[$(f.i_name)]"
+
+# ---------------------------------------------------------------------------- #
+#                             disjuncts encoding                               #
+# ---------------------------------------------------------------------------- #
 """
-    encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, feat_condindxss) -> Vector{String}
+    _encode_disjunct(
+        disjunct::SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
+        features::Vector{<:SoleData.VariableValue},
+        conditions::Vector{<:SoleData.ScalarCondition},
+        includes::Vector{BitMatrix},
+        excludes::Vector{BitMatrix},
+        feat_condindxss::Vector{Vector{Int64}}
+    ) -> Vector{String}
 
     Encode a logical disjunct into a Programmable Logic Array (PLA) row representation.
 
@@ -39,12 +55,12 @@ _removewhitespaces = x->replace(x, (' ' => ""))
     or "-" (don't care).
 
     # Arguments
-    - `disjunct::LeftmostConjunctiveForm`: The logical disjunct to encode, containing literals
-    - `features::AbstractVector`: Vector of features used in the logical formula
-    - `conditions::AbstractVector`: Vector of all possible conditions 
-    - `includes`: Matrix-like structure defining inclusion relationships between conditions
-    - `excludes`: Matrix-like structure defining exclusion relationships between conditions
-    - `feat_condindxss`: Mapping from features to their corresponding condition indices
+    - `disjunct::SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal}`: The logical disjunct to encode, containing literals
+    - `features::Vector{<:SoleData.VariableValue}`: Vector of features used in the logical formula
+    - `conditions::Vector{<:SoleData.ScalarCondition}`: Vector of all possible conditions 
+    - `includes::Vector{BitMatrix}`: Matrix-like structure defining inclusion relationships between conditions
+    - `excludes::Vector{BitMatrix}`: Matrix-like structure defining exclusion relationships between conditions
+    - `feat_condindxss::Vector{Vector{Int64}}`: Mapping from features to their corresponding condition indices
 
     # Returns
     - `Vector{String}`: PLA row representation where each element is "1", "0", or "-"
@@ -54,95 +70,51 @@ _removewhitespaces = x->replace(x, (' ' => ""))
     - For positive literals, sets "1" for included conditions and "0" for excluded ones
     - For negative literals, inverts the logic (sets "0" for included, "1" for excluded)
     - Handles dual conditions when they exist by applying inverted logic
-    - Detects and warns about logical conflicts when contradictory values are assigned
     - Preserves more restrictive values (NEG over POS) when conflicts occur
-
-    # Examples
-    ```julia
-    # Assuming appropriate data structures are set up
-    pla_row = encode_disjunct(my_disjunct, features, conditions, includes, excludes, feat_condindxss)
-    # Returns something like: ["1", "0", "-", "1", "0"]
-    ```
 
     # Notes
     - The function assumes that either the main condition or its dual exists in the conditions vector
-    - Warnings are issued when logical conflicts are detected during encoding
     - The resulting PLA row uses "-" for don't-care positions that are not constrained by any literal
 """
-function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, feat_condindxss)
+function _encode_disjunct(
+    disjunct        :: SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
+    features        :: Vector{<:SoleData.VariableValue},
+    conditions      :: Vector{<:SoleData.AbstractScalarCondition},
+    includes        :: Vector{BitMatrix},
+    excludes        :: Vector{BitMatrix},
+    feat_condindxss :: Vector{Vector{Int64}}
+)
     pla_row = fill("-", length(conditions))
     
-    # For each atom in the disjunct, add zeros or ones to relevants
+    # for each atom in the disjunct, add zeros or ones to relevants
     for lit in SoleLogics.grandchildren(disjunct)
-        # @show syntaxstring(lit)
         ispos = SoleLogics.ispos(lit)
-        cond = SoleLogics.value(atom(lit))
-        # @show cond
+        cond  = SoleLogics.value(atom(lit))
 
-        i_feat = findfirst((f)->f==SoleData.feature(cond), features)
+        i_feat         = findfirst((f)->f==SoleData.feature(cond), features)
         feat_condindxs = feat_condindxss[i_feat]
-        # @show feat_condindxs
-        feat_icond = findfirst(c->c==cond, conditions[feat_condindxs])
+
+        feat_icond     = findfirst(c->c==cond, conditions[feat_condindxs])
         feat_idualcond = SoleData.hasdual(cond) ? findfirst(c->c==SoleData.dual(cond), conditions[feat_condindxs]) : nothing
-        # @show feat_icond, feat_idualcond
+
         @assert !(isnothing(feat_icond) && isnothing(feat_idualcond))
 
         POS, NEG = ispos ? ("1", "0") : ("0", "1")
         
-        # Manage the main condition
-        if !isnothing(feat_icond)
-            # For each condition this includes, set POS if not already NEG
-            for (ic, c) in enumerate(feat_condindxs)
-                if includes[i_feat][feat_icond, ic]
-                    if pla_row[c] == "-"  # Only if it has not already been set
-                        pla_row[c] = POS
-                    elseif pla_row[c] == NEG && POS == "1"
-                        # Conflict: We already have a NEG but we should put POS
-                        # This indicates a logical problem in the formula
-                        #@warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
-                        # Keep NEG (more restrictive)
-                    end
-                end
+        for (ic, c) in enumerate(feat_condindxs)
+            # set pos for included conditions
+            if !isnothing(feat_icond)
+                includes[i_feat][feat_icond, ic] && pla_row[c] == "-" &&
+                    (pla_row[c] = POS)
+                excludes[i_feat][feat_icond, ic] &&
+                    (pla_row[c] = (pla_row[c] == "-" ? NEG : (pla_row[c] == POS && NEG == "0" ? NEG : pla_row[c])))
             end
-            
-            # For any condition that this excludes, set NEG
-            for (ic, c) in enumerate(feat_condindxs)
-                if excludes[i_feat][feat_icond, ic]
-                    if pla_row[c] == "-"
-                        pla_row[c] = NEG
-                    elseif pla_row[c] == POS && NEG == "0"
-                        # Conflict: We already have a POS but we should put NEG
-                        #@warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
-                        # Set NEG (more restrictive)
-                        pla_row[c] = NEG
-                    end
-                end
-            end
-        end
-        
-        # Handle dual condition if exists
-        if !isnothing(feat_idualcond)
-            # For dual condition, invert POS and NEG
-            for (ic, c) in enumerate(feat_condindxs)
-                if includes[i_feat][feat_idualcond, ic]
-                    if pla_row[c] == "-"
-                        pla_row[c] = NEG
-                    elseif pla_row[c] == POS && NEG == "0"
-                        #@warn "Logic conflict detected at position $(c): was $(POS), should be $(NEG)"
-                        pla_row[c] = NEG
-                    end
-                end
-            end
-            
-            for (ic, c) in enumerate(feat_condindxs)
-                if excludes[i_feat][feat_idualcond, ic]
-                    if pla_row[c] == "-"
-                        pla_row[c] = POS
-                    elseif pla_row[c] == NEG && POS == "1"
-                        #@warn "Logic conflict detected at position $(c): was $(NEG), should be $(POS)"
-                        # Keep NEG
-                    end
-                end
+            # handle dual condition if exists
+            if !isnothing(feat_idualcond)
+                includes[i_feat][feat_idualcond, ic] &&
+                    (pla_row[c] = (pla_row[c] == "-" ? NEG : (pla_row[c] == POS && NEG == "0" ? NEG : pla_row[c])))
+                excludes[i_feat][feat_idualcond, ic] && pla_row[c] == "-" &&
+                    (pla_row[c] = POS)
             end
         end
     end
@@ -150,534 +122,405 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
     return pla_row
 end
 
-# Function to parse and process the formula into PLA
+# ---------------------------------------------------------------------------- #
+#                               read conditions                                #
+# ---------------------------------------------------------------------------- #
 """
-        _formula_to_pla(formula::SoleLogics.Formula, dc_set=false, silent=true, args...; encoding=:univariate, use_scalar_range_conditions=false, kwargs...) -> (String, Tuple, NamedTuple)
+    _read_conditions(
+        line::AbstractString,
+        conditionstype::Type,
+        fnames::Vector
+    ) -> Vector{SoleLogics.Atom}
 
-    Convert a logical formula into Programmable Logic Array (PLA) format representation.
+Parse a PLA input label line (`.ilb`) and extract scalar conditions as atoms.
 
-    This function transforms a logical formula into a PLA format suitable for digital logic synthesis
-    and hardware implementation. The conversion process involves normalizing the formula to Disjunctive
-    Normal Form (DNF), extracting conditions and features, and encoding the logic into a structured
-    PLA representation.
+This function processes a single line from a Programmable Logic Array (PLA) file that 
+defines input variable labels and their associated conditions. It parses each condition 
+specification and creates corresponding `SoleLogics.Atom` objects.
 
-    # Arguments
-    - `formula::SoleLogics.Formula`: The input logical formula to convert
-    - `dc_set::Bool=false`: Whether to include don't-care set in the output (currently unused)
-    - `silent::Bool=true`: If `false`, prints intermediate steps and debugging information
-    - `args...`: Additional positional arguments passed to underlying functions
+# Arguments
+- `line::AbstractString`: The `.ilb` command line from a PLA file, containing space-separated condition specifications
+- `conditionstype::Type`: The type of condition to create (e.g., `SoleData.ScalarCondition`, `RangeScalarCondition`)
+- `fnames::Vector`: Vector of feature names used to resolve variable indices for `SoleData.VariableValue` structs
 
-    # Keyword Arguments
-    - `encoding::Symbol=:univariate`: Encoding method for variables (`:univariate` or `:multivariate`)
-    - `use_scalar_range_conditions::Bool=false`: Whether to use scalar range conditions in the conversion
-    - `kwargs...`: Additional keyword arguments passed to DNF conversion and scalar simplification
+# Returns
+- `Vector{SoleLogics.Atom}`: Vector of atoms, each containing a scalar condition parsed from the input line
 
-    # Returns
-    A tuple containing:
-    - `String`: The complete PLA format string ready for use with logic synthesis tools
-    - `Tuple`: A tuple containing `(nothing, conditions)` where conditions is the vector of extracted conditions
-    - `NamedTuple`: Configuration parameters used in the conversion including encoding method and other options
+# Format
+Each condition in the line follows the pattern: `[feature_name]operator threshold`
+- Feature name is enclosed in square brackets `[]`
+- Operator can be either `<` or `≥`
+- Threshold is typically floating-point number
 
-    # Details
-    The conversion process follows these main steps:
+# Details
+The function:
+1. Splits the line on spaces and skips the first element (`.ilb` command)
+2. For each part, extracts:
+   - Feature name (between `[` and `]`)
+   - Operator (`<` or `≥`)
+   - Threshold value (remaining string parsed as Float64)
+3. Creates a `SoleData.VariableValue` from the feature name and its index
+4. Constructs a condition object and wraps it in an `SoleLogics.Atom`
 
-    1. **Formula Normalization**: Converts the input formula to DNF using specified profiles and atom flipping rules
-    2. **Scalar Simplification**: Applies scalar simplification techniques based on the configuration
-    3. **Condition Extraction**: Identifies unique conditions and features from the normalized formula
-    4. **Condition Processing**: Optionally applies scalar tiling and removes dual conditions
-    5. **Relationship Analysis**: Computes inclusion and exclusion relationships between conditions
-    6. **PLA Header Generation**: Creates appropriate headers based on encoding method:
-       - `:univariate`: Standard binary encoding with `.i`, `.o`, `.ilb` directives
-       - `:multivariate`: Multi-valued variable encoding with `.mv`, `.label` directives
-    7. **Row Encoding**: Converts each disjunct to PLA rows using the `encode_disjunct` function
-    8. **Output Assembly**: Combines headers, onset rows, and termination markers into final PLA format
-
-    # Encoding Methods
-    - **`:univariate`**: Each condition becomes a binary input variable (standard PLA format)
-    - **`:multivariate`**: Groups conditions by feature, supporting multi-valued variables (experimental)
-
-    # PLA Format Output
-    The generated PLA string includes:
-    - Variable declarations (`.i`, `.o` for univariate; `.mv` for multivariate)
-    - Input/output labels (`.ilb`, `.ob`, `.label`)
-    - Product term count (`.p`)
-    - Logic onset rows (condition patterns with output values)
-    - End marker (`.e`)
-
-    # Examples
-    ```julia
-    # Basic conversion with default settings
-    pla_string, conditions, config = _formula_to_pla(my_formula)
-
-    # Verbose conversion with multivariate encoding
-    pla_string, conditions, config = _formula_to_pla(
-        my_formula, 
-        false, 
-        false;  # silent=false for debugging output
-        encoding=:multivariate,
-        use_scalar_range_conditions=true
-    )
-    ```
-
-    # Notes
-    - The `:multivariate` encoding is experimental and may not be fully tested
-    - Scalar range conditions provide additional optimization opportunities but may increase complexity
-    - The function assumes the input formula can be successfully converted to DNF
-    - Conditions are automatically sorted and processed to remove redundancy
-    - The resulting PLA format is compatible with standard logic synthesis tools
-
-    # See Also
-    - `encode_disjunct`: Function used internally to encode individual disjuncts
-    - `SoleLogics.dnf`: DNF conversion functionality
-    - `SoleData.scalar_simplification`: Scalar simplification methods
+# Notes
+- The feature name must exist in `fnames` to determine the variable index
 """
-function _formula_to_pla(
-    formula::SoleLogics.Formula,
-    dc_set = false,
-    silent = true,
-    args...;
-    encoding = :univariate,
-    use_scalar_range_conditions = false,
-    kwargs...
+function _read_conditions(
+    line           :: AbstractString,
+    conditionstype :: Type,
+    fnames         :: Vector{<:VariableValue}
 )
-    @assert encoding in [:univariate, :multivariate]
+    parts = split(line, ' ')[2:end]  # skip '.ilb' command
+    fnames = Symbol.(featurename.(fnames))
     
-    scalar_kwargs = (;
-        profile = :nnf,
-        allow_atom_flipping = true,
-    )
+    return map(parts) do part
+        # split with regex
+        m = match(OP_REGEX, part)
+        m === nothing && throw(ArgumentError("Invalid condition token: $(part)"))
 
-    dnfformula = SoleLogics.dnf(formula, Atom; scalar_kwargs..., kwargs...)
+        # reconstruct VariableValue
+        varname   = Symbol(m.captures[1])
+        i_var   = findfirst(==(varname), fnames)
+        value   = SoleData.VariableValue(i_var, varname)
 
-    scalar_simplification_kwargs = (;
-        force_scalar_range_conditions = use_scalar_range_conditions, 
-        allow_scalar_range_conditions = use_scalar_range_conditions,
-    )
-    silent || @show dnfformula
+        operator        = OPERATOR_MAP[m.captures[2]]
+        threshold = threshold = parse(Float64, m.captures[3])
 
-    dnfformula = SoleData.scalar_simplification(dnfformula;
-        scalar_simplification_kwargs...
-    )
+        condition = conditionstype(value, operator, threshold)
 
-    silent || @show dnfformula
-
-    # scalar_kwargs = (;
-    #     profile = :nnf,
-    #     allow_atom_flipping = true,
-    #     forced_negation_removal = false,
-    #     # flip_atom = a -> SoleData.polarity(SoleData.test_operator(SoleLogics.value(a))) == false
-    # )
-
-    dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs..., 
-    kwargs...)
-
-    _patchnothing(v, d) = isnothing(v) ? d : v
-
-    for ch in SoleLogics.grandchildren(dnfformula)
-        sort!(SoleLogics.grandchildren(ch), by=lit->SoleData._scalarcondition_sortby(SoleLogics.value(SoleLogics.atom(lit))))
+        return SoleLogics.Atom{typeof(condition)}(condition)
     end
-    silent || @show dnfformula
-
-    # Extract domains
-    conditions = unique(map(SoleLogics.value, atoms(dnfformula)))
-    features = unique(SoleData.feature.(conditions))
-    sort!(features, by=syntaxstring)
-    # nnbinary_vars =div(length(setdiff(_duals, conditions)), 2)
-    sort!(conditions, by=SoleData._scalarcondition_sortby)
-    silent || println(SoleLogics.displaysyntaxvector(features))
-    silent || println(SoleLogics.displaysyntaxvector(conditions))
-    if use_scalar_range_conditions
-        original_conditions = conditions
-        silent || println(SoleLogics.displaysyntaxvector(conditions))
-        conditions = SoleData.scalartiling(conditions, features)
-        @assert length(setdiff(original_conditions, conditions)) == 0 "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
-    end
-    # readline()
-    conditions = SoleData.removeduals(conditions)
-    silent || println(SoleLogics.displaysyntaxvector(conditions))
-
-    # For each feature, derive the conditions, and their names.
-    feat_condindxss, feat_conds, feat_condnames = zip(map(features) do feat
-        feat_condindxs = findall(c->feature(c) == feat, conditions)
-        conds = filter(c->feature(c) == feat, conditions)
-        condname = _removewhitespaces.(syntaxstring.(conds))
-        (feat_condindxs, conds, condname)
-    end...)
-
-    feat_nconds = length.(feat_conds)
-    
-    silent || @show feat_nconds
-    silent || @show feat_condnames
-    
-    # Derive inclusions and exclusions between conditions
-    includes, excludes = [], []
-    for (i,feat_condindxs) in enumerate(feat_condindxss)
-        # silent || @show feat_condnames[i]
-        this_includes = [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
-        this_excludes = [SoleData.excludes(conditions[cond_j], conditions[cond_i]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
-        # println(this_includes)
-        # println(this_excludes)
-        push!(includes, this_includes)
-        push!(excludes, this_excludes)
-    end
-    # silent || @show ilb_str
-    # Generate PLA header
-    pla_header = []
-    if encoding == :multivariate
-        @warn "encoding = :multivariate is untested."
-        num_binary_vars = sum(feat_nconds .== 1)
-        num_nonbinary_vars = sum(feat_nconds .> 1) + 1
-        silent || @show feat_nconds .== 1
-        silent || @show num_binary_vars
-        silent || @show num_nonbinary_vars
-        num_vars = num_binary_vars + num_nonbinary_vars
-        push!(pla_header, ".mv $(num_vars) $(num_binary_vars) $(join(feat_nconds[feat_nconds .> 1], " ")) 1")
-        if num_binary_vars > 0
-            ilb_str = join(vcat(feat_condnames[feat_nconds .== 1]...), " ")
-            push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
-        end
-        for i_var in 1:length(feat_nconds[feat_nconds .> 1])
-            if feat_nconds[feat_nconds .> 1][i_var] > 1
-                this_ilb_str = join(feat_condnames[feat_nconds .> 1][i_var], " ")
-                push!(pla_header, ".label var=$(num_binary_vars+i_var-1) $(this_ilb_str)")
-            end
-        end
-    else
-        num_outputs = 1
-        num_vars = length(conditions)
-        ilb_str = join(vcat(feat_condnames...), " ")
-        push!(pla_header, ".i $(num_vars)")
-        push!(pla_header, ".o $(num_outputs)")
-        push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
-        push!(pla_header, ".ob formula_output")
-    end
-
-    silent || @show pla_header
-
-    # Generate ON-set rows for each disjunct
-    end_idxs = cumsum(feat_nconds)
-    silent || @show feat_nconds
-    feat_varidxs = [(startidx:endidx) for (startidx,endidx) in zip([1, (end_idxs.+1)...], end_idxs)]
-    silent || @show feat_varidxs
-    pla_onset_rows = []
-    for disjunct in SoleLogics.disjuncts(dnfformula)
-        row = encode_disjunct(disjunct, features, conditions, includes, excludes, feat_condindxss)
-        if encoding == :multivariate
-            # Binary variables first
-            silent || @show row
-            binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nconds)
-            nonbinary_variable_idxs = findall(feat_nvar->feat_nvar > 1, feat_nconds)
-            row = vcat(
-                [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
-                (num_binary_vars > 0 ? ["|"] : [])...,
-                [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...
-            )
-            push!(pla_onset_rows, "$(join(row, ""))1")
-        else
-            push!(pla_onset_rows, "$(join(row, "")) 1")  # Append "1" for the ON-set output
-        end
-    end
-
-    # # Generate DC-set rows for each disjunct
-    pla_dcset_rows = []
-    # Combine PLA components
-    pla_content = [
-        join(pla_header, "\n"),
-        join(pla_dcset_rows, "\n"),
-        ".p $(length(pla_onset_rows))",
-        join(pla_onset_rows, "\n"),
-        ".e"
-    ]
-    c = strip(join(pla_content, "\n"))
-    return c, (nothing, conditions), (
-        encoding = encoding,
-        use_scalar_range_conditions = use_scalar_range_conditions,
-        kwargs...
-    )
 end
 
-"""
-        _pla_to_formula(pla::AbstractString, silent=true, ilb_str=nothing, conditions=nothing; conditionstype=SoleData.ScalarCondition, featuretype=SoleData.VariableValue, featvaltype=nothing, kwargs...) -> SoleLogics.Formula
-    
-    Convert a Programmable Logic Array (PLA) format string back into a logical formula representation.
-    
-    This function performs the inverse operation of `_formula_to_pla`, parsing a PLA format string
-    and reconstructing the corresponding logical formula in Disjunctive Normal Form (DNF). It handles
-    both univariate (binary) and multivariate PLA formats, processing input variables, output
-    specifications, and logic rows to rebuild the original logical structure.
-    
-    # Arguments
-    - `pla::AbstractString`: The PLA format string to parse and convert
-    - `silent::Bool=true`: If `false`, prints debugging information during parsing
-    - `ilb_str::Union{String,Nothing}=nothing`: Expected input labels string for validation (optional)
-    - `conditions::Union{AbstractVector,Nothing}=nothing`: Pre-existing conditions to map against (optional)
-    
-    # Keyword Arguments
-    - `conditionstype::Type=SoleData.ScalarCondition`: Type constructor for creating new conditions
-    - `featuretype::Type=SoleData.VariableValue`: Type for feature representation
-    - `featvaltype::Union{Type,Nothing}=nothing`: Type for feature values (optional)
-    - `kwargs...`: Additional arguments passed to condition parsing functions
-    
-    # Returns
-    - `SoleLogics.Formula`: The reconstructed logical formula in DNF, or `⊤` (true) if no valid rows exist
-    
-    # Details
-    The conversion process follows these main steps:
-    
-    1. **PLA Parsing**: Processes the input string line by line, extracting:
-       - Variable declarations (`.i`, `.o`, `.mv`)
-       - Input/output labels (`.ilb`, `.ob`, `.label`)
-       - Logic rows and don't-care specifications
-       - Multi-valued variable metadata
-    
-    2. **Variable Mapping**: Maps PLA input variables to logical conditions:
-       - Uses provided `conditions` mapping if available
-       - Creates new conditions using `conditionstype` constructor
-       - Handles both binary and multi-valued variables
-    
-    3. **Row Processing**: Converts each PLA row into logical conjuncts:
-       - `'1'` values become positive literals
-       - `'0'` values become negative literals  
-       - `'-'` values are ignored (don't-care)
-       - Only processes ON-set rows (output = '1')
-    
-    4. **Formula Reconstruction**: Combines processed rows:
-       - Each row becomes a conjunctive clause (AND of literals)
-       - All clauses are combined disjunctively (OR of conjunctions)
-       - Applies scalar simplification to optimize the result
-    
-    # PLA Format Support
-    The function supports standard PLA directives:
-    - `.i N`: Number of input variables (univariate format)
-    - `.o N`: Number of output variables (must be 1)
-    - `.mv N B S1 S2...`: Multi-valued variable declaration (experimental)
-    - `.ilb labels`: Input variable labels
-    - `.ob label`: Output variable label
-    - `.label var=N labels`: Multi-valued variable labels
-    - `.p N`: Number of product terms (ignored)
-    - `.e`: End marker
-    
-    # Examples
-    ```julia
-    # Basic PLA to formula conversion
-    pla_string = \"""
-    .i 3
-    .o 1  
-    .ilb x y z
-    .ob output
-    11- 1
-    -01 1
-    .e
-    \"""
-    formula = _pla_to_formula(pla_string)
-    
-    # Conversion with pre-defined conditions
-    formula = _pla_to_formula(pla_string, true, nothing, my_conditions)
-    
-    # Verbose conversion with custom types
-    formula = _pla_to_formula(
-        pla_string, 
-        false;  # silent=false for debugging
-        conditionstype=MyConditionType,
-        featuretype=MyFeatureType
+# ---------------------------------------------------------------------------- #
+#                               univariate utils                               #
+# ---------------------------------------------------------------------------- #
+function _header(conditions::Vector{<:SoleData.AbstractScalarCondition}, feat_condnames::Vector{Vector{String}})
+    num_outputs = 1
+    num_vars = length(conditions)
+    ilb_str = join(vcat(feat_condnames...), " ")
+    return [".i $(num_vars)\n.o $(num_outputs)\n.ilb $(ilb_str)\n.ob formula_output"]
+end
+
+_onset_rows(row::Vector{String}) = "$(join(row, "")) 1" # Append "1" for the ON-set output
+
+# ---------------------------------------------------------------------------- #
+#                              multivariate utils                              #
+# ---------------------------------------------------------------------------- #
+function _header(feat_nconds::Vector{Int64}, feat_condnames::Vector{Vector{String}})
+    num_binary_vars = sum(feat_nconds .== 1)
+    num_nonbinary_vars = sum(feat_nconds .> 1) + 1
+    num_vars = num_binary_vars + num_nonbinary_vars
+
+    pla_header = []
+
+    push!(pla_header, ".mv $(num_vars) $(num_binary_vars) $(join(feat_nconds[feat_nconds .> 1], " ")) 1")
+    if num_binary_vars > 0
+        ilb_str = join(vcat(feat_condnames[feat_nconds .== 1]...), " ")
+        push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
+    end
+    for i_var in 1:length(feat_nconds[feat_nconds .> 1])
+        if feat_nconds[feat_nconds .> 1][i_var] > 1
+            this_ilb_str = join(feat_condnames[feat_nconds .> 1][i_var], " ")
+            push!(pla_header, ".label var=$(num_binary_vars+i_var-1) $(this_ilb_str)")
+        end
+    end
+
+    return pla_header
+end
+
+function _onset_rows(feat_nconds::Vector{Int64}, row::Vector{String})
+    num_binary_vars = sum(feat_nconds .== 1)
+
+    # generate on-set rows for each disjunct    
+    end_idxs = cumsum(feat_nconds)
+    feat_varidxs = [(startidx:endidx) for (startidx,endidx) in zip([1, (end_idxs.+1)...], end_idxs)]
+
+    # binary variables first
+    binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nconds)
+    nonbinary_variable_idxs = findall(feat_nvar->feat_nvar > 1, feat_nconds)
+    row = vcat(
+        [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
+        (num_binary_vars > 0 ? ["|"] : [])...,
+        [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...
     )
-    ```
-        
-    # Multi-valued Variable Support
-    For PLA files with multi-valued variables (`.mv` directive):
-    - Binary variables are processed first
-    - Multi-valued variables are grouped and processed separately
-    - Variable labels are extracted from `.label` directives
-    - Each multi-valued variable contributes one selected literal per row
-        
-    # Error Handling
-    The function validates:
-    - PLA format correctness and known directive support
-    - Consistency between provided and parsed input labels
-    - Single output variable requirement
-    - Valid truth values in logic rows
-    
-    # Notes
-    - Multi-valued variable support is experimental and may not be fully tested
-    - The function assumes well-formed PLA input with valid syntax
-    - Only ON-set rows (output='1') are processed; OFF-set and don't-care rows are ignored
-    - Scalar simplification is applied to optimize the reconstructed formula
-    - Returns `⊤` (tautology) if no valid logic rows are found
-    
-    # See Also
-    - `_formula_to_pla`: Inverse function for converting formulas to PLA format
-    - `SoleData.scalar_simplification`: Formula optimization functionality
-    - `parsecondition`: Condition parsing utilities
-"""
-function _pla_to_formula(
-    pla::AbstractString,
-    silent = true,
-    ilb_str = nothing,
-    conditions = nothing;
-    conditionstype = SoleData.ScalarCondition,
-    featuretype = SoleData.VariableValue,
-    featvaltype = nothing,
+    return "$(join(row, ""))1"
+end
+
+# ---------------------------------------------------------------------------- #
+#                                formula to pla                                #
+# ---------------------------------------------------------------------------- #
+formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
+    formula_to_pla(SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
+
+function formula_to_pla(
+    dnfformula   :: SoleLogics.DNF;
+    scalar_range :: Bool=false,
     kwargs...
 )
-    # @show ilb_str, conditions
-    # Split the PLA into lines and parse key components
-    lines = split(pla, '\n')
-    input_vars = []
-    output_var = ""
-    rows = []
+    dnfformula = scalar_simplification(dnfformula; scalar_range)
+    dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
 
-    multivalued_info = Dict()  # To store multi-valued variable metadata
-    total_vars, nbinary_vars, multivalued_sizes = 0, 0, []
-    silent || println(lines)
-    # Parse header and rows
+    atoms_per_disjunct = Vector{Vector{SoleLogics.Atom}}([
+        collect(SoleLogics.atoms(d)) for d in SoleLogics.disjuncts(dnfformula)
+    ])
+
+    formula_to_pla(atoms_per_disjunct; scalar_range, kwargs...)
+end
+
+formula_to_pla(tree::SyntaxBranch; kwargs...) = formula_to_pla([SoleLogics.atoms(tree)]; kwargs...)
+
+function formula_to_pla(
+    atoms             :: Vector{Vector{SoleLogics.Atom}};
+    encoding          :: Symbol=:univariate,
+    scalar_range      :: Bool=false,
+    removewhitespaces :: Bool=true,
+    pretty_op         :: Bool=false
+)
+    @assert encoding in [:univariate, :multivariate]
+
+    # extract domains
+    conditions = unique(map(SoleLogics.value, reduce(vcat, atoms)))
+    fnames   = unique(SoleData.feature.(conditions))
+    nfnames = length(fnames)
+
+    sort!(conditions, by=SoleData._scalarcondition_sortby)
+    sort!(fnames, by=syntaxstring)
+
+    if scalar_range
+        original_conditions = conditions
+        conditions = SoleData.scalartiling(conditions, fnames)
+        @assert length(setdiff(original_conditions, conditions)) == 0 "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
+    end
+
+    conditions = SoleData.removeduals(conditions)
+
+    # for each feature, derive the conditions, and their names
+    feat_condindxss = Vector{Vector{Int64}}(undef, nfnames)
+    feat_condnames  = Vector{Vector{String}}(undef, nfnames)
+
+    @inbounds for (i, feat) in enumerate(fnames)
+        feat_condindxs = findall(c->SoleData.feature(c) == feat, conditions)
+        conds          = filter(c->SoleData.feature(c)  == feat, conditions)
+        condname = SoleLogics.syntaxstring.(conds; removewhitespaces, pretty_op)
+
+        feat_condindxss[i] = feat_condindxs
+        feat_condnames[i]  = condname
+    end
+
+    feat_nconds = length.(feat_condindxss)
+
+    # derive inclusions and exclusions between conditions
+    includes, excludes = Vector{BitMatrix}(undef, nfnames), Vector{BitMatrix}(undef, nfnames)
+    @inbounds for (i, feat_condindxs) in enumerate(feat_condindxss)
+        includes[i] = BitMatrix([SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs])
+        excludes[i] = BitMatrix([SoleData.excludes(conditions[cond_j], conditions[cond_i]) for cond_i in feat_condindxs, cond_j in feat_condindxs])
+    end
+
+    # generate pla _header
+    pla_header = encoding == :multivariate ? _header(feat_nconds, feat_condnames) : _header(conditions, feat_condnames)
+
+    conjuncts      = _get_conjuncts(atoms)
+    pla_onset_rows = Vector{String}(undef, length(conjuncts))
+
+    Threads.@threads for i in eachindex(conjuncts)
+        row = _encode_disjunct(conjuncts[i], fnames, conditions, includes, excludes, feat_condindxss)
+        pla_onset_rows[i] = encoding == :multivariate ? _onset_rows(feat_nconds, row) : _onset_rows(row)
+    end
+
+    # Combine PLA components
+    pla_content = join([join(pla_header, "\n"), ".p $(length(pla_onset_rows))", join(pla_onset_rows, "\n"), ".e"], "\n")
+
+    return pla_content, fnames
+end
+
+# ---------------------------------------------------------------------------- #
+#                                pla to formula                                #
+# ---------------------------------------------------------------------------- #
+function pla_to_formula(
+    pla            :: String,
+    fnames         :: Vector{<:VariableValue};
+    conditionstype :: Type=SoleData.SoleData.ScalarCondition,
+)
+    lines             = split(pla, '\n')
+    parsed_conditions = SoleLogics.Atom[]
+    binaries          = String[]
+
     for line in lines
-        line = strip(line)
-        silent || @show line
-        parts = split(line)
-
-        isempty(parts) && continue
-
-        cmd, args = parts[1], parts[2:end]
-
-        if cmd == ".mv"
-            @warn "PLA: Multivalued variables not tested."
-            total_vars, nbinary_vars = parse(Int, args[1]), parse(Int, args[2])
-            multivalued_sizes = parse.(Int, args[3:end])
-        elseif cmd == ".label"
-            var_id = parse(Int, match(r"var=(\d+)", line).captures[1])
-            labels = args[2:end]
-            multivalued_info[var_id] = labels
-        elseif cmd == ".i"  # Input variables count
-            total_vars, nbinary_vars = parse(Int, args[1]), parse(Int, args[1])
-        elseif cmd == ".o"  # Output variables count
-            @assert parse(Int, args[1]) == 1
-            continue
-        elseif cmd == ".p"
-            continue
-        elseif cmd == ".ilb"  # Input labels
-            this_ilb_str = join(args, " ")
-            if !isnothing(ilb_str)
-                @assert ilb_str == this_ilb_str "Mismatch between given ilb_str and parsed .ilb.\n$(ilb_str)\n$(this_ilb_str)."
-            end
-            input_vars = split(this_ilb_str)  # Extract input variable labels
-        elseif cmd == ".ob"  # Output labels
-            output_var = join(args, " ")  # Extract output variable label
-        elseif cmd == ".e"  # End marker
-            break
-        elseif cmd[1] in ['0', '1', '-', '|']
-            push!(rows, join(parts, ""))  # Add rows to data structure
-        else
-            throw(ArgumentError("Unknown PLA command: $cmd"))
-        end
+        startswith(line, ".ilb") && append!(parsed_conditions, _read_conditions(line, conditionstype, fnames))
+        startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:end-2]])
     end
 
-    # Map input variables to conditions
-    conditions_map = if !isnothing(conditions)
-        Dict(_removewhitespaces(syntaxstring(c)) => c for c in conditions)
-    else
-        Dict()
+    isempty(binaries) && return ⊤
+
+    disjuncts = Vector{SyntaxStructure}(undef, length(binaries))
+
+    Threads.@threads for i in eachindex(binaries)
+        binary = binaries[i]
+        disjuncts[i] = scalar_simplification(
+                SoleLogics.LeftmostConjunctiveForm([
+                SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx])
+                for (idx, value) in enumerate(binary)
+                if value ∈ ['1', '0']
+            ]);
+            scalar_range=false
+        )
     end
 
-    silent || @show total_vars, nbinary_vars
-    silent || @show input_vars
-    # parsed_conditions = [begin
-    #     if !isnothing(conditions)
-    #         idx = findfirst(c->_removewhitespaces(syntaxstring(c)) == _removewhitespaces(var_str), conditions)
-    #         !isnothing(idx) ? conditions[idx] : parsecondition(ScalarCondition, var_str)
-    #     else
-    #         parsecondition(ScalarCondition, var_str)
-    #     end
-    # end for var_str in input_vars]
+    return disjuncts
+end
 
-    silent || @show multivalued_info
-    parsed_conditions = []
-    binary_idx = 1
-    parsefun = c->parsecondition(conditionstype, c; featuretype, featvaltype)
-    silent || @show nbinary_vars, multivalued_sizes
-    for (i_var, domain_size) in enumerate([fill(2, nbinary_vars)..., multivalued_sizes...])
-        silent || @show (i_var, domain_size)
-        if i_var <= nbinary_vars
-            silent || @show i_var ∈ eachindex(input_vars)
-            silent || @show input_vars
-            silent || @show conditions_map
-            condname = i_var ∈ eachindex(input_vars) ? input_vars[i_var] : "?"
-            cond = (condname ∈ keys(conditions_map) ? conditions_map[condname] : parsefun(condname))
-            push!(parsed_conditions, cond)
-        else
-            # Multi-valued conditions are stored as a group
-            condnames = (haskey(multivalued_info, i_var) ? multivalued_info[i_var] : [])
-            conds = map(parsefun, condnames)
-            push!(parsed_conditions, conds)
-        end
+# ---------------------------------------------------------------------------- #
+#                         scalar simplification utils                          #
+# ---------------------------------------------------------------------------- #
+_isless(::T, ::T) where T         = false
+_isless(::typeof(<), ::typeof(≤)) = true
+_isless(::typeof(≤), ::typeof(<)) = false
+_isless(::typeof(>), ::typeof(≥)) = false
+_isless(::typeof(≥), ::typeof(>)) = true
+
+_isless(::typeof(<), ::typeof(>)) = false
+_isless(::typeof(>), ::typeof(<)) = false
+_isless(::typeof(≥), ::typeof(≥)) = false
+_isless(::typeof(≤), ::typeof(≤)) = false
+
+# ---------------------------------------------------------------------------- #
+#                             update mixmax domain                             #
+# ---------------------------------------------------------------------------- #
+function mixmax_domain(min_domain, max_domain, cond, conn_polarity)
+    @assert !SoleData.isordered(SoleData.test_operator) "Unexpected test operator: $(SoleData.test_operator)."
+
+    this_domain = (SoleData.test_operator(cond), SoleData.threshold(cond))
+    p = SoleData.polarity(SoleData.test_operator(cond))
+
+    isnothing(p) && throw(ArgumentError("Cannot simplify scalar formula with test operator = $(SoleData.test_operator(cond))"))
+
+    if !p && (
+        (isless(this_domain[2], max_domain[2]) ||
+            (==(this_domain[2], max_domain[2]) && _isless(this_domain[1], max_domain[1]))
+        ) == conn_polarity)
+        max_domain = this_domain
     end
 
-    silent || @show syntaxstring.(parsed_conditions)
+    if p && (
+        (!(isless(this_domain[2], min_domain[2])) ||
+            (==(this_domain[2], min_domain[2]) && _isless(this_domain[1], min_domain[1]))
+        ) == conn_polarity)
+        min_domain = this_domain
+    end
 
-    # Process rows to build the formula
-    disjuncts = []
-    for row in rows
-        parts = split(row, r" |\|")
-        silent || @show parts
-        binary_part = parts[1]
+    return min_domain, max_domain
+end
 
-        if (total_vars == nbinary_vars)
-            binary_part, output_value = binary_part[1:end-1], binary_part[end]
-            # @show row_values
-            if output_value != '1'  # Only process ON-set rows
-                continue
-            end
-        end
-        conjuncts = []        
+# ---------------------------------------------------------------------------- #
+#                            scalar simplification                             #
+# ---------------------------------------------------------------------------- #
+scalar_simplification(φ::DNF; kwargs...) =
+    map(d->scalar_simplification(d; kwargs...), SoleLogics.disjuncts(φ)) |> LeftmostDisjunctiveForm
 
-        # Process binary variables
-        # Convert row values back into parsed_conditions
-        for (idx, value) in enumerate(binary_part)
-            # @show value            
-            cond = parsed_conditions[idx]
-            if value == '1'
-                push!(conjuncts, Literal(true, Atom(cond)))
-            elseif value == '0'
-                push!(conjuncts, Literal(false, Atom(cond)))
-            elseif value == '-'
-                nothing
+scalar_simplification(φ::CNF; kwargs...) =
+    map(d->scalar_simplification(d; kwargs...), SoleLogics.conjuncts(φ)) |> LeftmostConjunctiveForm
+
+function scalar_simplification(
+    φ :: Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm};
+    kwargs...
+)
+    φ = LeftmostLinearForm(SoleLogics.connective(φ), map(ch->begin
+        if ch isa Atom
+            ch
+        elseif ch isa Literal
+            if SoleLogics.ispos(ch)
+                atom(ch)
+            elseif SoleLogics.hasdual(atom(ch))
+                SoleLogics.dual(atom(ch))
             else
-                error("Unexpected truth value: '$(value)'.")
+                ch
+            end
+        else
+            ch
+        end
+    end, SoleLogics.grandchildren(φ)))
+
+    if !all(c->c isa Atom{<:Union{SoleData.ScalarCondition,SoleData.RangeScalarCondition}}, SoleLogics.grandchildren(φ))
+        return φ
+    end
+
+    scalar_simplification(SoleLogics.atoms(φ), SoleLogics.connective(φ); kwargs...)
+end
+
+function scalar_simplification(
+    atomslist          :: Vector{SoleLogics.Atom},
+    conn               :: SoleLogics.NamedConnective;
+    scalar_range :: Bool=false
+)
+    scalar_conds = SoleLogics.value.(atomslist)
+    feats        = SoleData.feature.(scalar_conds)
+
+    feature_groups = [(f, map(x->x==f, feats)) for f in unique(feats)]
+
+    conn_polarity = (conn == SoleLogics.CONJUNCTION)
+
+    ch = collect(Iterators.flatten([begin
+        conds = scalar_conds[bitmask]
+
+        min_domain = (≥, Real(-Inf))
+        max_domain = (≤, Real(Inf))
+        T = eltype(SoleData.threshold.(conds))
+
+        for cond in conds
+            cond isa ScalarCondition && (SoleData.test_operator(cond) == (==)) && begin
+                cond = SoleData.RangeScalarCondition(
+                    SoleData.feature(cond),
+                    SoleData.minval(cond),
+                    SoleData.maxval(cond),
+                    SoleData.minincluded(cond),
+                    SoleData.maxincluded(cond),
+                )
+            end
+
+            min_domain, max_domain = if cond isa SoleData.RangeScalarCondition
+                conn_polarity ? begin
+                    rconds = SoleData._rangescalarcond_to_scalarconds_in_conjunction(cond)
+                    rminmax = [mixmax_domain(min_domain, max_domain, c, conn_polarity) for c in rconds]
+                    min_domain, max_domain = last(last(rminmax)), first(first(rminmax))
+                end :
+                    error("Cannot convert SoleData.RangeScalarCondition to ScalarCondition: $(cond).")
+            else
+                min_domain, max_domain = mixmax_domain(min_domain, max_domain, cond, conn_polarity)
             end
         end
-        
-        if length(parts) > 1
-            multiple_part = parts[2:end]
-            # Process multi-valued variables
-            for (i, multi_part) in enumerate(multiple_part)
-                var_labels = multivalued_info[nbinary_vars + i + 1]
-                selected = findfirst('1' == c for c in multi_part)
-                if selected
-                    push!(conjuncts, Literal(true, Atom(var_labels[selected])))
+
+        out = Atom[]
+
+        if !(max_domain[2] == Inf) && !(min_domain[2] == -Inf) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
+            nothing
+        elseif (min_domain[2] == -Inf) && (max_domain[2] == Inf)
+            nothing
+        else
+            if scalar_range
+                min_domain = (min_domain[2] == -Inf) ? (≥, -Inf) : min_domain
+                max_domain = (max_domain[2] == Inf) ? (≤, Inf)   : max_domain
+
+                minincluded = (!SoleData.isstrict(min_domain[1])) || (min_domain[2] == -Inf)
+                maxincluded = (!SoleData.isstrict(max_domain[1])) || (max_domain[2] == Inf)
+
+                push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], minincluded, maxincluded)))
+            else
+                if !(min_domain[2] == -Inf)
+                    push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
+                end
+                if !(max_domain[2] == Inf)
+                    push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
                 end
             end
         end
 
-        # Combine conjuncts into a conjunctive form
-        if !isempty(conjuncts)
-            push!(disjuncts, SL.LeftmostConjunctiveForm(conjuncts))
-        end
-    end
+        out
+    end for (feat, bitmask) in feature_groups]))
 
-
-    # Combine disjuncts into a disjunctive form
-    φ = if !isempty(disjuncts)
-        map!(d->SoleData.scalar_simplification(d;
-            force_scalar_range_conditions=false,
-            allow_scalar_range_conditions=false,
-        ), disjuncts, disjuncts)
-        return SL.LeftmostDisjunctiveForm(disjuncts)
-    else
-        return ⊤  # True formula
-    end
+    return (length(ch) == 0 ? (⊤) : (length(ch) == 1 ? first(ch) : LeftmostLinearForm(conn, ch)))
 end
 
-
-# function formula_to_emacs(expr::SyntaxTree) end
-
+scalar_simplification(a::SoleLogics.Atom; kwargs...) = a
 
 end
