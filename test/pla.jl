@@ -18,7 +18,8 @@ end
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
 
-@test cleanlines(PLA.formula_to_pla(formula0)) in [cleanlines("""
+pla, fnames = PLA.formula_to_pla(formula0)
+@test cleanlines(pla) in [cleanlines("""
 .i 5
 .o 1
 .ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2
@@ -40,7 +41,8 @@ formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) �
 .e
 """)]
 
-@test cleanlines(PLA.formula_to_pla(formula0; scalar_range=true)) in [cleanlines("""
+pla, fnames = PLA.formula_to_pla(formula0; scalar_range=true)
+@test cleanlines(pla) in [cleanlines("""
 .i 6
 .o 1
 .ilb V1∈[-Inf,0] V1∈(0,10] V1∈(10,Inf] V2∈[-Inf,0) V2∈[0,2) V2∈[2,2]
@@ -62,7 +64,8 @@ cleanlines("""
 """)]
 
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨ ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 >= 2))
-@test_nowarn PLA.formula_to_pla(formula0) |> println
+pla, fnames = PLA.formula_to_pla(formula0)
+@test pla == ".i 4\n.o 1\n.ilb V1<=0 V1>10 V2<0 V3>10\n.ob formula_output\n\n.p 3\n011- 1\n1011 1\n101- 1\n.e"
 @test cleanlines(PLA.formula_to_pla(formula0)) in [cleanlines("""
 .i 4
 .o 1

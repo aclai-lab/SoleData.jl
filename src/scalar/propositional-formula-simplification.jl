@@ -1,193 +1,173 @@
-using SoleLogics
-using SoleLogics: Atom
-using SoleData:  AbstractFeature, ScalarCondition, VariableValue, LeftmostConjunctiveForm
-using SoleData: feature, value, test_operator, threshold, polarity
+using SoleLogics: Atom, Formula, SyntaxLeaf, NamedConnective
+using SoleLogics: CONJUNCTION
+using SoleLogics: atoms, disjuncts, conjuncts, connective, grandchildren
+using SoleLogics: value, ispos, dual, hasdual
 
-const SatMask = BitVector
+using SoleData
+using SoleData: ScalarCondition, RangeScalarCondition
+using SoleData: feature, test_operator, threshold, polarity, isstrict
+using SoleData: minval, maxval, minincluded, maxincluded
+using SoleData: _rangescalarcond_to_scalarconds_in_conjunction
 
-function scalar_simplification(φ::SoleLogics.Formula; silent = false, kwargs...)
+# ---------------------------------------------------------------------------- #
+#                         scalar simplification utils                          #
+# ---------------------------------------------------------------------------- #
+_isless(::T, ::T) where T         = false
+_isless(::typeof(<), ::typeof(≤)) = true
+_isless(::typeof(≤), ::typeof(<)) = false
+_isless(::typeof(>), ::typeof(≥)) = false
+_isless(::typeof(≥), ::typeof(>)) = true
+
+_isless(::typeof(<), ::typeof(>)) = false
+_isless(::typeof(>), ::typeof(<)) = false
+_isless(::typeof(≥), ::typeof(≥)) = false
+_isless(::typeof(≤), ::typeof(≤)) = false
+
+# ---------------------------------------------------------------------------- #
+#                             update mixmax domain                             #
+# ---------------------------------------------------------------------------- #
+function mixmax_domain(min_domain, max_domain, cond, conn_polarity)
+    @assert !SoleData.isordered(test_operator) "Unexpected test operator: $(test_operator)."
+
+    this_domain = (test_operator(cond), threshold(cond))
+    p = polarity(test_operator(cond))
+
+    isnothing(p) && throw(ArgumentError("Cannot simplify scalar formula with test operator = $(test_operator(cond))"))
+
+    if !p && (
+        (isless(this_domain[2], max_domain[2]) ||
+            (==(this_domain[2], max_domain[2]) && _isless(this_domain[1], max_domain[1]))
+        ) == conn_polarity)
+        max_domain = this_domain
+    end
+
+    if p && (
+        (!(isless(this_domain[2], min_domain[2])) ||
+            (==(this_domain[2], min_domain[2]) && _isless(this_domain[1], min_domain[1]))
+        ) == conn_polarity)
+        min_domain = this_domain
+    end
+
+    return min_domain, max_domain
+end
+
+# ---------------------------------------------------------------------------- #
+#                            scalar simplification                             #
+# ---------------------------------------------------------------------------- #
+function scalar_simplification(φ::Formula; silent = false, kwargs...)
     !silent && @warn "Could not perform scalar simplification on formula of type " *
         " $(typeof(φ))."
     φ
 end
 
-function scalar_simplification(φ::SoleLogics.SyntaxLeaf; silent = false, kwargs...)
+function scalar_simplification(φ::SyntaxLeaf; silent = false, kwargs...)
     φ
 end
 
-function scalar_simplification(φ::DNF, args...; kwargs...)
-    return map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.disjuncts(φ)) |> LeftmostDisjunctiveForm
-end
-function scalar_simplification(φ::CNF, args...; kwargs...)
-    return map(d->scalar_simplification(d, args...; kwargs...), SoleLogics.conjuncts(φ)) |> LeftmostConjunctiveForm
-end
+scalar_simplification(φ::DNF; kwargs...) =
+    map(d->scalar_simplification(d; kwargs...), disjuncts(φ)) |> LeftmostDisjunctiveForm
+
+scalar_simplification(φ::CNF; kwargs...) =
+    map(d->scalar_simplification(d; kwargs...), conjuncts(φ)) |> LeftmostConjunctiveForm
+
 function scalar_simplification(
-    φ::Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm};
-    silent = false,
-    force_scalar_range_conditions = false,
-    # force_no_scalar_range_conditions = false,
-    allow_scalar_range_conditions = true,
+    φ :: Union{LeftmostConjunctiveForm,LeftmostDisjunctiveForm};
+    kwargs...
 )
-    # @show φ
-    # @show typeof.(SoleLogics.grandchildren(φ))
-    # @show all(c->c isa Atom{<:ScalarCondition}, SoleLogics.grandchildren(φ))
-    
-    φ = LeftmostLinearForm(SoleLogics.connective(φ), map(ch->begin
+    φ = LeftmostLinearForm(connective(φ), map(ch->begin
         if ch isa Atom
             ch
         elseif ch isa Literal
-            if SoleLogics.ispos(ch)
+            if ispos(ch)
                 atom(ch)
-            elseif SoleLogics.hasdual(atom(ch))
-                SoleLogics.dual(atom(ch))
+            elseif hasdual(atom(ch))
+                dual(atom(ch))
             else
                 ch
             end
         else
             ch
         end
-    end, SoleLogics.grandchildren(φ)))
-    
-    if !all(c->c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}, SoleLogics.grandchildren(φ))
-    # if (!all(c->c isa Atom{<:ScalarCondition}, SoleLogics.grandchildren(φ)))
-        !silent && println("Cannot perform scalar simplification on linear form:\n$(syntaxstring(φ))\n on" *
-            " $(Union{map(typeof, filter(c->!(c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}), SoleLogics.grandchildren(φ)))...}).")
+    end, grandchildren(φ)))
+
+    if !all(c->c isa Atom{<:Union{ScalarCondition,RangeScalarCondition}}, grandchildren(φ))
         return φ
     end
 
-    atomslist = SoleLogics.grandchildren(φ)
+    scalar_simplification(atoms(φ), connective(φ); kwargs...)
+end
 
-    scalar_conditions = SoleLogics.value.(atomslist)
-    feats = feature.(scalar_conditions)
+function scalar_simplification(
+    atomslist          :: Vector{Atom},
+    conn               :: NamedConnective;
+    scalar_range :: Bool=false
+)
+    scalar_conds = value.(atomslist)
+    feats        = feature.(scalar_conds)
 
     feature_groups = [(f, map(x->x==f, feats)) for f in unique(feats)]
 
-    conn_polarity = (SoleLogics.connective(φ) == SoleLogics.CONJUNCTION)
-
-    mostspecific(cs::AbstractVector{<:Real}, ::typeof(<=)) = findmin(cs)[1]
-    mostspecific(cs::AbstractVector{<:Real}, ::typeof(>=)) = findmax(cs)[1]
-
-    # [filter(cond->feature(cond) == feat, scalar_conditions) for feat in unique(feats)]
-    # SoleBase._groupby(feature, scalar_conditions)
-    # SoleBase._groupby(feature, scalar_conditions, Dict{VariableValue,Vector})
-
-    my_isless(::T, ::T) where T = false
-    my_isless(::typeof(<), ::typeof(<=)) = true
-    my_isless(::typeof(<=), ::typeof(<)) = false
-    my_isless(::typeof(>), ::typeof(>=)) = false
-    my_isless(::typeof(>=), ::typeof(>)) = true
-
-    my_isless(::typeof(<), ::typeof(>)) = false
-    my_isless(::typeof(>), ::typeof(<)) = false
-    my_isless(::typeof(>=), ::typeof(>=)) = false
-    my_isless(::typeof(<=), ::typeof(<=)) = false
+    conn_polarity = (conn == CONJUNCTION)
 
     ch = collect(Iterators.flatten([begin
-            conds = scalar_conditions[bitmask]
+        conds = scalar_conds[bitmask]
 
-            conds = [if cond isa ScalarCondition && (test_operator(cond) == (==))
-                        RangeScalarCondition(
-                            SoleData.feature(cond),
-                            SoleData.minval(cond),
-                            SoleData.maxval(cond),
-                            SoleData.minincluded(cond),
-                            SoleData.maxincluded(cond),
-                        )
-                    else
-                        cond
-                    end for cond in conds]
+        min_domain = (≥, Real(-Inf))
+        max_domain = (≤, Real(Inf))
+        T = eltype(threshold.(conds))
 
-            conds = Iterators.flatten([
-                if cond isa ScalarCondition
-                    [cond]
-                elseif cond isa RangeScalarCondition
-                    if conn_polarity
-                        conds = _rangescalarcond_to_scalarconds_in_conjunction(cond)
-                    else
-                        error("Cannot convert RangeScalarCondition to ScalarCondition: $(cond).")
-                    end
-                else
-                    error("Unexpected condition: $(cond)")
-                end for cond in conds])
-            
-            # @show conds
-
-            min_domain = nothing
-            max_domain = nothing
-            T = eltype(SoleData.threshold.(conds))
-            for cond in conds
-                @assert !SoleData.isordered(test_operator) "Unexpected test operator: $(test_operator)."
-                this_domain = (test_operator(cond), threshold(cond))
-                p = polarity(test_operator(cond))
-                if isnothing(p)
-                    throw(ArgumentError("Cannot simplify scalar formula with test operator = $(test_operator(cond))"))
-                elseif !p
-                    if isnothing(max_domain) ||
-                        (
-                            (isless(this_domain[2], max_domain[2]) ||
-                                (==(this_domain[2], max_domain[2]) && my_isless(this_domain[1], max_domain[1]))
-                                ) == conn_polarity)
-                        max_domain = this_domain
-                    end
-                else
-                    if isnothing(min_domain) ||
-                        (
-                            (!(isless(this_domain[2], min_domain[2])) ||
-                                (==(this_domain[2], min_domain[2]) && my_isless(this_domain[1], min_domain[1]))
-                                ) == conn_polarity)
-                        min_domain = this_domain
-                    end
-                end
+        for cond in conds
+            cond isa ScalarCondition && (test_operator(cond) == (==)) && begin
+                cond = RangeScalarCondition(
+                    feature(cond),
+                    minval(cond),
+                    maxval(cond),
+                    SoleData.minincluded(cond),
+                    SoleData.maxincluded(cond),
+                )
             end
-            out = []
 
-            if !isnothing(max_domain) && !isnothing(min_domain) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
-                nothing
-            elseif isnothing(min_domain) && isnothing(max_domain)
-                nothing
+            min_domain, max_domain = if cond isa RangeScalarCondition
+                conn_polarity ? begin
+                    rconds = _rangescalarcond_to_scalarconds_in_conjunction(cond)
+                    rminmax = [mixmax_domain(min_domain, max_domain, c, conn_polarity) for c in rconds]
+                    min_domain, max_domain = last(last(rminmax)), first(first(rminmax))
+                end :
+                    error("Cannot convert RangeScalarCondition to ScalarCondition: $(cond).")
             else
-                if force_scalar_range_conditions
-                    min_domain = isnothing(min_domain) ? (>=, nothing #= typemin(T) =#) : min_domain
-                    max_domain = isnothing(max_domain) ? (<=, nothing #= typemax(T) =#) : max_domain
+                min_domain, max_domain = mixmax_domain(min_domain, max_domain, cond, conn_polarity)
+            end
+        end
+
+        out = Atom[]
+
+        if !(max_domain[2] == Inf) && !(min_domain[2] == -Inf) && (max_domain[2] < min_domain[2]) # TODO make it more finegrained so that it captures cases with < and >=
+            nothing
+        elseif (min_domain[2] == -Inf) && (max_domain[2] == Inf)
+            nothing
+        else
+            if scalar_range
+                min_domain = (min_domain[2] == -Inf) ? (≥, -Inf) : min_domain
+                max_domain = (max_domain[2] == Inf) ? (≤, Inf)   : max_domain
+
+                minincluded = (!isstrict(min_domain[1])) || (min_domain[2] == -Inf)
+                maxincluded = (!SoleData.isstrict(max_domain[1])) || (max_domain[2] == Inf)
+
+                push!(out, Atom(RangeScalarCondition(feat, min_domain[2], max_domain[2], minincluded, maxincluded)))
+            else
+                if !(min_domain[2] == -Inf)
+                    push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
                 end
-                if allow_scalar_range_conditions && (!isnothing(min_domain) && !isnothing(max_domain))
-                    minincluded = (!SoleData.isstrict(min_domain[1])) || isnothing(min_domain[2])
-                    maxincluded = (!SoleData.isstrict(max_domain[1])) || isnothing(max_domain[2])
-                    push!(out, Atom(SoleData.RangeScalarCondition(feat, min_domain[2], max_domain[2], minincluded, maxincluded)))
-                else
-                    if !isnothing(min_domain)
-                        push!(out, Atom(ScalarCondition(feat, min_domain[1], min_domain[2])))
-                    end
-                    if !isnothing(max_domain)
-                        push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
-                    end
+                if !(max_domain[2] == Inf)
+                    push!(out, Atom(ScalarCondition(feat, max_domain[1], max_domain[2])))
                 end
             end
-            # @show out
-            out
-            # # thresholds for operator
-            # ths_foroperator = Dict{Function,Real}([])
-            # for to in TEST_OPS
+        end
 
-            #     compatible_sc = [sc for sc in conds if test_operator(sc)==to]
-            #     ths = Float64.(threshold.(compatible_sc))
-            #     isempty(ths) && break
+        out
+    end for (feat, bitmask) in feature_groups]))
 
-
-            #     push!(reduced_conditions, ScalarCondition(feat, to, mostspecific(ths, to)))
-            # end
-            # if length(reduced_conditions) > 1
-            #     (c1, c2) = reduced_conditions
-            #     if test_operator(c1)(threshold.(reduceduni_conditions))
-            #         push!(reducered_conditions, reduceduni_conditions)
-            #     else
-            #         return BOT
-            #     end
-            # else
-            #     push!(reducered_conditions, reduceduni_conditions)
-            # end
-        end for (feat, bitmask) in feature_groups]))
-
-    # @show SoleLogics.connective(φ)
-    ψ = (length(ch) == 0 ? (⊤) : (length(ch) == 1 ? first(ch) : LeftmostLinearForm(SoleLogics.connective(φ), ch)))
+    return (length(ch) == 0 ? (⊤) : (length(ch) == 1 ? first(ch) : LeftmostLinearForm(conn, ch)))
 end
+
+scalar_simplification(a::Atom; kwargs...) = a
