@@ -252,6 +252,89 @@ end
 # ---------------------------------------------------------------------------- #
 #                                formula to pla                                #
 # ---------------------------------------------------------------------------- #
+"""
+    formula_to_pla(formula::SoleLogics.Formula; scalar_range::Bool=false, kwargs...) -> (String, Vector{VariableValue})
+    formula_to_pla(dnfformula::SoleLogics.DNF; scalar_range::Bool=false, kwargs...) -> (String, Vector{VariableValue})
+    formula_to_pla(atoms::Vector{Vector{SoleLogics.Atom}}; encoding::Symbol=:univariate, scalar_range::Bool=false) -> (String, Vector{VariableValue})
+
+Convert a logical formula into Programmable Logic Array (PLA) format representation.
+
+This function transforms a logical formula into a PLA format suitable for digital logic synthesis
+and hardware implementation. The conversion process involves normalizing the formula to Disjunctive
+Normal Form (DNF), extracting conditions and features, and encoding the logic into a structured
+PLA representation.
+
+# Arguments
+- `formula::SoleLogics.Formula`: The input logical formula to convert (first method)
+- `dnfformula::SoleLogics.DNF`: A formula already in DNF form (second method)
+- `atoms::Vector{Vector{SoleLogics.Atom}}`: Vector of atom vectors representing disjuncts (third method)
+
+# Keyword Arguments
+- `scalar_range::Bool=false`: Whether to apply scalar tiling to conditions
+- `encoding::Symbol=:univariate`: Encoding method for variables (`:univariate` or `:multivariate`)
+- `kwargs...`: Additional keyword arguments passed to DNF conversion and scalar simplification
+
+# Returns
+A tuple containing:
+- `String`: The complete PLA format string ready for use with logic synthesis tools
+- `Vector{VariableValue}`: Vector of features (variable names) used in the formula
+
+# Encoding Methods
+- **`:univariate`**: Each condition becomes a binary input variable (standard PLA format)
+- **`:multivariate`**: Groups conditions by feature, supporting multi-valued variables (experimental)
+
+# Details
+The conversion process follows these main steps:
+
+1. **Formula Normalization**: Converts the input formula to DNF using NNF profile and atom flipping
+2. **Scalar Simplification**: Applies scalar simplification techniques based on the configuration
+3. **Condition Extraction**: Identifies unique conditions and features from the normalized formula
+4. **Condition Processing**: Optionally applies scalar tiling and removes dual conditions
+5. **Relationship Analysis**: Computes inclusion and exclusion relationships between conditions
+6. **PLA Header Generation**: Creates appropriate headers based on encoding method:
+   - `:univariate`: Standard binary encoding with `.i`, `.o`, `.ilb` directives
+   - `:multivariate`: Multi-valued variable encoding with `.mv`, `.label` directives
+7. **Row Encoding**: Converts each disjunct to PLA rows using the `_encode_disjunct` function
+8. **Output Assembly**: Combines headers, onset rows, and termination markers into final PLA format
+
+# PLA Format Output
+The generated PLA string includes:
+- Variable declarations (`.i`, `.o` for univariate; `.mv` for multivariate)
+- Input/output labels (`.ilb`, `.ob`, `.label`)
+- Product term count (`.p`)
+- Logic onset rows (condition patterns with output values)
+- End marker (`.e`)
+
+# Examples
+```julia
+# Basic conversion with default settings
+pla_string, features = formula_to_pla(my_formula)
+
+# Conversion with scalar range conditions
+pla_string, features = formula_to_pla(my_formula; scalar_range=true)
+
+# Multivariate encoding with pretty operators
+pla_string, features = formula_to_pla(
+    my_dnf_formula;
+    encoding=:multivariate,
+    scalar_range=true,
+    pretty_op=true
+)
+```
+
+# Notes
+- The `:multivariate` encoding is experimental and may not be fully tested
+- Scalar range conditions provide additional optimization opportunities through tiling
+- The function automatically converts formulas to DNF with NNF profile and atom flipping enabled
+- Conditions are automatically sorted and processed to remove redundancy and dual conditions
+- The resulting PLA format is compatible with standard logic synthesis tools
+
+# See Also
+- `_encode_disjunct`: Function used internally to encode individual disjuncts
+- `SoleLogics.dnf`: DNF conversion functionality
+- `SoleData.scalar_simplification`: Scalar simplification methods
+- `pla_to_formula`: Inverse operation to convert PLA back to formula
+"""
 formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
     formula_to_pla(SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
 
@@ -337,6 +420,109 @@ end
 # ---------------------------------------------------------------------------- #
 #                                pla to formula                                #
 # ---------------------------------------------------------------------------- #
+"""
+    pla_to_formula(
+        pla::String,
+        fnames::Vector{<:VariableValue};
+        conditionstype::Type=SoleData.ScalarCondition,
+        conjunct::Bool=false
+    ) -> Union{SoleLogics.Formula, Vector{SyntaxStructure}}
+
+Convert a Programmable Logic Array (PLA) format string back into a logical formula representation.
+
+This function performs the inverse operation of `formula_to_pla`, parsing a PLA format string
+and reconstructing the corresponding logical formula. It processes input variable labels,
+logic rows, and outputs the result either as a disjunctive normal form or as a vector of
+conjunctive clauses.
+
+# Arguments
+- `pla::String`: The PLA format string to parse and convert
+- `fnames::Vector{<:VariableValue}`: Vector of features corresponding to the variables in the PLA
+
+# Keyword Arguments
+- `conditionstype::Type=SoleData.ScalarCondition`: Type constructor for creating conditions from parsed input labels
+- `conjunct::Bool=false`: If `true`, returns a `LeftmostDisjunctiveForm`; if `false`, returns a vector of disjuncts
+
+# Returns
+- If `conjunct=false`: `Vector{SyntaxStructure}` - Vector of conjunctive clauses (disjuncts)
+- If `conjunct=true`: `LeftmostDisjunctiveForm` - Complete DNF formula
+- Returns `⊤` (tautology) if no valid logic rows exist in the PLA
+
+# Details
+The conversion process follows these main steps:
+
+1. **PLA Parsing**: Processes the input string line by line, extracting:
+   - Input labels from `.ilb` directive
+   - Logic rows (lines starting with '0', '1', '-', or '|')
+
+2. **Condition Extraction**: Parses `.ilb` line using `_read_conditions`:
+   - Creates `SoleLogics.Atom` objects from condition specifications
+   - Matches feature names from `fnames` to construct `VariableValue` objects
+   - Supports various operators defined in `OPERATOR_MAP`
+
+3. **Row Processing**: Converts each PLA row into logical conjuncts:
+   - `'1'` values become positive literals
+   - `'0'` values become negative literals  
+   - `'-'` and `'|'` values are ignored (don't-care or separator)
+   - Extracts the binary pattern (excludes last 2 characters which are output and newline)
+
+4. **Formula Reconstruction**: 
+   - Each row becomes a `LeftmostConjunctiveForm` (conjunction of literals)
+   - Applies `scalar_simplification` with `scalar_range=false` to each disjunct
+   - Multi-threaded processing for efficiency
+   - Optionally wraps result in `LeftmostDisjunctiveForm` if `conjunct=true`
+
+# PLA Format Support
+The function expects standard PLA directives:
+- `.ilb labels`: Input variable labels with condition specifications (required)
+- Logic rows: Binary patterns with '0', '1', '-' characters, ending with output value
+- Multi-valued rows: Supports '|' separator for multivariate encoding
+
+# Examples
+```julia
+# Basic PLA to formula conversion
+pla_string = \"\"\"
+.i 3
+.o 1  
+.ilb [x]<5.0 [y]≥10.0 [z]<2.5
+.ob output
+11- 1
+-01 1
+.e
+\"\"\"
+features = [VariableValue(1, :x), VariableValue(2, :y), VariableValue(3, :z)]
+disjuncts = pla_to_formula(pla_string, features)
+
+# Get complete DNF formula
+formula = pla_to_formula(pla_string, features; conjunct=true)
+
+# Use custom condition type
+formula = pla_to_formula(
+    pla_string, 
+    features;
+    conditionstype=MyCustomCondition,
+    conjunct=true
+)
+```
+
+# Processing Details
+- **Simplification**: Each disjunct is simplified using `scalar_simplification`
+- **Output Filtering**: Only processes rows ending with '1' (ON-set), automatically filtered by row extraction
+
+# Notes
+- The function assumes well-formed PLA input with valid syntax
+- Feature names in `fnames` must match those in the `.ilb` directive
+- The function strips the last 2 characters from each logic row (output value and potential whitespace)
+- Returns `⊤` (tautology) if the PLA contains no valid logic rows
+- Multi-valued variables (with '|' separators) are supported in the parsing
+
+# See Also
+- `formula_to_pla`: Inverse function for converting formulas to PLA format
+- `_read_conditions`: Helper function for parsing condition specifications
+- `SoleData.scalar_simplification`: Formula optimization functionality
+- `SoleLogics.LeftmostConjunctiveForm`: Conjunctive clause representation
+- `SoleLogics.LeftmostDisjunctiveForm`: Disjunctive normal form representation
+"""
 function pla_to_formula(
     pla            :: String,
     fnames         :: Vector{<:VariableValue};
