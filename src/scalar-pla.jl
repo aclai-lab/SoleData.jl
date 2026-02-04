@@ -280,9 +280,9 @@ end
 #                                formula to pla                                #
 # ---------------------------------------------------------------------------- #
 """
-    formula_to_pla(formula::SoleLogics.Formula; scalar_range::Bool=false, kwargs...) -> (String, Vector{VariableValue})
-    formula_to_pla(dnfformula::SoleLogics.DNF; scalar_range::Bool=false, kwargs...) -> (String, Vector{VariableValue})
-    formula_to_pla(atoms::Vector{Vector{SoleLogics.Atom}}; encoding::Symbol=:univariate, scalar_range::Bool=false) -> (String, Vector{VariableValue})
+    _formula_to_pla(formula::SoleLogics.Formula; allow_scalar_range_conditions::Bool=false, kwargs...) -> (String, Vector{VariableValue})
+    _formula_to_pla(dnfformula::SoleLogics.DNF; allow_scalar_range_conditions::Bool=false, kwargs...) -> (String, Vector{VariableValue})
+    _formula_to_pla(atoms::Vector{Vector{SoleLogics.Atom}}; encoding::Symbol=:univariate, allow_scalar_range_conditions::Bool=false) -> (String, Vector{VariableValue})
 
 Convert a logical formula into Programmable Logic Array (PLA) format representation.
 
@@ -297,7 +297,7 @@ PLA representation.
 - `atoms::Vector{Vector{SoleLogics.Atom}}`: Vector of atom vectors representing disjuncts (third method)
 
 # Keyword Arguments
-- `scalar_range::Bool=false`: Whether to apply scalar tiling to conditions
+- `allow_scalar_range_conditions::Bool=false`: Whether to apply scalar tiling to conditions
 - `encoding::Symbol=:univariate`: Encoding method for variables (`:univariate` or `:multivariate`)
 - `kwargs...`: Additional keyword arguments passed to DNF conversion and scalar simplification
 
@@ -335,16 +335,16 @@ The generated PLA string includes:
 # Examples
 ```julia
 # Basic conversion with default settings
-pla_string, features = formula_to_pla(my_formula)
+pla_string, features = _formula_to_pla(my_formula)
 
 # Conversion with scalar range conditions
-pla_string, features = formula_to_pla(my_formula; scalar_range=true)
+pla_string, features = _formula_to_pla(my_formula; allow_scalar_range_conditions=true)
 
 # Multivariate encoding with pretty operators
-pla_string, features = formula_to_pla(
+pla_string, features = _formula_to_pla(
     my_dnf_formula;
     encoding=:multivariate,
-    scalar_range=true,
+    allow_scalar_range_conditions=true,
     pretty_op=true
 )
 ```
@@ -360,17 +360,17 @@ pla_string, features = formula_to_pla(
 - `_encode_disjunct`: Function used internally to encode individual disjuncts
 - `SoleLogics.dnf`: DNF conversion functionality
 - `SoleData.scalar_simplification`: Scalar simplification methods
-- `pla_to_formula`: Inverse operation to convert PLA back to formula
+- `_pla_to_formula`: Inverse operation to convert PLA back to formula
 """
-function formula_to_pla(formula::SoleLogics.Formula; kwargs...)
-    formula_to_pla(
+function _formula_to_pla(formula::SoleLogics.Formula; kwargs...)
+    _formula_to_pla(
         SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true);
         kwargs...,
     )
 end
 
-function formula_to_pla(dnfformula::SoleLogics.DNF; scalar_range::Bool=false, kwargs...)
-    dnfformula = scalar_simplification(dnfformula; scalar_range)
+function _formula_to_pla(dnfformula::SoleLogics.DNF; allow_scalar_range_conditions::Bool=false, kwargs...)
+    dnfformula = scalar_simplification(dnfformula; allow_scalar_range_conditions)
     dnfformula = SoleLogics.dnf(
         dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...
     )
@@ -379,13 +379,13 @@ function formula_to_pla(dnfformula::SoleLogics.DNF; scalar_range::Bool=false, kw
         collect(SoleLogics.atoms(d)) for d in SoleLogics.disjuncts(dnfformula)
     ])
 
-    formula_to_pla(atoms_per_disjunct; scalar_range, kwargs...)
+    _formula_to_pla(atoms_per_disjunct; allow_scalar_range_conditions, kwargs...)
 end
 
-function formula_to_pla(
+function _formula_to_pla(
     atoms::Vector{Vector{SoleLogics.Atom}};
     encoding::Symbol=:univariate,
-    scalar_range::Bool=false,
+    allow_scalar_range_conditions::Bool=false,
     removewhitespaces::Bool=true,
     pretty_op::Bool=false,
 )
@@ -399,7 +399,7 @@ function formula_to_pla(
     sort!(conditions; by=SoleData._scalarcondition_sortby)
     sort!(fnames; by=syntaxstring)
 
-    if scalar_range
+    if allow_scalar_range_conditions
         original_conditions = conditions
         conditions = SoleData.scalartiling(conditions, fnames)
         @assert length(setdiff(original_conditions, conditions)) == 0
@@ -473,7 +473,7 @@ end
 #                                pla to formula                                #
 # ---------------------------------------------------------------------------- #
 """
-    pla_to_formula(
+    _pla_to_formula(
         pla::String,
         fnames::Vector{<:VariableValue};
         conditionstype::Type=SoleData.ScalarCondition,
@@ -482,7 +482,7 @@ end
 
 Convert a Programmable Logic Array (PLA) format string back into a logical formula representation.
 
-This function performs the inverse operation of `formula_to_pla`, parsing a PLA format string
+This function performs the inverse operation of `_formula_to_pla`, parsing a PLA format string
 and reconstructing the corresponding logical formula. It processes input variable labels,
 logic rows, and outputs the result either as a disjunctive normal form or as a vector of
 conjunctive clauses.
@@ -520,7 +520,7 @@ The conversion process follows these main steps:
 
 4. **Formula Reconstruction**: 
    - Each row becomes a `LeftmostConjunctiveForm` (conjunction of literals)
-   - Applies `scalar_simplification` with `scalar_range=false` to each disjunct
+   - Applies `scalar_simplification` with `allow_scalar_range_conditions=false` to each disjunct
    - Multi-threaded processing for efficiency
    - Optionally wraps result in `LeftmostDisjunctiveForm` if `conjunct=true`
 
@@ -543,13 +543,13 @@ pla_string = \"\"\"
 .e
 \"\"\"
 features = [VariableValue(1, :x), VariableValue(2, :y), VariableValue(3, :z)]
-disjuncts = pla_to_formula(pla_string, features)
+disjuncts = _pla_to_formula(pla_string, features)
 
 # Get complete DNF formula
-formula = pla_to_formula(pla_string, features; conjunct=true)
+formula = _pla_to_formula(pla_string, features; conjunct=true)
 
 # Use custom condition type
-formula = pla_to_formula(
+formula = _pla_to_formula(
     pla_string, 
     features;
     conditionstype=MyCustomCondition,
@@ -569,13 +569,13 @@ formula = pla_to_formula(
 - Multi-valued variables (with '|' separators) are supported in the parsing
 
 # See Also
-- `formula_to_pla`: Inverse function for converting formulas to PLA format
+- `_formula_to_pla`: Inverse function for converting formulas to PLA format
 - `_read_conditions`: Helper function for parsing condition specifications
 - `SoleData.scalar_simplification`: Formula optimization functionality
 - `SoleLogics.LeftmostConjunctiveForm`: Conjunctive clause representation
 - `SoleLogics.LeftmostDisjunctiveForm`: Disjunctive normal form representation
 """
-function pla_to_formula(
+function _pla_to_formula(
     pla::String,
     fnames::Vector{<:VariableValue};
     conditionstype::Type=SoleData.SoleData.ScalarCondition,
@@ -602,7 +602,7 @@ function pla_to_formula(
                 SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx]) for
                 (idx, value) in enumerate(binary) if value ∈ ['1', '0']
             ]);
-            scalar_range=false,
+            allow_scalar_range_conditions=false,
         )
     end
 

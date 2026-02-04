@@ -15,7 +15,7 @@ espresso_minimize(
     args...;
     espressobinary = nothing,
     otherflags = [],
-    scalar_range = false,
+    allow_scalar_range_conditions = false,
     kwargs...
 )
 
@@ -30,7 +30,7 @@ function espresso_minimize(
     args...;
     espressobinary=nothing,
     otherflags=[],
-    scalar_range=false,
+    allow_scalar_range_conditions=false,
     kwargs...,
 )
     # Determine the path of the espresso binary relative to the location of this file
@@ -51,7 +51,7 @@ function espresso_minimize(
     end
 
     # dc_set = false
-    pla_string, fnames = PLA.formula_to_pla(syntaxtree; scalar_range, kwargs...)
+    pla_string, fnames = PLA._formula_to_pla(syntaxtree; allow_scalar_range_conditions, kwargs...)
 
     silent || println()
     silent || println(pla_string)
@@ -95,8 +95,8 @@ function espresso_minimize(
 
     minimized_pla = String(read(out))
     silent || println(minimized_pla)
-    conditionstype = scalar_range ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
-    return PLA.pla_to_formula(minimized_pla, fnames; conditionstype, conjunct=true)
+    conditionstype = allow_scalar_range_conditions ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
+    return PLA._pla_to_formula(minimized_pla, fnames; conditionstype, conjunct=true)
 end
 
 """
@@ -216,7 +216,7 @@ Minimize a Boolean formula using the ABC tool with automatic setup.
 - `fast`: If true, use faster but less aggressive minimization
 - `abcbinary`: Path to ABC binary (auto-detected if nothing)
 - `force_rebuild_abc`: Force recompilation of ABC binary
-- `scalar_range`: Use range conditions for scalars
+- `allow_scalar_range_conditions`: Use range conditions for scalars
 - `otherflags`: Additional flags for ABC (currently unused)
 
 # Returns
@@ -312,7 +312,7 @@ function abc_minimize(
     fast=1,
     abcbinary=nothing,
     otherflags=[],
-    scalar_range=false,
+    allow_scalar_range_conditions=false,
     force_rebuild_abc=false,
     kwargs...,
 )
@@ -347,8 +347,8 @@ function abc_minimize(
 
     # Convert formula to PLA string format
     dc_set = false
-    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(
-        syntaxtree, dc_set, silent; scalar_range=scalar_range
+    pla_string, fnames = PLA._formula_to_pla(
+        syntaxtree; allow_scalar_range_conditions
     )
     silent || println("Input PLA:\n$pla_string\n")
 
@@ -519,12 +519,12 @@ function abc_minimize(
 
         # Determine condition type for conversion
         conditionstype =
-            scalar_range ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
+            allow_scalar_range_conditions ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
 
         # Convert minimized PLA back to formula
         try
             form = PLA._pla_to_formula(
-                minimized_pla, silent, pla_args...; conditionstype, pla_kwargs...
+                minimized_pla, fnames; conditionstype, conjunct=true
             )
             silent || println("Minimized formula: $form")
             return form

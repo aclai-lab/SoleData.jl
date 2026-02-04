@@ -18,14 +18,14 @@ end
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨
     ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 == 2))
 
-pla, fnames = PLA.formula_to_pla(formula0)
+pla, fnames = PLA._formula_to_pla(formula0)
 @test pla in [
     ".i 5\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2\n.ob formula_output\n.p 2\n10011 1\n011-0 1\n.e",
     ".i 5\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2<=2 V2>=2\n.ob formula_output\n.p 2\n011-0 1\n10011 1\n.e"
 ]
 @test fnames == [VariableValue(1), VariableValue(2)]
 
-pla, fnames = PLA.formula_to_pla(formula0; scalar_range=true)
+pla, fnames = PLA._formula_to_pla(formula0; allow_scalar_range_conditions=true)
 @test pla in [
     ".i 6\n.o 1\n.ilb V1∈[-Inf,0] V1∈(0,10] V1∈(10,Inf] V2∈[-Inf,0) V2∈[0,2) V2∈[2,2]\n.ob formula_output\n.p 2\n100001 1\n001100 1\n.e",
     ".i 6\n.o 1\n.ilb V1∈[-Inf,0] V1∈(0,10] V1∈(10,Inf] V2∈[-Inf,0) V2∈[0,2) V2∈[2,2]\n.ob formula_output\n.p 2\n001100 1\n100001 1\n.e"
@@ -34,7 +34,7 @@ pla, fnames = PLA.formula_to_pla(formula0; scalar_range=true)
 formula0 = @scalarformula ((V1 > 10) ∧ (V2 < 0) ∧ (V2 < 0) ∧ (V2 <= 0)) ∨
     ((V1 <= 0) ∧ ((V1 <= 3)) ∧ (V2 >= 2))
 
-pla, fnames = PLA.formula_to_pla(formula0)
+pla, fnames = PLA._formula_to_pla(formula0)
 @test pla in [
     ".i 4\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2>=2\n.ob formula_output\n.p 2\n1001 1\n0110 1\n.e",
     ".i 4\n.o 1\n.ilb V1<=0 V1>10 V2<0 V2>=2\n.ob formula_output\n.p 2\n0110 1\n1001 1\n.e"
@@ -44,8 +44,8 @@ pla, fnames = PLA.formula_to_pla(formula0)
 simplify = SoleData.scalar_simplification(dnf(formula0))
 @test simplify isa DNF
 
-pla, fnames = PLA.formula_to_pla(formula0)
-formula01 = PLA.pla_to_formula(pla, fnames)
+pla, fnames = PLA._formula_to_pla(formula0)
+formula01 = PLA._pla_to_formula(pla, fnames)
 @test formula01 isa Vector{SyntaxStructure}
 
 tree01 = tree(LeftmostDisjunctiveForm(formula0))
@@ -96,10 +96,10 @@ pla = """
 """
 fnames = [VariableValue(1)]
 
-formula = PLA.pla_to_formula(pla, fnames)
+formula = PLA._pla_to_formula(pla, fnames)
 @test syntaxstring(LeftmostDisjunctiveForm(formula)) == "[V1] > 10.0"
 
-formula = PLA.pla_to_formula(pla, fnames; conjunct=true)
+formula = PLA._pla_to_formula(pla, fnames; conjunct=true)
 @test syntaxstring(formula) == "[V1] > 10.0"
 
 pla = """.i 5
@@ -112,11 +112,11 @@ pla = """.i 5
 """
 fnames = [VariableValue(1), VariableValue(2), VariableValue(3), VariableValue(4)]
 
-formula = PLA.pla_to_formula(pla, fnames; conjunct=true)
+formula = PLA._pla_to_formula(pla, fnames; conjunct=true)
 @test syntaxstring(formula) ==
     "(([V1] ≤ 10.0) ∧ ([V2] < 0.0) ∧ ([V4] ≤ 10.0) ∧ ([V4] ≥ 10.0)) ∨ (([V1] ≤ 10.0) ∧ ([V2] < 0.0) ∧ ([V3] > 10.0))"
 
-pla, fnames = PLA.formula_to_pla(@scalarformula ((V1 <= 0)) ∨ (¬(V1 <= 0) ∧ (V2 <= 0)))
+pla, fnames = PLA._formula_to_pla(@scalarformula ((V1 <= 0)) ∨ (¬(V1 <= 0) ∧ (V2 <= 0)))
 @test pla == ".i 2\n.o 1\n.ilb V1<=0 V2<=0\n.ob formula_output\n.p 2\n1- 1\n01 1\n.e"
 
 @test syntaxstring(

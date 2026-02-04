@@ -109,7 +109,7 @@ function scalar_simplification(
 end
 
 function scalar_simplification(
-    atomslist::Vector{Atom}, conn::NamedConnective; scalar_range::Bool=false
+    atomslist::Vector{Atom}, conn::NamedConnective; allow_scalar_range_conditions::Bool=false
 )
     scalar_conds = value.(atomslist)
     feats = feature.(scalar_conds)
@@ -171,7 +171,7 @@ function scalar_simplification(
                 elseif (min_domain[2] == -Inf) && (max_domain[2] == Inf)
                     nothing
                 else
-                    if scalar_range
+                    if allow_scalar_range_conditions
                         min_domain = (min_domain[2] == -Inf) ? (≥, -Inf) : min_domain
                         max_domain = (max_domain[2] == Inf) ? (≤, Inf) : max_domain
 
