@@ -14,30 +14,29 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("Logisets", [ "logisets.jl", ]),
-    
-    ("Propositional Logisets", [ "propositional-logisets.jl", ]),
-    ("Memosets", [ "memosets.jl", ]),
+    ("Logisets", ["logisets.jl"]),
+    ("Propositional Logisets", ["propositional-logisets.jl"]),
+    ("Memosets", ["memosets.jl"]),
     #
-    ("Cube to Logiset", [ "cube2logiset.jl", ]),
-    ("DataFrame to Logiset", [ "dataframe2logiset.jl", ]),
-    ("MultiLogisets", [ "multilogisets.jl", ]),
+    ("Cube to Logiset", ["cube2logiset.jl"]),
+    ("DataFrame to Logiset", ["dataframe2logiset.jl"]),
+    ("MultiLogisets", ["multilogisets.jl"]),
     #
-    ("Conditions", [ "range-scalar-condition.jl", ]),
-    ("Alphabets", [ "scalar-alphabet.jl", "discretization.jl"]),
-    ("Features", [ "var-features.jl", "patchedfeatures.jl" ]),
+    ("Conditions", ["range-scalar-condition.jl"]),
+    ("Alphabets", ["scalar-alphabet.jl", "discretization.jl"]),
+    ("Features", ["var-features.jl", "patchedfeatures.jl"]),
     #
-    ("MLJ", [ "MLJ.jl", ]),
-    ("PLA", [ "pla.jl", ]),
+    ("MLJ", ["MLJ.jl"]),
+    ("PLA", ["pla.jl"]),
     ("Minify", ["minify.jl"]),
     ("Parse", ["parse.jl"]),
     #
-    ("Simplification", [ "simplification.jl", ]),
+    ("Simplification", ["simplification.jl"]),
     ("Artifacts", ["artifacts.jl"]),
     #
-    ("Relations", ["relations.jl", ]),
+    ("Relations", ["relations.jl"]),
     #
-    ("Conditions", ["conditions.jl", ]),
+    ("Conditions", ["conditions.jl"]),
 ]
 
 @testset "SoleData.jl" begin

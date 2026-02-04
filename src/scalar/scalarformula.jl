@@ -1,5 +1,4 @@
 
-
 using SoleLogics: SyntaxTree
 using SoleLogics
 using SoleData
@@ -46,14 +45,25 @@ macro scalarformula(expr)
             end
         elseif expr.head in [:||, :&&, :!]
             # @show ":||/:&&"
-            op = (expr.head == :|| ? (∨) : expr.head == :&& ? (∧) : (¬))
+            op = (
+                if expr.head == :||
+                    (∨)
+                elseif expr.head == :&&
+                    (∧)
+                else
+                    (¬)
+                end
+            )
             args = [_parse_syntaxtree(arg) for arg in expr.args]
             return Expr(:call, SyntaxTree, op, args...)
         else
-            throw(ArgumentError("Unsupported expression type: $expr (head: $(expr.head), args: $(expr.args))"))
+            throw(
+                ArgumentError(
+                    "Unsupported expression type: $expr (head: $(expr.head), args: $(expr.args))",
+                ),
+            )
         end
     end
-
 
     parsed_tree = _parse_syntaxtree(expr)
     return esc(parsed_tree)

@@ -14,15 +14,14 @@ struct ValueCondition{FT<:AbstractFeature} <: AbstractCondition{FT}
     feature::FT
 end
 
-checkcondition(c::ValueCondition, args...; kwargs...) = featvalue(c.feature, args...; kwargs...)
+function checkcondition(c::ValueCondition, args...; kwargs...)
+    featvalue(c.feature, args...; kwargs...)
+end
 
 syntaxstring(c::ValueCondition; kwargs...) = syntaxstring(c.feature)
 
 function parsecondition(
-    ::Type{ValueCondition},
-    expr::AbstractString;
-    featuretype = Feature,
-    kwargs...
+    ::Type{ValueCondition}, expr::AbstractString; featuretype=Feature, kwargs...
 )
     ValueCondition(featuretype(expr))
 end
@@ -44,15 +43,16 @@ struct FunctionalCondition{FT<:AbstractFeature} <: AbstractCondition{FT}
     f::Function
 end
 
-checkcondition(c::FunctionalCondition, args...; kwargs...) = (c.f)(featvalue(c.feature, args...; kwargs...))
+function checkcondition(c::FunctionalCondition, args...; kwargs...)
+    (c.f)(featvalue(c.feature, args...; kwargs...))
+end
 
-syntaxstring(c::FunctionalCondition; kwargs...) = string(c.f, "(", syntaxstring(c.feature), ")")
+function syntaxstring(c::FunctionalCondition; kwargs...)
+    string(c.f, "(", syntaxstring(c.feature), ")")
+end
 
 function parsecondition(
-    ::Type{FunctionalCondition},
-    expr::AbstractString;
-    featuretype = Feature,
-    kwargs...
+    ::Type{FunctionalCondition}, expr::AbstractString; featuretype=Feature, kwargs...
 )
     r = Regex("^\\s*(\\w+)\\(\\s*(\\w+)\\s*\\)\\s*\$")
     slices = match(r, expr)

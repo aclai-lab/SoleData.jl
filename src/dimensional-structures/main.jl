@@ -7,7 +7,6 @@ using ThreadSafeDicts
 # TODO remove
 using SoleData: _in, _findfirst
 
-
 # using BenchmarkTools
 using ProgressMeter
 using UniqueVectors
@@ -33,12 +32,18 @@ using SoleData: Aggregator, AbstractCondition
 using SoleData: UnivariateScalarAlphabet, UnionAlphabet, MultivariateScalarAlphabet
 using SoleData: AbstractModalLogiset, AbstractMultiModalFrame
 using SoleData: MultiLogiset, AbstractModalLogiset
-using SoleData: apply_test_operator, existential_aggregator, aggregator_bottom, aggregator_to_binary
+using SoleData:
+    apply_test_operator, existential_aggregator, aggregator_bottom, aggregator_to_binary
 
 import SoleData: features, nfeatures
 using SoleData: worldtype, featvaltype, featuretype, frametype
 
-import SoleData: representatives, ScalarMetaCondition, ScalarCondition, ObliqueScalarCondition, featvaltype
+import SoleData:
+    representatives,
+    ScalarMetaCondition,
+    ScalarCondition,
+    ObliqueScalarCondition,
+    featvaltype
 import SoleData: ninstances, nrelations, nfeatures, check, instances, minify
 import SoleData: displaystructure, frame
 import SoleData: alphabet, isminifiable
@@ -57,21 +62,22 @@ using SoleData: VariableId
 
 export UniformFullDimensionalLogiset
 
-import SoleData: AbstractUniformFullDimensionalLogiset,
-      maxchannelsize,
-      channelsize,
-      dimensionality,
-      frame
+import SoleData:
+    AbstractUniformFullDimensionalLogiset,
+    maxchannelsize,
+    channelsize,
+    dimensionality,
+    frame
 
 # Frame-specific logisets
 include("logiset.jl")
 
-import SoleData: AbstractUniformFullDimensionalOneStepRelationalMemoset,
-      innerstruct,
-      nmemoizedvalues
+import SoleData:
+    AbstractUniformFullDimensionalOneStepRelationalMemoset, innerstruct, nmemoizedvalues
 include("onestep-memosets.jl")
 
-export initlogiset, ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue
+export initlogiset,
+    ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue
 
 export nvariables
 

@@ -34,7 +34,9 @@ relation(f::ScalarOneStepFormula) = f.relation
 atom(f::ScalarOneStepFormula) = Atom(f.p)
 metacond(f::ScalarOneStepFormula{<:ScalarCondition}) = metacond(SoleLogics.value(atom(f)))
 feature(f::ScalarOneStepFormula{<:ScalarCondition}) = feature(SoleLogics.value(atom(f)))
-test_operator(f::ScalarOneStepFormula{<:ScalarCondition}) = test_operator(SoleLogics.value(atom(f)))
+function test_operator(f::ScalarOneStepFormula{<:ScalarCondition})
+    test_operator(SoleLogics.value(atom(f)))
+end
 threshold(f::ScalarOneStepFormula{<:ScalarCondition}) = threshold(SoleLogics.value(atom(f)))
 
 """
@@ -43,10 +45,10 @@ Templated formula for ⟨R⟩ f ⋈ t.
 struct ScalarExistentialFormula{V,R<:AbstractRelation} <: ScalarOneStepFormula{V}
 
     # Relation, interpreted as an existential modal connective
-    relation  :: R
+    relation::R
 
     # Atom value
-    p         :: V
+    p::V
 
     function ScalarExistentialFormula{V,R}(relation::R, p::V) where {V,R<:AbstractRelation}
         @assert !(V <: SoleLogics.Formula) "Cannot instantiate ScalarExistentialFormula " *
@@ -54,43 +56,36 @@ struct ScalarExistentialFormula{V,R<:AbstractRelation} <: ScalarOneStepFormula{V
         new{V,R}(relation, p)
     end
 
-    function ScalarExistentialFormula{V}(
-        relation      :: R,
-        p             :: V
-    ) where {V,R<:AbstractRelation}
+    function ScalarExistentialFormula{V}(relation::R, p::V) where {V,R<:AbstractRelation}
         ScalarExistentialFormula{V,R}(relation, p)
     end
 
-    function ScalarExistentialFormula(
-        relation      :: AbstractRelation,
-        p             :: V
-    ) where {V}
+    function ScalarExistentialFormula(relation::AbstractRelation, p::V) where {V}
         ScalarExistentialFormula{V}(relation, p)
     end
 
     function ScalarExistentialFormula{V}(
-        relation      :: AbstractRelation,
-        feature       :: AbstractFeature,
-        test_operator :: TestOperator,
-        threshold     :: U,
+        relation::AbstractRelation,
+        feature::AbstractFeature,
+        test_operator::TestOperator,
+        threshold::U,
     ) where {V,U}
         p = ScalarCondition(feature, test_operator, threshold)
         ScalarExistentialFormula(relation, p)
     end
 
     function ScalarExistentialFormula(
-        relation      :: AbstractRelation,
-        feature       :: AbstractFeature,
-        test_operator :: TestOperator,
-        threshold     :: U,
+        relation::AbstractRelation,
+        feature::AbstractFeature,
+        test_operator::TestOperator,
+        threshold::U,
     ) where {U}
         p = ScalarCondition(feature, test_operator, threshold)
         ScalarExistentialFormula(relation, p)
     end
 
     function ScalarExistentialFormula(
-        formula       :: ScalarExistentialFormula{V},
-        threshold_f   :: Function
+        formula::ScalarExistentialFormula{V}, threshold_f::Function
     ) where {V<:ScalarCondition}
         q = ScalarCondition(formula.p, threshold_f(threshold(formula.p)))
         ScalarExistentialFormula(relation(formula), q)
@@ -103,23 +98,17 @@ tree(f::ScalarExistentialFormula) = DiamondRelationalConnective(f.relation)(Atom
 Templated formula for [R] f ⋈ t.
 """
 struct ScalarUniversalFormula{V,R<:AbstractRelation} <: ScalarOneStepFormula{V}
-    relation  :: R
-    p         :: V
+    relation::R
+    p::V
 end
 
 tree(f::ScalarUniversalFormula) = BoxRelationalConnective(f.relation)(Atom(f.p))
 
 hasdual(f::ScalarExistentialFormula) = true
 function dual(formula::ScalarExistentialFormula)
-    return ScalarUniversalFormula(
-        relation(formula),
-        dual(atom(formula))
-    )
+    return ScalarUniversalFormula(relation(formula), dual(atom(formula)))
 end
 hasdual(f::ScalarUniversalFormula) = true
 function dual(formula::ScalarUniversalFormula)
-    return ScalarExistentialFormula(
-        relation(formula),
-        dual(atom(formula))
-    )
+    return ScalarExistentialFormula(relation(formula), dual(atom(formula)))
 end

@@ -3,7 +3,7 @@ using Downloads     # only for paper
 using Tar                  #    OLD
 ###################
 
-using SoleData.Artifacts:load,MITESPRESSOLoader,ABCLoader
+using SoleData.Artifacts: load, MITESPRESSOLoader, ABCLoader
 
 """
 espresso_minimize(
@@ -23,15 +23,15 @@ by https://jackhack96.github.io/logic-synthesis/espresso.html.
 """
 function espresso_minimize(
     syntaxtree::SoleLogics.Formula,
-    silent::Bool = true,
-    Dflag = "exact",
-    Sflag = nothing,
-    eflag = nothing,
+    silent::Bool=true,
+    Dflag="exact",
+    Sflag=nothing,
+    eflag=nothing,
     args...;
-    espressobinary = nothing,
-    otherflags = [],
-    scalar_range = false,
-    kwargs...
+    espressobinary=nothing,
+    otherflags=[],
+    scalar_range=false,
+    kwargs...,
 )
     # Determine the path of the espresso binary relative to the location of this file
     # Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.
@@ -44,7 +44,9 @@ function espresso_minimize(
         silent || @show espressobinary
         #espressobinary = joinpath(@__DIR__, "espresso") deprecate version
         if !isfile(espressobinary)
-            error("The 'espresso' binary was not found in the module directory. Please provide espresso path via the espressobinary argument")
+            error(
+                "The 'espresso' binary was not found in the module directory. Please provide espresso path via the espressobinary argument",
+            )
         end
     end
 
@@ -74,7 +76,7 @@ function espresso_minimize(
     append!(otherflags, args)
     espresso_cmd = `$espressobinary $args`
     silent || @show espresso_cmd
-    cmd = pipeline(pipeline(echo_cmd, espresso_cmd), stdout=out, stderr=err)
+    cmd = pipeline(pipeline(echo_cmd, espresso_cmd); stdout=out, stderr=err)
     # cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
     try
         run(cmd)
@@ -109,7 +111,7 @@ Returns the path to the compiled ABC binary.
 # Returns
 - Path to the ABC binary executable
 """
-function ensure_abc_binary(; force_rebuild = false)
+function ensure_abc_binary(; force_rebuild=false)
     # Path to ABC binary directly in src/ directory
     abc_binary = joinpath(@__DIR__, "abc")
 
@@ -122,7 +124,7 @@ function ensure_abc_binary(; force_rebuild = false)
     @info "Setting up ABC binary..."
 
     # Create unique temporary directory to avoid conflicts
-    abc_temp_dir = mktempdir(prefix="abc_build_")
+    abc_temp_dir = mktempdir(; prefix="abc_build_")
 
     # ABC repository URL (compressed tarball)
     abc_url = "https://github.com/berkeley-abc/abc/archive/refs/heads/master.tar.gz"
@@ -164,7 +166,9 @@ function ensure_abc_binary(; force_rebuild = false)
         try
             # Verify make is available
             if !success(`which make`)
-                error("make command not found. Please install build tools (make, gcc, etc.)")
+                error(
+                    "make command not found. Please install build tools (make, gcc, etc.)"
+                )
             end
 
             # Compile with make
@@ -303,14 +307,14 @@ input_pla =
 """
 function abc_minimize(
     syntaxtree::SoleLogics.Formula,
-    silent::Bool = true,
+    silent::Bool=true,
     args...;
-    fast = 1,
-    abcbinary = nothing,
-    otherflags = [],
-    scalar_range = false,
-    force_rebuild_abc = false,
-    kwargs...
+    fast=1,
+    abcbinary=nothing,
+    otherflags=[],
+    scalar_range=false,
+    force_rebuild_abc=false,
+    kwargs...,
 )
     println("Using abc_minimize function with Artifact loader !!")
     # Auto-setup ABC binary if not specified
@@ -344,8 +348,7 @@ function abc_minimize(
     # Convert formula to PLA string format
     dc_set = false
     pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(
-        syntaxtree, dc_set, silent;
-        scalar_range=scalar_range
+        syntaxtree, dc_set, silent; scalar_range=scalar_range
     )
     silent || println("Input PLA:\n$pla_string\n")
 
@@ -388,7 +391,9 @@ function abc_minimize(
 
         # Fix input count mismatch
         if actual_inputs > 0 && actual_inputs != i_count
-            silent || println("Fixing input count mismatch: declared=$i_count, actual=$actual_inputs")
+            silent || println(
+                "Fixing input count mismatch: declared=$i_count, actual=$actual_inputs"
+            )
             filtered_lines[i_line_idx] = ".i $actual_inputs"
         end
 
@@ -420,7 +425,7 @@ function abc_minimize(
                 "read $inputfile",
                 "strash",           # Convert to AIG (And-Inverter Graph)
                 "collapse",         # Collapse to SOP (Sum-of-Products)
-                "write $outputfile"
+                "write $outputfile",
             ]
         elseif fast == 0
             # Balanced minimization - rewriting and algebraic optimization
@@ -440,7 +445,7 @@ function abc_minimize(
                 "strash",           # Convert back to AIG
                 "balance",          # Final balance
                 "collapse",         # Final collapse to logic
-                "write $outputfile"
+                "write $outputfile",
             ]
         else
             # Thorough minimization - multiple optimization passes
@@ -456,7 +461,7 @@ function abc_minimize(
                 "dc2",              # Another DC pass
                 "collapse",         # Final collapse
                 "sop",              # Back to SOP
-                "write $outputfile"
+                "write $outputfile",
             ]
         end
 
@@ -477,7 +482,8 @@ function abc_minimize(
 
         # Check if ABC succeeded and produced output
         if !result || !isfile(outputfile)
-            silent || println("ABC failed or output file not created, returning original formula")
+            silent ||
+                println("ABC failed or output file not created, returning original formula")
             return syntaxtree
         end
 
@@ -499,8 +505,12 @@ function abc_minimize(
         function clean_abc_output(raw_pla::String)
             lines = split(raw_pla, '\n')
             # Keep only PLA format lines (headers and product terms)
-            pla_lines = filter(line -> !isempty(strip(line)) &&
-                              (startswith(line, '.') || occursin(r"^[01\-]+ ", line)), lines)
+            pla_lines = filter(
+                line ->
+                    !isempty(strip(line)) &&
+                    (startswith(line, '.') || occursin(r"^[01\-]+ ", line)),
+                lines,
+            )
             return join(pla_lines, '\n')
         end
 
@@ -508,13 +518,13 @@ function abc_minimize(
         silent || println("Cleaned minimized PLA:\n$minimized_pla\n")
 
         # Determine condition type for conversion
-        conditionstype = scalar_range ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
+        conditionstype =
+            scalar_range ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
 
         # Convert minimized PLA back to formula
         try
             form = PLA._pla_to_formula(
-                minimized_pla, silent, pla_args...;
-                conditionstype, pla_kwargs...
+                minimized_pla, silent, pla_args...; conditionstype, pla_kwargs...
             )
             silent || println("Minimized formula: $form")
             return form
@@ -572,7 +582,6 @@ function clean_abc_installation()
     end
 end
 
-
 function mktemp_pla()
     (f, io) = mktemp()
     close(io)
@@ -582,10 +591,13 @@ function mktemp_pla()
     (newf, open(newf, "w"))
 end
 
-
-function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", silent::Bool = true; kwargs...)
+function boom_minimize(
+    f::LeftmostLinearForm, single::Bool, name::String="", silent::Bool=true; kwargs...
+)
     #print(dump(f))
-    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(f, false, silent; necessary_type=true, kwargs...)
+    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(
+        f, false, silent; necessary_type=true, kwargs...
+    )
 
     (infile, infile_io) = mktemp_pla()
     (outfile, outfile_io) = mktemp_pla()
@@ -724,7 +736,9 @@ function boom_minimize(f::LeftmostLinearForm, single::Bool, name::String = "", s
         silent || println("==========================")
 
         # Pass original arguments to maintain variable labels
-        result = PLA._pla_to_formula(minimized_output, silent, pla_args...; pla_kwargs..., featvaltype=Float64)
+        result = PLA._pla_to_formula(
+            minimized_output, silent, pla_args...; pla_kwargs..., featvaltype=Float64
+        )
         silent || println("=== Resulting Formula ===")
         silent || println(result)
         silent || println("==========================")

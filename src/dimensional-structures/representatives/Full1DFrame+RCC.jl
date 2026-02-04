@@ -38,5 +38,4 @@ apply_aggregator(test_operator::CanonicalConditionLeq, w::Interval{Int}?, r::RCC
     )
 end
 
-    
 =#

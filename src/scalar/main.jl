@@ -20,7 +20,6 @@ include("representatives.jl")
 # # Types for representing common associations between features and operators
 # include("canonical-conditions.jl") # TODO remove
 
-
 struct PatchedFunction
     f::Base.Callable
     fname::String

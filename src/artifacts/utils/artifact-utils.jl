@@ -5,7 +5,6 @@
 # https://pkgdocs.julialang.org/v1/artifacts/#The-Pkg.Artifacts-API
 # https://pkgdocs.julialang.org/v1/api/#Artifacts-Reference
 
-
 """
     fillartifacts()
     fillartifacts(URLS::Vector{String})
@@ -32,12 +31,12 @@ function fillartifacts()
 end
 function fillartifacts(URLS::Vector{String})
     @showprogress map(url -> fillartifacts(url), URLS)
-    return # to avoid returning a vector of nothing
+    return nothing # to avoid returning a vector of nothing
 end
 
 function fillartifacts(url::String)
     filename_with_extension = split(url, "/")[end]
-    filename_no_extension = split(filename_with_extension, ".")[1] |> lowercase
+    filename_no_extension = lowercase(split(filename_with_extension, ".")[1])
 
     # see https://pkgdocs.julialang.org/v1/artifacts/#The-Pkg.Artifacts-API
     # this is ambiguous: create_artifact expects a function F as argument;
@@ -53,7 +52,8 @@ function fillartifacts(url::String)
 
     # create the artifact
     SHA1 = create_artifact(
-        tmp_dir -> Downloads.download(url, joinpath(tmp_dir, filename_with_extension)))
+        tmp_dir -> Downloads.download(url, joinpath(tmp_dir, filename_with_extension))
+    )
 
     # now we can clear the temporary file
     rm(temp_file)

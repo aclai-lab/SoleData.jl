@@ -1,22 +1,20 @@
 const BoundedScalarConditions = MultivariateScalarAlphabet{ScalarCondition}
 
 function BoundedScalarConditions(
-    metaconditions::Vector{<:ScalarMetaCondition},
-    thresholds::Vector{<:Vector}
+    metaconditions::Vector{<:ScalarMetaCondition}, thresholds::Vector{<:Vector}
 )
     @warn "This function is deprecating."
-    length(metaconditions) != length(thresholds) &&
-        error("Cannot instantiate UnionAlphabet with mismatching " *
-              "number of `metaconditions` and `thresholds` " *
-              "($(metaconditions) != $(thresholds)).")
+    length(metaconditions) != length(thresholds) && error(
+        "Cannot instantiate UnionAlphabet with mismatching " *
+        "number of `metaconditions` and `thresholds` " *
+        "($(metaconditions) != $(thresholds)).",
+    )
     alphabets = UnivariateScalarAlphabet.(zip(metaconditions, thresholds))
     UnionAlphabet(alphabets)
 end
 
 function BoundedScalarConditions(
-    features::AbstractVector,
-    test_operators::AbstractVector,
-    thresholds::Vector
+    features::AbstractVector, test_operators::AbstractVector, thresholds::Vector
 )
     @warn "This function is deprecating."
     metaconditions = [ScalarMetaCondition(f, t) for f in features for t in test_operators]

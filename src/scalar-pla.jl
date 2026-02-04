@@ -11,17 +11,17 @@ using SoleData: scalar_simplification
 const OPERATORS = "<=|>=|==|!=|<|≤|>|≥|≠|∈|∉"
 const OP_REGEX = Regex("^\\[?(.+?)\\]?(" * OPERATORS * ")(.+)\$")
 const OPERATOR_MAP = Dict(
-    "<"  => (<),
+    "<" => (<),
     "<=" => (<=),
-    "≤"  => (≤),
-    ">"  => (>),
+    "≤" => (≤),
+    ">" => (>),
     ">=" => (>=),
-    "≥"  => (≥),
+    "≥" => (≥),
     "==" => (==),
     "!=" => (!=),
-    "≠"  => (!=),
-    "∈"  => (∈),
-    "∉"  => (∉),
+    "≠" => (!=),
+    "∈" => (∈),
+    "∉" => (∉),
 )
 
 const LiteralBool = Dict('1' => true, '0' => false)
@@ -29,13 +29,16 @@ const LiteralBool = Dict('1' => true, '0' => false)
 # ---------------------------------------------------------------------------- #
 #                                get conjuncts                                 #
 # ---------------------------------------------------------------------------- #
-@inline  _get_conjuncts(a::Vector{Vector{Atom}}) = _get_conjuncts.(a)
-@inline  _get_conjuncts(a::Vector{Atom}) = isempty(a) ? ⊤ : LeftmostConjunctiveForm{Literal}(Literal.(a))
+@inline _get_conjuncts(a::Vector{Vector{Atom}}) = _get_conjuncts.(a)
+@inline _get_conjuncts(a::Vector{Atom}) =
+    isempty(a) ? ⊤ : LeftmostConjunctiveForm{Literal}(Literal.(a))
 
 # ---------------------------------------------------------------------------- #
 #                                 print utils                                  #
 # ---------------------------------------------------------------------------- #
-_featurename(f::SoleData.VariableValue) = isnothing(f.i_name) ? "V$(f.i_variable)" : "[$(f.i_name)]"
+function _featurename(f::SoleData.VariableValue)
+    isnothing(f.i_name) ? "V$(f.i_variable)" : "[$(f.i_name)]"
+end
 
 # ---------------------------------------------------------------------------- #
 #                             disjuncts encoding                               #
@@ -79,43 +82,61 @@ _featurename(f::SoleData.VariableValue) = isnothing(f.i_name) ? "V$(f.i_variable
     - The resulting PLA row uses "-" for don't-care positions that are not constrained by any literal
 """
 function _encode_disjunct(
-    disjunct        :: SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
-    features        :: Vector{<:SoleData.VariableValue},
-    conditions      :: Vector{<:SoleData.AbstractScalarCondition},
-    includes        :: Vector{BitMatrix},
-    excludes        :: Vector{BitMatrix},
-    feat_condindxss :: Vector{Vector{Int64}}
+    disjunct::SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
+    features::Vector{<:SoleData.VariableValue},
+    conditions::Vector{<:SoleData.AbstractScalarCondition},
+    includes::Vector{BitMatrix},
+    excludes::Vector{BitMatrix},
+    feat_condindxss::Vector{Vector{Int64}},
 )
     pla_row = fill("-", length(conditions))
-    
+
     # for each atom in the disjunct, add zeros or ones to relevants
     for lit in SoleLogics.grandchildren(disjunct)
         ispos = SoleLogics.ispos(lit)
-        cond  = SoleLogics.value(atom(lit))
+        cond = SoleLogics.value(atom(lit))
 
-        i_feat         = findfirst((f)->f==SoleData.feature(cond), features)
+        i_feat = findfirst((f)->f==SoleData.feature(cond), features)
         feat_condindxs = feat_condindxss[i_feat]
 
-        feat_icond     = findfirst(c->c==cond, conditions[feat_condindxs])
-        feat_idualcond = SoleData.hasdual(cond) ? findfirst(c->c==SoleData.dual(cond), conditions[feat_condindxs]) : nothing
+        feat_icond = findfirst(c->c==cond, conditions[feat_condindxs])
+        feat_idualcond = if SoleData.hasdual(cond)
+            findfirst(c->c==SoleData.dual(cond), conditions[feat_condindxs])
+        else
+            nothing
+        end
 
         @assert !(isnothing(feat_icond) && isnothing(feat_idualcond))
 
         POS, NEG = ispos ? ("1", "0") : ("0", "1")
-        
+
         for (ic, c) in enumerate(feat_condindxs)
             # set pos for included conditions
             if !isnothing(feat_icond)
-                includes[i_feat][feat_icond, ic] && pla_row[c] == "-" &&
-                    (pla_row[c] = POS)
-                excludes[i_feat][feat_icond, ic] &&
-                    (pla_row[c] = (pla_row[c] == "-" ? NEG : (pla_row[c] == POS && NEG == "0" ? NEG : pla_row[c])))
+                includes[i_feat][feat_icond, ic] && pla_row[c] == "-" && (pla_row[c] = POS)
+                excludes[i_feat][feat_icond, ic] && (
+                    pla_row[c] = (
+                        if pla_row[c] == "-"
+                            NEG
+                        else
+                            (pla_row[c] == POS && NEG == "0" ? NEG : pla_row[c])
+                        end
+                    )
+                )
             end
             # handle dual condition if exists
             if !isnothing(feat_idualcond)
-                includes[i_feat][feat_idualcond, ic] &&
-                    (pla_row[c] = (pla_row[c] == "-" ? NEG : (pla_row[c] == POS && NEG == "0" ? NEG : pla_row[c])))
-                excludes[i_feat][feat_idualcond, ic] && pla_row[c] == "-" &&
+                includes[i_feat][feat_idualcond, ic] && (
+                    pla_row[c] = (
+                        if pla_row[c] == "-"
+                            NEG
+                        else
+                            (pla_row[c] == POS && NEG == "0" ? NEG : pla_row[c])
+                        end
+                    )
+                )
+                excludes[i_feat][feat_idualcond, ic] &&
+                    pla_row[c] == "-" &&
                     (pla_row[c] = POS)
             end
         end
@@ -168,24 +189,22 @@ The function:
 - The feature name must exist in `fnames` to determine the variable index
 """
 function _read_conditions(
-    line           :: AbstractString,
-    conditionstype :: Type,
-    fnames         :: Vector{<:VariableValue}
+    line::AbstractString, conditionstype::Type, fnames::Vector{<:VariableValue}
 )
     parts = split(line, ' ')[2:end]  # skip '.ilb' command
     fnames = Symbol.(featurename.(fnames))
-    
+
     return map(parts) do part
         # split with regex
         m = match(OP_REGEX, part)
         m === nothing && throw(ArgumentError("Invalid condition token: $(part)"))
 
         # reconstruct VariableValue
-        varname   = Symbol(m.captures[1])
-        i_var   = findfirst(==(varname), fnames)
-        value   = SoleData.VariableValue(i_var, varname)
+        varname = Symbol(m.captures[1])
+        i_var = findfirst(==(varname), fnames)
+        value = SoleData.VariableValue(i_var, varname)
 
-        operator        = OPERATOR_MAP[m.captures[2]]
+        operator = OPERATOR_MAP[m.captures[2]]
         threshold = threshold = parse(Float64, m.captures[3])
 
         condition = conditionstype(value, operator, threshold)
@@ -197,7 +216,10 @@ end
 # ---------------------------------------------------------------------------- #
 #                               univariate utils                               #
 # ---------------------------------------------------------------------------- #
-function _header(conditions::Vector{<:SoleData.AbstractScalarCondition}, feat_condnames::Vector{Vector{String}})
+function _header(
+    conditions::Vector{<:SoleData.AbstractScalarCondition},
+    feat_condnames::Vector{Vector{String}},
+)
     num_outputs = 1
     num_vars = length(conditions)
     ilb_str = join(vcat(feat_condnames...), " ")
@@ -216,7 +238,10 @@ function _header(feat_nconds::Vector{Int64}, feat_condnames::Vector{Vector{Strin
 
     pla_header = []
 
-    push!(pla_header, ".mv $(num_vars) $(num_binary_vars) $(join(feat_nconds[feat_nconds .> 1], " ")) 1")
+    push!(
+        pla_header,
+        ".mv $(num_vars) $(num_binary_vars) $(join(feat_nconds[feat_nconds .> 1], " ")) 1",
+    )
     if num_binary_vars > 0
         ilb_str = join(vcat(feat_condnames[feat_nconds .== 1]...), " ")
         push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
@@ -236,7 +261,9 @@ function _onset_rows(feat_nconds::Vector{Int64}, row::Vector{String})
 
     # generate on-set rows for each disjunct    
     end_idxs = cumsum(feat_nconds)
-    feat_varidxs = [(startidx:endidx) for (startidx,endidx) in zip([1, (end_idxs.+1)...], end_idxs)]
+    feat_varidxs = [
+        (startidx:endidx) for (startidx, endidx) in zip([1, (end_idxs .+ 1)...], end_idxs)
+    ]
 
     # binary variables first
     binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nconds)
@@ -244,7 +271,7 @@ function _onset_rows(feat_nconds::Vector{Int64}, row::Vector{String})
     row = vcat(
         [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
         (num_binary_vars > 0 ? ["|"] : [])...,
-        [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...
+        [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...,
     )
     return "$(join(row, ""))1"
 end
@@ -335,16 +362,18 @@ pla_string, features = formula_to_pla(
 - `SoleData.scalar_simplification`: Scalar simplification methods
 - `pla_to_formula`: Inverse operation to convert PLA back to formula
 """
-formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
-    formula_to_pla(SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
+function formula_to_pla(formula::SoleLogics.Formula; kwargs...)
+    formula_to_pla(
+        SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true);
+        kwargs...,
+    )
+end
 
-function formula_to_pla(
-    dnfformula   :: SoleLogics.DNF;
-    scalar_range :: Bool=false,
-    kwargs...
-)
+function formula_to_pla(dnfformula::SoleLogics.DNF; scalar_range::Bool=false, kwargs...)
     dnfformula = scalar_simplification(dnfformula; scalar_range)
-    dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
+    dnfformula = SoleLogics.dnf(
+        dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...
+    )
 
     atoms_per_disjunct = Vector{Vector{SoleLogics.Atom}}([
         collect(SoleLogics.atoms(d)) for d in SoleLogics.disjuncts(dnfformula)
@@ -354,65 +383,88 @@ function formula_to_pla(
 end
 
 function formula_to_pla(
-    atoms             :: Vector{Vector{SoleLogics.Atom}};
-    encoding          :: Symbol=:univariate,
-    scalar_range      :: Bool=false,
-    removewhitespaces :: Bool=true,
-    pretty_op         :: Bool=false
+    atoms::Vector{Vector{SoleLogics.Atom}};
+    encoding::Symbol=:univariate,
+    scalar_range::Bool=false,
+    removewhitespaces::Bool=true,
+    pretty_op::Bool=false,
 )
     @assert encoding in [:univariate, :multivariate]
 
     # extract domains
     conditions = unique(map(SoleLogics.value, reduce(vcat, atoms)))
-    fnames   = unique(SoleData.feature.(conditions))
+    fnames = unique(SoleData.feature.(conditions))
     nfnames = length(fnames)
 
-    sort!(conditions, by=SoleData._scalarcondition_sortby)
-    sort!(fnames, by=syntaxstring)
+    sort!(conditions; by=SoleData._scalarcondition_sortby)
+    sort!(fnames; by=syntaxstring)
 
     if scalar_range
         original_conditions = conditions
         conditions = SoleData.scalartiling(conditions, fnames)
-        @assert length(setdiff(original_conditions, conditions)) == 0 "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
+        @assert length(setdiff(original_conditions, conditions)) == 0
+            "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
     end
 
     conditions = SoleData.removeduals(conditions)
 
     # for each feature, derive the conditions, and their names
     feat_condindxss = Vector{Vector{Int64}}(undef, nfnames)
-    feat_condnames  = Vector{Vector{String}}(undef, nfnames)
+    feat_condnames = Vector{Vector{String}}(undef, nfnames)
 
     @inbounds for (i, feat) in enumerate(fnames)
         feat_condindxs = findall(c->SoleData.feature(c) == feat, conditions)
-        conds          = filter(c->SoleData.feature(c)  == feat, conditions)
+        conds = filter(c->SoleData.feature(c) == feat, conditions)
         condname = SoleLogics.syntaxstring.(conds; removewhitespaces, pretty_op)
 
         feat_condindxss[i] = feat_condindxs
-        feat_condnames[i]  = condname
+        feat_condnames[i] = condname
     end
 
     feat_nconds = length.(feat_condindxss)
 
     # derive inclusions and exclusions between conditions
-    includes, excludes = Vector{BitMatrix}(undef, nfnames), Vector{BitMatrix}(undef, nfnames)
+    includes, excludes = Vector{BitMatrix}(undef, nfnames),
+    Vector{BitMatrix}(undef, nfnames)
     @inbounds for (i, feat_condindxs) in enumerate(feat_condindxss)
-        includes[i] = BitMatrix([SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs])
-        excludes[i] = BitMatrix([SoleData.excludes(conditions[cond_j], conditions[cond_i]) for cond_i in feat_condindxs, cond_j in feat_condindxs])
+        includes[i] = BitMatrix([
+            SoleData.includes(conditions[cond_i], conditions[cond_j]) for
+            cond_i in feat_condindxs, cond_j in feat_condindxs
+        ])
+        excludes[i] = BitMatrix([
+            SoleData.excludes(conditions[cond_j], conditions[cond_i]) for
+            cond_i in feat_condindxs, cond_j in feat_condindxs
+        ])
     end
 
     # generate pla _header
-    pla_header = encoding == :multivariate ? _header(feat_nconds, feat_condnames) : _header(conditions, feat_condnames)
+    pla_header = if encoding == :multivariate
+        _header(feat_nconds, feat_condnames)
+    else
+        _header(conditions, feat_condnames)
+    end
 
-    conjuncts      = _get_conjuncts(atoms)
+    conjuncts = _get_conjuncts(atoms)
     pla_onset_rows = Vector{String}(undef, length(conjuncts))
 
     Threads.@threads for i in eachindex(conjuncts)
-        row = _encode_disjunct(conjuncts[i], fnames, conditions, includes, excludes, feat_condindxss)
-        pla_onset_rows[i] = encoding == :multivariate ? _onset_rows(feat_nconds, row) : _onset_rows(row)
+        row = _encode_disjunct(
+            conjuncts[i], fnames, conditions, includes, excludes, feat_condindxss
+        )
+        pla_onset_rows[i] =
+            encoding == :multivariate ? _onset_rows(feat_nconds, row) : _onset_rows(row)
     end
 
     # Combine PLA components
-    pla_content = join([join(pla_header, "\n"), ".p $(length(pla_onset_rows))", join(pla_onset_rows, "\n"), ".e"], "\n")
+    pla_content = join(
+        [
+            join(pla_header, "\n"),
+            ".p $(length(pla_onset_rows))",
+            join(pla_onset_rows, "\n"),
+            ".e",
+        ],
+        "\n",
+    )
 
     return pla_content, fnames
 end
@@ -524,18 +576,19 @@ formula = pla_to_formula(
 - `SoleLogics.LeftmostDisjunctiveForm`: Disjunctive normal form representation
 """
 function pla_to_formula(
-    pla            :: String,
-    fnames         :: Vector{<:VariableValue};
-    conditionstype :: Type=SoleData.SoleData.ScalarCondition,
-    conjunct       :: Bool=false
+    pla::String,
+    fnames::Vector{<:VariableValue};
+    conditionstype::Type=SoleData.SoleData.ScalarCondition,
+    conjunct::Bool=false,
 )
-    lines             = split(pla, '\n')
+    lines = split(pla, '\n')
     parsed_conditions = SoleLogics.Atom[]
-    binaries          = String[]
+    binaries = String[]
 
     for line in lines
-        startswith(line, ".ilb") && append!(parsed_conditions, _read_conditions(line, conditionstype, fnames))
-        startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:end-2]])
+        startswith(line, ".ilb") &&
+            append!(parsed_conditions, _read_conditions(line, conditionstype, fnames))
+        startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:(end - 2)]])
     end
 
     isempty(binaries) && return ⊤
@@ -545,12 +598,11 @@ function pla_to_formula(
     Threads.@threads for i in eachindex(binaries)
         binary = binaries[i]
         disjuncts[i] = scalar_simplification(
-                SoleLogics.LeftmostConjunctiveForm([
-                SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx])
-                for (idx, value) in enumerate(binary)
-                if value ∈ ['1', '0']
+            SoleLogics.LeftmostConjunctiveForm([
+                SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx]) for
+                (idx, value) in enumerate(binary) if value ∈ ['1', '0']
             ]);
-            scalar_range=false
+            scalar_range=false,
         )
     end
 

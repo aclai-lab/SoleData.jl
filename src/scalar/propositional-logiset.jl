@@ -47,7 +47,10 @@ struct PropositionalLogiset{T} <: AbstractPropositionalLogiset
 
     function PropositionalLogiset(tabulardataset::T) where {T}
         if Tables.istable(tabulardataset)
-            @assert all(t->t<:Union{Real,AbstractString,CategoricalValue}, eltype.(collect(Tables.columns(tabulardataset)))) "" *
+            @assert all(
+                t->t<:Union{Real,AbstractString,CategoricalValue},
+                eltype.(collect(Tables.columns(tabulardataset))),
+            ) "" *
                 "Unexpected eltypes for some columns. `Union{Real,AbstractString,CategoricalValue}` is expected, but " *
                 "`$(Union{eltype.(collect(Tables.columns(tabulardataset)))...})` " *
                 "encountered."
@@ -71,14 +74,16 @@ Tables.materializer(::Type{PropositionalLogiset{T}}) where {T} = Tables.material
 
 # Helpers
 @forward PropositionalLogiset.tabulardataset (Base.setindex!)
-@forward PropositionalLogiset.tabulardataset (Tables.rows, Tables.columns, Tables.subset, Tables.schema, DataAPI.nrow, DataAPI.ncol)
+@forward PropositionalLogiset.tabulardataset (
+    Tables.rows, Tables.columns, Tables.subset, Tables.schema, DataAPI.nrow, DataAPI.ncol
+)
 @forward PropositionalLogiset.tabulardataset (Tables.getcolumns,)
 
 ninstances(X::PropositionalLogiset) = DataAPI.nrow(gettable(X))
 nfeatures(X::PropositionalLogiset) = DataAPI.ncol(gettable(X))
 nvariables(X::PropositionalLogiset) = nfeatures(X)
 
-function features(X::PropositionalLogiset; force_i_variables::Bool = false)
+function features(X::PropositionalLogiset; force_i_variables::Bool=false)
     if force_i_variables
         return VariableValue.(1:nfeatures(X))
     else
@@ -87,12 +92,7 @@ function features(X::PropositionalLogiset; force_i_variables::Bool = false)
     end
 end
 
-function featvalue(
-    f::VariableValue,
-    X::PropositionalLogiset,
-    i_instance::Integer,
-    args...
-)
+function featvalue(f::VariableValue, X::PropositionalLogiset, i_instance::Integer, args...)
     X[i_instance, i_variable(f)]
 end
 
@@ -100,17 +100,19 @@ function Base.show(io::IO, X::PropositionalLogiset; kwargs...)
     println(io, displaystructure(X; kwargs...))
 end
 
-function displaystructure(X::PropositionalLogiset;
-    indent_str = "",
-    include_ninstances = true,
-    include_nfeatures = true,
-    include_features = false,
-    include_worldtype = missing,
-    include_featvaltype = missing,
-    include_featuretype = missing,
-    include_frametype = missing,
+function displaystructure(
+    X::PropositionalLogiset;
+    indent_str="",
+    include_ninstances=true,
+    include_nfeatures=true,
+    include_features=false,
+    include_worldtype=missing,
+    include_featvaltype=missing,
+    include_featuretype=missing,
+    include_frametype=missing,
 )
-    padattribute(l,r) = string(l) * lpad(r,32+length(string(r))-(length(indent_str)+2+length(l)))
+    padattribute(l, r) =
+        string(l) * lpad(r, 32+length(string(r))-(length(indent_str)+2+length(l)))
     pieces = []
     push!(pieces, "")
 
@@ -121,11 +123,14 @@ function displaystructure(X::PropositionalLogiset;
         push!(pieces, "$(padattribute("# features:", nfeatures(X)))")
     end
     if include_features
-        push!(pieces, "$(padattribute("features:", "$(nfeatures(X)) -> $(SoleLogics.displaysyntaxvector(features(X); quotes = false))"))")
+        push!(
+            pieces,
+            "$(padattribute("features:", "$(nfeatures(X)) -> $(SoleLogics.displaysyntaxvector(features(X); quotes = false))"))",
+        )
     end
     push!(pieces, "Table: $(gettable(X))")
     return "$(nameof(typeof(X))) ($(humansize(X)))" *
-        join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
+           join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
 end
 
 # Patch getindex so that vector-based slicings return PropositionalLogisets ;)
@@ -137,34 +142,46 @@ end
 function instances(
     X::PropositionalLogiset,
     inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false)
+    return_view::Union{Val{true},Val{false}}=Val(false),
 )
-    return PropositionalLogiset(if return_view == Val(true)
-        Tables.subset(gettable(X), inds; viewhint = true)
-    else
-        Tables.subset(gettable(X), inds; viewhint = false)
-    end)
+    return PropositionalLogiset(
+        if return_view == Val(true)
+            Tables.subset(gettable(X), inds; viewhint=true)
+        else
+            Tables.subset(gettable(X), inds; viewhint=false)
+        end,
+    )
 end
 
 function Base.getindex(X::PropositionalLogiset, rows::Union{Colon}, cols::Union{Colon})
     __getindex(X, rows, cols)
 end
-function Base.getindex(X::PropositionalLogiset, rows::Union{Colon}, cols::Union{AbstractVector})
+function Base.getindex(
+    X::PropositionalLogiset, rows::Union{Colon}, cols::Union{AbstractVector}
+)
     __getindex(X, rows, cols)
 end
-function Base.getindex(X::PropositionalLogiset, rows::Union{AbstractVector}, cols::Union{Colon})
+function Base.getindex(
+    X::PropositionalLogiset, rows::Union{AbstractVector}, cols::Union{Colon}
+)
     __getindex(X, rows, cols)
 end
-function Base.getindex(X::PropositionalLogiset, rows::Union{AbstractVector}, cols::Union{AbstractVector})
+function Base.getindex(
+    X::PropositionalLogiset, rows::Union{AbstractVector}, cols::Union{AbstractVector}
+)
     __getindex(X, rows, cols)
 end
-function __getindex(X::PropositionalLogiset, rows::Union{Colon,AbstractVector}, cols::Union{Colon,AbstractVector})
+function __getindex(
+    X::PropositionalLogiset,
+    rows::Union{Colon,AbstractVector},
+    cols::Union{Colon,AbstractVector},
+)
     if Tables.columnaccess(X)
         coliter = Tables.columns(gettable(X))[cols]
-        return (Tables.rows(coliter)[rows] |> PropositionalLogiset)
+        return (PropositionalLogiset(Tables.rows(coliter)[rows]))
     else
         rowiter = Tables.rows(gettable(X))[rows]
-        return (Tables.columns(rowiter)[cols] |> PropositionalLogiset)
+        return (PropositionalLogiset(Tables.columns(rowiter)[cols]))
     end
 end
 
@@ -176,14 +193,9 @@ function Base.getindex(X::PropositionalLogiset, row::Integer, col::Union{Integer
     return Tables.getcolumn(gettable(X), col)[row]
 end
 
-
-function frame(
-    dataset::PropositionalLogiset,
-    i_instance::Integer
-)
+function frame(dataset::PropositionalLogiset, i_instance::Integer)
     return OneWorld()
 end
-
 
 # TODO: @test_broken alphabet(X, false; skipextremes = true)
 # TODO skipextremes: note that for non-strict operators, the first atom has no entropy; for strict operators, the last has undefined entropy. Add parameter that skips those.
@@ -209,24 +221,26 @@ Returns a `UnionAlphabet` containing `ScalarCondition` and `UnivariateScalarAlph
 """
 function alphabet(
     X::PropositionalLogiset,
-    sorted = true;
-    force_i_variables::Bool = false,
-    test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable} = nothing,
-    discretizedomain::Bool = false,
-    unique::Bool = false,
-    kwargs...
+    sorted=true;
+    force_i_variables::Bool=false,
+    test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable}=nothing,
+    discretizedomain::Bool=false,
+    unique::Bool=false,
+    kwargs...,
 )::MultivariateScalarAlphabet
-    feats = collect(features(X; force_i_variables = force_i_variables))
+    feats = collect(features(X; force_i_variables=force_i_variables))
     coltypes = eltype.(collect(Tables.columns(gettable(X)))) # TODO could this be inferred from the features
     # scalarmetaconds = map(((feat, test_op),) -> ScalarMetaCondition(feat, test_op), Iterators.product(feats, test_operators))
 
-    domains = [begin
-        domain = Tables.getcolumn(gettable(X), i_variable(feat))
-        if unique && !discretizedomain
-            domain = unique(domain)
-        end
-        domain
-    end for feat in feats]
+    domains = [
+        begin
+            domain = Tables.getcolumn(gettable(X), i_variable(feat))
+            if unique && !discretizedomain
+                domain = unique(domain)
+            end
+            domain
+        end for feat in feats
+    ]
 
     get_test_operators(to, t::Type{<:Any}) = _get_test_operators(Val(to), t)
     get_test_operators(v::AbstractVector, ::Type{<:Any}) = v
@@ -236,21 +250,24 @@ function alphabet(
     _get_test_operators(::Val{:single}, ::Type{<:Number}) = [≤]
     _get_test_operators(::Val{:double}, ::Type{<:Any}) = [(==)]
 
-    testopss = [begin
-        get_test_operators(test_operators, coltype)
-    end for coltype in coltypes]
+    testopss = [
+        begin
+            get_test_operators(test_operators, coltype)
+        end for coltype in coltypes
+    ]
 
-    _multivariate_scalar_alphabet(feats, testopss, domains; sorted, discretizedomain, kwargs...)
+    _multivariate_scalar_alphabet(
+        feats, testopss, domains; sorted, discretizedomain, kwargs...
+    )
 end
 
 # Note that this method is important and very fast!
 function checkcondition(
     cond::ScalarCondition,
     X::PropositionalLogiset;
-    _fastmath = Val(true), # TODO warning!!!
+    _fastmath=Val(true), # TODO warning!!!
     kwargs...,
 )::BitVector
-
     cond_threshold = threshold(cond)
     cond_operator = test_operator(cond)
     cond_feature = feature(cond)
@@ -264,10 +281,7 @@ function checkcondition(
 end
 
 function checkcondition(
-    cond::ScalarCondition,
-    i::LogicalInstance{<:PropositionalLogiset},
-    args...;
-    kwargs...,
+    cond::ScalarCondition, i::LogicalInstance{<:PropositionalLogiset}, args...; kwargs...
 )::Bool
     # @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
@@ -284,8 +298,8 @@ end
 function checkcondition(
     cond::ObliqueScalarCondition,
     X::PropositionalLogiset;
-    _fastmath = Val(true), # TODO warning!!!
-    kwargs...
+    _fastmath=Val(true), # TODO warning!!!
+    kwargs...,
 )::BitVector
     testop = test_operator(cond)
     # TODO: use features
@@ -299,7 +313,7 @@ function checkcondition(
     cond::ObliqueScalarCondition,
     i::LogicalInstance{<:PropositionalLogiset},
     args...;
-    kwargs...
+    kwargs...,
 )::Bool
     # @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)

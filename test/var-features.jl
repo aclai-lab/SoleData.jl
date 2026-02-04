@@ -11,7 +11,7 @@ sequence_15 = sequence .* 1.5
 sequence_20 = sequence .* 2.0
 sequence_30 = sequence .* 3.0
 
-sequences = [sequence, sequence.+1, sequence.+2]
+sequences = [sequence, sequence .+ 1, sequence .+ 2]
 too_long_sequence = [0.0, 0.0, 0.0, 0.3, 0.4, 0.5]
 
 vd = VariableDistance(1, [sequence]) # id=1 is totally arbitrary
@@ -25,9 +25,8 @@ vd = VariableDistance(1, [sequence]) # id=1 is totally arbitrary
 # given a new signal z, we want to compute distance(vd)(s,z) for each s in S,
 # and aggregate the result by the minimum distance (this is the default behaviour).
 vd = VariableDistance(1, [sequence, sequence_20, sequence_30])
-@test computeunivariatefeature(vd, sequence_15) ≈ minimum([
-    distance(vd)(r, sequence_15) for r in references(vd)
-])
+@test computeunivariatefeature(vd, sequence_15) ≈
+    minimum([distance(vd)(r, sequence_15) for r in references(vd)])
 
 # in the degenerate case in which we wrap a single value inside a VariableDistance,
 # we do not want to consider it as a simple scalar, but as a signal containing only
@@ -45,20 +44,19 @@ var_id::SoleData.VariableId = 1
 var_name::SoleData.VariableName = "feature_name"
 
 unf1 = UnivariateNamedFeature{U}(var_id, var_name)
-@test unf1 isa UnivariateNamedFeature{Float64, Int64}
+@test unf1 isa UnivariateNamedFeature{Float64,Int64}
 @test i_variable(unf1) == 1
 @test featurename(unf1) == "feature_name"
 @test syntaxstring(unf1) == "[feature_name]"
 
 unf2 = UnivariateNamedFeature(var_id, var_name)
-@test unf2 isa UnivariateNamedFeature{Real, Int64}
+@test unf2 isa UnivariateNamedFeature{Real,Int64}
 @test i_variable(unf2) == 1
 @test featurename(unf2) == "feature_name"
 @test syntaxstring(unf2) == "[feature_name]"
 
-
 # case in which a VariableDistance wraps multiple references
 @test_throws DimensionMismatch vd = VariableDistance(1, [sequences, too_long_sequence])
 vd = VariableDistance(1, sequences)
-@test references(vd) |> length == 3
+@test length(references(vd)) == 3
 @test computeunivariatefeature(vd, sequence) ≈ 0.0

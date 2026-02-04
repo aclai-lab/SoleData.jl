@@ -5,32 +5,40 @@ const DEFAULT_SCALARCOND_FEATTYPE = SoleData.VarFeature
 
 abstract type AbstractScalarCondition{FT} <: AbstractCondition{FT} end
 
-
 _patchnothing(v, d) = isnothing(v) ? d : v
 function _scalarcondition_sortby(cond)
-    (syntaxstring(SoleData.feature(cond)),
-    _patchnothing(SoleData.minval(cond), -Inf),
-    !SoleData.minincluded(cond),
-    _patchnothing(SoleData.maxval(cond), Inf),
-    SoleData.maxincluded(cond)
+    (
+        syntaxstring(SoleData.feature(cond)),
+        _patchnothing(SoleData.minval(cond), -Inf),
+        !SoleData.minincluded(cond),
+        _patchnothing(SoleData.maxval(cond), Inf),
+        SoleData.maxincluded(cond),
     )
 end
 
-function scalartiling(conditions::Vector, features = unique(SoleData.feature.(conditions)))
+function scalartiling(conditions::Vector, features=unique(SoleData.feature.(conditions)))
     newconds = SoleData.RangeScalarCondition[]
     for feat in features
         conds = filter(c->feature(c) == feat, conditions)
         # @show syntaxstring.(conds)
-        minextremes = [(true, (SoleData.minval(cond), !SoleData.minincluded(cond))) for cond in conds]
-        maxextremes = [(false, (SoleData.maxval(cond), SoleData.maxincluded(cond))) for cond in conds]
+        minextremes = [
+            (true, (SoleData.minval(cond), !SoleData.minincluded(cond))) for cond in conds
+        ]
+        maxextremes = [
+            (false, (SoleData.maxval(cond), SoleData.maxincluded(cond))) for cond in conds
+        ]
         extremes = [minextremes..., maxextremes...]
-        sort!(extremes, by=((ismin, (mv, mi)),)->(_patchnothing(mv, ismin ? -Inf : Inf), mi))
+        sort!(
+            extremes; by=((ismin, (mv, mi)),)->(_patchnothing(mv, ismin ? -Inf : Inf), mi)
+        )
         extremes = map(last, extremes)
         extremes = unique(extremes)
         # @show extremes
-        for (minextreme,maxextreme) in zip(extremes[1:end-1], extremes[2:end])
+        for (minextreme, maxextreme) in zip(extremes[1:(end - 1)], extremes[2:end])
             # @show maxextreme
-            cond = SoleData.RangeScalarCondition(feat, minextreme[1], maxextreme[1], !minextreme[2], maxextreme[2])
+            cond = SoleData.RangeScalarCondition(
+                feat, minextreme[1], maxextreme[1], !minextreme[2], maxextreme[2]
+            )
             push!(newconds, cond)
         end
     end
@@ -41,19 +49,21 @@ end
 function tointervalset(a::AbstractScalarCondition)
     f1 = minincluded(a) ? :closed : :open
     f2 = maxincluded(a) ? :closed : :open
-    IntervalSetsWrap.Interval{f1,f2}(isnothing(minval(a)) ? -Inf : minval(a), isnothing(maxval(a)) ? Inf : maxval(a))
+    IntervalSetsWrap.Interval{f1,f2}(
+        isnothing(minval(a)) ? -Inf : minval(a), isnothing(maxval(a)) ? Inf : maxval(a)
+    )
 end
 
 function includes(a::AbstractScalarCondition, b::AbstractScalarCondition)
     (feature(a) == feature(b)) || return false
-    return issubset(tointervalset(b),tointervalset(a))
+    return issubset(tointervalset(b), tointervalset(a))
 end
 
 function excludes(a::AbstractScalarCondition, b::AbstractScalarCondition)
     (feature(a) == feature(b)) || return false
     # @show tointervalset(a)
     # @show tointervalset(b)
-    return isdisjoint(tointervalset(a),tointervalset(b))
+    return isdisjoint(tointervalset(a), tointervalset(b))
 end
 
 function removeduals(values::Vector)
@@ -65,7 +75,6 @@ function removeduals(values::Vector)
     end
     newvalues
 end
-
 
 # TODO ScalarMetaCondition is more like... an Alphabet, than a Condition.
 """
@@ -86,14 +95,14 @@ See also
 [`AbstractScalarCondition`](@ref),
 [`ScalarCondition`](@ref).
 """
-struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractScalarCondition{FT}
+struct ScalarMetaCondition{FT<:AbstractFeature,O<:TestOperator} <:
+       AbstractScalarCondition{FT}
 
     # Feature: a scalar function that can be computed on a world
     feature::FT
 
     # Test operator (e.g. ≥)
     test_operator::O
-
 end
 
 # TODO
@@ -104,27 +113,30 @@ feature(m::ScalarMetaCondition) = m.feature
 test_operator(m::ScalarMetaCondition) = m.test_operator
 
 hasdual(::ScalarMetaCondition) = true
-dual(m::ScalarMetaCondition) = ScalarMetaCondition(feature(m), inverse_test_operator(test_operator(m)))
+function dual(m::ScalarMetaCondition)
+    ScalarMetaCondition(feature(m), inverse_test_operator(test_operator(m)))
+end
 
-syntaxstring(m::ScalarMetaCondition; kwargs...) =
+function syntaxstring(m::ScalarMetaCondition; kwargs...)
     "$(_syntaxstring_metacondition(m; kwargs...)) ⍰"
+end
 
 function _syntaxstring_metacondition(
     m::ScalarMetaCondition;
-    style = false,
+    style=false,
     removewhitespaces::Bool=false,
     pretty_op::Bool=true,
     kwargs...,
 )
     f, t = feature(m), test_operator(m)
 
-    unstyled_str = removewhitespaces ? 
-        "$(syntaxstring(f; style, kwargs...))$(_st_testop_name(t; pretty_op))" :
+    unstyled_str = if removewhitespaces
+        "$(syntaxstring(f; style, kwargs...))$(_st_testop_name(t; pretty_op))"
+    else
         "$(syntaxstring(f; style, kwargs...)) $(_st_testop_name(t; pretty_op))"
+    end
 
-    return style ?
-        "\e[1m" * unstyled_str * "\e[0m" :
-        unstyled_str
+    return style ? "\e[1m" * unstyled_str * "\e[0m" : unstyled_str
 end
 
 _st_testop_name(test_op::Any; kwargs...) = "$(test_op)"
@@ -135,22 +147,27 @@ _st_testop_name(::typeof(<=); pretty_op::Bool=true) = pretty_op ? "≤" : "<="
 
 function groupbyfeature(
     metaconditions::AbstractVector{<:ScalarMetaCondition},
-    features::Union{Nothing,AbstractVector{<:AbstractFeature}} = nothing,
+    features::Union{Nothing,AbstractVector{<:AbstractFeature}}=nothing,
 )
     if isnothing(features)
         features = unique(feature.(metaconditions))
     end
-    groups = map(_feature->begin
-        these_metaconds = filter(m->feature(m) == _feature, metaconditions)
-        # these_testops = unique(test_operator.(these_metaconds))
-        (_feature, these_metaconds)
-    end, features)
+    groups = map(
+        _feature->begin
+            these_metaconds = filter(m->feature(m) == _feature, metaconditions)
+            # these_testops = unique(test_operator.(these_metaconds))
+            (_feature, these_metaconds)
+        end,
+        features,
+    )
     all_matched_metaconds = unique(vcat(last.(groups)...))
     unmatched_metaconds = filter(m->!(m in all_matched_metaconds), metaconditions)
     if length(unmatched_metaconds) != 0
         if length(unmatched_metaconds) == length(metaconditions)
-            error("Could not find features for any of the $(length(metaconditions)) " *
-                "metaconditions: $(metaconditions). Features: $(features).")
+            error(
+                "Could not find features for any of the $(length(metaconditions)) " *
+                "metaconditions: $(metaconditions). Features: $(features).",
+            )
         end
         @warn "Could not find features for $(length(unmatched_metaconds)) " *
             "metaconditions: $(unmatched_metaconds)."
@@ -194,36 +211,33 @@ See also
 [`AbstractScalarCondition`](@ref),
 [`ScalarMetaCondition`](@ref).
 """
-struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <: AbstractScalarCondition{FT}
+struct ScalarCondition{U,FT<:AbstractFeature,M<:ScalarMetaCondition{FT}} <:
+       AbstractScalarCondition{FT}
 
-  # Metacondition
-  metacond::M
+    # Metacondition
+    metacond::M
 
-  # Threshold value
-  threshold::U
+    # Threshold value
+    threshold::U
 
-  function ScalarCondition(
-      metacond       :: M,
-      threshold      :: U
-  ) where {FT<:AbstractFeature,M<:ScalarMetaCondition{FT},U}
-      new{U,FT,M}(metacond, threshold)
-  end
+    function ScalarCondition(
+        metacond::M, threshold::U
+    ) where {FT<:AbstractFeature,M<:ScalarMetaCondition{FT},U}
+        new{U,FT,M}(metacond, threshold)
+    end
 
-  function ScalarCondition(
-      condition      :: ScalarCondition{U,M},
-      threshold      :: U
-  ) where {FT<:AbstractFeature,M<:ScalarMetaCondition{FT},U}
-      new{U,FT,M}(metacond(condition), threshold)
-  end
+    function ScalarCondition(
+        condition::ScalarCondition{U,M}, threshold::U
+    ) where {FT<:AbstractFeature,M<:ScalarMetaCondition{FT},U}
+        new{U,FT,M}(metacond(condition), threshold)
+    end
 
-  function ScalarCondition(
-      feature       :: AbstractFeature,
-      test_operator :: TestOperator,
-      threshold     :: U
-  ) where {U}
-      metacond = ScalarMetaCondition(feature, test_operator)
-      ScalarCondition(metacond, threshold)
-  end
+    function ScalarCondition(
+        feature::AbstractFeature, test_operator::TestOperator, threshold::U
+    ) where {U}
+        metacond = ScalarMetaCondition(feature, test_operator)
+        ScalarCondition(metacond, threshold)
+    end
 end
 
 metacond(c::ScalarCondition) = c.metacond
@@ -293,7 +307,9 @@ function maxincluded(c::ScalarCondition)
 end
 
 function checkcondition(c::ScalarCondition, args...; kwargs...)
-    apply_test_operator(test_operator(c), featvalue(feature(c), args...; kwargs...), threshold(c))
+    apply_test_operator(
+        test_operator(c), featvalue(feature(c), args...; kwargs...), threshold(c)
+    )
 end
 
 """
@@ -320,12 +336,14 @@ Generate a formatted string representation of a feature, test operator and thres
 """
 function syntaxstring(
     m::ScalarCondition;
-    threshold_digits::Union{Nothing,Integer} = nothing,
-    threshold_display_method::Union{Nothing,Base.Callable} = nothing,
+    threshold_digits::Union{Nothing,Integer}=nothing,
+    threshold_display_method::Union{Nothing,Base.Callable}=nothing,
     removewhitespaces::Bool=false,
-    kwargs...
+    kwargs...,
 )
-    threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
+    threshold_display_method = get_threshold_display_method(
+        threshold_display_method, threshold_digits
+    )
     string(_syntaxstring_metacondition(metacond(m); removewhitespaces, kwargs...)) *
     (removewhitespaces ? "" : " ") *
     string(threshold_display_method(threshold(m)))
@@ -334,9 +352,9 @@ end
 function parsecondition(
     ::Type{ScalarCondition},
     expr::AbstractString;
-    featuretype::Union{Nothing,Type} = nothing,
-    featvaltype::Union{Nothing,Type} = nothing,
-    kwargs...
+    featuretype::Union{Nothing,Type}=nothing,
+    featvaltype::Union{Nothing,Type}=nothing,
+    kwargs...,
 )
     if isnothing(featvaltype)
         featvaltype = DEFAULT_VARFEATVALTYPE
@@ -354,10 +372,7 @@ function parsecondition(
 end
 
 function parsecondition(
-    ::Type{C},
-    expr::AbstractString;
-    featuretype::Union{Nothing,Type} = nothing,
-    kwargs...
+    ::Type{C}, expr::AbstractString; featuretype::Union{Nothing,Type}=nothing, kwargs...
 ) where {U,C<:ScalarCondition{U}}
     if isnothing(featuretype)
         featuretype = DEFAULT_SCALARCOND_FEATTYPE
@@ -368,34 +383,37 @@ function parsecondition(
     _parsecondition(C{featuretype}, expr; kwargs...)
 end
 function parsecondition(
-    ::Type{C},
-    expr::AbstractString;
-    featuretype::Union{Nothing,Type} = nothing,
-    kwargs...
+    ::Type{C}, expr::AbstractString; featuretype::Union{Nothing,Type}=nothing, kwargs...
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
     if !isnothing(featuretype) && featuretype != FT
-        throw(ArgumentError("Cannot parse condition of type $(C) with " *
-            "featuretype = $(featuretype). (expr = $(repr(expr)))"))
+        throw(
+            ArgumentError(
+                "Cannot parse condition of type $(C) with " *
+                "featuretype = $(featuretype). (expr = $(repr(expr)))",
+            ),
+        )
     end
     _parsecondition(C, expr; kwargs...)
 end
 
 function _parsecondition(
-    ::Type{C},
-    expr::AbstractString;
-    kwargs...
+    ::Type{C}, expr::AbstractString; kwargs...
 ) where {U,FT<:AbstractFeature,C<:ScalarCondition{U,FT}}
     r = Regex("^\\s*([^\\s><!=≥≤]+)\\s*([^\\s\\d]+)\\s*(\\S+)\\s*\$")
     slices = match(r, expr)
 
     if isnothing(slices) || length(slices) != 3
-        throw(ArgumentError("Could not parse ScalarCondition from " *
-            "expression $(repr(expr)). Regex slices = $(slices)"))
+        throw(
+            ArgumentError(
+                "Could not parse ScalarCondition from " *
+                "expression $(repr(expr)). Regex slices = $(slices)",
+            ),
+        )
     end
 
     slices = string.(slices)
 
-    feature = parsefeature(FT, slices[1]; featvaltype = U, kwargs...)
+    feature = parsefeature(FT, slices[1]; featvaltype=U, kwargs...)
     # @show slices
     test_operator = eval(Meta.parse(slices[2]))
     threshold = eval(Meta.parse(slices[3]))
@@ -479,11 +497,11 @@ function atoms(c::UnivariateScalarAlphabet)
     return Iterators.map(threshold -> Atom(ScalarCondition(mc, threshold)), thresholds)
 end
 
-metacond(c::UnivariateScalarAlphabet)   = c.featcondition[1]
+metacond(c::UnivariateScalarAlphabet) = c.featcondition[1]
 thresholds(c::UnivariateScalarAlphabet) = c.featcondition[2]
 
-feature(c::UnivariateScalarAlphabet)        = feature(metacond(c))
-test_operator(c::UnivariateScalarAlphabet)  = test_operator(metacond(c))
+feature(c::UnivariateScalarAlphabet) = feature(metacond(c))
+test_operator(c::UnivariateScalarAlphabet) = test_operator(metacond(c))
 
 natoms(c::UnivariateScalarAlphabet) = length(thresholds(c))
 
@@ -493,62 +511,87 @@ function Base.show(io::IO, c::UnivariateScalarAlphabet)
 end
 
 # Optimized lookup for alphabet union
-function Base.in(p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet})
+function Base.in(
+    p::Atom{<:ScalarCondition}, a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet}
+)
     fc = SoleLogics.value(p)
     sas = subalphabets(a)
     idx = findfirst((sa) -> sa.featcondition[1] == metacond(fc), sas)
     return !isnothing(idx) && Base.in(threshold(fc), sas[idx].featcondition[2])
 end
 
-function randatom(
-    rng::AbstractRNG,
-    a::UnivariateScalarAlphabet
-)::Atom
+function randatom(rng::AbstractRNG, a::UnivariateScalarAlphabet)::Atom
     (mc, thresholds) = a.featcondition
     threshold = rand(rng, thresholds)
     return Atom(ScalarCondition(mc, threshold))
 end
 
-const MultivariateScalarAlphabet{C<:ScalarCondition} = UnionAlphabet{C,UnivariateScalarAlphabet}
-
+const MultivariateScalarAlphabet{C<:ScalarCondition} = UnionAlphabet{
+    C,UnivariateScalarAlphabet
+}
 
 function _multivariate_scalar_alphabet(
     feats::AbstractVector{<:AbstractFeature},
     testopss::AbstractVector{<:AbstractVector},
     domains::AbstractVector{<:AbstractVector};
-    sorted = true,
-    truerfirst = true,
+    sorted=true,
+    truerfirst=true,
     # skipextremes::Bool = true, # TODO
-    discretizedomain::Bool = false, # TODO default behavior should depend on test_operator
-    y::Union{Nothing,AbstractVector} = nothing,
+    discretizedomain::Bool=false, # TODO default behavior should depend on test_operator
+    y::Union{Nothing,AbstractVector}=nothing,
 )::MultivariateScalarAlphabet
-
     if discretizedomain && isnothing(y)
-        throw(ArgumentError("Please, provide `y` keyword argument to apply Fayyad's discretization algorithm."))
+        throw(
+            ArgumentError(
+                "Please, provide `y` keyword argument to apply Fayyad's discretization algorithm.",
+            ),
+        )
     end
 
-    grouped_sas = map(((feat,testops,domain),) ->begin
-
+    grouped_sas = map(
+        ((feat, testops, domain),) -> begin
             discretizedomain && (domain = discretize(domain, y))
 
             sub_alphabets = begin
                 if sorted && !allequal(polarity, testops) # Different domain
-                    [begin
-                        mc = ScalarMetaCondition(feat, test_op)
-                        this_domain = sort(domain, rev = (!isnothing(polarity(test_op)) && truerfirst == !polarity(test_op)))
-                        UnivariateScalarAlphabet((mc, this_domain))
-                    end for test_op in testops]
+                    [
+                        begin
+                            mc = ScalarMetaCondition(feat, test_op)
+                            this_domain = sort(
+                                domain;
+                                rev=(
+                                    !isnothing(polarity(test_op)) &&
+                                    truerfirst == !polarity(test_op)
+                                ),
+                            )
+                            UnivariateScalarAlphabet((mc, this_domain))
+                        end for test_op in testops
+                    ]
                 else
-                    this_domain = sorted ? sort(domain, rev = (!isnothing(polarity(testops[1])) && truerfirst == !polarity(testops[1]))) : domain
-                    [begin
-                        mc = ScalarMetaCondition(feat, test_op)
-                        UnivariateScalarAlphabet((mc, this_domain))
-                    end for test_op in testops]
+                    this_domain = if sorted
+                        sort(
+                            domain;
+                            rev=(
+                                !isnothing(polarity(testops[1])) &&
+                                truerfirst == !polarity(testops[1])
+                            ),
+                        )
+                    else
+                        domain
+                    end
+                    [
+                        begin
+                            mc = ScalarMetaCondition(feat, test_op)
+                            UnivariateScalarAlphabet((mc, this_domain))
+                        end for test_op in testops
+                    ]
                 end
             end
 
             sub_alphabets
-        end, zip(feats,testopss, domains))
+        end,
+        zip(feats, testopss, domains),
+    )
     sas = vcat(grouped_sas...)
     return UnionAlphabet(sas)
 end
@@ -568,7 +611,8 @@ See also
 [`AbstractScalarCondition`](@ref),
 [`ScalarCondition`](@ref).
 """
-struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractScalarCondition{FT}
+struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <:
+       AbstractScalarCondition{FT}
 
     # Feature: a scalar function that can be computed on a world
     features::Vector{<:FT}
@@ -577,15 +621,18 @@ struct ObliqueScalarCondition{FT<:AbstractFeature,O<:TestOperator} <: AbstractSc
 
     # Test operator (e.g. ≥)
     test_operator::O
-
 end
 
 test_operator(m::ObliqueScalarCondition) = m.test_operator
 
 hasdual(::ObliqueScalarCondition) = true
-dual(c::ObliqueScalarCondition) = ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))
+function dual(c::ObliqueScalarCondition)
+    ObliqueScalarCondition(c.features, c.b, c.u, inverse_test_operator(test_operator(c)))
+end
 
-syntaxstring(c::ObliqueScalarCondition; kwargs...) = "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] $(c.test_operator) 0"
+function syntaxstring(c::ObliqueScalarCondition; kwargs...)
+    "($(syntaxstring.(c.features)) - [$(join(", ", c.b))]) * [$(join(", ", c.u))] $(c.test_operator) 0"
+end
 
 function checkcondition(c::ObliqueScalarCondition, args...; kwargs...)
     f = [featvalue(feat, args...; kwargs...) for feat in c.features]
@@ -617,8 +664,8 @@ The `syntaxstring` method returns a string representation of the condition in th
 `feature ∈ [minval, maxval]`, where the interval notation is used to indicate whether the minimum and maximum
 values are included or excluded.
 """
-struct RangeScalarCondition{U<:Number,UU<:Union{Nothing,U},FT<:AbstractFeature} <: AbstractScalarCondition{FT}
-
+struct RangeScalarCondition{U<:Number,UU<:Union{Nothing,U},FT<:AbstractFeature} <:
+       AbstractScalarCondition{FT}
     feature::FT
 
     minval::UU
@@ -627,15 +674,9 @@ struct RangeScalarCondition{U<:Number,UU<:Union{Nothing,U},FT<:AbstractFeature} 
     maxincluded::Bool
 
     function RangeScalarCondition(
-        feature::FT,
-        minval::U1,
-        maxval::U2,
-        minincluded::Bool,
-        maxincluded::Bool,
+        feature::FT, minval::U1, maxval::U2, minincluded::Bool, maxincluded::Bool
     ) where {U1<:Union{Nothing,Number},U2<:Union{Nothing,Number},FT<:AbstractFeature}
-        U = isnothing(minval) ? U2 : (
-                isnothing(maxval) ? U1 : Union{U1,U2}
-            )
+        U = isnothing(minval) ? U2 : (isnothing(maxval) ? U1 : Union{U1,U2})
         new{U,Union{U1,U2},FT}(feature, minval, maxval, minincluded, maxincluded)
     end
 end
@@ -653,37 +694,33 @@ function dual(c::RangeScalarCondition)
     if (isnothing(minval(c)) && isnothing(maxval(c)))
         RangeScalarCondition(feature(c), zero(U), zero(U), false, false) # Always false condition
     elseif isnothing(minval(c))
-        RangeScalarCondition(
-            feature(c),
-            maxval(c),
-            nothing,
-            !maxincluded(c),
-            true,
-        )
+        RangeScalarCondition(feature(c), maxval(c), nothing, !maxincluded(c), true)
     elseif isnothing(maxval(c))
-        RangeScalarCondition(
-            feature(c),
-            nothing,
-            minval(c),
-            true,
-            !minincluded(c),
-        )
+        RangeScalarCondition(feature(c), nothing, minval(c), true, !minincluded(c))
     else
-        error("Could not compute dual condition for RangeScalarCondition: $(syntaxstring(c)).")
+        error(
+            "Could not compute dual condition for RangeScalarCondition: $(syntaxstring(c))."
+        )
     end
 end
 
 function hasdual(c::RangeScalarCondition)
-    (isnothing(minval(c)) || isnothing(maxval(c))) || (
-        minval(c) == maxval(c) &&
-        maxincluded(c) == minincluded(c) == false
-    )
+    (isnothing(minval(c)) || isnothing(maxval(c))) ||
+        (minval(c) == maxval(c) && maxincluded(c) == minincluded(c) == false)
 end
 
 function _rangescalarcond_to_scalarconds_in_conjunction(cond)
     conds = ScalarCondition[]
-    !isnothing(SoleData.minval(cond)) && push!(conds, ScalarCondition(feature(cond), _isgreater_test_operator(cond), SoleData.minval(cond)))
-    !isnothing(SoleData.maxval(cond)) && push!(conds, ScalarCondition(feature(cond), _isless_test_operator(cond), SoleData.maxval(cond)))
+    !isnothing(SoleData.minval(cond)) && push!(
+        conds,
+        ScalarCondition(
+            feature(cond), _isgreater_test_operator(cond), SoleData.minval(cond)
+        ),
+    )
+    !isnothing(SoleData.maxval(cond)) && push!(
+        conds,
+        ScalarCondition(feature(cond), _isless_test_operator(cond), SoleData.maxval(cond)),
+    )
     return conds
 end
 
@@ -708,10 +745,12 @@ end
 # end
 
 @inline function honors_minval(c::RangeScalarCondition, featval)
-    isnothing(c.minval) || apply_test_operator(_isgreater_test_operator(c), featval, c.minval)
+    isnothing(c.minval) ||
+        apply_test_operator(_isgreater_test_operator(c), featval, c.minval)
 end
 @inline function honors_maxval(c::RangeScalarCondition, featval)
-    isnothing(c.maxval) || apply_test_operator(_isgreater_test_operator(c), featval, c.maxval)
+    isnothing(c.maxval) ||
+        apply_test_operator(_isgreater_test_operator(c), featval, c.maxval)
 end
 @inline function checkcondition(c::RangeScalarCondition, args...; kwargs...)
     featval = featvalue(feature(c), args...; kwargs...)
@@ -720,28 +759,32 @@ end
 
 function syntaxstring(
     m::RangeScalarCondition;
-    threshold_digits::Union{Nothing,Integer} = nothing,
-    threshold_display_method::Union{Nothing,Base.Callable} = nothing,
+    threshold_digits::Union{Nothing,Integer}=nothing,
+    threshold_display_method::Union{Nothing,Base.Callable}=nothing,
     removewhitespaces::Bool=false,
-    kwargs...
+    kwargs...,
 )
-    threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
+    threshold_display_method = get_threshold_display_method(
+        threshold_display_method, threshold_digits
+    )
     _min = string(isnothing(m.minval) ? "-∞" : threshold_display_method(m.minval))
     _max = string(isnothing(m.maxval) ? "∞" : threshold_display_method(m.maxval))
     _parmin = minincluded(m) ? "[" : "("
     _parmax = maxincluded(m) ? "]" : ")"
-    removewhitespaces ?
-        "$(syntaxstring(m.feature; kwargs...))∈$(_parmin)$(_min),$(_max)$(_parmax)" :
+    if removewhitespaces
+        "$(syntaxstring(m.feature; kwargs...))∈$(_parmin)$(_min),$(_max)$(_parmax)"
+    else
         "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
+    end
 end
 
 # TODO remove repetition with other parsecondition method.
 function parsecondition(
     T::Type{<:RangeScalarCondition},
     expr::AbstractString;
-    featuretype::Union{Nothing,Type} = nothing,
-    featvaltype::Union{Nothing,Type} = nothing,
-    kwargs...
+    featuretype::Union{Nothing,Type}=nothing,
+    featvaltype::Union{Nothing,Type}=nothing,
+    kwargs...,
 )
     if isnothing(featvaltype)
         featvaltype = DEFAULT_VARFEATVALTYPE
@@ -760,9 +803,9 @@ end
 function _parsecondition(
     ::Type{C},
     expr::AbstractString;
-    featuretype::Union{Nothing,Type} = nothing,
-    featvaltype::Union{Nothing,Type} = nothing,
-    kwargs...
+    featuretype::Union{Nothing,Type}=nothing,
+    featvaltype::Union{Nothing,Type}=nothing,
+    kwargs...,
 ) where {C<:RangeScalarCondition}
     U = featvaltype
     FT = featuretype
@@ -770,13 +813,17 @@ function _parsecondition(
     # r = Regex("^\\s*(\\S+)\\s*([^\\s\\d]+)\\s*(\\[|\\()\\s*(\\S+)\\s*,\\s*(\\S+)\\s*(\\]|\\))\\s*\$")
     slices = match(r, expr)
     if isnothing(slices) || length(slices) != 5
-        throw(ArgumentError("Could not parse RangeScalarCondition from " *
-            "expression $(repr(expr)). Regex slices = $(slices)"))
+        throw(
+            ArgumentError(
+                "Could not parse RangeScalarCondition from " *
+                "expression $(repr(expr)). Regex slices = $(slices)",
+            ),
+        )
     end
 
     slices = string.(slices)
 
-    feature = parsefeature(FT, slices[1]; featvaltype = U, kwargs...)
+    feature = parsefeature(FT, slices[1]; featvaltype=U, kwargs...)
     # test_operator = eval(Meta.parse(slices[2]))
     # @assert test_operator == (∈) "Unknown test operator: $(test_operator)"
     minincluded = (slices[2] == "[")

@@ -59,10 +59,9 @@ See also the implementations of [`load(al::ABCLoader)`](@ref) and
 """
 load(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
-
 # Extract tar.gz file in the artifact directory (cross-platform);
 # see extract_artifact.
-function _extract_artifact(path::String, name::String; silent::Bool = true)
+function _extract_artifact(path::String, name::String; silent::Bool=true)
     tarfile = joinpath(path, "$(name).tar.gz")
 
     if !isfile(tarfile)
@@ -119,7 +118,7 @@ See also (the implementation of) [`load(al::ABCLoader)`](@ref) or
 function extract_artifact(loader::AbstractLoader)
     extract_artifact(path(loader), name(loader))
 end
-function extract_artifact(path::String, name::String; silent::Bool = true)
+function extract_artifact(path::String, name::String; silent::Bool=true)
     extract_dir = joinpath(path, "extracted")
 
     # if the extraction directory already exists and is not empty, assume extraction is done
@@ -132,17 +131,17 @@ function extract_artifact(path::String, name::String; silent::Bool = true)
             return _extract_artifact(path, name)
         end
 
-    # if the "extracted" folder does not exist, then "readdir" (above) will trigger an error
+        # if the "extracted" folder does not exist, then "readdir" (above) will trigger an error
     catch e
         if e isa SystemError
-            throw(SystemError(
-                "The extraction of $(name) artifact has failed; " *
-                "you probably need to run SoleData.Artifacts.fillartifacts()"
-            ))
+            throw(
+                SystemError(
+                    "The extraction of $(name) artifact has failed; " *
+                    "you probably need to run SoleData.Artifacts.fillartifacts()",
+                ),
+            )
         else
             rethrow()
         end
-
     end
-
 end

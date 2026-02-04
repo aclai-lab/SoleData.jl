@@ -64,32 +64,29 @@ struct UniformFullDimensionalLogiset{
     features::UniqueVector{FT}
 
     function UniformFullDimensionalLogiset{U,W,N,D,FT,FR}(
-        featstruct::D,
-        features::AbstractVector{FT},
+        featstruct::D, features::AbstractVector{FT}
     ) where {
         U,
         W<:AbstractWorld,
         N,
         D<:AbstractArray{U},
         FT<:AbstractFeature,
-        FR<:FullDimensionalFrame{N,W}
+        FR<:FullDimensionalFrame{N,W},
     }
         features = UniqueVector(features)
         new{U,W,N,D,FT,FR}(featstruct, features)
     end
 
     function UniformFullDimensionalLogiset{U,W,N}(
-        featstruct::D,
-        features::AbstractVector{FT},
+        featstruct::D, features::AbstractVector{FT}
     ) where {U,W<:AbstractWorld,N,D<:AbstractArray{U},FT<:AbstractFeature}
         UniformFullDimensionalLogiset{U,W,N,D,FT,FullDimensionalFrame{N,W}}(
-            featstruct, features)
+            featstruct, features
+        )
     end
 
     function UniformFullDimensionalLogiset(
-        featstruct::Any,
-        features::AbstractVector{<:VarFeature},
-        worldtype::Type,
+        featstruct::Any, features::AbstractVector{<:VarFeature}, worldtype::Type
     )
         # TODO move to SoleLogics geometrical worlds interface
         numparams(::Type{<:OneWorld}) = 0
@@ -103,25 +100,24 @@ struct UniformFullDimensionalLogiset{
         N = (ndims(featstruct)-2)//numparams(worldtype)
         UniformFullDimensionalLogiset{U,W,N}(featstruct, features)
     end
-
 end
 
 Base.size(X::UniformFullDimensionalLogiset, args...) = size(X.featstruct, args...)
 Base.ndims(X::UniformFullDimensionalLogiset, args...) = ndims(X.featstruct, args...)
 
-ninstances(X::UniformFullDimensionalLogiset)  = size(X, ndims(X)-1)
+ninstances(X::UniformFullDimensionalLogiset) = size(X, ndims(X)-1)
 nfeatures(X::UniformFullDimensionalLogiset) = size(X, ndims(X))
 
 features(X::UniformFullDimensionalLogiset) = X.features
 
 ################################### maxchannelsize #########################################
 maxchannelsize(X::UniformFullDimensionalLogiset{U,OneWorld}) where {U} = ()
-maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Point{N}}) where {U,N} = begin
+function maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Point{N}}) where {U,N}
     (size(X)[1:N]...,)
 end
 maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Interval}) where {U} = (size(X, 1),)
-maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Interval2D}) where {U} = begin
-    (size(X, 1), size(X, 3),)
+function maxchannelsize(X::UniformFullDimensionalLogiset{U,<:Interval2D}) where {U}
+    (size(X, 1), size(X, 3))
 end
 channelsize(X::UniformFullDimensionalLogiset, i_instance::Integer) = maxchannelsize(X)
 
@@ -131,8 +127,8 @@ channelsize(X::UniformFullDimensionalLogiset, i_instance::Integer) = maxchannels
 Base.@propagate_inbounds @inline function featchannel(
     X::UniformFullDimensionalLogiset{U,OneWorld},
     i_instance::Integer,
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -145,9 +141,9 @@ Base.@propagate_inbounds @inline function featchannel(
 end
 Base.@propagate_inbounds @inline function featvalues!(
     X::UniformFullDimensionalLogiset{U,OneWorld},
-    featslice   :: AbstractArray{U,1},
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing,
+    featslice::AbstractArray{U,1},
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -162,7 +158,7 @@ function readfeature(
     X::UniformFullDimensionalLogiset{U,OneWorld},
     featchannel::U,
     w::OneWorld,
-    f::AbstractFeature
+    f::AbstractFeature,
 ) where {U}
     featchannel
 end
@@ -171,22 +167,17 @@ function readfeature(
     X::UniformFullDimensionalLogiset{U,OneWorld},
     featchannel::U,
     w::Nothing,
-    f::AbstractFeature
+    f::AbstractFeature,
 ) where {U}
-    readfeature(
-        X,
-        featchannel,
-        OneWorld(),
-        f
-    )
+    readfeature(X, featchannel, OneWorld(), f)
 end
 
 @inline function featvalue(
-    feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,OneWorld},
-    i_instance  :: Integer,
-    w           :: OneWorld,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,OneWorld},
+    i_instance::Integer,
+    w::OneWorld,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -204,7 +195,7 @@ end
     featval::U,
     i_instance::Integer,
     w::OneWorld,
-    i_feature::Union{Nothing,Integer} = nothing
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -222,8 +213,8 @@ end
 Base.@propagate_inbounds @inline function featchannel(
     X::UniformFullDimensionalLogiset{U,<:Point},
     i_instance::Integer,
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -236,15 +227,19 @@ Base.@propagate_inbounds @inline function featchannel(
 end
 Base.@propagate_inbounds @inline function featvalues!(
     X::UniformFullDimensionalLogiset{U,<:Point},
-    featslice   :: AbstractArray{U},
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing,
+    featslice::AbstractArray{U},
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     _ndims_featslice = ndims(featslice)
 
     if dimensionality(X) == _ndims_featslice-1
-        throw(ArgumentError("Mismatching dimensionality between `X` " *
-        "($(dimensionality(X))) and `featslice`-1 ($(_ndims_featslice-1))."))
+        throw(
+            ArgumentError(
+                "Mismatching dimensionality between `X` " *
+                "($(dimensionality(X))) and `featslice`-1 ($(_ndims_featslice-1)).",
+            ),
+        )
     end
 
     if isnothing(i_feature)
@@ -260,7 +255,7 @@ function readfeature(
     X::UniformFullDimensionalLogiset{U,<:Point},
     featchannel::AbstractArray{U,1},
     w::Point,
-    f::AbstractFeature
+    f::AbstractFeature,
 ) where {U}
     # to @giopaglia from @mauro-milella: tuple splatting works, but maybe I need to
     # correct the last coordinate with a -1 as in Interval case?
@@ -268,11 +263,11 @@ function readfeature(
 end
 
 @inline function featvalue(
-    feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,<:Point},
-    i_instance  :: Integer,
-    w           :: Point,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,<:Point},
+    i_instance::Integer,
+    w::Point,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -290,7 +285,7 @@ end
     featval::U,
     i_instance::Integer,
     w::Point,
-    i_feature::Union{Nothing,Integer} = nothing
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -302,15 +297,14 @@ end
     X.featstruct[w.xyz..., i_instance, i_feature] = featval
 end
 
-
 ############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
 #################################### Interval ##############################################
 
 Base.@propagate_inbounds @inline function featchannel(
     X::UniformFullDimensionalLogiset{U,<:Interval},
     i_instance::Integer,
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -323,9 +317,9 @@ Base.@propagate_inbounds @inline function featchannel(
 end
 Base.@propagate_inbounds @inline function featvalues!(
     X::UniformFullDimensionalLogiset{U,<:Interval},
-    featslice   :: AbstractArray{U,3},
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing,
+    featslice::AbstractArray{U,3},
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -340,17 +334,17 @@ function readfeature(
     X::UniformFullDimensionalLogiset{U,<:Interval},
     featchannel::AbstractArray{U,2},
     w::Interval,
-    f::AbstractFeature
+    f::AbstractFeature,
 ) where {U}
-    featchannel[w.x, w.y-1]
+    featchannel[w.x, w.y - 1]
 end
 
 @inline function featvalue(
-    feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,<:Interval},
-    i_instance  :: Integer,
-    w           :: Interval,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,<:Interval},
+    i_instance::Integer,
+    w::Interval,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -359,7 +353,7 @@ end
         end
     end
 
-    X.featstruct[w.x, w.y-1, i_instance, i_feature]
+    X.featstruct[w.x, w.y - 1, i_instance, i_feature]
 end
 
 @inline function featvalue!(
@@ -368,7 +362,7 @@ end
     featval::U,
     i_instance::Integer,
     w::Interval,
-    i_feature::Union{Nothing,Integer} = nothing
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -377,7 +371,7 @@ end
         end
     end
 
-    X.featstruct[w.x, w.y-1, i_instance, i_feature] = featval
+    X.featstruct[w.x, w.y - 1, i_instance, i_feature] = featval
 end
 
 ############### featchannel, featvalues!, readfeature, featvalue, featvalue! ###############
@@ -386,8 +380,8 @@ end
 Base.@propagate_inbounds @inline function featchannel(
     X::UniformFullDimensionalLogiset{U,<:Interval2D},
     i_instance::Integer,
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -400,9 +394,9 @@ Base.@propagate_inbounds @inline function featchannel(
 end
 Base.@propagate_inbounds @inline function featvalues!(
     X::UniformFullDimensionalLogiset{U,<:Interval2D},
-    featslice   :: AbstractArray{U,5},
-    feature     :: AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing,
+    featslice::AbstractArray{U,5},
+    feature::AbstractFeature,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -417,17 +411,17 @@ function readfeature(
     X::UniformFullDimensionalLogiset{U,<:Interval2D},
     featchannel::AbstractArray{U,4},
     w::Interval2D,
-    f::AbstractFeature
+    f::AbstractFeature,
 ) where {U}
-    featchannel[w.x.x, w.x.y-1, w.y.x, w.y.y-1]
+    featchannel[w.x.x, w.x.y - 1, w.y.x, w.y.y - 1]
 end
 
 @inline function featvalue(
-    feature     :: AbstractFeature,
-    X           :: UniformFullDimensionalLogiset{U,<:Interval2D},
-    i_instance  :: Integer,
-    w           :: Interval2D,
-    i_feature   :: Union{Nothing,Integer} = nothing
+    feature::AbstractFeature,
+    X::UniformFullDimensionalLogiset{U,<:Interval2D},
+    i_instance::Integer,
+    w::Interval2D,
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -435,7 +429,7 @@ end
             error("Could not find feature $(feature) in logiset of type $(typeof(X)).")
         end
     end
-    X.featstruct[w.x.x, w.x.y-1, w.y.x, w.y.y-1, i_instance, i_feature]
+    X.featstruct[w.x.x, w.x.y - 1, w.y.x, w.y.y - 1, i_instance, i_feature]
 end
 
 @inline function featvalue!(
@@ -444,7 +438,7 @@ end
     featval::U,
     i_instance::Integer,
     w::Interval2D,
-    i_feature::Union{Nothing,Integer} = nothing
+    i_feature::Union{Nothing,Integer}=nothing,
 ) where {U}
     if isnothing(i_feature)
         i_feature = _findfirst(isequal(feature), features(X))
@@ -453,41 +447,34 @@ end
         end
     end
 
-    X.featstruct[w.x.x, w.x.y-1, w.y.x, w.y.y-1, i_instance, i_feature] = featval
+    X.featstruct[w.x.x, w.x.y - 1, w.y.x, w.y.y - 1, i_instance, i_feature] = featval
 end
 
 ############################################################################################
 
-function allfeatvalues(
-    X::UniformFullDimensionalLogiset,
-)
+function allfeatvalues(X::UniformFullDimensionalLogiset)
     error("TODO only look at upper half")
     vec(X.featstruct)
 end
 
-function allfeatvalues(
-    X::UniformFullDimensionalLogiset,
-    i_instance,
-)
-    return error("Please, provide method allfeatvalues(::" *
-        "$(typeof(X)), i_instance::$(typeof(i_instance)), f::$(typeof(f))).")
+function allfeatvalues(X::UniformFullDimensionalLogiset, i_instance)
+    return error(
+        "Please, provide method allfeatvalues(::" *
+        "$(typeof(X)), i_instance::$(typeof(i_instance)), f::$(typeof(f))).",
+    )
 end
 
-function allfeatvalues(
-    X::UniformFullDimensionalLogiset,
-    i_instance,
-    f::AbstractFeature,
-)
-    return error("Please, provide method allfeatvalues(::" *
-        "$(typeof(X)), i_instance::$(typeof(i_instance)), f::$(typeof(f))).")
+function allfeatvalues(X::UniformFullDimensionalLogiset, i_instance, f::AbstractFeature)
+    return error(
+        "Please, provide method allfeatvalues(::" *
+        "$(typeof(X)), i_instance::$(typeof(i_instance)), f::$(typeof(f))).",
+    )
 end
 
-function allfeatvalues(
-    X::UniformFullDimensionalLogiset,
-    f::AbstractFeature,
-)
-    return error("Please, provide method allfeatvalues(::" *
-        "$(typeof(X)), f::$(typeof(f))).")
+function allfeatvalues(X::UniformFullDimensionalLogiset, f::AbstractFeature)
+    return error(
+        "Please, provide method allfeatvalues(::" * "$(typeof(X)), f::$(typeof(f)))."
+    )
 end
 
 ############################################################################################
@@ -495,33 +482,45 @@ end
 function instances(
     X::UniformFullDimensionalLogiset{U,W,0},
     inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false)
+    return_view::Union{Val{true},Val{false}}=Val(false),
 ) where {U,W}
     UniformFullDimensionalLogiset{U,W,0}(
-        if return_view == Val(true) @view X.featstruct[inds,:]
-        else X.featstruct[inds,:] end, features(X)
+        if return_view == Val(true)
+            @view X.featstruct[inds, :]
+        else
+            X.featstruct[inds, :]
+        end,
+        features(X),
     )
 end
 
 function instances(
     X::UniformFullDimensionalLogiset{U,W,1},
     inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false)
+    return_view::Union{Val{true},Val{false}}=Val(false),
 ) where {U,W}
     UniformFullDimensionalLogiset{U,W,1}(
-        if return_view == Val(true) @view X.featstruct[:,:,inds,:]
-        else X.featstruct[:,:,inds,:] end, features(X)
+        if return_view == Val(true)
+            @view X.featstruct[:, :, inds, :]
+        else
+            X.featstruct[:, :, inds, :]
+        end,
+        features(X),
     )
 end
 
 function instances(
     X::UniformFullDimensionalLogiset{U,W,2},
     inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false)
+    return_view::Union{Val{true},Val{false}}=Val(false),
 ) where {U,W}
     UniformFullDimensionalLogiset{U,W,2}(
-        if return_view == Val(true) @view X.featstruct[:,:,:,:,inds,:]
-        else X.featstruct[:,:,:,:,inds,:] end, features(X)
+        if return_view == Val(true)
+            @view X.featstruct[:, :, :, :, inds, :]
+        else
+            X.featstruct[:, :, :, :, inds, :]
+        end,
+        features(X),
     )
 end
 
@@ -534,17 +533,15 @@ function concatdatasets(
         "UniformFullDimensionalLogiset's with different features: " *
         "$(@show features.(Xs))"
     UniformFullDimensionalLogiset{U,W,N}(
-        cat([X.featstruct for X in Xs]...; dims=1+N*2), features(first(Xs)))
+        cat([X.featstruct for X in Xs]...; dims=1+N*2), features(first(Xs))
+    )
 end
 
 isminifiable(::UniformFullDimensionalLogiset) = true
 
 function minify(X::UniformFullDimensionalLogiset{U,W,N}) where {U,W<:AbstractWorld,N}
     new_d, backmap = minify(X.featstruct)
-    X = UniformFullDimensionalLogiset{U,W,N}(
-        minify(new_d),
-        features(X),
-    )
+    X = UniformFullDimensionalLogiset{U,W,N}(minify(new_d), features(X))
     X, backmap
 end
 
@@ -552,21 +549,30 @@ end
 
 function displaystructure(
     X::UniformFullDimensionalLogiset{U,W,N};
-    indent_str = "",
-    include_ninstances = true,
-    include_worldtype = missing,
-    include_featvaltype = missing,
-    include_featuretype = missing,
-    include_frametype = missing,
+    indent_str="",
+    include_ninstances=true,
+    include_worldtype=missing,
+    include_featvaltype=missing,
+    include_featuretype=missing,
+    include_frametype=missing,
 ) where {U,W<:AbstractWorld,N}
-    padattribute(l,r) = string(l) *
-        lpad(r, 32+length(string(r)) - (length(indent_str) + 2 + length(l)))
+    padattribute(l, r) =
+        string(l) * lpad(r, 32+length(string(r)) - (length(indent_str) + 2 + length(l)))
     pieces = []
-    push!(pieces, "UniformFullDimensionalLogiset " * (
-        dimensionality(X) == 0 ? "of dimensionality 0" :
-        dimensionality(X) == 1 ? "of channel size $(maxchannelsize(X))" :
-            "of channel size $(join(maxchannelsize(X), " × "))"
-        ) * " ($(humansize(X)))")
+    push!(
+        pieces,
+        "UniformFullDimensionalLogiset " *
+        (
+            if dimensionality(X) == 0
+                "of dimensionality 0"
+            elseif dimensionality(X) == 1
+                "of channel size $(maxchannelsize(X))"
+            else
+                "of channel size $(join(maxchannelsize(X), " × "))"
+            end
+        ) *
+        " ($(humansize(X)))",
+    )
     if ismissing(include_worldtype) || include_worldtype != worldtype(X)
         push!(pieces, "$(padattribute("worldtype:", worldtype(X)))")
     end
@@ -582,13 +588,19 @@ function displaystructure(
     if include_ninstances
         push!(pieces, "$(padattribute("# instances:", ninstances(X)))")
     end
-    push!(pieces, "$(padattribute("size × eltype:", "$(size(X.featstruct)) × " *
-        "$(eltype(X.featstruct))"))")
+    push!(
+        pieces,
+        "$(padattribute("size × eltype:", "$(size(X.featstruct)) × " *
+"$(eltype(X.featstruct))"))",
+    )
     # push!(pieces, "$(padattribute("dimensionality:", dimensionality(X)))")
     # push!(pieces, "$(padattribute("maxchannelsize:", maxchannelsize(X)))")
     # push!(pieces, "$(padattribute("# features:", nfeatures(X)))")
-    push!(pieces, "$(padattribute("features:", "$(nfeatures(X)) -> " *
-        "$(SoleLogics.displaysyntaxvector(features(X); quotes = false))"))")
+    push!(
+        pieces,
+        "$(padattribute("features:", "$(nfeatures(X)) -> " *
+"$(SoleLogics.displaysyntaxvector(features(X); quotes = false))"))",
+    )
 
     return join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
 end
@@ -599,18 +611,14 @@ function capacity(X::UniformFullDimensionalLogiset{U,OneWorld}) where {U}
     prod(size(X))
 end
 function capacity(X::UniformFullDimensionalLogiset{U,<:Interval}) where {U}
-    prod([
-        ninstances(X),
-        nfeatures(X),
-        div(size(X, 1)*(size(X, 2)+1),2),
-    ])
+    prod([ninstances(X), nfeatures(X), div(size(X, 1)*(size(X, 2)+1), 2)])
 end
 function capacity(X::UniformFullDimensionalLogiset{U,<:Interval2D}) where {U}
     prod([
         ninstances(X),
         nfeatures(X),
-        div(size(X, 1)*(size(X, 2)+1),2),
-        div(size(X, 3)*(size(X, 4)+1),2),
+        div(size(X, 1)*(size(X, 2)+1), 2),
+        div(size(X, 3)*(size(X, 4)+1), 2),
     ])
 end
 
@@ -620,13 +628,17 @@ function hasnans(X::UniformFullDimensionalLogiset{U,OneWorld}) where {U}
     any(_isnan.(X.featstruct))
 end
 function hasnans(X::UniformFullDimensionalLogiset{U,<:Interval}) where {U}
-    any([hasnans(X.featstruct[x,y-1,:,:])
-        for x in 1:size(X, 1) for y in (x+1):(size(X, 2)+1)])
+    any([
+        hasnans(X.featstruct[x, y - 1, :, :]) for x in 1:size(X, 1) for
+        y in (x + 1):(size(X, 2) + 1)
+    ])
 end
 function hasnans(X::UniformFullDimensionalLogiset{U,<:Interval2D}) where {U}
-    any([hasnans(X.featstruct[xx,xy-1,yx,yy-1,:,:])
-        for xx in 1:size(X, 1) for xy in (xx+1):(size(X, 2)+1)
-        for yx in 1:size(X, 3) for yy in (yx+1):(size(X, 4)+1)])
+    any([
+        hasnans(X.featstruct[xx, xy - 1, yx, yy - 1, :, :]) for xx in 1:size(X, 1) for
+        xy in (xx + 1):(size(X, 2) + 1) for yx in 1:size(X, 3) for
+        yy in (yx + 1):(size(X, 4) + 1)
+    ])
 end
 
 ############################################################################################

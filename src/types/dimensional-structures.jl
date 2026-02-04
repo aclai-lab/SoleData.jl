@@ -12,11 +12,7 @@ See also
 [`AbstractModalLogiset`](@ref).
 """
 abstract type AbstractUniformFullDimensionalLogiset{
-    U,
-    N,
-    W<:AbstractWorld,
-    FT<:AbstractFeature,
-    FR<:FullDimensionalFrame{N,W}
+    U,N,W<:AbstractWorld,FT<:AbstractFeature,FR<:FullDimensionalFrame{N,W}
 } <: AbstractModalLogiset{W,U,FT,FR} end
 
 function maxchannelsize(X::AbstractUniformFullDimensionalLogiset)
@@ -31,7 +27,9 @@ function dimensionality(X::AbstractUniformFullDimensionalLogiset{U,N}) where {U,
     N
 end
 
-function frame(X::AbstractUniformFullDimensionalLogiset{U,N,W}, i_instance::Integer) where {U,N,W<:AbstractWorld}
+function frame(
+    X::AbstractUniformFullDimensionalLogiset{U,N,W}, i_instance::Integer
+) where {U,N,W<:AbstractWorld}
     return FullDimensionalFrame{N,W}(channelsize(X, i_instance))
 end
 
@@ -45,12 +43,12 @@ See also
 [`SoleLogics.FullDimensionalFrame`](@ref),
 [`AbstractModalLogiset`](@ref).
 """
-abstract type AbstractUniformFullDimensionalOneStepRelationalMemoset{U,W<:AbstractWorld,FR<:AbstractFrame{W}} <: AbstractScalarOneStepRelationalMemoset{W,U,FR} end
+abstract type AbstractUniformFullDimensionalOneStepRelationalMemoset{
+    U,W<:AbstractWorld,FR<:AbstractFrame{W}
+} <: AbstractScalarOneStepRelationalMemoset{W,U,FR} end
 
 innerstruct(Xm::AbstractUniformFullDimensionalOneStepRelationalMemoset) = Xm.d
 
 function nmemoizedvalues(Xm::AbstractUniformFullDimensionalOneStepRelationalMemoset)
     count(!isnothing, innerstruct(Xm))
 end
-
-

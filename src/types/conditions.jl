@@ -49,14 +49,19 @@ condition = ScalarCondition(:sepal_length, >, 5.0);
 ```
 """
 function checkcondition(c::AbstractCondition, args...; kwargs...)::Bool
-    return error("Please, provide method checkcondition(::$(typeof(c)), " *
-        join(map(t->"::$(t)", typeof.(args)), ", ") * "; kwargs...). " *
-        "Note that this value must be unique.")
+    return error(
+        "Please, provide method checkcondition(::$(typeof(c)), " *
+        join(map(t->"::$(t)", typeof.(args)), ", ") *
+        "; kwargs...). " *
+        "Note that this value must be unique.",
+    )
 end
 
 function syntaxstring(c::AbstractCondition; kwargs...)
-    return error("Please, provide method syntaxstring(::$(typeof(c)); kwargs...). " *
-        "Note that this value must be unique.")
+    return error(
+        "Please, provide method syntaxstring(::$(typeof(c)); kwargs...). " *
+        "Note that this value must be unique.",
+    )
 end
 
 function Base.show(io::IO, c::AbstractCondition)
@@ -70,8 +75,15 @@ end
 # Base.isequal(a::AbstractCondition, b::AbstractCondition) = syntaxstring(a) == syntaxstring(b) # nameof(x) == nameof(feature)
 # Base.hash(a::AbstractCondition) = Base.hash(syntaxstring(a))
 # TODO remove
-Base.isequal(a::AbstractCondition, b::AbstractCondition) = Base.isequal(map(x->getfield(a, x), fieldnames(typeof(a))), map(x->getfield(b, x), fieldnames(typeof(b))))
-Base.hash(a::AbstractCondition) = Base.hash(map(x->getfield(a, x), fieldnames(typeof(a))), Base.hash(typeof(a)))
+function Base.isequal(a::AbstractCondition, b::AbstractCondition)
+    Base.isequal(
+        map(x->getfield(a, x), fieldnames(typeof(a))),
+        map(x->getfield(b, x), fieldnames(typeof(b))),
+    )
+end
+function Base.hash(a::AbstractCondition)
+    Base.hash(map(x->getfield(a, x), fieldnames(typeof(a))), Base.hash(typeof(a)))
+end
 
 """
     parsecondition(C::Type{<:AbstractCondition}, expr::AbstractString; kwargs...)
@@ -83,18 +95,14 @@ and `featvaltype::Type` may be required or recommended.
 
 See also [`parsefeature`](@ref).
 """
-function parsecondition(
-    C::Type{<:AbstractCondition},
-    expr::AbstractString;
-    kwargs...
-)
-    return error("Please, provide method parsecondition(::$(Type{C}), expr::$(typeof(expr)); kwargs...).")
+function parsecondition(C::Type{<:AbstractCondition}, expr::AbstractString; kwargs...)
+    return error(
+        "Please, provide method parsecondition(::$(Type{C}), expr::$(typeof(expr)); kwargs...).",
+    )
 end
 
 function check(
-    φ::Atom{<:AbstractCondition},
-    X::AbstractInterpretationSet;
-    kwargs...
+    φ::Atom{<:AbstractCondition}, X::AbstractInterpretationSet; kwargs...
 )::BitVector
     cond = SoleLogics.value(φ)
     return checkcondition(cond, X; kwargs...)
@@ -104,7 +112,7 @@ function check(
     φ::Atom{<:AbstractCondition},
     i::LogicalInstance{<:AbstractInterpretationSet},
     args...;
-    kwargs...
+    kwargs...,
 )::Bool
     # @warn "Attempting single-instance check. This is not optimal."
     X, i_instance = SoleLogics.splat(i)
@@ -118,7 +126,7 @@ function interpret(
     φ::Atom{<:AbstractCondition},
     i::LogicalInstance{<:AbstractInterpretationSet},
     args...;
-    kwargs...
+    kwargs...,
 )::Formula
     # @warn "Please use `check` instead of `interpret` for crisp formulas."
     cond = SoleLogics.value(φ)

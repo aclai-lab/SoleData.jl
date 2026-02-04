@@ -14,12 +14,8 @@ See also
 [`SupportedLogiset`](@ref),
 [`AbstractModalLogiset`](@ref).
 """
-abstract type AbstractMemoset{
-    W<:AbstractWorld,
-    U,
-    FT<:AbstractFeature,
-    FR<:AbstractFrame,
-} <: AbstractModalLogiset{W,U,FT,FR} end
+abstract type AbstractMemoset{W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame} <:
+              AbstractModalLogiset{W,U,FT,FR} end
 
 """
 Return the capacity of a memoset, that is, the number of memoizable values (if finite).
@@ -55,14 +51,15 @@ end
 
 function displaystructure(
     Xm::AbstractMemoset;
-    indent_str = "",
-    include_ninstances = true,
-    include_worldtype = missing,
-    include_featvaltype = missing,
-    include_featuretype = missing,
-    include_frametype = missing,
+    indent_str="",
+    include_ninstances=true,
+    include_worldtype=missing,
+    include_featvaltype=missing,
+    include_featuretype=missing,
+    include_frametype=missing,
 )
-    padattribute(l,r) = string(l) * lpad(r,32+length(string(r))-(length(indent_str)+2+length(l)))
+    padattribute(l, r) =
+        string(l) * lpad(r, 32+length(string(r))-(length(indent_str)+2+length(l)))
     pieces = []
     push!(pieces, "")
     if ismissing(include_worldtype) || include_worldtype != worldtype(Xm)
@@ -83,7 +80,7 @@ function displaystructure(
     # push!(pieces, "$(padattribute("# memoized values:", nmemoizedvalues(Xm)))")
 
     return "$(nameof(typeof(Xm))) ($(memoizationinfo(Xm)), $(humansize(Xm)))" *
-        join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
+           join(pieces, "\n$(indent_str)├ ", "\n$(indent_str)└ ")
 end
 
 ############################################################################################
@@ -97,7 +94,9 @@ These structures can be stacked and coupled with *full* memoization structures
 
 See [`ScalarOneStepMemoset`](@ref), [`AbstractFullMemoset`](@ref), [`representatives`](@ref).
 """
-abstract type AbstractOneStepMemoset{W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame{W}} <: AbstractMemoset{W,U,FT,FR}     end
+abstract type AbstractOneStepMemoset{
+    W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame{W}
+} <: AbstractMemoset{W,U,FT,FR} end
 
 """
 Abstract type for full memoization structures for checking generic formulas.
@@ -107,4 +106,6 @@ These structures can be stacked and coupled with *one-step* memoization structur
 
 See [`AbstractOneStepMemoset`](@ref), [`FullMemoset`](@ref).
 """
-abstract type AbstractFullMemoset{W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame{W}} <: AbstractMemoset{W,U,FT,FR}     end
+abstract type AbstractFullMemoset{
+    W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame{W}
+} <: AbstractMemoset{W,U,FT,FR} end
