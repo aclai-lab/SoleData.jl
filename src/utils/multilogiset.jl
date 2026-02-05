@@ -163,6 +163,7 @@ end
 ############################################################################################
 
 function check(
+    algo::CheckAlgorithm,
     φ::SoleLogics.Formula,
     X::MultiLogiset,
     i_modality::Integer,
@@ -308,6 +309,7 @@ function ntokens(children::NTuple{N,MultiFormula}) where {N}
 end
 
 function check(
+    algo::CheckAlgorithm,
     φ::MultiFormula,
     i::SoleLogics.LogicalInstance{<:MultiLogiset},
     args...;
@@ -325,6 +327,7 @@ end
 # end
 
 function check(
+    algo::CheckAlgorithm,
     φ::LeftmostConjunctiveForm{<:MultiFormula},
     d::AbstractInterpretationSet,
     i_instance::Integer,

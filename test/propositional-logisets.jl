@@ -13,7 +13,7 @@ alphabet(X) |> atoms .|> syntaxstring
 φ =
 Atom(parsecondition(SoleData.ScalarCondition, "sepal_length > 5.8"; featuretype = SoleData.VariableValue)) ∧
 Atom(parsecondition(SoleData.ScalarCondition, "sepal_width < 3.0";  featuretype = SoleData.VariableValue)) ∨
-Atom(parsecondition(SoleData.ScalarCondition, "target == \"setosa\"";      featuretype = SoleData.VariableValue))
+Atom(parsecondition(SoleData.ScalarCondition, "target == \"setosa\""; featuretype = SoleData.VariableValue))
 
 c1 = check(φ, X)
 
@@ -124,3 +124,4 @@ sb = randformula(3, [a,b,c,d], [NEGATION, CONJUNCTION])
 @test_nowarn check(TOP, X)
 @test_nowarn check(TOP, SoleLogics.LogicalInstance(X, 1))
 @test_nowarn check(TOP, X, 1)
+

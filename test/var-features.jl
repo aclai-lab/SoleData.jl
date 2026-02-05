@@ -1,8 +1,9 @@
 using Test
 using SoleData
 
-# Tests for VariableDistance
-
+# ---------------------------------------------------------------------------- #
+#                              VariableDistance                                #
+# ---------------------------------------------------------------------------- #
 # let's consider a motif, that is, a little representative shapelet
 sequence = [0.1, 0.2, 0.3, 0.4, 0.5]
 
@@ -55,7 +56,6 @@ unf2 = UnivariateNamedFeature(var_id, var_name)
 @test i_variable(unf2) == 1
 @test featurename(unf2) == "feature_name"
 @test syntaxstring(unf2) == "[feature_name]"
-
 
 # case in which a VariableDistance wraps multiple references
 @test_throws DimensionMismatch vd = VariableDistance(1, [sequences, too_long_sequence])

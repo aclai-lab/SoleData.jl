@@ -6,7 +6,6 @@ using SoleData.Artifacts
 # fill your Artifacts.toml file;
 fillartifacts()
 
-
 # Loader lists
 abcloader = ABCLoader()
 mitloader = MITESPRESSOLoader()
@@ -23,7 +22,6 @@ LOADERS = [
     librasloader,
     natopsloader,
 ]
-
 
 # Common logic
 for l in LOADERS
