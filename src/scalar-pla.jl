@@ -254,7 +254,7 @@ function _formula_to_pla(
         allow_scalar_range_conditions = use_scalar_range_conditions,
     )
     silent || @show dnfformula
-    
+
     dnfformula = SoleData.scalar_simplification(dnfformula;
         scalar_simplification_kwargs...
     )
@@ -320,7 +320,6 @@ function _formula_to_pla(
         push!(includes, this_includes)
         push!(excludes, this_excludes)
     end
-
     # silent || @show ilb_str
     # Generate PLA header
     pla_header = []

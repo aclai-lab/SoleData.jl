@@ -17,7 +17,7 @@ function _scalarcondition_sortby(cond)
 end
 
 function scalartiling(conditions::Vector, features = unique(SoleData.feature.(conditions)))
-    newconds = SoleData.AbstractScalarCondition[]
+    newconds = SoleData.RangeScalarCondition[]
     for feat in features
         conds = filter(c->feature(c) == feat, conditions)
         # @show syntaxstring.(conds)
@@ -111,36 +111,25 @@ syntaxstring(m::ScalarMetaCondition; kwargs...) =
 
 function _syntaxstring_metacondition(
     m::ScalarMetaCondition;
-    use_feature_abbreviations::Bool = false,
+    style = false,
+    removewhitespaces::Bool=false,
+    pretty_op::Bool=true,
     kwargs...,
 )
-    if use_feature_abbreviations
-        _st_featop_abbr(feature(m), test_operator(m); kwargs...)
-    else
-        _st_featop_name(feature(m), test_operator(m); kwargs...)
-    end
-end
+    f, t = feature(m), test_operator(m)
 
-function _st_featop_name(feature::AbstractFeature,   test_operator::TestOperator; style = false, kwargs...)
-    unstyled_str = "$(syntaxstring(feature; style, kwargs...)) $(_st_testop_name(test_operator))"
-    if style != false && haskey(style, :featurestyle)
-        if style.featurestyle == :bold
-            "\e[1m" * unstyled_str * "\e[0m"
-        else
-            error("Unknown featurestyle: $(style.featurestyle).")
-        end
-    else
+    unstyled_str = removewhitespaces ? 
+        "$(syntaxstring(f; style, kwargs...))$(_st_testop_name(t; pretty_op))" :
+        "$(syntaxstring(f; style, kwargs...)) $(_st_testop_name(t; pretty_op))"
+
+    return style ?
+        "\e[1m" * unstyled_str * "\e[0m" :
         unstyled_str
-    end
 end
 
-_st_testop_name(test_op::Any) = "$(test_op)"
-_st_testop_name(::typeof(>=)) = "≥"
-_st_testop_name(::typeof(<=)) = "≤"
-
-# Abbreviations
-
-_st_featop_abbr(feature::AbstractFeature,   test_operator::TestOperator; kwargs...)     = _st_featop_name(feature, test_operator; kwargs...)
+_st_testop_name(test_op::Any; kwargs...) = "$(test_op)"
+_st_testop_name(::typeof(>=); pretty_op::Bool=true) = pretty_op ? "≥" : ">="
+_st_testop_name(::typeof(<=); pretty_op::Bool=true) = pretty_op ? "≤" : "<="
 
 ############################################################################################
 
@@ -307,14 +296,35 @@ function checkcondition(c::ScalarCondition, args...; kwargs...)
     apply_test_operator(test_operator(c), featvalue(feature(c), args...; kwargs...), threshold(c))
 end
 
+"""
+    syntaxstring(m::ScalarCondition; 
+                style=false, removewhitespaces::Bool=false, 
+                pretty_op::Bool=true, kwargs...)::String
+
+Generate a formatted string representation of a feature, test operator and threshold combination.
+
+# Keyword Arguments
+- `threshold_digits::Union{Nothing,Integer}=nothing`: If set, rounds the threshold value to the
+  specified number of digits (via `round(...; digits=threshold_digits)`).
+- `threshold_display_method::Union{Nothing,Base.Callable}=nothing`: A function applied to the
+  threshold value before string conversion. If provided, it takes precedence over `threshold_digits`.
+- `style::Union{Bool,Dict}=false`: Style options for formatting. If a dict with key 
+  `:featurestyle` is provided, applies styling (`:bold` supported). Default `false` means no styling.
+- `removewhitespaces::Bool=false`: If `true`, removes spaces between feature, operator and threshold. 
+  Useful for generating output suitable for PLA (Programmable Logic Array) applications.
+  Default is `false` (includes space).
+- `kwargs...`: Additional keyword arguments
+"""
 function syntaxstring(
     m::ScalarCondition;
     threshold_digits::Union{Nothing,Integer} = nothing,
     threshold_display_method::Union{Nothing,Base.Callable} = nothing,
+    removewhitespaces::Bool=false,
     kwargs...
 )
     threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
-    string(_syntaxstring_metacondition(metacond(m); kwargs...)) * " " *
+    string(_syntaxstring_metacondition(metacond(m); removewhitespaces, kwargs...)) *
+    (removewhitespaces ? "" : " ") *
     string(threshold_display_method(threshold(m)))
 end
 
@@ -668,10 +678,10 @@ function hasdual(c::RangeScalarCondition)
 end
 
 function _rangescalarcond_to_scalarconds_in_conjunction(cond)
-    conds = []
+    conds = ScalarCondition[]
     !isnothing(SoleData.minval(cond)) && push!(conds, ScalarCondition(feature(cond), _isgreater_test_operator(cond), SoleData.minval(cond)))
     !isnothing(SoleData.maxval(cond)) && push!(conds, ScalarCondition(feature(cond), _isless_test_operator(cond), SoleData.maxval(cond)))
-    conds
+    return conds
 end
 
 module IntervalSetsWrap
@@ -709,6 +719,7 @@ function syntaxstring(
     m::RangeScalarCondition;
     threshold_digits::Union{Nothing,Integer} = nothing,
     threshold_display_method::Union{Nothing,Base.Callable} = nothing,
+    removewhitespaces::Bool=false,
     kwargs...
 )
     threshold_display_method = get_threshold_display_method(threshold_display_method, threshold_digits)
@@ -716,7 +727,9 @@ function syntaxstring(
     _max = string(isnothing(m.maxval) ? "∞" : threshold_display_method(m.maxval))
     _parmin = minincluded(m) ? "[" : "("
     _parmax = maxincluded(m) ? "]" : ")"
-    "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
+    removewhitespaces ?
+        "$(syntaxstring(m.feature; kwargs...))∈$(_parmin)$(_min),$(_max)$(_parmax)" :
+        "$(syntaxstring(m.feature; kwargs...)) ∈ $(_parmin)$(_min),$(_max)$(_parmax)"
 end
 
 # TODO remove repetition with other parsecondition method.

@@ -347,7 +347,6 @@ function abc_minimize(
         syntaxtree, dc_set, silent;
         use_scalar_range_conditions=use_scalar_range_conditions
     )
-
     silent || println("Input PLA:\n$pla_string\n")
 
     """
