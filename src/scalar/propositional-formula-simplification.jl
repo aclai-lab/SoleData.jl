@@ -109,7 +109,9 @@ function scalar_simplification(
 end
 
 function scalar_simplification(
-    atomslist::Vector{Atom}, conn::NamedConnective; allow_scalar_range_conditions::Bool=false
+    atomslist          :: Vector{Atom},
+    conn               :: NamedConnective;
+    allow_scalar_range_conditions :: Bool=false
 )
     scalar_conds = value.(atomslist)
     feats = feature.(scalar_conds)

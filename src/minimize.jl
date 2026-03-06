@@ -51,7 +51,7 @@ function espresso_minimize(
     end
 
     # dc_set = false
-    pla_string, fnames = PLA._formula_to_pla(syntaxtree; allow_scalar_range_conditions, kwargs...)
+    pla_string, fnames = PLA.formula_to_pla(syntaxtree; allow_scalar_range_conditions, kwargs...)
 
     silent || println()
     silent || println(pla_string)
@@ -96,7 +96,7 @@ function espresso_minimize(
     minimized_pla = String(read(out))
     silent || println(minimized_pla)
     conditionstype = allow_scalar_range_conditions ? SoleData.RangeScalarCondition : SoleData.ScalarCondition
-    return PLA._pla_to_formula(minimized_pla, fnames; conditionstype, conjunct=true)
+    return PLA.pla_to_formula(minimized_pla, fnames; conditionstype, conjunct=true)
 end
 
 """
