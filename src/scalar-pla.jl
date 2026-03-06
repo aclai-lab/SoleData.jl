@@ -253,9 +253,9 @@ end
 #                                formula to pla                                #
 # ---------------------------------------------------------------------------- #
 """
-    formula_to_pla(formula::SoleLogics.Formula; scalar_range::Bool=false, kwargs...) -> (String, Vector{VariableValue})
-    formula_to_pla(dnfformula::SoleLogics.DNF; scalar_range::Bool=false, kwargs...) -> (String, Vector{VariableValue})
-    formula_to_pla(atoms::Vector{Vector{SoleLogics.Atom}}; encoding::Symbol=:univariate, scalar_range::Bool=false) -> (String, Vector{VariableValue})
+    formula_to_pla(formula::SoleLogics.Formula; allow_scalar_range_conditions::Bool=false, kwargs...) -> (String, Vector{VariableValue})
+    formula_to_pla(dnfformula::SoleLogics.DNF; allow_scalar_range_conditions::Bool=false, kwargs...) -> (String, Vector{VariableValue})
+    formula_to_pla(atoms::Vector{Vector{SoleLogics.Atom}}; encoding::Symbol=:univariate, allow_scalar_range_conditions::Bool=false) -> (String, Vector{VariableValue})
 
 Convert a logical formula into Programmable Logic Array (PLA) format representation.
 
@@ -270,7 +270,7 @@ PLA representation.
 - `atoms::Vector{Vector{SoleLogics.Atom}}`: Vector of atom vectors representing disjuncts (third method)
 
 # Keyword Arguments
-- `scalar_range::Bool=false`: Whether to apply scalar tiling to conditions
+- `allow_scalar_range_conditions::Bool=false`: Whether to apply scalar tiling to conditions
 - `encoding::Symbol=:univariate`: Encoding method for variables (`:univariate` or `:multivariate`)
 - `kwargs...`: Additional keyword arguments passed to DNF conversion and scalar simplification
 
@@ -340,23 +340,23 @@ formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
 
 function formula_to_pla(
     dnfformula   :: SoleLogics.DNF;
-    scalar_range :: Bool=false,
+    allow_scalar_range_conditions :: Bool=false,
     kwargs...
 )
-    dnfformula = scalar_simplification(dnfformula; scalar_range)
+    dnfformula = scalar_simplification(dnfformula; allow_scalar_range_conditions)
     dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
 
     atoms_per_disjunct = Vector{Vector{SoleLogics.Atom}}([
         collect(SoleLogics.atoms(d)) for d in SoleLogics.disjuncts(dnfformula)
     ])
 
-    formula_to_pla(atoms_per_disjunct; scalar_range, kwargs...)
+    formula_to_pla(atoms_per_disjunct; allow_scalar_range_conditions, kwargs...)
 end
 
 function formula_to_pla(
     atoms             :: Vector{Vector{SoleLogics.Atom}};
     encoding          :: Symbol=:univariate,
-    scalar_range      :: Bool=false,
+    allow_scalar_range_conditions      :: Bool=false,
     removewhitespaces :: Bool=true,
     pretty_op         :: Bool=false
 )
@@ -370,7 +370,7 @@ function formula_to_pla(
     sort!(conditions, by=SoleData._scalarcondition_sortby)
     sort!(fnames, by=syntaxstring)
 
-    if scalar_range
+    if allow_scalar_range_conditions
         original_conditions = conditions
         conditions = SoleData.scalartiling(conditions, fnames)
         @assert length(setdiff(original_conditions, conditions)) == 0 "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
@@ -468,7 +468,7 @@ The conversion process follows these main steps:
 
 4. **Formula Reconstruction**: 
    - Each row becomes a `LeftmostConjunctiveForm` (conjunction of literals)
-   - Applies `scalar_simplification` with `scalar_range=false` to each disjunct
+   - Applies `scalar_simplification` with `allow_scalar_range_conditions=false` to each disjunct
    - Multi-threaded processing for efficiency
    - Optionally wraps result in `LeftmostDisjunctiveForm` if `conjunct=true`
 
@@ -550,7 +550,7 @@ function pla_to_formula(
                 for (idx, value) in enumerate(binary)
                 if value ∈ ['1', '0']
             ]);
-            scalar_range=false
+            allow_scalar_range_conditions=false
         )
     end
 
