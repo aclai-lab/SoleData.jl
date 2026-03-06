@@ -347,7 +347,7 @@ function abc_minimize(
 
     # Convert formula to PLA string format
     dc_set = false
-    pla_string, fnames = PLA._formula_to_pla(
+    pla_string, fnames = PLA.formula_to_pla(
         syntaxtree; allow_scalar_range_conditions
     )
     silent || println("Input PLA:\n$pla_string\n")
@@ -595,7 +595,7 @@ function boom_minimize(
     f::LeftmostLinearForm, single::Bool, name::String="", silent::Bool=true; kwargs...
 )
     #print(dump(f))
-    pla_string, pla_args, pla_kwargs = PLA._formula_to_pla(
+    pla_string, pla_args, pla_kwargs = PLA.formula_to_pla(
         f, false, silent; necessary_type=true, kwargs...
     )
 
