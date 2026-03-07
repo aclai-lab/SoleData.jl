@@ -57,8 +57,8 @@ function entropy_cut_sorted(CS)
 end
 
 function contingency(C::AbstractVector, y::AbstractVector)
-	vals  = sort(unique(C))
-	classes = unique(y)
+    vals = sort(unique(C))
+    classes = unique(y)
 
     counts_ = Array{Float64}(undef, 0, length(classes))
 
@@ -72,14 +72,14 @@ function contingency(C::AbstractVector, y::AbstractVector)
 end
 
 function _entropy_discretize_sorted(
-	C;
-	force = false
+        C;
+        force = false,
 )
     E, ES1, ES2 = entropy_cut_sorted(C)
 
     length(E) == 0 && return []
 
-	cut_index = argmin(E[:])
+    cut_index = argmin(E[:])
 
     S1_c = sum(C[1:cut_index, :], dims = 1)
     S2_c = sum(C[(cut_index + 1):end, :], dims = 1)
@@ -103,28 +103,29 @@ function _entropy_discretize_sorted(
     delta = log2(3^k - 2) - (k * ES - k1 * ES1 - k2 * ES2)
     N = sum(S_c)
 
-	if N > 1 && Gain > ( (log2(N - 1)/N) + (delta/N) )
-		left, right = [], []
-		if k1 > 1 && cut_index > 1
-			left = _entropy_discretize_sorted(C[1:(cut_index), :])
-		end
-		if k2 > 1 && cut_index < nncols(C) - 1
-			right = _entropy_discretize_sorted(C[cut_index+1:end, :])
-		end
-		return union(left, [cut_index + 1], [(i + cut_index) for i in right])
-	elseif force
-		return [cut_index + 1]
-	else
-		return []
-	end
+    if N > 1 && Gain > ((log2(N - 1)/N) + (delta/N))
+        left, right = [], []
+        if k1 > 1 && cut_index > 1
+            left = _entropy_discretize_sorted(C[1:(cut_index), :])
+        end
+        if k2 > 1 && cut_index < nncols(C) - 1
+            right = _entropy_discretize_sorted(C[(cut_index + 1):end, :])
+        end
+        return union(left, [cut_index + 1], [(i + cut_index) for i in right])
+    elseif force
+        return [cut_index + 1]
+    else
+        return []
+    end
 end
 
 function discretize(
-	varvalue::AbstractVector,
-	y::AbstractVector
+        varvalue::AbstractVector,
+        y::AbstractVector,
 )
-    allequal(length.([varvalue, y])) || throw(DimensionMismatch("$(length(varvalue)) != $(length(y))"))
-	vals, counts_ = contingency(varvalue, y)
-	cut_ind = _entropy_discretize_sorted(counts_, force=true)
-	return [vals[ind] for ind in cut_ind]
+    allequal(length.([varvalue, y])) ||
+        throw(DimensionMismatch("$(length(varvalue)) != $(length(y))"))
+    vals, counts_ = contingency(varvalue, y)
+    cut_ind = _entropy_discretize_sorted(counts_, force = true)
+    return [vals[ind] for ind in cut_ind]
 end

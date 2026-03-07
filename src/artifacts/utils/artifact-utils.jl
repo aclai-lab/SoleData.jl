@@ -5,7 +5,6 @@
 # https://pkgdocs.julialang.org/v1/artifacts/#The-Pkg.Artifacts-API
 # https://pkgdocs.julialang.org/v1/api/#Artifacts-Reference
 
-
 """
     fillartifacts()
     fillartifacts(URLS::Vector{String})
@@ -59,7 +58,7 @@ function fillartifacts(url::String)
     rm(temp_file)
 
     # and bind the artifact to let the user call the macro artifact"name"
-    bind_artifact!(ARTIFACTS_PATH, filename_no_extension, SHA1; force=true)
+    bind_artifact!(ARTIFACTS_PATH, filename_no_extension, SHA1; force = true)
 
     # proceed to update the Artifact.toml
     content = TOML.parsefile(ARTIFACTS_PATH)
@@ -75,7 +74,7 @@ function fillartifacts(url::String)
             # we insert a vector of possible new entries; this method automatically infers
             # the most simple one but actually it could be possible to add many sources;
             # to do so, we could iterate some kwargs here.
-            new_entry = Dict{String,Any}()
+            new_entry = Dict{String, Any}()
             content[filename_no_extension]["download"] = [new_entry]
             new_entry["sha256"] = file_sha256
             new_entry["url"] = url

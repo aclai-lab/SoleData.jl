@@ -69,26 +69,31 @@ See also [`AbstractModalLogiset`](@ref), [`AbstractOneStepMemoset`](@ref),
 [`VarFeature`](@ref).
 """
 function scalarlogiset(
-    dataset,
-    features::Union{Nothing,AbstractVector}=nothing;
-    use_full_memoization             :: Union{Bool,Type{<:Union{AbstractOneStepMemoset,AbstractFullMemoset}}}=true,
-    conditions                       :: Union{Nothing,AbstractVector{<:AbstractCondition},AbstractVector{<:Union{Nothing,AbstractVector}}}=nothing,
-    relations                        :: Union{Nothing,AbstractVector{<:AbstractRelation},AbstractVector{<:Union{Nothing,AbstractVector}}}=nothing,
-    use_onestep_memoization          :: Union{Bool,Type{<:AbstractOneStepMemoset}}=!isnothing(conditions) && !isnothing(relations),
-    onestep_precompute_globmemoset   :: Bool=(use_onestep_memoization != false),
-    onestep_precompute_relmemoset    :: Bool=false,
-    print_progress                   :: Bool=false,
-    allow_propositional              :: Bool=false, # TODO default to true
-    force_i_variables                :: Bool=false,
-    fixcallablenans                  :: Bool = false,
-    worldtype_by_dim                 :: Union{Nothing,AbstractDict{Int,Type{<:AbstractWorld}}}=nothing,
-    kwargs...,
-    # featvaltype = nothing
+        dataset,
+        features::Union{Nothing, AbstractVector} = nothing;
+        use_full_memoization::Union{
+            Bool, Type{<:Union{AbstractOneStepMemoset, AbstractFullMemoset}},} = true,
+        conditions::Union{Nothing, AbstractVector{<:AbstractCondition},
+            AbstractVector{<:Union{Nothing, AbstractVector}},} = nothing,
+        relations::Union{Nothing, AbstractVector{<:AbstractRelation},
+            AbstractVector{<:Union{Nothing, AbstractVector}},} = nothing,
+        use_onestep_memoization::Union{Bool, Type{<:AbstractOneStepMemoset}} = !isnothing(conditions) &&
+                                                                               !isnothing(relations),
+        onestep_precompute_globmemoset::Bool = (use_onestep_memoization != false),
+        onestep_precompute_relmemoset::Bool = false,
+        print_progress::Bool = false,
+        allow_propositional::Bool = false, # TODO default to true
+        force_i_variables::Bool = false,
+        fixcallablenans::Bool = false,
+        worldtype_by_dim::Union{Nothing, AbstractDict{Int, Type{<:AbstractWorld}}} = nothing,
+        kwargs...,        # featvaltype = nothing
 )
     is_feature(f) = (f isa MixedCondition)
     is_nofeatures(_features) = isnothing(_features)
-    is_unifeatures(_features) = (_features isa AbstractVector && all(f->is_feature(f), _features))
-    is_multifeatures(_features) = (_features isa AbstractVector && all(fs->(is_nofeatures(fs) || is_unifeatures(fs)), _features))
+    is_unifeatures(_features) = (_features isa AbstractVector &&
+                                 all(f->is_feature(f), _features))
+    is_multifeatures(_features) = (_features isa AbstractVector &&
+                                   all(fs->(is_nofeatures(fs) || is_unifeatures(fs)), _features))
 
     # @show conditions
     # @show typeof(conditions)
@@ -98,16 +103,15 @@ function scalarlogiset(
     # @show ismultilogiseed(dataset)
 
     @assert (is_nofeatures(features) ||
-            is_unifeatures(features) ||
-            is_multifeatures(features)) "Unexpected features (type: $(typeof(features))).\n" *
-            "$(features)" *
-            "Suspects: $(filter(f->(!is_feature(f) && !is_nofeatures(f) && !is_unifeatures(f)), features))"
+             is_unifeatures(features) ||
+             is_multifeatures(features)) "Unexpected features (type: $(typeof(features))).\n" *
+                                         "$(features)" *
+                                         "Suspects: $(filter(f->(!is_feature(f) && !is_nofeatures(f) && !is_unifeatures(f)), features))"
 
     framekwargs = (; worldtype_by_dim = worldtype_by_dim)
     framekwargs = NamedTuple(filter(x->!isnothing(last(x)), pairs(framekwargs)))
 
     if ismultilogiseed(dataset)
-
         newkwargs = (;
             use_full_memoization = use_full_memoization,
             use_onestep_memoization = use_onestep_memoization,
@@ -122,30 +126,30 @@ function scalarlogiset(
                 features
             else
                 error("Cannot build multimodal scalar logiset with features " *
-                    "$(features), " *
-                    "$(SoleLogics.displaysyntaxvector(features)).")
+                      "$(features), " *
+                      "$(SoleLogics.displaysyntaxvector(features)).")
             end
         end
 
         conditions = begin
-            if conditions isa Union{Nothing,AbstractVector{<:AbstractCondition}}
+            if conditions isa Union{Nothing, AbstractVector{<:AbstractCondition}}
                 fill(conditions, nmodalities(dataset))
-            elseif conditions isa AbstractVector{<:Union{Nothing,AbstractVector}}
+            elseif conditions isa AbstractVector{<:Union{Nothing, AbstractVector}}
                 conditions
             else
                 error("Cannot build multimodal scalar logiset with conditions " *
-                    "$(SoleLogics.displaysyntaxvector(conditions)).")
+                      "$(SoleLogics.displaysyntaxvector(conditions)).")
             end
         end
 
         relations = begin
-            if relations isa Union{Nothing,AbstractVector{<:AbstractRelation}}
+            if relations isa Union{Nothing, AbstractVector{<:AbstractRelation}}
                 fill(relations, nmodalities(dataset))
-            elseif relations isa AbstractVector{<:Union{Nothing,AbstractVector}}
+            elseif relations isa AbstractVector{<:Union{Nothing, AbstractVector}}
                 relations
             else
                 error("Cannot build multimodal scalar logiset with relations " *
-                    "$(SoleLogics.displaysyntaxvector(relations)).")
+                      "$(SoleLogics.displaysyntaxvector(relations)).")
             end
         end
 
@@ -153,26 +157,27 @@ function scalarlogiset(
             p = Progress(nmodalities(dataset); dt = 1, desc = "Computing multilogiset...")
         end
         return MultiLogiset([begin
-                # println("Modality $(i_modality)/$(nmodalities(dataset))")
-                X = scalarlogiset(
-                    _dataset,
-                    _features;
-                    conditions = _conditions,
-                    relations = _relations,
-                    print_progress = false,
-                    newkwargs...
-                )
-                if print_progress
-                    next!(p)
-                end
-                X
-            end for (i_modality, (_dataset, _features, _conditions, _relations)) in
-                    enumerate(zip(eachmodality(dataset), features, conditions, relations))
-            ])
+                                 # println("Modality $(i_modality)/$(nmodalities(dataset))")
+                                 X = scalarlogiset(
+                                     _dataset,
+                                     _features;
+                                     conditions = _conditions,
+                                     relations = _relations,
+                                     print_progress = false,
+                                     newkwargs...,
+                                 )
+                                 if print_progress
+                                     next!(p)
+                                 end
+                                 X
+                             end
+                             for (
+            i_modality, (_dataset, _features, _conditions, _relations),) in
+                                 enumerate(zip(eachmodality(dataset), features, conditions, relations))])
     end
 
     frames = map(
-        i_instance->frame(dataset, i_instance; framekwargs...), 1:ninstances(dataset))
+        i_instance->frame(dataset, i_instance; framekwargs...), 1:ninstances(dataset),)
     is_propositional = all(_frame->nworlds(_frame) == 1, frames)
 
     if allow_propositional && is_propositional
@@ -180,20 +185,22 @@ function scalarlogiset(
     end
 
     @assert is_nofeatures(features) || is_unifeatures(features) "Unexpected features (type: $(typeof(features))).\n" *
-        "$(features)" *
-        "Suspects: $(filter(f->(!is_feature(f) && !is_nofeatures(f) && !is_unifeatures(f)), features))"
+                                                                "$(features)" *
+                                                                "Suspects: $(filter(f->(!is_feature(f) && !is_nofeatures(f) && !is_unifeatures(f)), features))"
 
     if isnothing(features)
         features = begin
             if isnothing(conditions)
                 # TODO use the fact that the worldtype is constant
                 worldtypes = map(_frame->SoleLogics.worldtype(_frame), frames)
-                !allequal(worldtypes) && error("Could not infere worldtype. $(unique(worldtypes)).")
+                !allequal(worldtypes) &&
+                    error("Could not infere worldtype. $(unique(worldtypes)).")
                 worldtype = first(worldtypes)
                 if is_propositional || worldtype <: Point
                     [VariableValue(i_var) for i_var in 1:nvariables(dataset)]
                 else
-                    vcat([[VariableMax(i_var), VariableMin(i_var)] for i_var in 1:nvariables(dataset)]...)
+                    vcat([[VariableMax(i_var), VariableMin(i_var)]
+                          for i_var in 1:nvariables(dataset)]...)
                 end
             else
                 unique(feature.(conditions))
@@ -215,8 +222,8 @@ function scalarlogiset(
         else
             if !all(f->f isa VarFeature, features) # or AbstractFeature
                 error("Unexpected case (TODO). " *
-                    "features = $(typeof(features)), conditions = $(typeof(conditions)). " *
-                    "Suspects: $(filter(f->!(f isa VarFeature), features))"
+                      "features = $(typeof(features)), conditions = $(typeof(conditions)). " *
+                      "Suspects: $(filter(f->!(f isa VarFeature), features))"
                 )
             end
         end
@@ -232,7 +239,6 @@ function scalarlogiset(
 
     # features_ok = filter(f->isconcretetype(SoleData.featvaltype(dataset, f)), features)
     # features_notok = filter(f->!isconcretetype(SoleData.featvaltype(dataset, f)), features)
-
 
     # if length(features_notok) > 0
     #     if all(preserveseltype, features_notok) && all(f->f isa AbstractUnivariateFeature, features_notok)
@@ -279,7 +285,8 @@ function scalarlogiset(
 
     # Load explicit features (if any)
     if any(isa.(features, ExplicitFeature))
-        i_external_features = first.(filter(((i_feature,isexplicit),)->(isexplicit), collect(enumerate(isa.(features, ExplicitFeature)))))
+        i_external_features = first.(filter(((i_feature, isexplicit),)->(isexplicit),
+            collect(enumerate(isa.(features, ExplicitFeature))),))
         for i_feature in i_external_features
             feature = features[i_feature]
             featvalues!(X, feature.X, i_feature)
@@ -287,7 +294,8 @@ function scalarlogiset(
     end
 
     # Load internal features
-    i_features = first.(filter(((i_feature,isexplicit),)->!(isexplicit), collect(enumerate(isa.(features, ExplicitFeature)))))
+    i_features = first.(filter(
+        ((i_feature, isexplicit),)->!(isexplicit), collect(enumerate(isa.(features, ExplicitFeature))),))
     enum_features = zip(i_features, features[i_features])
 
     _ninstances = ninstances(dataset)
@@ -298,7 +306,7 @@ function scalarlogiset(
     end
     @inbounds Threads.@threads for i_instance in 1:_ninstances
         for w in allworlds(frames[i_instance])
-           for (i_feature,feature) in enum_features
+            for (i_feature, feature) in enum_features
                 featval = featvalue(feature, dataset, i_instance, w)
                 featvalue!(feature, X, featval, i_instance, w, i_feature)
             end
@@ -322,19 +330,24 @@ function scalarlogiset(
     end
 end
 
-
-function nanpatchedfunction(f::Base.Callable, test_op, fname = (string(f) * (polarity(test_op) ? "⁺" : "⁻")))
-    newf = (channel -> let val = f(channel); (isnan(val) ? eltype(channel)(aggregator_bottom(existential_aggregator(test_op), Float64)) : eltype(channel)(val)) end)
+function nanpatchedfunction(f::Base.Callable, test_op, fname = (string(f) *
+                                                                (polarity(test_op) ? "⁺" :
+                                                                 "⁻")))
+    newf = (channel -> let val = f(channel);
+        (isnan(val) ?
+         eltype(channel)(aggregator_bottom(existential_aggregator(test_op), Float64)) :
+         eltype(channel)(val))
+    end)
     return PatchedFunction(newf, fname)
 end
 
 function naturalconditions(
-    dataset,
-    mixed_conditions   :: AbstractVector,
-    featvaltype        :: Union{Nothing,Type} = nothing;
-    force_i_variables  :: Bool = false,
-    fixcallablenans    :: Bool = false,
-    framekwargs...,
+        dataset,
+        mixed_conditions::AbstractVector,
+        featvaltype::Union{Nothing, Type} = nothing;
+        force_i_variables::Bool = false,
+        fixcallablenans::Bool = false,
+        framekwargs...,
 )
     # TODO maybe? Should work
     # if ismultilogiseed(dataset)
@@ -356,15 +369,16 @@ function naturalconditions(
     nvars = nvariables(dataset)
 
     @assert all(isa.(mixed_conditions, MixedCondition)) "" *
-        "Unknown condition seed encountered! " *
-        "$(filter(f->!isa(f, MixedCondition), mixed_conditions)), " *
-        "$(typeof.(filter(f->!isa(f, MixedCondition), mixed_conditions)))"
+                                                        "Unknown condition seed encountered! " *
+                                                        "$(filter(f->!isa(f, MixedCondition), mixed_conditions)), " *
+                                                        "$(typeof.(filter(f->!isa(f, MixedCondition), mixed_conditions)))"
 
     mixed_conditions = Vector{MixedCondition}(mixed_conditions)
 
-    is_propositional = all(i_instance->nworlds(frame(
-        dataset, i_instance; framekwargs...)) == 1,
-        1:ninstances(dataset)
+    is_propositional = all(
+        i_instance->nworlds(frame(
+            dataset, i_instance; framekwargs...,)) == 1,
+        1:ninstances(dataset),
     )
 
     def_test_operators = is_propositional ? [≥] : [≥, <]
@@ -373,23 +387,30 @@ function naturalconditions(
     # univar_condition(i_var,cond::SoleData.CanonicalConditionLeq) = ([<],VariableMax(i_var))
     # univar_condition(i_var,cond::SoleData.CanonicalConditionGeqSoft) = ([≥],VariableSoftMin(i_var, cond.alpha))
     # univar_condition(i_var,cond::SoleData.CanonicalConditionLeqSoft) = ([<],VariableSoftMax(i_var, cond.alpha))
-    function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(identity)})
-        return (test_ops,VariableValue(i_var))
+    function univar_condition(
+            i_var, (
+                test_ops, cond,)::Tuple{<:AbstractVector{<:TestOperator}, typeof(identity)},)
+        return (test_ops, VariableValue(i_var))
     end
-    function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(minimum)})
-        return (test_ops,VariableMin(i_var))
+    function univar_condition(i_var, (
+            test_ops, cond,)::Tuple{<:AbstractVector{<:TestOperator}, typeof(minimum)})
+        return (test_ops, VariableMin(i_var))
     end
-    function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},typeof(maximum)})
-        return (test_ops,VariableMax(i_var))
+    function univar_condition(i_var, (
+            test_ops, cond,)::Tuple{<:AbstractVector{<:TestOperator}, typeof(maximum)})
+        return (test_ops, VariableMax(i_var))
     end
-    function univar_condition(i_var,(test_ops,cond)::Tuple{<:AbstractVector{<:TestOperator},<:Union{Base.Callable,SoleData.PatchedFunction}})
+    function univar_condition(i_var,
+            (test_ops,
+                cond,)::Tuple{<:AbstractVector{<:TestOperator},
+                <:Union{Base.Callable, SoleData.PatchedFunction},},)
         if isnothing(featvaltype)
             featvaltype = SoleData.vareltype(dataset, i_var)
         end
         V = featvaltype
         if !isconcretetype(V)
             @warn "Building UnivariateFeature with non-concrete feature type: $(V)."
-                "Please provide `featvaltype` parameter to naturalconditions."
+            "Please provide `featvaltype` parameter to naturalconditions."
         end
         # f = function (x) return V(cond(x)) end # breaks because it does not create a closure.
         if cond isa Base.Callable
@@ -400,14 +421,16 @@ function naturalconditions(
         else
             error("Unknown cond: $(cond).")
         end
-        return (test_ops,cond)
+        return (test_ops, cond)
     end
-    univar_condition(i_var,::Any) = throw_n_log("Unknown mixed_feature type: $(cond), $(typeof(cond))")
+    univar_condition(i_var, ::Any) = throw_n_log("Unknown mixed_feature type: $(cond), $(typeof(cond))")
 
     # readymade conditions
     unpackcondition(cond::ScalarMetaCondition) = [cond]
-    unpackcondition(feature::AbstractFeature) = [ScalarMetaCondition(feature, test_op) for test_op in def_test_operators]
-    unpackcondition(cond::Tuple{TestOperator,AbstractFeature}) = [ScalarMetaCondition(cond[2], cond[1])]
+    unpackcondition(feature::AbstractFeature) = [ScalarMetaCondition(feature, test_op)
+                                                 for test_op in def_test_operators]
+    unpackcondition(cond::Tuple{
+        TestOperator, AbstractFeature,}) = [ScalarMetaCondition(cond[2], cond[1])]
 
     # single-variable conditions
     unpackcondition(cond::Any) = [cond]
@@ -416,20 +439,25 @@ function naturalconditions(
     function unpackcondition(cond::PatchedFunction, test_ops = def_test_operators)
         [(test_ops, cond)]
     end
-    unpackcondition(cond::Tuple{TestOperator,PatchedFunction}) = unpackcondition(cond[2], [cond[1]])
+    unpackcondition(cond::Tuple{
+        TestOperator, PatchedFunction,}) = unpackcondition(cond[2], [cond[1]])
 
     function unpackcondition(cond::Base.Callable, test_ops = def_test_operators)
         if fixcallablenans
-            [([test_operator], nanpatchedfunction(cond,test_operator)) for test_operator in test_ops]
+            [([test_operator], nanpatchedfunction(cond, test_operator))
+             for test_operator in test_ops]
         else
             [(test_ops, cond)]
         end
     end
-    unpackcondition(cond::Tuple{TestOperator,Base.Callable}) = unpackcondition(cond[2], [cond[1]])
+    unpackcondition(cond::Tuple{
+        TestOperator, Base.Callable,}) = unpackcondition(cond[2], [cond[1]])
 
-    function unpackcondition((callable,i_var)::Tuple{Base.Callable,Integer})
+    function unpackcondition((callable, i_var)::Tuple{Base.Callable, Integer})
         if fixcallablenans
-            return [univar_condition(i_var, ([test_operator], nanpatchedfunction(callable,test_operator))) for test_operator in def_test_operators]
+            return [univar_condition(i_var, (
+                        [test_operator], nanpatchedfunction(callable, test_operator),))
+                    for test_operator in def_test_operators]
         else
             return [univar_condition(i_var, (def_test_operators, callable))]
         end
@@ -439,35 +467,39 @@ function naturalconditions(
 
     mixed_conditions = vcat(unpackcondition.(mixed_conditions)...)
     # @show mixed_conditions
-    readymade_conditions          = filter(x->
-        isa(x, ScalarMetaCondition),
+    readymade_conditions = filter(x -> isa(x, ScalarMetaCondition),
         mixed_conditions,
     )
-    variable_specific_conditions = filter(x->
+    variable_specific_conditions = filter(
+        x->
         # isa(x, CanonicalCondition) ||
-        isa(x, Tuple{AbstractVector,PatchedFunction}) ||
+        isa(x, Tuple{AbstractVector, PatchedFunction}) ||
         # isa(x, Tuple{<:AbstractVector{<:TestOperator},Base.Callable}) ||
-        (isa(x, Tuple{AbstractVector,Base.Callable}) && !isa(x, Tuple{AbstractVector,AbstractFeature})),
+        (isa(x, Tuple{AbstractVector, Base.Callable}) &&
+         !isa(x, Tuple{AbstractVector, AbstractFeature})),
         mixed_conditions,
     )
 
-    @assert length(readymade_conditions) + length(variable_specific_conditions) == length(mixed_conditions) "" *
-        "Unexpected mixed_conditions. " *
-        "$(mixed_conditions). " *
-        "$(filter(x->(! (x in readymade_conditions) && ! (x in variable_specific_conditions)), mixed_conditions)). " *
-        "$(length(readymade_conditions)) + $(length(variable_specific_conditions)) == $(length(mixed_conditions))."
+    @assert length(readymade_conditions) + length(variable_specific_conditions) ==
+            length(mixed_conditions) "" *
+                                     "Unexpected mixed_conditions. " *
+                                     "$(mixed_conditions). " *
+                                     "$(filter(x->(! (x in readymade_conditions) && ! (x in variable_specific_conditions)), mixed_conditions)). " *
+                                     "$(length(readymade_conditions)) + $(length(variable_specific_conditions)) == $(length(mixed_conditions))."
 
     for cond in readymade_conditions
         push!(metaconditions, cond)
     end
     for i_var in 1:nvars
-        tmp = map((cond)->univar_condition(
-            if !force_i_variables && !isnothing(varnames(dataset))
-                Symbol(varnames(dataset)[i_var])
-            else
-                i_var
-            end, cond), variable_specific_conditions)
-        for (test_ops,feature) in tmp
+        tmp = map(
+            (cond)->univar_condition(
+                if !force_i_variables && !isnothing(varnames(dataset))
+                    Symbol(varnames(dataset)[i_var])
+                else
+                    i_var
+                end, cond,),
+            variable_specific_conditions,)
+        for (test_ops, feature) in tmp
             for test_op in test_ops
                 cond = ScalarMetaCondition(feature, test_op)
                 push!(metaconditions, cond)
@@ -491,32 +523,28 @@ from its type (e.g., Real, Vector{<:Real} or Matrix{<:Real}) and frame.
 All instances must have the same frame (e.g., channel size/number of worlds).
 """
 function naturalgrouping(
-    X::AbstractDataFrame;
-    allow_variable_drop=false,
-    framekwargs...,
-    # allow_nonuniform_variable_types = false,
-    # allow_nonuniform_variables = false,
+        X::AbstractDataFrame;
+        allow_variable_drop = false,
+        framekwargs...,        # allow_nonuniform_variable_types = false,        # allow_nonuniform_variables = false,
 ) #::AbstractVector{<:AbstractVector{<:Symbol}}
-
     coltypes = eltype.(eachcol(X))
-
 
     # Check that columns with same dimensionality have same eltype's.
     for T in [Real, Vector, Matrix]
         these_coltypes = filter((t)->(t<:T), coltypes)
         @assert all([eltype(t) <: Real for t in these_coltypes]) "$(these_coltypes). Cannot " *
-          "apply this algorithm on variables types with non-Real " *
-          "eltype's: $(filter((t)->(!(eltype(t) <: Real)), these_coltypes))."
+                                                                 "apply this algorithm on variables types with non-Real " *
+                                                                 "eltype's: $(filter((t)->(!(eltype(t) <: Real)), these_coltypes))."
         @assert length(unique(these_coltypes)) <= 1 "$(these_coltypes). Cannot " *
-          "apply this algorithm on dataset with non-uniform types for variables " *
-          "with eltype = $(T). Please, convert all values to $(promote_type(these_coltypes...))."
+                                                    "apply this algorithm on dataset with non-uniform types for variables " *
+                                                    "with eltype = $(T). Please, convert all values to $(promote_type(these_coltypes...))."
     end
 
     columnnames = names(X)
     percol_framess = [unique(map(
-        (i_instance)->(frame(X, X[:,col], i_instance; framekwargs...)),
-        1:ninstances(X)
-    )) for col in columnnames]
+                          (i_instance)->(frame(X, X[:, col], i_instance; framekwargs...)),
+                          1:ninstances(X),
+                      )) for col in columnnames]
 
     # Must have common frame across instances
     _uniform_columns = (length.(percol_framess) .== 1)
@@ -550,21 +578,25 @@ function naturalgrouping(
     percol_frames = getindex.(percol_framess, 1)
 
     var_grouping = begin
-        unique_frames = sort(unique(percol_frames); lt = (x,y)->begin
-            if hasmethod(dimensionality, (typeof(x),)) && hasmethod(dimensionality, (typeof(y),))
-                if dimensionality(x) == dimensionality(y)
-                    isless(MultiData.channelsize(x), MultiData.channelsize(y))
+        unique_frames = sort(unique(percol_frames);
+            lt = (x,
+                y,)->begin
+                if hasmethod(dimensionality, (typeof(x),)) &&
+                   hasmethod(dimensionality, (typeof(y),))
+                    if dimensionality(x) == dimensionality(y)
+                        isless(MultiData.channelsize(x), MultiData.channelsize(y))
+                    else
+                        isless(dimensionality(x), dimensionality(y))
+                    end
+                elseif hasmethod(dimensionality, (typeof(x),))
+                    true
                 else
-                    isless(dimensionality(x), dimensionality(y))
+                    false
                 end
-            elseif hasmethod(dimensionality, (typeof(x),))
-                true
-            else
-                false
-            end
-        end)
+            end,)
 
-        percol_modality = [findfirst((ucs)->(ucs==cs), unique_frames) for cs in percol_frames]
+        percol_modality = [findfirst((ucs)->(ucs==cs), unique_frames)
+                           for cs in percol_frames]
 
         var_grouping = Dict([modality => [] for modality in unique(percol_modality)])
         for (modality, col) in zip(percol_modality, columnnames)
@@ -592,7 +624,9 @@ function scalaralphabet(a::AbstractAlphabet{<:ScalarCondition}, args...; kwargs.
     return scalaralphabet(atoms(a), args...; kwargs...)
 end
 
-function scalaralphabet(atoms::Vector{<:Atom{<:ScalarCondition}}; domains_by_feature = true, discretizedomain::Bool = false, kwargs...)::MultivariateScalarAlphabet
+function scalaralphabet(
+        atoms::Vector{<:Atom{<:ScalarCondition}}; domains_by_feature = true,
+        discretizedomain::Bool = false, kwargs...,)::MultivariateScalarAlphabet
     if discretizedomain
         @warn "Cannot discretize domains given a vector of atoms."
         discretizedomain = false
@@ -606,13 +640,16 @@ function scalaralphabet(atoms::Vector{<:Atom{<:ScalarCondition}}; domains_by_fea
         end
     end
 
-    feats, testopss, domains = zip([begin
-        scalarconditions = SoleLogics.value.(atoms_group)
-        feat = domains_by_feature ? key(atoms_group) : SoleData.feature(key(atoms_group))
-        testopss = unique(SoleData.test_operator.(scalarconditions))
-        domain = unique(SoleData.threshold.(scalarconditions))
-        (feat, testopss, domain)
-    end for atoms_group in atoms_groups]...) .|> collect
+    feats, testopss,
+    domains = zip([begin
+                       scalarconditions = SoleLogics.value.(atoms_group)
+                       feat = domains_by_feature ? key(atoms_group) :
+                              SoleData.feature(key(atoms_group))
+                       testopss = unique(SoleData.test_operator.(scalarconditions))
+                       domain = unique(SoleData.threshold.(scalarconditions))
+                       (feat, testopss, domain)
+                   end
+                   for atoms_group in atoms_groups]...) .|> collect
 
     return _multivariate_scalar_alphabet(feats, testopss, domains; kwargs...)
 end

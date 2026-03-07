@@ -59,7 +59,6 @@ See also the implementations of [`load(al::ABCLoader)`](@ref) and
 """
 load(::T) where {T} = throw(ArgumentError("Invalid method for type $T"))
 
-
 # Extract tar.gz file in the artifact directory (cross-platform);
 # see extract_artifact.
 function _extract_artifact(path::String, name::String; silent::Bool = true)
@@ -74,7 +73,7 @@ function _extract_artifact(path::String, name::String; silent::Bool = true)
 
     # Remove existing extraction directory if it exists
     if isdir(extract_dir)
-        rm(extract_dir; recursive=true)
+        rm(extract_dir; recursive = true)
     end
 
     # Create the extraction directory
@@ -94,7 +93,7 @@ function _extract_artifact(path::String, name::String; silent::Bool = true)
     catch e
         # Clean up on error
         if isdir(extract_dir)
-            rm(extract_dir; recursive=true)
+            rm(extract_dir; recursive = true)
         end
         error("Failed to extract $(tarfile): $(e)")
     end
@@ -132,7 +131,7 @@ function extract_artifact(path::String, name::String; silent::Bool = true)
             return _extract_artifact(path, name)
         end
 
-    # if the "extracted" folder does not exist, then "readdir" (above) will trigger an error
+        # if the "extracted" folder does not exist, then "readdir" (above) will trigger an error
     catch e
         if e isa SystemError
             throw(SystemError(
@@ -142,7 +141,5 @@ function extract_artifact(path::String, name::String; silent::Bool = true)
         else
             rethrow()
         end
-
     end
-
 end

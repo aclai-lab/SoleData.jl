@@ -25,7 +25,7 @@ LOADERS = [
 
 # Common logic
 for l in LOADERS
-    printstyled("Loading $(SoleData.Artifacts.name(l))\n", color=:green)
+    printstyled("Loading $(SoleData.Artifacts.name(l))\n", color = :green)
 
     # this should be enough to also test the specific getters of each loader since,
     # if they exist, they are called by the loading logic.

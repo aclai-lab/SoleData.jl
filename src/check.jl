@@ -5,11 +5,11 @@ using SoleLogics: value
 using SoleLogics: CheckAlgorithm
 
 function check(
-    ::CheckAlgorithm,
-    φ::Atom{<:AbstractCondition},
-    i::SoleLogics.LogicalInstance{<:AbstractLogiset},
-    args...;
-    kwargs...
+        ::CheckAlgorithm,
+        φ::Atom{<:AbstractCondition},
+        i::SoleLogics.LogicalInstance{<:AbstractLogiset},
+        args...;
+        kwargs...,
 )
     X, i_instance = SoleLogics.splat(i)
     cond = SoleLogics.value(φ)
@@ -17,14 +17,14 @@ function check(
 end
 
 function check(
-    ::CheckAlgorithm,
-    φ::Atom{<:AbstractCondition},
-    i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
-    w::Union{Nothing,AnyWorld,<:AbstractWorld} = nothing,
-    args...;
-    use_memo = nothing,
-    kwargs...
-) where {W<:AbstractWorld,U}
+        ::CheckAlgorithm,
+        φ::Atom{<:AbstractCondition},
+        i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W, <:U}},
+        w::Union{Nothing, AnyWorld, <:AbstractWorld} = nothing,
+        args...;
+        use_memo = nothing,
+        kwargs...,
+) where {W <: AbstractWorld, U}
     X, i_instance = SoleLogics.splat(i)
     cond = SoleLogics.value(φ)
     return checkcondition(cond, X, i_instance, w, args...)
@@ -59,16 +59,16 @@ If `X` supports onestep memoization, then it will be used for specific diamond f
 
 """
 function check(
-    ::CheckAlgorithm, 
-    φ::SoleLogics.SyntaxBranch,
-    i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W,<:U}},
-    w::Union{Nothing,AnyWorld,<:AbstractWorld} = nothing;
-    use_memo::Union{Nothing,AbstractMemoset{<:AbstractWorld},AbstractVector{<:AbstractDict{<:FT,<:AbstractWorlds}}} = nothing,
-    perform_normalization::Bool = true,
-    memo_max_height::Union{Nothing,Int} = nothing,
-    onestep_memoset_is_complete = false,
-) where {W<:AbstractWorld,U,FT<:SoleLogics.Formula}
-
+        ::CheckAlgorithm,
+        φ::SoleLogics.SyntaxBranch,
+        i::SoleLogics.LogicalInstance{<:AbstractModalLogiset{W, <:U}},
+        w::Union{Nothing, AnyWorld, <:AbstractWorld} = nothing;
+        use_memo::Union{Nothing, AbstractMemoset{<:AbstractWorld},
+            AbstractVector{<:AbstractDict{<:FT, <:AbstractWorlds}},} = nothing,
+        perform_normalization::Bool = true,
+        memo_max_height::Union{Nothing, Int} = nothing,
+        onestep_memoset_is_complete = false,
+) where {W <: AbstractWorld, U, FT <: SoleLogics.Formula}
     X, i_instance = SoleLogics.splat(i)
 
     if isnothing(w)
@@ -77,18 +77,24 @@ function check(
         end
     end
     @assert SoleLogics.isgrounded(φ) || !isnothing(w) "Please, specify a world in order " *
-        "to check non-grounded formula: $(syntaxstring(φ))."
+                                                      "to check non-grounded formula: $(syntaxstring(φ))."
 
-    setformula(memo_structure::AbstractDict{<:Formula}, φ::Formula, val) = memo_structure[SoleLogics.tree(φ)] = val
+    setformula(memo_structure::AbstractDict{<:Formula}, φ::Formula,
+        val,) = memo_structure[SoleLogics.tree(φ)] = val
     readformula(memo_structure::AbstractDict{<:Formula}, φ::Formula) = memo_structure[SoleLogics.tree(φ)]
-    hasformula(memo_structure::AbstractDict{<:Formula}, φ::Formula) = haskey(memo_structure, SoleLogics.tree(φ))
+    hasformula(memo_structure::AbstractDict{<:Formula},
+        φ::Formula,) = haskey(memo_structure, SoleLogics.tree(φ))
 
-    setformula(memo_structure::AbstractMemoset, φ::Formula, val) = Base.setindex!(memo_structure, i_instance, SoleLogics.tree(φ), val)
-    readformula(memo_structure::AbstractMemoset, φ::Formula) = Base.getindex(memo_structure, i_instance, SoleLogics.tree(φ))
-    hasformula(memo_structure::AbstractMemoset, φ::Formula) = haskey(memo_structure, i_instance, SoleLogics.tree(φ))
+    setformula(memo_structure::AbstractMemoset, φ::Formula,
+        val,) = Base.setindex!(memo_structure, i_instance, SoleLogics.tree(φ), val)
+    readformula(memo_structure::AbstractMemoset,
+        φ::Formula,) = Base.getindex(memo_structure, i_instance, SoleLogics.tree(φ))
+    hasformula(memo_structure::AbstractMemoset,
+        φ::Formula,) = haskey(memo_structure, i_instance, SoleLogics.tree(φ))
 
     onestep_memoset = begin
-        if hassupports(X) && supporttypes(X) <: Tuple{<:AbstractOneStepMemoset,<:AbstractFullMemoset}
+        if hassupports(X) &&
+           supporttypes(X) <: Tuple{<:AbstractOneStepMemoset, <:AbstractFullMemoset}
             supports(X)[1]
         else
             nothing
@@ -100,15 +106,16 @@ function check(
         φ = normalize(φ; profile = :modelchecking, allow_atom_flipping = isnothing(onestep_memoset))
     end
 
-    X, memo_structure = begin
+    X,
+    memo_structure = begin
         if hassupports(X) && usesfullmemo(X)
             if !isnothing(use_memo)
                 @warn "Dataset of type $(typeof(X)) uses full memoization, " *
-                    "but a memoization structure was provided to check(...)."
+                      "but a memoization structure was provided to check(...)."
             end
             base(X), fullmemo(X)
         elseif isnothing(use_memo)
-            X, ThreadSafeDict{SyntaxTree,Worlds{W}}()
+            X, ThreadSafeDict{SyntaxTree, Worlds{W}}()
         elseif use_memo isa AbstractMemoset
             X, use_memo[i_instance]
         else
@@ -136,13 +143,17 @@ function check(
                 tok = token(ψ)
 
                 worldset = begin
-                    if !isnothing(onestep_memoset) && SoleLogics.height(ψ) == 1 && tok isa SoleLogics.AbstractRelationalConnective &&
-                            ((SoleLogics.relation(tok) == globalrel && nworlds(fr) != 1) || !SoleLogics.isgrounding(SoleLogics.relation(tok))) &&
-                            SoleLogics.ismodal(tok) && SoleLogics.isunary(tok) && SoleLogics.isdiamond(tok) &&
-                            token(first(children(ψ))) isa Atom &&
-                            # Note: metacond with same aggregator also works. TODO maybe use Conditions with aggregators inside and look those up.
-                            (onestep_memoset_is_complete || (metacond(SoleLogics.value(token(first(children(ψ))))) in metaconditions(onestep_memoset))) &&
-                            true
+                    if !isnothing(onestep_memoset) && SoleLogics.height(ψ) == 1 &&
+                       tok isa SoleLogics.AbstractRelationalConnective &&
+                       ((SoleLogics.relation(tok) == globalrel && nworlds(fr) != 1) ||
+                        !SoleLogics.isgrounding(SoleLogics.relation(tok))) &&
+                       SoleLogics.ismodal(tok) && SoleLogics.isunary(tok) &&
+                       SoleLogics.isdiamond(tok) &&
+                       token(first(children(ψ))) isa Atom &&
+                       # Note: metacond with same aggregator also works. TODO maybe use Conditions with aggregators inside and look those up.
+                       (onestep_memoset_is_complete ||
+                        (metacond(SoleLogics.value(token(first(children(ψ))))) in metaconditions(onestep_memoset))) &&
+                       true
                         # println("ONESTEP!")
                         # println(syntaxstring(ψ))
                         condition = SoleLogics.value(token(first(children(ψ))))
@@ -150,12 +161,17 @@ function check(
                         _rel = SoleLogics.relation(tok)
                         _feature = feature(condition)
                         _featchannel = featchannel(X, i_instance, _feature)
-                        _f(world->begin
-                            gamma = featchannel_onestep_aggregation(X, onestep_memoset, _featchannel, i_instance, world, _rel, _metacond)
-                            apply_test_operator(test_operator(_metacond), gamma, threshold(condition))
-                        end, _c(allworlds(fr)))
+                        _f(
+                            world->begin
+                                gamma = featchannel_onestep_aggregation(
+                                    X, onestep_memoset, _featchannel,
+                                    i_instance, world, _rel, _metacond,)
+                                apply_test_operator(test_operator(_metacond), gamma, threshold(condition))
+                            end,
+                            _c(allworlds(fr)),)
                     elseif tok isa Connective
-                        _c(SoleLogics.collateworlds(fr, tok, map(f->readformula(memo_structure, f), children(ψ))))
+                        _c(SoleLogics.collateworlds(
+                            fr, tok, map(f->readformula(memo_structure, f), children(ψ)),))
                     elseif tok isa SyntaxLeaf
                         # TODO write check(tok, X, i_instance, _w) and use it here instead of checkcondition.
                         condition = SoleLogics.value(tok)
@@ -204,11 +220,11 @@ in SoleLogics, they require their own method definition here rather than falling
 to the `Formula` method.
 """
 function check(
-    ::CheckAlgorithm,
-    φ::Truth,
-    i::LogicalInstance,
-    args...;
-    kwargs...
+        ::CheckAlgorithm,
+        φ::Truth,
+        i::LogicalInstance,
+        args...;
+        kwargs...,
 )
     return istop(interpret(φ, i, args...; kwargs...))
 end

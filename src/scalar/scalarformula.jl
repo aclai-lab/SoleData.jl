@@ -1,5 +1,4 @@
 
-
 using SoleLogics: SyntaxTree
 using SoleLogics
 using SoleData
@@ -53,7 +52,6 @@ macro scalarformula(expr)
             throw(ArgumentError("Unsupported expression type: $expr (head: $(expr.head), args: $(expr.args))"))
         end
     end
-
 
     parsed_tree = _parse_syntaxtree(expr)
     return esc(parsed_tree)
