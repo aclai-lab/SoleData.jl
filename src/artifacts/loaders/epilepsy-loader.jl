@@ -4,7 +4,7 @@ struct EpilepsyLoader <: AbstractLoaderDataset
 
     EpilepsyLoader() = new(
         "epilepsy",
-        ""
+        "",
     )
 end
 
@@ -28,14 +28,16 @@ function load(l::EpilepsyLoader)
         end
     end
 
-    (X_train, y_train), (X_test, y_test) =
-        (
-            read("$(dirpath)/epilepsy_TEST.arff", String) |> parseARFF,
-            read("$(dirpath)/epilepsy_TRAIN.arff", String) |> parseARFF,
-        )
+    (X_train,
+        y_train,),
+    (X_test,
+        y_test,) = (
+        read("$(dirpath)/epilepsy_TEST.arff", String) |> parseARFF,
+        read("$(dirpath)/epilepsy_TRAIN.arff", String) |> parseARFF,
+    )
 
-    X_train  = fix_dataframe(X_train, nothing)
-    X_test   = fix_dataframe(X_test, nothing)
+    X_train = fix_dataframe(X_train, nothing)
+    X_test = fix_dataframe(X_test, nothing)
 
     y_train = categorical(y_train)
     y_test = categorical(y_test)

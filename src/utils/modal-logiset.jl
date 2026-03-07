@@ -21,7 +21,6 @@
 #     FR<:AbstractFrame{W},
 # } <: AbstractModalLogiset{W,U,FT,FR} end
 
-
 """
     struct ExplicitBooleanModalLogiset{
         W<:AbstractWorld,
@@ -40,44 +39,42 @@ See also
 [`AbstractModalLogiset`](@ref).
 """
 struct ExplicitBooleanModalLogiset{
-    W<:AbstractWorld,
-    FT<:AbstractFeature,
-    FR<:AbstractFrame{W},
-    D<:AbstractVector{<:Tuple{<:Dict{<:W,<:Vector{<:FT}},<:FR}}
-} <: AbstractModalLogiset{W,Bool,FT,FR}
-
-    d :: D
-
+    W <: AbstractWorld,
+    FT <: AbstractFeature,
+    FR <: AbstractFrame{W},
+    D <: AbstractVector{<:Tuple{<:Dict{<:W, <:Vector{<:FT}}, <:FR}},
+} <: AbstractModalLogiset{W, Bool, FT, FR}
+    d::D
 end
 
 ninstances(X::ExplicitBooleanModalLogiset) = length(X.d)
 
 function featchannel(
-    X::ExplicitBooleanModalLogiset{W},
-    i_instance::Integer,
-    feature::AbstractFeature,
-) where {W<:AbstractWorld}
+        X::ExplicitBooleanModalLogiset{W},
+        i_instance::Integer,
+        feature::AbstractFeature,
+) where {W <: AbstractWorld}
     X.d[i_instance][1]
 end
 
 function readfeature(
-    X::ExplicitBooleanModalLogiset{W},
-    featchannel::Any,
-    w::W,
-    feature::AbstractFeature;
-    kwargs...
-) where {W<:AbstractWorld}
+        X::ExplicitBooleanModalLogiset{W},
+        featchannel::Any,
+        w::W,
+        feature::AbstractFeature;
+        kwargs...,
+) where {W <: AbstractWorld}
     Base.in(feature, featchannel[w])
 end
 
 function featvalue!(
-    X::ExplicitBooleanModalLogiset{W},
-    featval::Bool,
-    i_instance::Integer,
-    w::W,
-    feature::AbstractFeature,
-    i_feature   :: Union{Nothing,Integer} = nothing,
-) where {W<:AbstractWorld}
+        X::ExplicitBooleanModalLogiset{W},
+        featval::Bool,
+        i_instance::Integer,
+        w::W,
+        feature::AbstractFeature,
+        i_feature::Union{Nothing, Integer} = nothing,
+) where {W <: AbstractWorld}
     cur_featval = featvalue(feature, X, featval, i_instance, w)
     if featval && !cur_featval
         push!(X.d[i_instance][1][w], feature)
@@ -87,19 +84,23 @@ function featvalue!(
 end
 
 function frame(
-    X::ExplicitBooleanModalLogiset{W},
-    i_instance::Integer,
-) where {W<:AbstractWorld}
+        X::ExplicitBooleanModalLogiset{W},
+        i_instance::Integer,
+) where {W <: AbstractWorld}
     X.d[i_instance][2]
 end
 
 function instances(
-    X::ExplicitBooleanModalLogiset,
-    inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false);
-    kwargs...
+        X::ExplicitBooleanModalLogiset,
+        inds::AbstractVector,
+        return_view::Union{Val{true}, Val{false}} = Val(false);
+        kwargs...,
 )
-    ExplicitBooleanModalLogiset(if return_view == Val(true) @views X.d[inds] else X.d[inds] end)
+    ExplicitBooleanModalLogiset(if return_view == Val(true)
+        @views X.d[inds]
+    else
+        X.d[inds]
+    end)
 end
 
 function concatdatasets(Xs::ExplicitBooleanModalLogiset...)
@@ -107,15 +108,16 @@ function concatdatasets(Xs::ExplicitBooleanModalLogiset...)
 end
 
 function displaystructure(
-    X::ExplicitBooleanModalLogiset;
-    indent_str = "",
-    include_ninstances = true,
-    include_worldtype = missing,
-    include_featvaltype = missing,
-    include_featuretype = missing,
-    include_frametype = missing,
+        X::ExplicitBooleanModalLogiset;
+        indent_str = "",
+        include_ninstances = true,
+        include_worldtype = missing,
+        include_featvaltype = missing,
+        include_featuretype = missing,
+        include_frametype = missing,
 )
-    padattribute(l,r) = string(l) * lpad(r,32+length(string(r))-(length(indent_str)+2+length(l)))
+    padattribute(l, r) = string(l) *
+                         lpad(r, 32+length(string(r))-(length(indent_str)+2+length(l)))
     out = "ExplicitBooleanModalLogiset ($(humansize(X)))\n"
     if ismissing(include_worldtype) || include_worldtype != worldtype(X)
         out *= indent_str * "├ " * padattribute("worldtype:", worldtype(X)) * "\n"
@@ -132,7 +134,9 @@ function displaystructure(
     if include_ninstances
         out *= indent_str * "├ " * padattribute("# instances:", ninstances(X)) * "\n"
     end
-    out *= indent_str * "└ " * padattribute("# world density (countmap):", "$(countmap([nworlds(X, i_instance) for i_instance in 1:ninstances(X)]))")
+    out *= indent_str * "└ " *
+           padattribute("# world density (countmap):",
+               "$(countmap([nworlds(X, i_instance) for i_instance in 1:ninstances(X)]))",)
     out
 end
 
@@ -141,16 +145,16 @@ function allfeatvalues(X::ExplicitBooleanModalLogiset)
 end
 
 function allfeatvalues(
-    X::ExplicitBooleanModalLogiset,
-    i_instance
+        X::ExplicitBooleanModalLogiset,
+        i_instance,
 )
     [true, false]
 end
 
 function allfeatvalues(
-    X::ExplicitBooleanModalLogiset,
-    i_instance,
-    feature,
+        X::ExplicitBooleanModalLogiset,
+        i_instance,
+        feature,
 )
     [true, false]
 end
@@ -158,7 +162,6 @@ end
 hasnans(X::ExplicitBooleanModalLogiset) = false
 
 # TODO "show plot" method
-
 
 """
     struct ExplicitModalLogiset{
@@ -179,15 +182,13 @@ See also
 [`AbstractModalLogiset`](@ref).
 """
 struct ExplicitModalLogiset{
-    W<:AbstractWorld,
+    W <: AbstractWorld,
     U,
-    FT<:AbstractFeature,
-    FR<:AbstractFrame{W},
-    D<:AbstractVector{<:Tuple{<:Dict{<:W,<:Dict{<:FT,<:U}},<:FR}}
-} <: AbstractModalLogiset{W,U,FT,FR}
-
-    d :: D
-
+    FT <: AbstractFeature,
+    FR <: AbstractFrame{W},
+    D <: AbstractVector{<:Tuple{<:Dict{<:W, <:Dict{<:FT, <:U}}, <:FR}},
+} <: AbstractModalLogiset{W, U, FT, FR}
+    d::D
 end
 
 ninstances(X::ExplicitModalLogiset) = length(X.d)
@@ -197,47 +198,51 @@ ninstances(X::ExplicitModalLogiset) = length(X.d)
 # features(X::ExplicitModalLogiset) = unique(collect(Iterators.flatten(map(i->Iterators.flatten(map(d->collect(keys(d)), values(first(i)))), X.d))))
 
 function featchannel(
-    X::ExplicitModalLogiset{W},
-    i_instance::Integer,
-    feature::AbstractFeature,
-) where {W<:AbstractWorld}
+        X::ExplicitModalLogiset{W},
+        i_instance::Integer,
+        feature::AbstractFeature,
+) where {W <: AbstractWorld}
     X.d[i_instance][1]
 end
 
 function readfeature(
-    X::ExplicitModalLogiset{W},
-    featchannel::Any,
-    w::W,
-    feature::AbstractFeature,
-) where {W<:AbstractWorld}
+        X::ExplicitModalLogiset{W},
+        featchannel::Any,
+        w::W,
+        feature::AbstractFeature,
+) where {W <: AbstractWorld}
     featchannel[w][feature]
 end
 
 function featvalue!(
-    feature::AbstractFeature,
-    X::ExplicitModalLogiset{W},
-    featval,
-    i_instance::Integer,
-    w::W,
-    i_feature   :: Union{Nothing,Integer} = nothing,
-) where {W<:AbstractWorld}
+        feature::AbstractFeature,
+        X::ExplicitModalLogiset{W},
+        featval,
+        i_instance::Integer,
+        w::W,
+        i_feature::Union{Nothing, Integer} = nothing,
+) where {W <: AbstractWorld}
     X.d[i_instance][1][w][feature] = featval
 end
 
 function frame(
-    X::ExplicitModalLogiset{W},
-    i_instance::Integer,
-) where {W<:AbstractWorld}
+        X::ExplicitModalLogiset{W},
+        i_instance::Integer,
+) where {W <: AbstractWorld}
     X.d[i_instance][2]
 end
 
 function instances(
-    X::ExplicitModalLogiset,
-    inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false);
-    kwargs...
+        X::ExplicitModalLogiset,
+        inds::AbstractVector,
+        return_view::Union{Val{true}, Val{false}} = Val(false);
+        kwargs...,
 )
-    ExplicitModalLogiset(if return_view == Val(true) @views X.d[inds] else X.d[inds] end)
+    ExplicitModalLogiset(if return_view == Val(true)
+        @views X.d[inds]
+    else
+        X.d[inds]
+    end)
 end
 
 function concatdatasets(Xs::ExplicitModalLogiset...)
@@ -245,15 +250,16 @@ function concatdatasets(Xs::ExplicitModalLogiset...)
 end
 
 function displaystructure(
-    X::ExplicitModalLogiset;
-    indent_str = "",
-    include_ninstances = true,
-    include_worldtype = missing,
-    include_featvaltype = missing,
-    include_featuretype = missing,
-    include_frametype = missing,
+        X::ExplicitModalLogiset;
+        indent_str = "",
+        include_ninstances = true,
+        include_worldtype = missing,
+        include_featvaltype = missing,
+        include_featuretype = missing,
+        include_frametype = missing,
 )
-    padattribute(l,r) = string(l) * lpad(r,32+length(string(r))-(length(indent_str)+2+length(l)))
+    padattribute(l, r) = string(l) *
+                         lpad(r, 32+length(string(r))-(length(indent_str)+2+length(l)))
     out = "ExplicitModalLogiset ($(humansize(X)))\n"
     if ismissing(include_worldtype) || include_worldtype != worldtype(X)
         out *= indent_str * "├ " * padattribute("worldtype:", worldtype(X)) * "\n"
@@ -270,25 +276,25 @@ function displaystructure(
     if include_ninstances
         out *= indent_str * "├ " * padattribute("# instances:", "$(ninstances(X))") * "\n"
     end
-    out *= indent_str * "└ " * padattribute("# world density (countmap):", "$(countmap([nworlds(X, i_instance) for i_instance in 1:ninstances(X)]))")
+    out *= indent_str * "└ " *
+           padattribute("# world density (countmap):",
+               "$(countmap([nworlds(X, i_instance) for i_instance in 1:ninstances(X)]))",)
     out
 end
 
-
 # TODO "show plot" method
 
-
 function allfeatvalues(
-    X::ExplicitModalLogiset{W},
-    i_instance,
-) where {W<:AbstractWorld}
+        X::ExplicitModalLogiset{W},
+        i_instance,
+) where {W <: AbstractWorld}
     unique(collect(Iterators.flatten(values.(values(X.d[i_instance][1])))))
 end
 
 function allfeatvalues(
-    X::ExplicitModalLogiset{W},
-    i_instance,
-    feature,
-) where {W<:AbstractWorld}
+        X::ExplicitModalLogiset{W},
+        i_instance,
+        feature,
+) where {W <: AbstractWorld}
     unique([ch[feature] for ch in values(X.d[i_instance][1])])
 end

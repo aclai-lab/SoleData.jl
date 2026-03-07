@@ -8,26 +8,27 @@ using SoleLogics
 Applica `_formula_to_pla` e poi `_pla_to_formula` sulla formula in input,
 restituendo la formula ricostruita.
 """
-function debug_roundtrip_formula(formula; featvaltype=Float64)
+function debug_roundtrip_formula(formula; featvaltype = Float64)
     println("=== FORMULA ORIGINALE ===")
     println(syntaxstring(formula))
-    
+
     pla_str, args, kwargs = PLA._formula_to_pla(formula, false, false) # silent=false
     println("\n=== PLA GENERATO ===")
     println(pla_str)
     println("\n=== ARGS E KWARGS ===")
     println("args: ", args)
     println("kwargs: ", kwargs)
-    
-    result = PLA._pla_to_formula(pla_str, false, args...; featvaltype=featvaltype, kwargs...)
+
+    result = PLA._pla_to_formula(
+        pla_str, false, args...; featvaltype = featvaltype, kwargs...,)
     println("\n=== FORMULA RICOSTRUITA ===")
     println(syntaxstring(result))
-    
+
     # Controllo di uguaglianza
     println("\n=== CONTROLLO UGUAGLIANZA ===")
     formulas_equal = dnf(formula).grandchildren == dnf(result).grandchildren
     println("Formule uguali: ", formulas_equal)
-    
+
     if !formulas_equal
         println("⚠️  ATTENZIONE: Le formule non sono uguali!")
         println("Originale:    ", syntaxstring(dnf(formula)))
@@ -35,10 +36,9 @@ function debug_roundtrip_formula(formula; featvaltype=Float64)
     else
         println("✅ Roundtrip completato con successo!")
     end
-    
+
     return result
 end
-
 
 #=
 f = @scalarformula
@@ -349,7 +349,7 @@ f = @scalarformula
 =#
 
 f = @scalarformula ((V1 ≥ 10) ∧ (V2 < 0)) ∨
-((V2 < 0) ∧ (V1 ≥ 2))
+                   ((V2 < 0) ∧ (V1 ≥ 2))
 f_roundtrip = roundtrip_formula(f)
 
 println("Originale: ", syntaxstring(f))

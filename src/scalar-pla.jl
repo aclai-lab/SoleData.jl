@@ -27,7 +27,6 @@ _removewhitespaces = x->replace(x, (' ' => ""))
 #     return OrderedDict(k => sort(collect(v)) for (k, v) in domains)
 # end
 
-
 # Function to encode a disjunct into a PLA row
 """
     encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, feat_condindxss) -> Vector{String}
@@ -69,9 +68,10 @@ _removewhitespaces = x->replace(x, (' ' => ""))
     - Warnings are issued when logical conflicts are detected during encoding
     - The resulting PLA row uses "-" for don't-care positions that are not constrained by any literal
 """
-function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector, conditions::AbstractVector, includes, excludes, feat_condindxss)
+function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVector,
+        conditions::AbstractVector, includes, excludes, feat_condindxss,)
     pla_row = fill("-", length(conditions))
-    
+
     # For each atom in the disjunct, add zeros or ones to relevants
     for lit in SoleLogics.grandchildren(disjunct)
         # @show syntaxstring(lit)
@@ -83,12 +83,14 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
         feat_condindxs = feat_condindxss[i_feat]
         # @show feat_condindxs
         feat_icond = findfirst(c->c==cond, conditions[feat_condindxs])
-        feat_idualcond = SoleData.hasdual(cond) ? findfirst(c->c==SoleData.dual(cond), conditions[feat_condindxs]) : nothing
+        feat_idualcond = SoleData.hasdual(cond) ?
+                         findfirst(c->c==SoleData.dual(cond), conditions[feat_condindxs]) :
+                         nothing
         # @show feat_icond, feat_idualcond
         @assert !(isnothing(feat_icond) && isnothing(feat_idualcond))
 
         POS, NEG = ispos ? ("1", "0") : ("0", "1")
-        
+
         # Manage the main condition
         if !isnothing(feat_icond)
             # For each condition this includes, set POS if not already NEG
@@ -104,7 +106,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
                     end
                 end
             end
-            
+
             # For any condition that this excludes, set NEG
             for (ic, c) in enumerate(feat_condindxs)
                 if excludes[i_feat][feat_icond, ic]
@@ -119,7 +121,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
                 end
             end
         end
-        
+
         # Handle dual condition if exists
         if !isnothing(feat_idualcond)
             # For dual condition, invert POS and NEG
@@ -133,7 +135,7 @@ function encode_disjunct(disjunct::LeftmostConjunctiveForm, features::AbstractVe
                     end
                 end
             end
-            
+
             for (ic, c) in enumerate(feat_condindxs)
                 if excludes[i_feat][feat_idualcond, ic]
                     if pla_row[c] == "-"
@@ -232,16 +234,16 @@ end
     - `SoleData.scalar_simplification`: Scalar simplification methods
 """
 function _formula_to_pla(
-    formula::SoleLogics.Formula,
-    dc_set = false,
-    silent = true,
-    args...;
-    encoding = :univariate,
-    use_scalar_range_conditions = false,
-    kwargs...
+        formula::SoleLogics.Formula,
+        dc_set = false,
+        silent = true,
+        args...;
+        encoding = :univariate,
+        use_scalar_range_conditions = false,
+        kwargs...,
 )
     @assert encoding in [:univariate, :multivariate]
-    
+
     scalar_kwargs = (;
         profile = :nnf,
         allow_atom_flipping = true,
@@ -250,13 +252,13 @@ function _formula_to_pla(
     dnfformula = SoleLogics.dnf(formula, Atom; scalar_kwargs..., kwargs...)
 
     scalar_simplification_kwargs = (;
-        force_scalar_range_conditions = use_scalar_range_conditions, 
+        force_scalar_range_conditions = use_scalar_range_conditions,
         allow_scalar_range_conditions = use_scalar_range_conditions,
     )
     silent || @show dnfformula
 
     dnfformula = SoleData.scalar_simplification(dnfformula;
-        scalar_simplification_kwargs...
+        scalar_simplification_kwargs...,
     )
 
     silent || @show dnfformula
@@ -268,22 +270,23 @@ function _formula_to_pla(
     #     # flip_atom = a -> SoleData.polarity(SoleData.test_operator(SoleLogics.value(a))) == false
     # )
 
-    dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs..., 
-    kwargs...)
+    dnfformula = SoleLogics.dnf(dnfformula; scalar_kwargs...,
+        kwargs...,)
 
     _patchnothing(v, d) = isnothing(v) ? d : v
 
     for ch in SoleLogics.grandchildren(dnfformula)
-        sort!(SoleLogics.grandchildren(ch), by=lit->SoleData._scalarcondition_sortby(SoleLogics.value(SoleLogics.atom(lit))))
+        sort!(SoleLogics.grandchildren(ch),
+            by = lit->SoleData._scalarcondition_sortby(SoleLogics.value(SoleLogics.atom(lit))),)
     end
     silent || @show dnfformula
 
     # Extract domains
     conditions = unique(map(SoleLogics.value, atoms(dnfformula)))
     features = unique(SoleData.feature.(conditions))
-    sort!(features, by=syntaxstring)
+    sort!(features, by = syntaxstring)
     # nnbinary_vars =div(length(setdiff(_duals, conditions)), 2)
-    sort!(conditions, by=SoleData._scalarcondition_sortby)
+    sort!(conditions, by = SoleData._scalarcondition_sortby)
     silent || println(SoleLogics.displaysyntaxvector(features))
     silent || println(SoleLogics.displaysyntaxvector(conditions))
     if use_scalar_range_conditions
@@ -297,7 +300,8 @@ function _formula_to_pla(
     silent || println(SoleLogics.displaysyntaxvector(conditions))
 
     # For each feature, derive the conditions, and their names.
-    feat_condindxss, feat_conds, feat_condnames = zip(map(features) do feat
+    feat_condindxss, feat_conds,
+    feat_condnames = zip(map(features) do feat
         feat_condindxs = findall(c->feature(c) == feat, conditions)
         conds = filter(c->feature(c) == feat, conditions)
         condname = _removewhitespaces.(syntaxstring.(conds))
@@ -305,16 +309,18 @@ function _formula_to_pla(
     end...)
 
     feat_nconds = length.(feat_conds)
-    
+
     silent || @show feat_nconds
     silent || @show feat_condnames
-    
+
     # Derive inclusions and exclusions between conditions
     includes, excludes = [], []
-    for (i,feat_condindxs) in enumerate(feat_condindxss)
+    for (i, feat_condindxs) in enumerate(feat_condindxss)
         # silent || @show feat_condnames[i]
-        this_includes = [SoleData.includes(conditions[cond_i], conditions[cond_j]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
-        this_excludes = [SoleData.excludes(conditions[cond_j], conditions[cond_i]) for cond_i in feat_condindxs, cond_j in feat_condindxs]
+        this_includes = [SoleData.includes(conditions[cond_i], conditions[cond_j])
+                         for cond_i in feat_condindxs, cond_j in feat_condindxs]
+        this_excludes = [SoleData.excludes(conditions[cond_j], conditions[cond_i])
+                         for cond_i in feat_condindxs, cond_j in feat_condindxs]
         # println(this_includes)
         # println(this_excludes)
         push!(includes, this_includes)
@@ -331,7 +337,8 @@ function _formula_to_pla(
         silent || @show num_binary_vars
         silent || @show num_nonbinary_vars
         num_vars = num_binary_vars + num_nonbinary_vars
-        push!(pla_header, ".mv $(num_vars) $(num_binary_vars) $(join(feat_nconds[feat_nconds .> 1], " ")) 1")
+        push!(pla_header,
+            ".mv $(num_vars) $(num_binary_vars) $(join(feat_nconds[feat_nconds .> 1], " ")) 1",)
         if num_binary_vars > 0
             ilb_str = join(vcat(feat_condnames[feat_nconds .== 1]...), " ")
             push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
@@ -357,11 +364,13 @@ function _formula_to_pla(
     # Generate ON-set rows for each disjunct
     end_idxs = cumsum(feat_nconds)
     silent || @show feat_nconds
-    feat_varidxs = [(startidx:endidx) for (startidx,endidx) in zip([1, (end_idxs.+1)...], end_idxs)]
+    feat_varidxs = [(startidx:endidx)
+                    for (startidx, endidx) in zip([1, (end_idxs .+ 1)...], end_idxs)]
     silent || @show feat_varidxs
     pla_onset_rows = []
     for disjunct in SoleLogics.disjuncts(dnfformula)
-        row = encode_disjunct(disjunct, features, conditions, includes, excludes, feat_condindxss)
+        row = encode_disjunct(
+            disjunct, features, conditions, includes, excludes, feat_condindxss,)
         if encoding == :multivariate
             # Binary variables first
             silent || @show row
@@ -370,7 +379,7 @@ function _formula_to_pla(
             row = vcat(
                 [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
                 (num_binary_vars > 0 ? ["|"] : [])...,
-                [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...
+                [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...,
             )
             push!(pla_onset_rows, "$(join(row, ""))1")
         else
@@ -386,13 +395,14 @@ function _formula_to_pla(
         join(pla_dcset_rows, "\n"),
         ".p $(length(pla_onset_rows))",
         join(pla_onset_rows, "\n"),
-        ".e"
+        ".e",
     ]
     c = strip(join(pla_content, "\n"))
-    return c, (nothing, conditions), (
+    return c, (nothing, conditions),
+    (
         encoding = encoding,
         use_scalar_range_conditions = use_scalar_range_conditions,
-        kwargs...
+        kwargs...,
     )
 end
 
@@ -510,14 +520,14 @@ end
     - `parsecondition`: Condition parsing utilities
 """
 function _pla_to_formula(
-    pla::AbstractString,
-    silent = true,
-    ilb_str = nothing,
-    conditions = nothing;
-    conditionstype = SoleData.ScalarCondition,
-    featuretype = SoleData.VariableValue,
-    featvaltype = nothing,
-    kwargs...
+        pla::AbstractString,
+        silent = true,
+        ilb_str = nothing,
+        conditions = nothing;
+        conditionstype = SoleData.ScalarCondition,
+        featuretype = SoleData.VariableValue,
+        featvaltype = nothing,
+        kwargs...,
 )
     # @show ilb_str, conditions
     # Split the PLA into lines and parse key components
@@ -601,7 +611,8 @@ function _pla_to_formula(
             silent || @show input_vars
             silent || @show conditions_map
             condname = i_var ∈ eachindex(input_vars) ? input_vars[i_var] : "?"
-            cond = (condname ∈ keys(conditions_map) ? conditions_map[condname] : parsefun(condname))
+            cond = (condname ∈ keys(conditions_map) ? conditions_map[condname] :
+                    parsefun(condname))
             push!(parsed_conditions, cond)
         else
             # Multi-valued conditions are stored as a group
@@ -621,13 +632,13 @@ function _pla_to_formula(
         binary_part = parts[1]
 
         if (total_vars == nbinary_vars)
-            binary_part, output_value = binary_part[1:end-1], binary_part[end]
+            binary_part, output_value = binary_part[1:(end - 1)], binary_part[end]
             # @show row_values
             if output_value != '1'  # Only process ON-set rows
                 continue
             end
         end
-        conjuncts = []        
+        conjuncts = []
 
         # Process binary variables
         # Convert row values back into parsed_conditions
@@ -644,7 +655,7 @@ function _pla_to_formula(
                 error("Unexpected truth value: '$(value)'.")
             end
         end
-        
+
         if length(parts) > 1
             multiple_part = parts[2:end]
             # Process multi-valued variables
@@ -663,21 +674,21 @@ function _pla_to_formula(
         end
     end
 
-
     # Combine disjuncts into a disjunctive form
     φ = if !isempty(disjuncts)
-        map!(d->SoleData.scalar_simplification(d;
-            force_scalar_range_conditions=false,
-            allow_scalar_range_conditions=false,
-        ), disjuncts, disjuncts)
+        map!(
+            d->SoleData.scalar_simplification(d;
+                force_scalar_range_conditions = false,
+                allow_scalar_range_conditions = false,
+            ),
+            disjuncts,
+            disjuncts,)
         return SL.LeftmostDisjunctiveForm(disjuncts)
     else
         return ⊤  # True formula
     end
 end
 
-
 # function formula_to_emacs(expr::SyntaxTree) end
-
 
 end

@@ -34,8 +34,8 @@ See also
 """
 abstract type VarFeature <: AbstractFeature end
 
-const VariableId = Union{Integer,Symbol}
-const VariableName = Union{String,Symbol}
+const VariableId = Union{Integer, Symbol}
+const VariableName = Union{String, Symbol}
 
 DEFAULT_VARFEATVALTYPE = Real
 
@@ -60,7 +60,6 @@ See also [`VarFeature`](@ref).
 function computefeature(f::VarFeature, featchannel; kwargs...)
     return error("Please, provide method computefeature(::$(typeof(f)), featchannel::$(typeof(featchannel)); kwargs...).")
 end
-
 
 @inline (f::AbstractFeature)(args...) = computefeature(f, args...)
 
@@ -148,24 +147,26 @@ See also
 [`syntaxstring`](@ref).
 """
 function variable_name(
-    f::AbstractUnivariateFeature;
-    variable_names_map::Union{Nothing,AbstractDict,AbstractVector} = nothing,
-    variable_name_prefix::Union{Nothing,String} = nothing,
-    kwargs..., # TODO remove this.
+        f::AbstractUnivariateFeature;
+        variable_names_map::Union{Nothing, AbstractDict, AbstractVector} = nothing,
+        variable_name_prefix::Union{Nothing, String} = nothing,
+        kwargs..., # TODO remove this.
 )
     i_var = i_variable(f)
     if isnothing(variable_names_map)
-        variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
+        variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX :
+                               variable_name_prefix
         i_var isa Integer ? "$(variable_name_prefix)$(i_var)" : "$(i_var)"
     else
         if i_var isa Integer
-            i_var =i_var
+            i_var = i_var
         elseif i_var isa Symbol
             i_var = findfirst(v->occursin(string(i_var), string(v)), variable_names_map)
         end
         if !(i_var in keys(variable_names_map))
             @warn "Could not find variable $i_var in `variable_names_map`. ($(@show variable_names_map))"
-            variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX : variable_name_prefix
+            variable_name_prefix = isnothing(variable_name_prefix) ? UVF_VARPREFIX :
+                                   variable_name_prefix
             i_var isa Integer ? "?$(variable_name_prefix)$(i_var)?" : "?$(i_var)?"
         else
             "$(variable_names_map[i_var])"
@@ -178,10 +179,10 @@ function featurename(f::AbstractFeature; kwargs...)
 end
 
 function syntaxstring(
-    f::AbstractUnivariateFeature;
-    opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
-    closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
-    kwargs...
+        f::AbstractUnivariateFeature;
+        opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
+        closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
+        kwargs...,
 )
     n = variable_name(f; kwargs...)
     "$(featurename(f))$opening_parenthesis$n$closing_parenthesis"
@@ -209,18 +210,20 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateFeature{U,I<:VariableId} <: AbstractUnivariateFeature
+struct UnivariateFeature{U, I <: VariableId} <: AbstractUnivariateFeature
     i_variable::I
     f::Function
-    fname::Union{Nothing,String}
-    function UnivariateFeature{U}(feat::UnivariateFeature) where {U<:Real}
+    fname::Union{Nothing, String}
+    function UnivariateFeature{U}(feat::UnivariateFeature) where {U <: Real}
         return UnivariateFeature{U}(i_variable(f), feat.f, feat.fname)
     end
-    function UnivariateFeature{U}(i_variable::I, f::Function, fname::Union{Nothing,String} = nothing) where {U<:Real,I<:VariableId}
-        return new{U,I}(i_variable, f, fname)
+    function UnivariateFeature{U}(i_variable::I, f::Function,
+            fname::Union{Nothing, String} = nothing,) where {U <: Real, I <: VariableId}
+        return new{U, I}(i_variable, f, fname)
     end
-    function UnivariateFeature(i_variable::I, f::Function, fname::Union{Nothing,String} = nothing) where {I<:VariableId}
-        return new{DEFAULT_VARFEATVALTYPE,I}(i_variable, f, fname)
+    function UnivariateFeature(i_variable::I, f::Function,
+            fname::Union{Nothing, String} = nothing,) where {I <: VariableId}
+        return new{DEFAULT_VARFEATVALTYPE, I}(i_variable, f, fname)
     end
 end
 featurename(f::UnivariateFeature) = (!isnothing(f.fname) ? f.fname : string(f.f))
@@ -242,26 +245,28 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct UnivariateNamedFeature{U,I<:VariableId} <: AbstractUnivariateFeature
+struct UnivariateNamedFeature{U, I <: VariableId} <: AbstractUnivariateFeature
     i_variable::I
     name::VariableName
-    function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U<:Real}
+    function UnivariateNamedFeature{U}(f::UnivariateNamedFeature) where {U <: Real}
         return UnivariateNamedFeature{U}(i_variable(f), f.name)
     end
-    function UnivariateNamedFeature{U}(i_variable::I, name::VariableName) where {U<:Real,I<:VariableId}
-        return new{U,I}(i_variable, name)
+    function UnivariateNamedFeature{U}(i_variable::I, name::VariableName) where {
+            U <: Real, I <: VariableId,}
+        return new{U, I}(i_variable, name)
     end
-    function UnivariateNamedFeature(i_variable::I, name::VariableName) where {I<:VariableId}
-        return new{DEFAULT_VARFEATVALTYPE,I}(i_variable, name)
+    function UnivariateNamedFeature(i_variable::I, name::VariableName) where {I <:
+                                                                              VariableId}
+        return new{DEFAULT_VARFEATVALTYPE, I}(i_variable, name)
     end
 end
 featurename(f::UnivariateNamedFeature) = f.name
 
 function syntaxstring(
-    f::UnivariateNamedFeature;
-    opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
-    closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
-    kwargs...
+        f::UnivariateNamedFeature;
+        opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
+        closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
+        kwargs...,
 )
     n = f.name
     "$opening_parenthesis$n$closing_parenthesis"
@@ -286,17 +291,19 @@ See also [`SoleLogics.Interval`](@ref),
 [`AbstractUnivariateFeature`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableValue{I<:VariableId, N<:Union{VariableName, Nothing}} <: AbstractUnivariateFeature
+struct VariableValue{I <: VariableId, N <: Union{VariableName, Nothing}} <:
+       AbstractUnivariateFeature
     i_variable::I
     i_name::N
     function VariableValue(f::VariableValue)
         return VariableValue(i_variable(f))
     end
-    function VariableValue(i_variable::I) where {I<:VariableId}
+    function VariableValue(i_variable::I) where {I <: VariableId}
         return new{I, Nothing}(i_variable, nothing)
     end
-    function VariableValue(i_variable::I, i_name::N) where {I<:VariableId, N<:VariableName}
-        return new{I,N}(i_variable, i_name)
+    function VariableValue(i_variable::I, i_name::N) where {
+            I <: VariableId, N <: VariableName,}
+        return new{I, N}(i_variable, i_name)
     end
 end
 featurename(f::VariableValue) = !isnothing(f.i_name) ? f.i_name : ""
@@ -335,12 +342,12 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMax`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableMin{I<:VariableId} <: AbstractUnivariateFeature
+struct VariableMin{I <: VariableId} <: AbstractUnivariateFeature
     i_variable::I
     function VariableMin(f::VariableMin)
         return VariableMin(i_variable(f))
     end
-    function VariableMin(i_variable::I) where {I<:VariableId}
+    function VariableMin(i_variable::I) where {I <: VariableId}
         return new{I}(i_variable)
     end
 end
@@ -363,12 +370,12 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableMax{I<:VariableId} <: AbstractUnivariateFeature
+struct VariableMax{I <: VariableId} <: AbstractUnivariateFeature
     i_variable::I
     function VariableMax(f::VariableMax)
         return VariableMax(i_variable(f))
     end
-    function VariableMax(i_variable::I) where {I<:VariableId}
+    function VariableMax(i_variable::I) where {I <: VariableId}
         return new{I}(i_variable)
     end
 end
@@ -394,20 +401,22 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableSoftMin{T<:AbstractFloat,I<:VariableId} <: AbstractUnivariateFeature
+struct VariableSoftMin{T <: AbstractFloat, I <: VariableId} <: AbstractUnivariateFeature
     i_variable::I
     alpha::T
     function VariableSoftMin(f::VariableSoftMin)
         return VariableSoftMin(i_variable(f), alpha(f))
     end
-    function VariableSoftMin(i_variable::I, alpha::T) where {T,I<:VariableId}
+    function VariableSoftMin(i_variable::I, alpha::T) where {T, I <: VariableId}
         @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMin with alpha = $(alpha)"
         @assert !isone(alpha) "Cannot instantiate VariableSoftMin with alpha = $(alpha). Use VariableMin instead!"
-        new{T,I}(i_variable, alpha)
+        new{T, I}(i_variable, alpha)
     end
 end
 alpha(f::VariableSoftMin) = f.alpha
-featurename(f::VariableSoftMin) = "min" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
+function featurename(f::VariableSoftMin)
+    "min" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
+end
 
 function featvaltype(dataset, f::VariableSoftMin)
     return vareltype(dataset, f.i_variable)
@@ -427,20 +436,22 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMax`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableSoftMax{T<:AbstractFloat,I<:VariableId} <: AbstractUnivariateFeature
+struct VariableSoftMax{T <: AbstractFloat, I <: VariableId} <: AbstractUnivariateFeature
     i_variable::I
     alpha::T
     function VariableSoftMax(f::VariableSoftMax)
         return VariableSoftMax(i_variable(f), alpha(f))
     end
-    function VariableSoftMax(i_variable::I, alpha::T) where {T,I<:VariableId}
+    function VariableSoftMax(i_variable::I, alpha::T) where {T, I <: VariableId}
         @assert !(alpha > 1.0 || alpha < 0.0) "Cannot instantiate VariableSoftMax with alpha = $(alpha)"
         @assert !isone(alpha) "Cannot instantiate VariableSoftMax with alpha = $(alpha). Use VariableMax instead!"
-        new{T,I}(i_variable, alpha)
+        new{T, I}(i_variable, alpha)
     end
 end
 alpha(f::VariableSoftMax) = f.alpha
-featurename(f::VariableSoftMax) = "max" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
+function featurename(f::VariableSoftMax)
+    "max" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.'))
+end
 
 function featvaltype(dataset, f::VariableSoftMax)
     return vareltype(dataset, f.i_variable)
@@ -461,12 +472,12 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMax`](@ref), [`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableAvg{I<:VariableId} <: AbstractUnivariateFeature
+struct VariableAvg{I <: VariableId} <: AbstractUnivariateFeature
     i_variable::I
     function VariableAvg(f::VariableAvg)
         return VariableAvg(i_variable(f))
     end
-    function VariableAvg(i_variable::I) where {I<:VariableId}
+    function VariableAvg(i_variable::I) where {I <: VariableId}
         return new{I}(i_variable)
     end
 end
@@ -531,24 +542,24 @@ See also [`SoleLogics.Interval`](@ref),
 [`VariableMax`](@ref), [`VariableMin`](@ref),
 [`VarFeature`](@ref), [`AbstractFeature`](@ref).
 """
-struct VariableDistance{I<:VariableId,T} <: AbstractUnivariateFeature
+struct VariableDistance{I <: VariableId, T} <: AbstractUnivariateFeature
     i_variable::I
     references::AbstractArray{T}
     distance::Function
     featurename::VariableName
 
     function VariableDistance(
-        i_variable::I,
-        references::AbstractArray{T};
-        # euclidean distance, but with no Distances.jl dependency
-        distance::Function=(x,y) -> sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)])),
-        featurename = "Δ"
-    ) where {I<:VariableId,T}
+            i_variable::I,
+            references::AbstractArray{T};
+            # euclidean distance, but with no Distances.jl dependency
+            distance::Function = (x, y) -> sqrt(sum([(x - y)^2 for (x, y) in zip(x, y)])),
+            featurename = "Δ",
+    ) where {I <: VariableId, T}
         if any(r -> size(r) != size(references |> first), references)
             throw(DimensionMismatch("References' sizes are not unique."))
         end
 
-        return new{I,T}(i_variable, references, distance, featurename)
+        return new{I, T}(i_variable, references, distance, featurename)
     end
 end
 featurename(f::VariableDistance) = string(f.featurename)
@@ -566,29 +577,47 @@ end
 ############################################################################################
 
 # These features collapse to a single value; it can be useful to know this
-is_collapsing_univariate_feature(f::Union{VariableMin,VariableMax,VariableSoftMin,VariableSoftMax,VariableDistance}) = true
+function is_collapsing_univariate_feature(f::Union{
+        VariableMin, VariableMax, VariableSoftMin, VariableSoftMax, VariableDistance,})
+    true
+end
 is_collapsing_univariate_feature(f::UnivariateFeature) = (f.f in [minimum, maximum, mean])
 
+_st_featop_abbr(f::VariableMin, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⪰"
+_st_featop_abbr(f::VariableMax, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⪯"
+function _st_featop_abbr(f::VariableSoftMin, ::typeof(≥); kwargs...)
+    "$(variable_name(f; kwargs...)) $("⪰" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
+function _st_featop_abbr(f::VariableSoftMax, ::typeof(≤); kwargs...)
+    "$(variable_name(f; kwargs...)) $("⪯" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
 
-_st_featop_abbr(f::VariableMin,     ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⪰"
-_st_featop_abbr(f::VariableMax,     ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⪯"
-_st_featop_abbr(f::VariableSoftMin, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) $("⪰" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::VariableSoftMax, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) $("⪯" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableMin, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ↓"
+_st_featop_abbr(f::VariableMax, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ↑"
+function _st_featop_abbr(f::VariableSoftMin, ::typeof(<); kwargs...)
+    "$(variable_name(f; kwargs...)) $("↓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
+function _st_featop_abbr(f::VariableSoftMax, ::typeof(>); kwargs...)
+    "$(variable_name(f; kwargs...)) $("↑" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
 
-_st_featop_abbr(f::VariableMin,     ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ↓"
-_st_featop_abbr(f::VariableMax,     ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ↑"
-_st_featop_abbr(f::VariableSoftMin, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) $("↓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::VariableSoftMax, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) $("↑" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableMin, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⤓"
+_st_featop_abbr(f::VariableMax, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⤒"
+function _st_featop_abbr(f::VariableSoftMin, ::typeof(≤); kwargs...)
+    "$(variable_name(f; kwargs...)) $("⤓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
+function _st_featop_abbr(f::VariableSoftMax, ::typeof(≥); kwargs...)
+    "$(variable_name(f; kwargs...)) $("⤒" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
 
-_st_featop_abbr(f::VariableMin,     ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) ⤓"
-_st_featop_abbr(f::VariableMax,     ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) ⤒"
-_st_featop_abbr(f::VariableSoftMin, ::typeof(≤); kwargs...) = "$(variable_name(f; kwargs...)) $("⤓" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::VariableSoftMax, ::typeof(≥); kwargs...) = "$(variable_name(f; kwargs...)) $("⤒" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-
-_st_featop_abbr(f::VariableMin,     ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ≻"
-_st_featop_abbr(f::VariableMax,     ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ≺"
-_st_featop_abbr(f::VariableSoftMin, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) $("≻" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
-_st_featop_abbr(f::VariableSoftMax, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) $("≺" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+_st_featop_abbr(f::VariableMin, ::typeof(>); kwargs...) = "$(variable_name(f; kwargs...)) ≻"
+_st_featop_abbr(f::VariableMax, ::typeof(<); kwargs...) = "$(variable_name(f; kwargs...)) ≺"
+function _st_featop_abbr(f::VariableSoftMin, ::typeof(>); kwargs...)
+    "$(variable_name(f; kwargs...)) $("≻" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
+function _st_featop_abbr(f::VariableSoftMax, ::typeof(<); kwargs...)
+    "$(variable_name(f; kwargs...)) $("≺" * SoleBase.subscriptnumber(rstrip(rstrip(string(alpha(f)*100), '0'), '.')))"
+end
 
 ############################################################################################
 
@@ -599,15 +628,15 @@ using StatsBase
 """
 Syntaxstring aliases for standard features, such as "min", "max", "avg".
 """
-const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String,Base.Callable}(
+const BASE_FEATURE_FUNCTIONS_ALIASES = Dict{String, Base.Callable}(
     #
     "minimum" => VariableMin,
-    "min"     => VariableMin,
+    "min" => VariableMin,
     "maximum" => VariableMax,
-    "max"     => VariableMax,
+    "max" => VariableMax,
     #
-    "avg"     => VariableAvg,
-    "mean"    => VariableAvg,
+    "avg" => VariableAvg,
+    "mean" => VariableAvg,
 )
 
 """
@@ -645,23 +674,23 @@ should be provided.
 See also [`VarFeature`](@ref), [`featvaltype`](@ref), [`parsecondition`](@ref).
 """
 function parsefeature(
-    ::Type{FT},
-    expr::AbstractString;
-    featvaltype::Union{Nothing,Type} = nothing,
-    opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
-    closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
-    additional_feature_aliases = Dict{String,Base.Callable}(),
-    variable_names_map::Union{Nothing,AbstractDict,AbstractVector} = nothing,
-    variable_name_prefix::Union{Nothing,String} = nothing,
-    kwargs...
-) where {FT<:VarFeature}
+        ::Type{FT},
+        expr::AbstractString;
+        featvaltype::Union{Nothing, Type} = nothing,
+        opening_parenthesis::String = UVF_OPENING_PARENTHESIS,
+        closing_parenthesis::String = UVF_CLOSING_PARENTHESIS,
+        additional_feature_aliases = Dict{String, Base.Callable}(),
+        variable_names_map::Union{Nothing, AbstractDict, AbstractVector} = nothing,
+        variable_name_prefix::Union{Nothing, String} = nothing,
+        kwargs...,
+) where {FT <: VarFeature}
     @assert isnothing(variable_names_map) || isnothing(variable_name_prefix) "" *
-        "Cannot parse variable with both variable_names_map and variable_name_prefix. " *
-        "(expr = $(repr(expr)))"
+                                                                             "Cannot parse variable with both variable_names_map and variable_name_prefix. " *
+                                                                             "(expr = $(repr(expr)))"
 
     @assert length(opening_parenthesis) == 1 || length(closing_parenthesis)
-        "Parentheses must be single-character strings! " *
-        "$(repr(opening_parenthesis)) and $(repr(closing_parenthesis)) encountered."
+    "Parentheses must be single-character strings! " *
+    "$(repr(opening_parenthesis)) and $(repr(closing_parenthesis)) encountered."
 
     if FT <: VariableValue
         i_variable = tryparse(Int, expr)
@@ -673,15 +702,15 @@ function parsefeature(
 
         # Assert for malformed strings (e.g. "123.4<avg[V189]>250.2")
         @assert !isnothing(slices) && length(slices) == 2 "Could not parse UnivariateNamedFeature " *
-            "from expression $(repr(expr))."
+                                                          "from expression $(repr(expr))."
 
         return UnivariateNamedFeature(parse(Int, string(slices[1])), string(slices[2]))
     else
-
         featdict = merge(BASE_FEATURE_FUNCTIONS_ALIASES, additional_feature_aliases)
 
         variable_name_prefix = isnothing(variable_name_prefix) &&
-            isnothing(variable_names_map) ? UVF_VARPREFIX : variable_name_prefix
+                               isnothing(variable_names_map) ? UVF_VARPREFIX :
+                               variable_name_prefix
         variable_name_prefix = isnothing(variable_name_prefix) ? "" : variable_name_prefix
 
         r = Regex("^\\s*(\\w+)\\s*\\$(opening_parenthesis)\\s*$(variable_name_prefix)(\\S+)\\s*\\$(closing_parenthesis)\\s*\$")
@@ -696,13 +725,13 @@ function parsefeature(
                 i_var = begin
                     if isnothing(variable_names_map)
                         parse(Int, _variable)
-                    elseif variable_names_map isa Union{AbstractDict,AbstractVector}
+                    elseif variable_names_map isa Union{AbstractDict, AbstractVector}
                         i_var = findfirst(variable_names_map, variable)
                         @assert !isnothing(i_var) "Could not find variable $variable in the " *
-                            "specified map. ($(@show variable_names_map))"
+                                                  "specified map. ($(@show variable_names_map))"
                     else
                         error("Unexpected variable_names_map of type $(typeof(variable_names_map)) " *
-                            "encountered.")
+                              "encountered.")
                     end
                 end
                 if haskey(featdict, _feature)
@@ -715,8 +744,8 @@ function parsefeature(
                         if isnothing(featvaltype)
                             featvaltype = DEFAULT_VARFEATVALTYPE
                             @warn "Please, specify a type for the feature values (featvaltype = ...). " *
-                                "$(featvaltype) will be used, but note that this may raise type errors. " *
-                                "(expression = $(repr(expr)))"
+                                  "$(featvaltype) will be used, but note that this may raise type errors. " *
+                                  "(expression = $(repr(expr)))"
                         end
 
                         UnivariateFeature{featvaltype}(i_var, feat_or_fun)
@@ -731,8 +760,8 @@ function parsefeature(
                     if isnothing(featvaltype)
                         featvaltype = DEFAULT_VARFEATVALTYPE
                         @warn "Please, specify a type for the feature values (featvaltype = ...). " *
-                            "$(featvaltype) will be used, but note that this may raise type errors. " *
-                            "(expression = $(repr(expr)))"
+                              "$(featvaltype) will be used, but note that this may raise type errors. " *
+                              "(expression = $(repr(expr)))"
                     end
 
                     UnivariateFeature{featvaltype}(i_var, f)

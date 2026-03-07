@@ -4,7 +4,7 @@ import SoleLogics: tree, dual
 """
 Templated formula for ⟨R⟩⊤.
 """
-struct ExistentialTopFormula{R<:AbstractRelation} <: SoleLogics.Formula
+struct ExistentialTopFormula{R <: AbstractRelation} <: SoleLogics.Formula
     rel::R
 end
 relation(φ::ExistentialTopFormula) = φ.rel
@@ -15,7 +15,7 @@ dual(φ::ExistentialTopFormula) = UniversalBotFormula(φ.rel)
 """
 Templated formula for [R]⊥.
 """
-struct UniversalBotFormula{R<:AbstractRelation} <: SoleLogics.Formula
+struct UniversalBotFormula{R <: AbstractRelation} <: SoleLogics.Formula
     rel::R
 end
 relation(φ::UniversalBotFormula) = φ.rel

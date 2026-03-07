@@ -12,7 +12,7 @@ sequence_15 = sequence .* 1.5
 sequence_20 = sequence .* 2.0
 sequence_30 = sequence .* 3.0
 
-sequences = [sequence, sequence.+1, sequence.+2]
+sequences = [sequence, sequence .+ 1, sequence .+ 2]
 too_long_sequence = [0.0, 0.0, 0.0, 0.3, 0.4, 0.5]
 
 vd = VariableDistance(1, [sequence]) # id=1 is totally arbitrary
@@ -26,9 +26,8 @@ vd = VariableDistance(1, [sequence]) # id=1 is totally arbitrary
 # given a new signal z, we want to compute distance(vd)(s,z) for each s in S,
 # and aggregate the result by the minimum distance (this is the default behaviour).
 vd = VariableDistance(1, [sequence, sequence_20, sequence_30])
-@test computeunivariatefeature(vd, sequence_15) ≈ minimum([
-    distance(vd)(r, sequence_15) for r in references(vd)
-])
+@test computeunivariatefeature(vd, sequence_15) ≈
+      minimum([distance(vd)(r, sequence_15) for r in references(vd)])
 
 # in the degenerate case in which we wrap a single value inside a VariableDistance,
 # we do not want to consider it as a simple scalar, but as a signal containing only

@@ -1,4 +1,5 @@
-using SoleLogics: AbstractKripkeStructure, AbstractAssignment, AbstractInterpretation, AbstractInterpretationSet, AbstractFrame, AbstractWorld
+using SoleLogics: AbstractKripkeStructure, AbstractAssignment, AbstractInterpretation,
+                  AbstractInterpretationSet, AbstractFrame, AbstractWorld
 using SoleLogics: Truth, LogicalInstance
 import SoleLogics: alphabet, frame, check
 import SoleLogics: accessibles, allworlds, nworlds
@@ -27,25 +28,25 @@ function ninstances(X::AbstractLogiset)
 end
 
 function allfeatvalues(
-    X::AbstractLogiset,
-    i_instance,
+        X::AbstractLogiset,
+        i_instance,
 )
     return error("Please, provide method allfeatvalues(::$(typeof(X)), i_instance::$(typeof(i_instance))).")
 end
 
 function allfeatvalues(
-    X::AbstractLogiset,
-    i_instance,
-    feature,
+        X::AbstractLogiset,
+        i_instance,
+        feature,
 )
     return error("Please, provide method allfeatvalues(::$(typeof(X)), i_instance::$(typeof(i_instance)), feature::$(typeof(feature))).")
 end
 
 function instances(
-    X::AbstractLogiset,
-    inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false);
-    kwargs...
+        X::AbstractLogiset,
+        inds::AbstractVector,
+        return_view::Union{Val{true}, Val{false}} = Val(false);
+        kwargs...,
 )
     return error("Please, provide method instances(::$(typeof(X)), ::$(typeof(inds)), ::$(typeof(return_view))).")
 end
@@ -63,17 +64,15 @@ isminifiable(::AbstractLogiset) = false
 usesfullmemo(::AbstractLogiset) = false
 
 function allfeatvalues(X::AbstractLogiset)
-    unique(collect(Iterators.flatten([allfeatvalues(X, i_instance) for i_instance in 1:ninstances(X)])))
+    unique(collect(Iterators.flatten([allfeatvalues(X, i_instance)
+                                      for i_instance in 1:ninstances(X)])))
 end
 
 hasnans(X::AbstractLogiset) = any(isnan, allfeatvalues(X))
 
-
-
 function Base.show(io::IO, X::AbstractLogiset; kwargs...)
     println(io, displaystructure(X; kwargs...))
 end
-
 
 ############################################################################################
 # Non mandatory
@@ -96,7 +95,6 @@ See also [`features`](@ref).
 function nfeatures(X::AbstractLogiset)
     return error("Please, provide method nfeatures(::$(typeof(X))).")
 end
-
 
 ############################################################################################
 

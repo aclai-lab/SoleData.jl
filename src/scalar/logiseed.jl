@@ -71,7 +71,8 @@ function islogiseed(dataset)
     false
 end
 function initlogiset(logiseed, features; kwargs...)
-    return error("Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...{" * join(map(p->"$(p.first)::$(p.second)", kwargs), ", ") * "}).")
+    return error("Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...{" *
+                 join(map(p->"$(p.first)::$(p.second)", kwargs), ", ") * "}).")
 end
 function ninstances(logiseed)
     return error("Please, provide method ninstances(logiseed::$(typeof(logiseed))).")
@@ -137,37 +138,38 @@ function ismultilogiseed(dataset::AbstractMultiDataset)
     true
 end
 
-function ismultilogiseed(dataset::Union{AbstractVector,Tuple})
+function ismultilogiseed(dataset::Union{AbstractVector, Tuple})
     length(dataset) > 0 && all(islogiseed, dataset) # && allequal(ninstances, eachmodality(dataset))
 end
-function nmodalities(dataset::Union{AbstractVector,Tuple})
+function nmodalities(dataset::Union{AbstractVector, Tuple})
     @assert ismultilogiseed(dataset) "$(typeof(dataset))"
     length(dataset)
 end
-function eachmodality(dataset::Union{AbstractVector,Tuple})
+function eachmodality(dataset::Union{AbstractVector, Tuple})
     # @assert ismultilogiseed(dataset) "$(typeof(dataset))"
     dataset
 end
-function ninstances(dataset::Union{AbstractVector,Tuple})
+function ninstances(dataset::Union{AbstractVector, Tuple})
     @assert ismultilogiseed(dataset) "$(typeof(dataset))"
     ninstances(first(dataset))
 end
 
 function instances(
-    dataset::Union{AbstractVector,Tuple},
-    inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false);
-    kwargs...
+        dataset::Union{AbstractVector, Tuple},
+        inds::AbstractVector,
+        return_view::Union{Val{true}, Val{false}} = Val(false);
+        kwargs...,
 )
     @assert ismultilogiseed(dataset) "$(typeof(dataset))"
     map(modality->instances(modality, inds, return_view; kwargs...), eachmodality(dataset))
 end
 
-function concatdatasets(datasets::Union{AbstractVector,Tuple}...)
+function concatdatasets(datasets::Union{AbstractVector, Tuple}...)
     @assert all(ismultilogiseed.(datasets)) "$(typeof.(datasets))"
     @assert allequal(nmodalities.(datasets)) "Cannot concatenate multilogiseed's of type ($(typeof.(datasets))) with mismatching " *
-        "number of modalities: $(nmodalities.(datasets))"
-    out = [concatdatasets([modality(dataset, i_mod) for dataset in datasets]...) for i_mod in 1:nmodalities(first(datasets))]
+                                             "number of modalities: $(nmodalities.(datasets))"
+    out = [concatdatasets([modality(dataset, i_mod) for dataset in datasets]...)
+           for i_mod in 1:nmodalities(first(datasets))]
     if eltype(datasets) <: Tuple
         out = Tuple(out)
     end
@@ -192,13 +194,19 @@ function displaystructure(dataset; indent_str = "", include_ninstances = true, k
             end
             out *= "{$i_modality} "
             # \t\t\t$(humansize(mod))\t(worldtype: $(worldtype(mod)))"
-            out *= displaystructure(mod; indent_str = indent_str * (i_modality == nmodalities(dataset) ? "  " : "│ "), include_ninstances = false, kwargs...)
+            out *= displaystructure(mod;
+                indent_str = indent_str *
+                             (i_modality == nmodalities(dataset) ? "  " : "│ "),
+                include_ninstances = false,
+                kwargs...,)
             push!(pieces, out)
         end
         return join(pieces, "\n")
     elseif islogiseed(dataset)
-        return "logiseed ($(humansize(dataset)))\n$(dataset)" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
+        return "logiseed ($(humansize(dataset)))\n$(dataset)" |>
+               x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
     else
-        return "?? dataset of type $(typeof(dataset)) ($(humansize(dataset))) ??\n$(dataset)\n" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
+        return "?? dataset of type $(typeof(dataset)) ($(humansize(dataset))) ??\n$(dataset)\n" |>
+               x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
     end
 end
