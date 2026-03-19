@@ -71,7 +71,7 @@ end
 # Base.hash(a::AbstractCondition) = Base.hash(syntaxstring(a))
 # TODO remove
 Base.isequal(a::AbstractCondition, b::AbstractCondition) = Base.isequal(map(x->getfield(a, x), fieldnames(typeof(a))), map(x->getfield(b, x), fieldnames(typeof(b))))
-Base.hash(a::AbstractCondition) = Base.hash(map(x->getfield(a, x), fieldnames(typeof(a))), Base.hash(typeof(a)))
+Base.hash(a::AbstractCondition, h::UInt) = hash(map(x->getfield(a, x), fieldnames(typeof(a))), hash(typeof(a), h))
 
 """
     parsecondition(C::Type{<:AbstractCondition}, expr::AbstractString; kwargs...)

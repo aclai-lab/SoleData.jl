@@ -212,7 +212,7 @@ See also [`MultiFormula`](@ref), [`MultiLogiset`](@ref).
 modforms(f::MultiFormula) = f.modforms
 
 Base.isequal(a::MultiFormula, b::MultiFormula) = allequal(Set.(keys.([modforms(a), modforms(b)]))) && all(k->Base.isequal(modforms(a)[k], modforms(b)[k]), keys(modforms(a)))
-Base.hash(a::MultiFormula) = Base.hash(typeof(a), Base.hash(modforms(a)))
+Base.hash(a::MultiFormula, h::UInt) = hash(modforms(a), hash(typeof(a), h))
 
 function MultiFormula(i_modality::Integer, modant::Formula)
     F = eval(nameof(typeof(modant)))
