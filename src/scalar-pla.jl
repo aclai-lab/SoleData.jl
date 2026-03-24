@@ -360,7 +360,7 @@ pla_string, features = _formula_to_pla(
 - `_encode_disjunct`: Function used internally to encode individual disjuncts
 - `SoleLogics.dnf`: DNF conversion functionality
 - `SoleData.scalar_simplification`: Scalar simplification methods
-- `_pla_to_formula`: Inverse operation to convert PLA back to formula
+- `pla_to_formula`: Inverse operation to convert PLA back to formula
 """
 formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
     formula_to_pla(SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
@@ -471,7 +471,7 @@ end
 #                                pla to formula                                #
 # ---------------------------------------------------------------------------- #
 """
-    _pla_to_formula(
+    pla_to_formula(
         pla::String,
         fnames::Vector{<:VariableValue};
         conditionstype::Type=SoleData.ScalarCondition,
@@ -541,13 +541,13 @@ pla_string = \"\"\"
 .e
 \"\"\"
 features = [VariableValue(1, :x), VariableValue(2, :y), VariableValue(3, :z)]
-disjuncts = _pla_to_formula(pla_string, features)
+disjuncts = pla_to_formula(pla_string, features)
 
 # Get complete DNF formula
-formula = _pla_to_formula(pla_string, features; conjunct=true)
+formula = pla_to_formula(pla_string, features; conjunct=true)
 
 # Use custom condition type
-formula = _pla_to_formula(
+formula = pla_to_formula(
     pla_string, 
     features;
     conditionstype=MyCustomCondition,
@@ -573,7 +573,7 @@ formula = _pla_to_formula(
 - `SoleLogics.LeftmostConjunctiveForm`: Conjunctive clause representation
 - `SoleLogics.LeftmostDisjunctiveForm`: Disjunctive normal form representation
 """
-function _pla_to_formula(
+function pla_to_formula(
     pla::String,
     fnames::Vector{<:VariableValue};
     conditionstype::Type=SoleData.SoleData.ScalarCondition,
