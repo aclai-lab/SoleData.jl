@@ -249,11 +249,17 @@ end
 
 Check whether a `Truth` formula holds for a given instance.
 
-Note: This method provides a specialized implementation for `Truth` and `BooleanTruth`
-types from SoleLogics. Since these types inherit from the `Formula` supertype defined
-in SoleLogics, they require their own method definition here rather than falling back
+Note: This method provides a specialized implementation for `Truth` and `BooleanTruth` 
+types from SoleLogics. Since these types inherit from the `Formula` supertype defined 
+in SoleLogics, they require their own method definition here rather than falling back 
 to the `Formula` method.
 """
-function check(::CheckAlgorithm, φ::Truth, i::LogicalInstance, args...; kwargs...)
+function check(
+    ::CheckAlgorithm,
+    φ::Truth,
+    i::LogicalInstance,
+    args...;
+    kwargs...
+)
     return istop(interpret(φ, i, args...; kwargs...))
 end
