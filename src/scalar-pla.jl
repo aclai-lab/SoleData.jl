@@ -1,9 +1,10 @@
 module PLA
 
-using SoleData
 using SoleLogics
+const SL = SoleLogics
 
-using SoleData: scalar_simplification
+using SoleData
+const SD = SoleData
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
@@ -36,7 +37,7 @@ const LiteralBool = Dict('1' => true, '0' => false)
 # ---------------------------------------------------------------------------- #
 #                                 print utils                                  #
 # ---------------------------------------------------------------------------- #
-function _featurename(f::SoleData.VariableValue)
+function _featurename(f::SD.VariableValue)
     isnothing(f.i_name) ? "V$(f.i_variable)" : "[$(f.i_name)]"
 end
 
@@ -82,9 +83,9 @@ end
     - The resulting PLA row uses "-" for don't-care positions that are not constrained by any literal
 """
 function _encode_disjunct(
-    disjunct::SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal},
-    features::Vector{<:SoleData.VariableValue},
-    conditions::Vector{<:SoleData.AbstractScalarCondition},
+    disjunct::SL.LeftmostConjunctiveForm{SL.Literal},
+    features::Vector{<:SD.VariableValue},
+    conditions::Vector{<:SD.AbstractScalarCondition},
     includes::Vector{BitMatrix},
     excludes::Vector{BitMatrix},
     feat_condindxss::Vector{Vector{Int64}},
@@ -92,16 +93,16 @@ function _encode_disjunct(
     pla_row = fill("-", length(conditions))
 
     # for each atom in the disjunct, add zeros or ones to relevants
-    for lit in SoleLogics.grandchildren(disjunct)
-        ispos = SoleLogics.ispos(lit)
-        cond = SoleLogics.value(atom(lit))
+    for lit in SL.grandchildren(disjunct)
+        ispos = SL.ispos(lit)
+        cond = SL.value(atom(lit))
 
-        i_feat = findfirst((f)->f==SoleData.feature(cond), features)
+        i_feat = findfirst((f)->f==SD.feature(cond), features)
         feat_condindxs = feat_condindxss[i_feat]
 
         feat_icond = findfirst(c->c==cond, conditions[feat_condindxs])
-        feat_idualcond = if SoleData.hasdual(cond)
-            findfirst(c->c==SoleData.dual(cond), conditions[feat_condindxs])
+        feat_idualcond = if SD.hasdual(cond)
+            findfirst(c->c==SD.dual(cond), conditions[feat_condindxs])
         else
             nothing
         end
@@ -202,14 +203,14 @@ function _read_conditions(
         # reconstruct VariableValue
         varname = Symbol(m.captures[1])
         i_var = findfirst(==(varname), fnames)
-        value = SoleData.VariableValue(i_var, varname)
+        value = SD.VariableValue(i_var, varname)
 
         operator = OPERATOR_MAP[m.captures[2]]
         threshold = threshold = parse(Float64, m.captures[3])
 
         condition = conditionstype(value, operator, threshold)
 
-        return SoleLogics.Atom{typeof(condition)}(condition)
+        return SL.Atom{typeof(condition)}(condition)
     end
 end
 
@@ -217,7 +218,7 @@ end
 #                               univariate utils                               #
 # ---------------------------------------------------------------------------- #
 function _header(
-    conditions::Vector{<:SoleData.AbstractScalarCondition},
+    conditions::Vector{<:SD.AbstractScalarCondition},
     feat_condnames::Vector{Vector{String}},
 )
     num_outputs = 1
@@ -280,9 +281,19 @@ end
 #                                formula to pla                                #
 # ---------------------------------------------------------------------------- #
 """
-    formula_to_pla(formula::SoleLogics.Formula; allow_scalar_range_conditions::Bool=false, kwargs...) -> (String, Vector{VariableValue})
-    formula_to_pla(dnfformula::SoleLogics.DNF; allow_scalar_range_conditions::Bool=false, kwargs...) -> (String, Vector{VariableValue})
-    formula_to_pla(atoms::Vector{Vector{SoleLogics.Atom}}; encoding::Symbol=:univariate, allow_scalar_range_conditions::Bool=false) -> (String, Vector{VariableValue})
+    formula_to_pla(
+        formula::SoleLogics.Formula;
+        allow_scalar_range_conditions::Bool=false, kwargs...
+    ) -> (String, Vector{VariableValue})
+    formula_to_pla(
+        dnfformula::SoleLogics.DNF;
+        allow_scalar_range_conditions::Bool=false, kwargs...
+    ) -> (String, Vector{VariableValue})
+    formula_to_pla(
+        atoms::Vector{Vector{SoleLogics.Atom}};
+        encoding::Symbol=:univariate,
+        allow_scalar_range_conditions::Bool=false
+    ) -> (String, Vector{VariableValue})
 
 Convert a logical formula into Programmable Logic Array (PLA) format representation.
 
@@ -362,57 +373,60 @@ pla_string, features = _formula_to_pla(
 - `SoleData.scalar_simplification`: Scalar simplification methods
 - `pla_to_formula`: Inverse operation to convert PLA back to formula
 """
-formula_to_pla(formula::SoleLogics.Formula; kwargs...) =
-    formula_to_pla(SoleLogics.dnf(formula, SoleLogics.Atom; profile=:nnf, allow_atom_flipping=true); kwargs...)
+formula_to_pla(formula::SL.Formula; kwargs...) =
+    formula_to_pla(
+        SL.dnf(formula, SL.Atom; profile=:nnf, allow_atom_flipping=true);
+        kwargs...
+    )
 
 function formula_to_pla(
-    dnfformula   :: SoleLogics.DNF;
-    allow_scalar_range_conditions :: Bool=false,
+    dnfformula::SL.DNF;
+    allow_scalar_range_conditions::Bool=false,
     kwargs...
 )
-    dnfformula = scalar_simplification(dnfformula; allow_scalar_range_conditions)
-    dnfformula = SoleLogics.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
+    dnfformula = SD.scalar_simplification(dnfformula; allow_scalar_range_conditions)
+    dnfformula = SL.dnf(dnfformula; profile=:nnf, allow_atom_flipping=true, kwargs...)
 
-    atoms_per_disjunct = Vector{Vector{SoleLogics.Atom}}([
-        collect(SoleLogics.atoms(d)) for d in SoleLogics.disjuncts(dnfformula)
+    atoms_per_disjunct = Vector{Vector{SL.Atom}}([
+        collect(SL.atoms(d)) for d in SL.disjuncts(dnfformula)
     ])
 
     formula_to_pla(atoms_per_disjunct; allow_scalar_range_conditions, kwargs...)
 end
 
 function formula_to_pla(
-    atoms             :: Vector{Vector{SoleLogics.Atom}};
-    encoding          :: Symbol=:univariate,
-    allow_scalar_range_conditions      :: Bool=false,
-    removewhitespaces :: Bool=true,
-    pretty_op         :: Bool=false
+    atoms::Vector{Vector{SL.Atom}};
+    encoding::Symbol=:univariate,
+    allow_scalar_range_conditions::Bool=false,
+    removewhitespaces::Bool=true,
+    pretty_op::Bool=false
 )
     @assert encoding in [:univariate, :multivariate]
 
     # extract domains
-    conditions = unique(map(SoleLogics.value, reduce(vcat, atoms)))
-    fnames = unique(SoleData.feature.(conditions))
+    conditions = unique(map(SL.value, reduce(vcat, atoms)))
+    fnames = unique(SD.feature.(conditions))
     nfnames = length(fnames)
 
-    sort!(conditions; by=SoleData._scalarcondition_sortby)
+    sort!(conditions; by=SD._scalarcondition_sortby)
     sort!(fnames; by=syntaxstring)
 
     if allow_scalar_range_conditions
         original_conditions = conditions
-        conditions = SoleData.scalartiling(conditions, fnames)
+        conditions = SD.scalartiling(conditions, fnames)
         @assert length(setdiff(original_conditions, conditions)) == 0
             "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
     end
 
-    conditions = SoleData.removeduals(conditions)
+    conditions = SD.removeduals(conditions)
 
     # for each feature, derive the conditions, and their names
     feat_condindxss = Vector{Vector{Int64}}(undef, nfnames)
     feat_condnames = Vector{Vector{String}}(undef, nfnames)
 
     @inbounds for (i, feat) in enumerate(fnames)
-        feat_condindxs = findall(c->SoleData.feature(c) == feat, conditions)
-        conds = filter(c->SoleData.feature(c) == feat, conditions)
+        feat_condindxs = findall(c->SD.feature(c) == feat, conditions)
+        conds = filter(c->SD.feature(c) == feat, conditions)
         condname = SoleLogics.syntaxstring.(conds; removewhitespaces, pretty_op)
 
         feat_condindxss[i] = feat_condindxs
@@ -426,11 +440,11 @@ function formula_to_pla(
     Vector{BitMatrix}(undef, nfnames)
     @inbounds for (i, feat_condindxs) in enumerate(feat_condindxss)
         includes[i] = BitMatrix([
-            SoleData.includes(conditions[cond_i], conditions[cond_j]) for
+            SD.includes(conditions[cond_i], conditions[cond_j]) for
             cond_i in feat_condindxs, cond_j in feat_condindxs
         ])
         excludes[i] = BitMatrix([
-            SoleData.excludes(conditions[cond_j], conditions[cond_i]) for
+            SD.excludes(conditions[cond_j], conditions[cond_i]) for
             cond_i in feat_condindxs, cond_j in feat_condindxs
         ])
     end
@@ -576,7 +590,7 @@ formula = pla_to_formula(
 function pla_to_formula(
     pla::String,
     fnames::Vector{<:VariableValue};
-    conditionstype::Type=SoleData.SoleData.ScalarCondition,
+    conditionstype::Type=SD.ScalarCondition,
     conjunct::Bool=false,
 )
     lines = split(pla, '\n')
@@ -595,9 +609,9 @@ function pla_to_formula(
 
     Threads.@threads for i in eachindex(binaries)
         binary = binaries[i]
-        disjuncts[i] = scalar_simplification(
-            SoleLogics.LeftmostConjunctiveForm([
-                SoleLogics.Literal(LiteralBool[value], parsed_conditions[idx]) for
+        disjuncts[i] = SD.scalar_simplification(
+            SL.LeftmostConjunctiveForm([
+                SL.Literal(LiteralBool[value], parsed_conditions[idx]) for
                 (idx, value) in enumerate(binary) if value ∈ ['1', '0']
             ]);
             allow_scalar_range_conditions=false

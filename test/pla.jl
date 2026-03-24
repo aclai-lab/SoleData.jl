@@ -112,6 +112,8 @@ pla = """.i 5
 """
 fnames = [VariableValue(1), VariableValue(2), VariableValue(3), VariableValue(4)]
 
+@test PLA._featurename.(fnames) == ["V1", "V2", "V3", "V4"]
+
 formula = PLA.pla_to_formula(pla, fnames; conjunct=true)
 @test syntaxstring(formula) ==
     "(([V1] ≤ 10.0) ∧ ([V2] < 0.0) ∧ ([V4] ≤ 10.0) ∧ ([V4] ≥ 10.0)) ∨ (([V1] ≤ 10.0) ∧ ([V2] < 0.0) ∧ ([V3] > 10.0))"
