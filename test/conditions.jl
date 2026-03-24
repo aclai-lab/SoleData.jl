@@ -49,3 +49,4 @@ result = syntaxstring(cond; pretty_op=false)
 
 result = syntaxstring(cond; style=true)
 @test result == "\e[1my ≤\e[0m 10"
+
