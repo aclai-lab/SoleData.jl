@@ -1,14 +1,15 @@
-using SoleData: MultivariateFeature,
-                    UnivariateFeature,
-                    UnivariateNamedFeature,
-                    VariableValue,
-                    VariableMin,
-                    VariableMax,
-                    VariableSoftMin,
-                    VariableSoftMax,
-                    VariableAvg,
-                    i_variable,
-                    alpha
+using SoleData:
+    MultivariateFeature,
+    UnivariateFeature,
+    UnivariateNamedFeature,
+    VariableValue,
+    VariableMin,
+    VariableMax,
+    VariableSoftMin,
+    VariableSoftMax,
+    VariableAvg,
+    i_variable,
+    alpha
 
 import SoleData: computefeature, computeunivariatefeature
 using StatsBase: mean
@@ -17,14 +18,20 @@ function computefeature(f::MultivariateFeature{U}, featchannel::Any) where {U}
     (f.f(featchannel))::U
 end
 
-function computeunivariatefeature(f::UnivariateFeature{U}, varchannel::Union{T,AbstractArray{T}}) where {U,T}
+function computeunivariatefeature(
+    f::UnivariateFeature{U}, varchannel::Union{T,AbstractArray{T}}
+) where {U,T}
     # (f.f(SoleBase.vectorize(varchannel);))::U
     (f.f(varchannel))::U
 end
-function computeunivariatefeature(f::UnivariateNamedFeature, varchannel::Union{T,AbstractArray{T}}) where {T}
+function computeunivariatefeature(
+    f::UnivariateNamedFeature, varchannel::Union{T,AbstractArray{T}}
+) where {T}
     return error("Cannot intepret UnivariateNamedFeature on any structure at all.")
 end
-function computeunivariatefeature(f::VariableValue, varchannel::Union{T,AbstractArray{T}}) where {T}
+function computeunivariatefeature(
+    f::VariableValue, varchannel::Union{T,AbstractArray{T}}
+) where {T}
     (varchannel isa T ? varchannel : first(varchannel))
 end
 function computeunivariatefeature(f::VariableMin, varchannel::AbstractArray{T}) where {T}
@@ -33,10 +40,14 @@ end
 function computeunivariatefeature(f::VariableMax, varchannel::AbstractArray{T}) where {T}
     (maximum(varchannel))
 end
-function computeunivariatefeature(f::VariableSoftMin, varchannel::AbstractArray{T}) where {T}
+function computeunivariatefeature(
+    f::VariableSoftMin, varchannel::AbstractArray{T}
+) where {T}
     SoleBase.softminimum(varchannel, alpha(f))
 end
-function computeunivariatefeature(f::VariableSoftMax, varchannel::AbstractArray{T}) where {T}
+function computeunivariatefeature(
+    f::VariableSoftMax, varchannel::AbstractArray{T}
+) where {T}
     SoleBase.softmaximum(varchannel, alpha(f))
 end
 function computeunivariatefeature(f::VariableAvg, varchannel::AbstractArray{T}) where {T}
@@ -53,16 +64,15 @@ end
 Return `aggregator( [distance(f)(r, varchannel) for r in references(f)] )`.
 """
 function computeunivariatefeature(
-    f::VariableDistance,
-    varchannel::AbstractArray{T};
-    aggregator::Function=minimum
+    f::VariableDistance, varchannel::AbstractArray{T}; aggregator::Function=minimum
 ) where {T}
-    size(varchannel) == refsize(f) || throw(DimensionMismatch(
-        "Trying to compare size $(size(varchannel)) with $(refsize(f))"))
+    size(varchannel) == refsize(f) || throw(
+        DimensionMismatch("Trying to compare size $(size(varchannel)) with $(refsize(f))"),
+    )
 
     # TODO: this can probably be optimized using @inbounds and mapreduce to avoid
     # unnecessarily allocations.
-    (map(reference -> distance(f)(varchannel,reference), references(f)) |> aggregator)
+    (aggregator(map(reference -> distance(f)(varchannel, reference), references(f))))
 end
 
 # simplified propositional cases:

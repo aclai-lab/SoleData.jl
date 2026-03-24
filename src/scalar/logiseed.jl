@@ -71,7 +71,11 @@ function islogiseed(dataset)
     false
 end
 function initlogiset(logiseed, features; kwargs...)
-    return error("Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...{" * join(map(p->"$(p.first)::$(p.second)", kwargs), ", ") * "}).")
+    return error(
+        "Please, provide method initlogiset(logiseed::$(typeof(logiseed)), features::$(typeof(features)); kwargs...{" *
+        join(map(p->"$(p.first)::$(p.second)", kwargs), ", ") *
+        "}).",
+    )
 end
 function ninstances(logiseed)
     return error("Please, provide method ninstances(logiseed::$(typeof(logiseed))).")
@@ -80,7 +84,9 @@ function nvariables(logiseed)
     return error("Please, provide method nvariables(logiseed::$(typeof(logiseed))).")
 end
 function frame(logiseed, i_instance::Integer)
-    return error("Please, provide method frame(logiseed::$(typeof(logiseed)), i_instance::Integer).")
+    return error(
+        "Please, provide method frame(logiseed::$(typeof(logiseed)), i_instance::Integer)."
+    )
 end
 """
     featvalue(feature, logiseed, i_instance, w)
@@ -90,10 +96,14 @@ Return the value of a feature at world on an instance of a logiset.
 See [`islogiseed`](@ref).
 """
 function featvalue(feature::AbstractFeature, logiseed, i_instance::Integer, w)
-    return error("Please, provide method featvalue(feature::$(typeof(feature)), logiseed::$(typeof(logiseed)), i_instance::Integer, w::$(typeof(w))).")
+    return error(
+        "Please, provide method featvalue(feature::$(typeof(feature)), logiseed::$(typeof(logiseed)), i_instance::Integer, w::$(typeof(w))).",
+    )
 end
 function vareltype(logiseed, i_variable::VariableId)
-    return error("Please, provide method vareltype(logiseed::$(typeof(logiseed)), i_variable::VariableId).")
+    return error(
+        "Please, provide method vareltype(logiseed::$(typeof(logiseed)), i_variable::VariableId).",
+    )
 end
 function varnames(logiseed)
     return error("Please, provide method varnames(logiseed::$(typeof(logiseed))).")
@@ -156,8 +166,8 @@ end
 function instances(
     dataset::Union{AbstractVector,Tuple},
     inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false);
-    kwargs...
+    return_view::Union{Val{true},Val{false}}=Val(false);
+    kwargs...,
 )
     @assert ismultilogiseed(dataset) "$(typeof(dataset))"
     map(modality->instances(modality, inds, return_view; kwargs...), eachmodality(dataset))
@@ -167,17 +177,23 @@ function concatdatasets(datasets::Union{AbstractVector,Tuple}...)
     @assert all(ismultilogiseed.(datasets)) "$(typeof.(datasets))"
     @assert allequal(nmodalities.(datasets)) "Cannot concatenate multilogiseed's of type ($(typeof.(datasets))) with mismatching " *
         "number of modalities: $(nmodalities.(datasets))"
-    out = [concatdatasets([modality(dataset, i_mod) for dataset in datasets]...) for i_mod in 1:nmodalities(first(datasets))]
+    out = [
+        concatdatasets([modality(dataset, i_mod) for dataset in datasets]...) for
+        i_mod in 1:nmodalities(first(datasets))
+    ]
     if eltype(datasets) <: Tuple
         out = Tuple(out)
     end
     out
 end
 
-function displaystructure(dataset; indent_str = "", include_ninstances = true, kwargs...)
+function displaystructure(dataset; indent_str="", include_ninstances=true, kwargs...)
     if ismultilogiseed(dataset)
         pieces = []
-        push!(pieces, "multilogiseed with $(nmodalities(dataset)) modalities ($(humansize(dataset)))")
+        push!(
+            pieces,
+            "multilogiseed with $(nmodalities(dataset)) modalities ($(humansize(dataset)))",
+        )
         # push!(pieces, indent_str * "├ # modalities:\t$(nmodalities(dataset))")
         if include_ninstances
             push!(pieces, indent_str * "├ # instances:\t$(ninstances(dataset))")
@@ -192,13 +208,22 @@ function displaystructure(dataset; indent_str = "", include_ninstances = true, k
             end
             out *= "{$i_modality} "
             # \t\t\t$(humansize(mod))\t(worldtype: $(worldtype(mod)))"
-            out *= displaystructure(mod; indent_str = indent_str * (i_modality == nmodalities(dataset) ? "  " : "│ "), include_ninstances = false, kwargs...)
+            out *= displaystructure(
+                mod;
+                indent_str=indent_str * (i_modality == nmodalities(dataset) ? "  " : "│ "),
+                include_ninstances=false,
+                kwargs...,
+            )
             push!(pieces, out)
         end
         return join(pieces, "\n")
     elseif islogiseed(dataset)
-        return "logiseed ($(humansize(dataset)))\n$(dataset)" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
+        return (x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n")(
+            "logiseed ($(humansize(dataset)))\n$(dataset)"
+        )
     else
-        return "?? dataset of type $(typeof(dataset)) ($(humansize(dataset))) ??\n$(dataset)\n" |> x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n"
+        return (x->"$(replace(x, "\n"=>"$(indent_str)\n"))\n")(
+            "?? dataset of type $(typeof(dataset)) ($(humansize(dataset))) ??\n$(dataset)\n"
+        )
     end
 end

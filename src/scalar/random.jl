@@ -29,30 +29,38 @@ using SoleLogics
 function randatom(
     rng::AbstractRNG,
     a::UnionAlphabet{ScalarCondition,<:UnivariateScalarAlphabet};
-    metaconditions::Union{Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}} = nothing,
-    features::Union{Nothing,AbstractFeature,AbstractVector{<:AbstractFeature}} = nothing,
-    test_operators::Union{Nothing,TestOperator,AbstractVector{<:TestOperator}} = nothing,
+    metaconditions::Union{
+        Nothing,ScalarMetaCondition,AbstractVector{<:ScalarMetaCondition}
+    }=nothing,
+    features::Union{Nothing,AbstractFeature,AbstractVector{<:AbstractFeature}}=nothing,
+    test_operators::Union{Nothing,TestOperator,AbstractVector{<:TestOperator}}=nothing,
 )::Atom
     @warn "TODO this function is untested."
-    
+
     # Transform values to singletons
-    metaconditions = metaconditions isa ScalarMetaCondition ? [metaconditions] : metaconditions
+    metaconditions =
+        metaconditions isa ScalarMetaCondition ? [metaconditions] : metaconditions
     features = features isa AbstractFeature ? [features] : features
     test_operators = test_operators isa TestOperator ? [test_operators] : test_operators
 
-    @assert !(!isnothing(metaconditions) &&
-        (!isnothing(features) || !isnothing(test_operators))) "" *
-            "Ambiguous output, there are more choices; only one metacondition, one " *
-            "feature or one operator must be specified\n Now: \n" *
-            "metaconditions: $(metaconditions)\n" *
-            "feature: $(feature)\n" *
-            "test operator: $(test_operator)\n"
+    @assert !(
+        !isnothing(metaconditions) && (!isnothing(features) || !isnothing(test_operators))
+    ) "" *
+        "Ambiguous output, there are more choices; only one metacondition, one " *
+        "feature or one operator must be specified\n Now: \n" *
+        "metaconditions: $(metaconditions)\n" *
+        "feature: $(feature)\n" *
+        "test operator: $(test_operator)\n"
 
     grouped_featconditions = map(sa -> sa.featcondition, subalphabets(a))
 
     filtered_featconds = begin
         if !isnothing(metaconditions)
-            filtered_featconds = filter(mc_thresholds->first(mc_thresholds) in [metaconditions..., dual.(metaconditions)...], grouped_featconditions)
+            filtered_featconds = filter(
+                mc_thresholds->first(mc_thresholds) in
+                               [metaconditions..., dual.(metaconditions)...],
+                grouped_featconditions,
+            )
             @assert length(filtered_featconds) == length(metaconditions) "" *
                 "There is at least one metacondition passed that is not among the " *
                 "possible ones\n metaconditions: $(metaconditions)\n filtered " *
@@ -60,11 +68,15 @@ function randatom(
                 "grouped_featconditions: $(map(first,grouped_featconditions))"
             filtered_featconds
         elseif !isnothing(features) || !isnothing(test_operators)
-            filtered_featconds = filter(mc_thresholds->begin
-                mc = first(mc_thresholds)
-                return (isnothing(features) || feature(mc) in features) &&
-                    (isnothing(test_operators) || test_operator(mc) in test_operators)
-            end, grouped_featconditions)
+            filtered_featconds = filter(
+                mc_thresholds->begin
+                    mc = first(mc_thresholds)
+                    return (isnothing(features) || feature(mc) in features) && (
+                        isnothing(test_operators) || test_operator(mc) in test_operators
+                    )
+                end,
+                grouped_featconditions,
+            )
             # TODO check with alphabet
             #=@assert length(filtered_featconds) == length(metaconditions) "" *
                 "There is at least one metacondition passed that is not among the " *

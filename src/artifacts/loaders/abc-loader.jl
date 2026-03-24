@@ -3,10 +3,9 @@ struct ABCLoader <: AbstractLoaderBinary
     url::String     # Fallback download URL
 
     # Internal constructor with default values
-    ABCLoader() = new(
-        "abc",
-        "https://github.com/berkeley-abc/abc/archive/refs/heads/master.tar.gz"
-    )
+    function ABCLoader()
+        new("abc", "https://github.com/berkeley-abc/abc/archive/refs/heads/master.tar.gz")
+    end
 end
 
 function load(al::ABCLoader)

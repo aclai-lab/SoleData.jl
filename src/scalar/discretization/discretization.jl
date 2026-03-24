@@ -91,7 +91,7 @@ function discretizedomain(
     X::Vector{<:Real},
     metacondition::AbstractCondition,
     discretizer::DiscretizationAlgorithm;
-    cutextrema::Bool=true # considerations in https://github.com/aclai-lab/SoleData.jl/pull/19
+    cutextrema::Bool=true, # considerations in https://github.com/aclai-lab/SoleData.jl/pull/19
 )
     alphabet = Vector{AbstractCondition}()
 
@@ -102,8 +102,7 @@ function discretizedomain(
     if cutextrema
         _binedges_length = length(_binedges)
         if _binedges_length <= 2
-            throw(
-                ArgumentError("Cannot remove extrema: $(_binedges_length) bins found"))
+            throw(ArgumentError("Cannot remove extrema: $(_binedges_length) bins found"))
         else
             popfirst!(_binedges)
             pop!(_binedges)
@@ -113,7 +112,7 @@ function discretizedomain(
     # for each metacondition, apply a threshold (a bin edge)
 
     for threshold in _binedges
-        push!(alphabet, ScalarCondition(metacondition, round(threshold, digits=2)))
+        push!(alphabet, ScalarCondition(metacondition, round(threshold; digits=2)))
     end
 
     return alphabet
@@ -124,7 +123,7 @@ function discretizedomain(
     metacondition::AbstractCondition,
     discretizer::DiscretizationAlgorithm;
     consider_all_subintervals::Bool=false,
-    kwargs...
+    kwargs...,
 )
     _X = _intervalbased_discretizealphabet(X, metacondition; kwargs...)
 
@@ -132,18 +131,16 @@ function discretizedomain(
 end
 
 function _intervalbased_discretizealphabet(
-    X::Vector{<:Vector{<:Real}}, 
+    X::Vector{<:Vector{<:Real}},
     metacondition::AbstractCondition;
-    consider_all_subintervals::Bool=false
+    consider_all_subintervals::Bool=false,
 )
     if consider_all_subintervals
         _X = [
-                SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
-                # for each vector, we consider the superior triangular matrix
-                for v in X
-                for i in 1:length(v)
-                for j in i+1:length(v)
-            ]
+            SoleData.computeunivariatefeature(SoleData.feature(metacondition), v[i:j])
+            # for each vector, we consider the superior triangular matrix
+            for v in X for i in 1:length(v) for j in (i + 1):length(v)
+        ]
     else
         _X = reduce(vcat, X)
     end
@@ -167,13 +164,10 @@ Unpack `a`, then fallback to [`discretizedomain`](@ref).
 See also [`discretizedomain`](@ref), [`UnivariateScalarAlphabet`](@ref).
 """
 function discretizealphabet(
-    a::UnivariateScalarAlphabet,
-    discretizer::DiscretizationAlgorithm;
-    kwargs...
+    a::UnivariateScalarAlphabet, discretizer::DiscretizationAlgorithm; kwargs...
 )
     return discretizedomain(thresholds(a), metacond(a), discretizer; kwargs...)
 end
-
 
 # TODO: could be a cool idea to unpack a MultivariateScalarAlphabet argument
 # see https://github.com/aclai-lab/SoleData.jl/pull/19

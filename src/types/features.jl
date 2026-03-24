@@ -12,7 +12,8 @@ See also [`VarFeature`](@ref), [`featvaltype`](@ref), [`SoleLogics.AbstractWorld
 abstract type AbstractFeature end
 
 function syntaxstring(f::AbstractFeature; kwargs...)
-    return error("Please, provide method syntaxstring(::$(typeof(f)); kwargs...)."
+    return error(
+        "Please, provide method syntaxstring(::$(typeof(f)); kwargs...).",
         # * " Note that this value must be unique."
     )
 end
@@ -32,7 +33,6 @@ end
 # Base.isequal(a::AbstractFeature, b::AbstractFeature) = syntaxstring(a) == syntaxstring(b)
 # Base.hash(a::AbstractFeature) = Base.hash(syntaxstring(a))
 
-
 """
     parsefeature(FT::Type{<:AbstractFeature}, expr::AbstractString; kwargs...)
 
@@ -42,11 +42,9 @@ keyword arguments such as `featvaltype::Type` may be required or recommended.
 
 See also [`parsecondition`](@ref).
 """
-function parsefeature(
-    FT::Type{<:AbstractFeature},
-    expr::AbstractString;
-    kwargs...
-)
-    return error("Please, provide method parsefeature(::$(FT), " *
-        "expr::$(typeof(expr)); kwargs...).")
+function parsefeature(FT::Type{<:AbstractFeature}, expr::AbstractString; kwargs...)
+    return error(
+        "Please, provide method parsefeature(::$(FT), " *
+        "expr::$(typeof(expr)); kwargs...).",
+    )
 end

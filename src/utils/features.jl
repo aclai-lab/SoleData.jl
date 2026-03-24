@@ -22,11 +22,7 @@ valuetype(::Feature{A}) where {A} = A
 
 syntaxstring(f::Feature; kwargs...) = string(f.atom)
 
-function parsefeature(
-    ::Type{FT},
-    expr::AbstractString;
-    kwargs...
-) where {FT<:Feature}
+function parsefeature(::Type{FT}, expr::AbstractString; kwargs...) where {FT<:Feature}
     if FT == Feature
         FT(expr)
     else

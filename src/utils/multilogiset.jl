@@ -18,8 +18,7 @@ See also
 [`minify`](@ref).
 """
 struct MultiLogiset{L<:AbstractLogiset} <: AbstractInterpretationSet
-
-    modalities  :: Vector{L}
+    modalities::Vector{L}
 
     function MultiLogiset{L}(X::MultiLogiset{L}) where {L<:AbstractLogiset}
         MultiLogiset{L}(X.modalities)
@@ -53,34 +52,37 @@ modalitytype(::Type{<:MultiLogiset{L}}) where {L<:AbstractLogiset} = L
 modalitytype(X::MultiLogiset) = modalitytype(typeof(X))
 
 modality(X::MultiLogiset, i_modality::Integer) = eachmodality(X)[i_modality]
-nmodalities(X::MultiLogiset)                   = length(eachmodality(X))
-ninstances(X::MultiLogiset)                    = ninstances(modality(X, 1))
+nmodalities(X::MultiLogiset) = length(eachmodality(X))
+ninstances(X::MultiLogiset) = ninstances(modality(X, 1))
 
-worldtype(X::MultiLogiset,  i_modality::Integer) = worldtype(modality(X, i_modality))
+worldtype(X::MultiLogiset, i_modality::Integer) = worldtype(modality(X, i_modality))
 
-featvaltype(X::MultiLogiset,  i_modality::Integer) = featvaltype(modality(X, i_modality))
+featvaltype(X::MultiLogiset, i_modality::Integer) = featvaltype(modality(X, i_modality))
 featvaltype(X::MultiLogiset) = Union{featvaltype.(eachmodality(X))...}
 
-featuretype(X::MultiLogiset,  i_modality::Integer) = featuretype(modality(X, i_modality))
+featuretype(X::MultiLogiset, i_modality::Integer) = featuretype(modality(X, i_modality))
 featuretype(X::MultiLogiset) = Union{featuretype.(eachmodality(X))...}
 
-frametype(X::MultiLogiset,  i_modality::Integer) = frametype(modality(X, i_modality))
+frametype(X::MultiLogiset, i_modality::Integer) = frametype(modality(X, i_modality))
 frametype(X::MultiLogiset) = Union{frametype.(eachmodality(X))...}
 
 function instances(
     X::MultiLogiset,
     inds::AbstractVector,
-    return_view::Union{Val{true},Val{false}} = Val(false);
-    kwargs...
+    return_view::Union{Val{true},Val{false}}=Val(false);
+    kwargs...,
 )
-    MultiLogiset(map(modality->instances(modality, inds, return_view; kwargs...), eachmodality(X)))
+    MultiLogiset(
+        map(modality->instances(modality, inds, return_view; kwargs...), eachmodality(X))
+    )
 end
 
 function concatdatasets(Xs::MultiLogiset...)
     @assert allequal(nmodalities.(Xs)) "Cannot concatenate MultiLogiset's with mismatching " *
         "number of modalities: $(nmodalities.(Xs))"
     MultiLogiset([
-        concatdatasets([modality(X, i_mod) for X in Xs]...) for i_mod in 1:nmodalities(first(Xs))
+        concatdatasets([modality(X, i_mod) for X in Xs]...) for
+        i_mod in 1:nmodalities(first(Xs))
     ])
 end
 
@@ -88,7 +90,7 @@ function Base.show(io::IO, X::MultiLogiset; kwargs...)
     println(io, displaystructure(X; kwargs...))
 end
 
-function displaystructure(X::MultiLogiset; indent_str = "", include_ninstances = true)
+function displaystructure(X::MultiLogiset; indent_str="", include_ninstances=true)
     pieces = []
     push!(pieces, "MultiLogiset with $(nmodalities(X)) modalities ($(humansize(X)))")
     # push!(pieces, indent_str * "├ # modalities:\t$(nmodalities(X))")
@@ -105,12 +107,15 @@ function displaystructure(X::MultiLogiset; indent_str = "", include_ninstances =
         end
         out *= "{$i_modality} "
         # \t\t\t$(humansize(mod))\t(worldtype: $(worldtype(mod)))"
-        out *= displaystructure(mod; indent_str = indent_str * (i_modality == nmodalities(X) ? "  " : "│ "), include_ninstances = false)
+        out *= displaystructure(
+            mod;
+            indent_str=indent_str * (i_modality == nmodalities(X) ? "  " : "│ "),
+            include_ninstances=false,
+        )
         push!(pieces, out)
     end
     return join(pieces, "\n")
 end
-
 
 function featvalue(
     feature::AbstractFeature,
@@ -118,11 +123,10 @@ function featvalue(
     i_modality::Integer,
     i_instance::Integer,
     args...;
-    kwargs...
+    kwargs...,
 )
     featvalue(feature, modality(X, i_modality), i_instance, args...; kwargs...)
 end
-
 
 hasnans(X::MultiLogiset) = any(hasnans.(eachmodality(X)))
 
@@ -131,16 +135,20 @@ isminifiable(X::MultiLogiset) = any(isminifiable.(eachmodality(X)))
 function minify(X::MultiLogiset)
     if !any(map(isminifiable, eachmodality(X)))
         if !all(map(isminifiable, eachmodality(X)))
-            error("Cannot perform minification with modalities " *
+            error(
+                "Cannot perform minification with modalities " *
                 "of types $(typeof.(eachmodality(X))). Please use a " *
-                "minifiable format (e.g., SupportedLogiset).")
+                "minifiable format (e.g., SupportedLogiset).",
+            )
         else
             @warn "Cannot perform minification on some of the modalities " *
                 "provided. Please use a minifiable format (e.g., " *
                 "SupportedLogiset) ($(typeof.(eachmodality(X))) were used instead)."
         end
     end
-    X, backmap = zip([!isminifiable(X) ? minify(X) : (X, identity) for X in eachmodality(X)]...)
+    X, backmap = zip(
+        [!isminifiable(X) ? minify(X) : (X, identity) for X in eachmodality(X)]...
+    )
     X, backmap
 end
 
@@ -211,7 +219,10 @@ See also [`MultiFormula`](@ref), [`MultiLogiset`](@ref).
 """
 modforms(f::MultiFormula) = f.modforms
 
-Base.isequal(a::MultiFormula, b::MultiFormula) = allequal(Set.(keys.([modforms(a), modforms(b)]))) && all(k->Base.isequal(modforms(a)[k], modforms(b)[k]), keys(modforms(a)))
+function Base.isequal(a::MultiFormula, b::MultiFormula)
+    allequal(Set.(keys.([modforms(a), modforms(b)]))) &&
+        all(k->Base.isequal(modforms(a)[k], modforms(b)[k]), keys(modforms(a)))
+end
 Base.hash(a::MultiFormula) = Base.hash(typeof(a), Base.hash(modforms(a)))
 
 function MultiFormula(i_modality::Integer, modant::Formula)
@@ -221,13 +232,19 @@ end
 
 function syntaxstring(
     f::MultiFormula;
-    hidemodality = false,
-    variable_names_map::Union{Nothing,AbstractDict,AbstractVector,AbstractVector{<:Union{AbstractDict,AbstractVector}}} = nothing,
-    parenthesize_modforms = true,
-    kwargs...
+    hidemodality=false,
+    variable_names_map::Union{
+        Nothing,
+        AbstractDict,
+        AbstractVector,
+        AbstractVector{<:Union{AbstractDict,AbstractVector}},
+    }=nothing,
+    parenthesize_modforms=true,
+    kwargs...,
 )
     map_is_multimodal = begin
-        if !isnothing(variable_names_map) && all(e->!(e isa Union{AbstractDict,AbstractVector}), variable_names_map)
+        if !isnothing(variable_names_map) &&
+            all(e->!(e isa Union{AbstractDict,AbstractVector}), variable_names_map)
             (haskey(kwargs, :silent) && kwargs[:silent]) ||
                 @warn "With multimodal formulas, variable_names_map should be a vector of vectors/maps of " *
                     "variable names. Got $(typeof(variable_names_map)) instead. This may fail, " *
@@ -237,16 +254,24 @@ function syntaxstring(
             !isnothing(variable_names_map)
         end
     end
-    join([begin
-        _variable_names_map = map_is_multimodal ? variable_names_map[i_modality] : variable_names_map
-        φ = modforms(f)[i_modality]
-        str = syntaxstring(φ; variable_names_map = _variable_names_map, kwargs...)
-        parenthesize = !(φ isa SyntaxBranch) || (φ isa SyntaxBranch && SoleLogics.isunary(token(φ)))
-        if parenthesize && parenthesize_modforms
-            str = "($str)"
-        end
-        hidemodality ? "$str" : "{$(i_modality)}$str"
-    end for i_modality in sort(collect(keys(modforms(f))))], " $(CONJUNCTION) ")
+    join(
+        [
+            begin
+                _variable_names_map =
+                    map_is_multimodal ? variable_names_map[i_modality] : variable_names_map
+                φ = modforms(f)[i_modality]
+                str = syntaxstring(φ; variable_names_map=_variable_names_map, kwargs...)
+                parenthesize =
+                    !(φ isa SyntaxBranch) ||
+                    (φ isa SyntaxBranch && SoleLogics.isunary(token(φ)))
+                if parenthesize && parenthesize_modforms
+                    str = "($str)"
+                end
+                hidemodality ? "$str" : "{$(i_modality)}$str"
+            end for i_modality in sort(collect(keys(modforms(f))))
+        ],
+        " $(CONJUNCTION) ",
+    )
 end
 
 function composeformulas(c::typeof(∧), φs::NTuple{N,MultiFormula}) where {N}
@@ -276,14 +301,18 @@ end
 # end
 function composeformulas(c::Connective, φs::NTuple{N,MultiFormula}) where {N}
     if !all(c->length(modforms(c)) == 1, φs)
-        error("Cannot join $(length(φs)) MultiFormula's by means of $(c). " *
+        error(
+            "Cannot join $(length(φs)) MultiFormula's by means of $(c). " *
             "$(φs)\n" *
-            "$(map(c->length(modforms(c)), φs)).")
+            "$(map(c->length(modforms(c)), φs)).",
+        )
     end
     ks = map(c->first(keys(modforms(c))), φs)
     if !allequal(ks)
-        error("Cannot join $(length(φs)) MultiFormula's by means of $(c)." *
-            "Found different modalities: $(unique(ks)).")
+        error(
+            "Cannot join $(length(φs)) MultiFormula's by means of $(c)." *
+            "Found different modalities: $(unique(ks)).",
+        )
     end
     i_modality = first(ks)
     MultiFormula(i_modality, composeformulas(c, map(c->modforms(c)[i_modality], φs)))
@@ -291,19 +320,28 @@ end
 
 function SoleLogics.normalize(φ::MultiFormula{F}; kwargs...) where {F<:Formula}
     # MultiFormula(Dict{Int,F}([i_modality => SoleLogics.normalize(f; kwargs...) for (i_modality,f) in pairs(modforms(φ))]))
-    MultiFormula(Dict([i_modality => SoleLogics.normalize(f; kwargs...) for (i_modality,f) in pairs(modforms(φ))]))
+    MultiFormula(
+        Dict([
+            i_modality => SoleLogics.normalize(f; kwargs...) for
+            (i_modality, f) in pairs(modforms(φ))
+        ]),
+    )
 end
 
-natoms(φ::LeftmostConjunctiveForm{<:MultiFormula}) = natoms((SoleLogics.grandchildren(φ)...,))
-natoms(φ::MultiFormula{<:SyntaxTree}) =
-    sum([natoms(modant) for (_,modant) in modforms(φ)])
+function natoms(φ::LeftmostConjunctiveForm{<:MultiFormula})
+    natoms((SoleLogics.grandchildren(φ)...,))
+end
+natoms(φ::MultiFormula{<:SyntaxTree}) = sum([natoms(modant) for (_, modant) in modforms(φ)])
 function natoms(children::NTuple{N,MultiFormula}) where {N}
     return sum([natoms(child) for child in children])
 end
 
-ntokens(φ::LeftmostConjunctiveForm{<:MultiFormula}) = ntokens((SoleLogics.grandchildren(φ)...,))
-ntokens(φ::MultiFormula{<:SyntaxTree}) =
-    sum([ntokens(modant) for (_,modant) in modforms(φ)])
+function ntokens(φ::LeftmostConjunctiveForm{<:MultiFormula})
+    ntokens((SoleLogics.grandchildren(φ)...,))
+end
+function ntokens(φ::MultiFormula{<:SyntaxTree})
+    sum([ntokens(modant) for (_, modant) in modforms(φ)])
+end
 function ntokens(children::NTuple{N,MultiFormula}) where {N}
     return sum([ntokens(child) for child in children])
 end
@@ -318,8 +356,10 @@ function check(
     X, i_instance = SoleLogics.splat(i)
 
     # TODO in the fuzzy case: use collatetruth(∧, fuzzy truth values...)
-    all([check(f, X, i_modality, i_instance, args...; kwargs...)
-        for (i_modality, f) in modforms(φ)])
+    all([
+        check(f, X, i_modality, i_instance, args...; kwargs...) for
+        (i_modality, f) in modforms(φ)
+    ])
 end
 
 # # TODO join MultiFormula leads to a SyntaxTree with MultiFormula φs
@@ -332,8 +372,8 @@ function check(
     d::AbstractInterpretationSet,
     i_instance::Integer,
     args...;
-    kwargs...
+    kwargs...,
 )
     X = MultiLogiset(d)
-    all([check(c,X,i_instance,args...; kwargs...) for c in children(φ)])
+    all([check(c, X, i_instance, args...; kwargs...) for c in children(φ)])
 end

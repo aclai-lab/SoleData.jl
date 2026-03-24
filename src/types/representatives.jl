@@ -40,15 +40,13 @@ function representatives( # Dispatch on feature/aggregator pairs
     fr::AbstractFrame{W},
     w::W,
     r::AbstractRelation,
-    ::AbstractCondition
+    ::AbstractCondition,
 ) where {W<:AbstractWorld}
     accessibles(fr, w, r)
 end
 
 function representatives(
-    fr::AbstractFrame{W},
-    w::W,
-    ::AbstractCondition
+    fr::AbstractFrame{W}, w::W, ::AbstractCondition
 ) where {W<:AbstractWorld}
     accessibles(fr, w)
 end

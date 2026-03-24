@@ -17,9 +17,7 @@ Apply a test operator by simply passing the feature value and threshold to
 the (binary) test operator function.
 """
 @inline function apply_test_operator(
-    operator::TestOperator,
-    featval::T1,
-    threshold::T2
+    operator::TestOperator, featval::T1, threshold::T2
 ) where {T1,T2}
     operator(featval, threshold)
 end
@@ -42,10 +40,10 @@ const Aggregator = Function
 # Crisp operators
 ############################################################################################
 
-inverse_test_operator(::typeof(≥))  = <
-inverse_test_operator(::typeof(≤))  = >
-inverse_test_operator(::typeof(<))  = ≥
-inverse_test_operator(::typeof(>))  = ≤
+inverse_test_operator(::typeof(≥)) = <
+inverse_test_operator(::typeof(≤)) = >
+inverse_test_operator(::typeof(<)) = ≥
+inverse_test_operator(::typeof(>)) = ≤
 inverse_test_operator(::typeof(==)) = !=
 inverse_test_operator(::typeof(!=)) = ==
 
@@ -64,20 +62,19 @@ isstrict(::typeof(≤)) = false
 isstrict(::typeof(<)) = true
 isstrict(::typeof(>)) = true
 
-
 dual_test_operator(::typeof(≥)) = ≤
 dual_test_operator(::typeof(≤)) = ≥
 
-existential_aggregator(::typeof(>))  = maximum
-existential_aggregator(::typeof(<))  = minimum
-existential_aggregator(::typeof(≥))  = maximum
-existential_aggregator(::typeof(≤))  = minimum
+existential_aggregator(::typeof(>)) = maximum
+existential_aggregator(::typeof(<)) = minimum
+existential_aggregator(::typeof(≥)) = maximum
+existential_aggregator(::typeof(≤)) = minimum
 existential_aggregator(::typeof(==)) = ∪
 
-universal_aggregator(::typeof(>))  = minimum
-universal_aggregator(::typeof(<))  = maximum
-universal_aggregator(::typeof(≥))  = minimum
-universal_aggregator(::typeof(≤))  = maximum
+universal_aggregator(::typeof(>)) = minimum
+universal_aggregator(::typeof(<)) = maximum
+universal_aggregator(::typeof(≥)) = minimum
+universal_aggregator(::typeof(≤)) = maximum
 universal_aggregator(::typeof(==)) = ∩
 
 aggregator_bottom(::typeof(maximum), T::Type) = typemin(T)
@@ -107,7 +104,6 @@ aggregator_to_binary(::typeof(minimum)) = min
 #   @eval global existential_aggregator(::typeof($fun)) = ∪
 #   fun
 # end
-
 
 # # >ₕ
 # function get_fuzzy_linear_gt(h::T, fuzzy_type::Type{<:Real} = Float64) where {T}
@@ -141,7 +137,6 @@ aggregator_to_binary(::typeof(minimum)) = min
 #   fun
 # end
 
-
 # # ≧ₕ
 # function get_fuzzy_linear_geq(h::T, fuzzy_type::Type{<:Real} = Float64) where {T}
 #   fun = function (x::S, y::S) where {S}
@@ -157,7 +152,6 @@ aggregator_to_binary(::typeof(minimum)) = min
 #   @eval global existential_aggregator(::typeof($fun)) = maximum
 #   fun
 # end
-
 
 # # ≦ₕ
 # function get_fuzzy_linear_leq(h::T, fuzzy_type::Type{<:Real} = Float64) where {T}

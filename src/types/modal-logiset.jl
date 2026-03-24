@@ -33,27 +33,23 @@ See also
 [`SoleLogics.AbstractInterpretationSet`](@ref).
 """
 abstract type AbstractModalLogiset{
-    W<:AbstractWorld,
-    U,
-    FT<:AbstractFeature,
-    FR<:AbstractFrame{W},
+    W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame{W}
 } <: AbstractLogiset end
 
 function featchannel(
-    X::AbstractModalLogiset{W},
-    i_instance::Integer,
-    feature::AbstractFeature,
+    X::AbstractModalLogiset{W}, i_instance::Integer, feature::AbstractFeature
 ) where {W<:AbstractWorld}
-    return error("Please, provide method featchannel(::$(typeof(X)), i_instance::$(typeof(i_instance)), feature::$(typeof(feature))).")
+    return error(
+        "Please, provide method featchannel(::$(typeof(X)), i_instance::$(typeof(i_instance)), feature::$(typeof(feature))).",
+    )
 end
 
 function readfeature(
-    X::AbstractModalLogiset{W},
-    featchannel::Any,
-    w::W,
-    feature::AbstractFeature,
+    X::AbstractModalLogiset{W}, featchannel::Any, w::W, feature::AbstractFeature
 ) where {W<:AbstractWorld}
-    return error("Please, provide method readfeature(::$(typeof(X)), featchannel::$(typeof(featchannel)), w::$(typeof(w)), feature::$(typeof(feature))).")
+    return error(
+        "Please, provide method readfeature(::$(typeof(X)), featchannel::$(typeof(featchannel)), w::$(typeof(w)), feature::$(typeof(feature))).",
+    )
 end
 
 function featvalue(
@@ -61,31 +57,31 @@ function featvalue(
     X::AbstractModalLogiset,
     i_instance::Integer,
     args...;
-    kwargs...
+    kwargs...,
 )
     readfeature(X, featchannel(X, i_instance, feature), args..., feature; kwargs...)
 end
 
 function featvalue!(
-    feature::AbstractFeature,
-    X::AbstractModalLogiset{W},
-    featval,
-    i_instance::Integer,
-    w::W,
+    feature::AbstractFeature, X::AbstractModalLogiset{W}, featval, i_instance::Integer, w::W
 ) where {W<:AbstractWorld}
-    return error("Please, provide method featvalue!(feature::$(typeof(feature)), X::$(typeof(X)), featval::$(typeof(featval)), i_instance::$(typeof(i_instance)), w::$(typeof(w))).")
+    return error(
+        "Please, provide method featvalue!(feature::$(typeof(feature)), X::$(typeof(X)), featval::$(typeof(featval)), i_instance::$(typeof(i_instance)), w::$(typeof(w))).",
+    )
 end
 
 function featvalues!(
-    feature::AbstractFeature,
-    X::AbstractModalLogiset{W},
-    featslice,
+    feature::AbstractFeature, X::AbstractModalLogiset{W}, featslice
 ) where {W<:AbstractWorld}
-    return error("Please, provide method featvalues!(feature::$(typeof(feature)), X::$(typeof(X)), featslice::$(typeof(featslice))).")
+    return error(
+        "Please, provide method featvalues!(feature::$(typeof(feature)), X::$(typeof(X)), featslice::$(typeof(featslice))).",
+    )
 end
 
 function frame(X::AbstractModalLogiset, i_instance::Integer)
-    return error("Please, provide method frame(::$(typeof(X)), i_instance::$(typeof(i_instance))).")
+    return error(
+        "Please, provide method frame(::$(typeof(X)), i_instance::$(typeof(i_instance)))."
+    )
 end
 
 ############################################################################################
@@ -93,7 +89,11 @@ end
 featvaltype(::Type{<:AbstractModalLogiset{W,U}}) where {W<:AbstractWorld,U} = U
 featvaltype(X::AbstractModalLogiset) = featvaltype(typeof(X))
 
-featuretype(::Type{<:AbstractModalLogiset{W,U,FT}}) where {W<:AbstractWorld,U,FT<:AbstractFeature} = FT
+function featuretype(
+    ::Type{<:AbstractModalLogiset{W,U,FT}}
+) where {W<:AbstractWorld,U,FT<:AbstractFeature}
+    FT
+end
 featuretype(X::AbstractModalLogiset) = featuretype(typeof(X))
 
 ############################################################################################
@@ -101,9 +101,15 @@ featuretype(X::AbstractModalLogiset) = featuretype(typeof(X))
 worldtype(::Type{<:AbstractModalLogiset{W}}) where {W<:AbstractWorld} = W
 worldtype(X::AbstractModalLogiset) = worldtype(typeof(X))
 
-frametype(::Type{<:AbstractModalLogiset{W,U,FT,FR}}) where {W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame} = FR
+function frametype(
+    ::Type{<:AbstractModalLogiset{W,U,FT,FR}}
+) where {W<:AbstractWorld,U,FT<:AbstractFeature,FR<:AbstractFrame}
+    FR
+end
 frametype(X::AbstractModalLogiset) = frametype(typeof(X))
 
-representatives(X::AbstractModalLogiset, i_instance::Integer, args...) = representatives(frame(X, i_instance), args...)
+function representatives(X::AbstractModalLogiset, i_instance::Integer, args...)
+    representatives(frame(X, i_instance), args...)
+end
 
 ############################################################################################

@@ -29,10 +29,10 @@ struct VariableBounds
     has_upper::Bool
     lower_inclusive::Bool
     upper_inclusive::Bool
-    
+
     # Default constructor: unconstrained
     VariableBounds() = new(-Inf, Inf, false, false, true, true)
-    
+
     # Constructor from single constraint
     function VariableBounds(relation::Function, threshold::Float64)
         if relation === ≥
@@ -47,7 +47,7 @@ struct VariableBounds
             throw(ArgumentError("Unsupported relation: $relation"))
         end
     end
-    
+
     # Full constructor (internal use)
     VariableBounds(lb, ub, hl, hu, li, ui) = new(lb, ub, hl, hu, li, ui)
 end
@@ -83,12 +83,12 @@ function extract_constraint(atom; silent::Bool=true)::Constraint
     metacond = atom.value.metacond
     var_id = metacond.feature.i_variable
     threshold = atom.value.threshold
-    
+
     # Extract relation from type parameters
     relation = _extract_relation(typeof(metacond), silent)
-    
+
     !silent && @info "Extracted constraint" var_id relation threshold
-    
+
     return Constraint(var_id, relation, threshold)
 end
 
@@ -104,11 +104,11 @@ function _extract_relation(metacond_type::Type, silent::Bool)::Function
         relation = _type_to_relation(rel_type)
         relation !== nothing && return relation
     end
-    
+
     # Fallback to string parsing
     type_str = string(metacond_type)
     !silent && @debug "Parsing type string" type_str
-    
+
     return _parse_relation_from_string(type_str)
 end
 
@@ -137,7 +137,7 @@ function _parse_relation_from_string(type_str::String)::Function
     (occursin("typeof(≥)", type_str) || occursin("typeof(>=)", type_str)) && return ≥
     occursin("typeof(>)", type_str) && return >
     (occursin("typeof(≤)", type_str) || occursin("typeof(<=)", type_str)) && return ≤
-    
+
     @warn "Could not parse relation from type string, using default ≥" type_str
     return ≥
 end
@@ -166,7 +166,7 @@ function merge_bounds(vb1::VariableBounds, vb2::VariableBounds)::VariableBounds
     else  # Equal bounds
         (vb1.lower_bound, true, vb1.lower_inclusive && vb2.lower_inclusive)
     end
-    
+
     # Determine most restrictive upper bound
     new_upper, new_has_upper, new_upper_inclusive = if !vb1.has_upper && !vb2.has_upper
         (Inf, false, true)
@@ -181,9 +181,15 @@ function merge_bounds(vb1::VariableBounds, vb2::VariableBounds)::VariableBounds
     else  # Equal bounds
         (vb1.upper_bound, true, vb1.upper_inclusive && vb2.upper_inclusive)
     end
-    
-    return VariableBounds(new_lower, new_upper, new_has_lower, new_has_upper, 
-                         new_lower_inclusive, new_upper_inclusive)
+
+    return VariableBounds(
+        new_lower,
+        new_upper,
+        new_has_lower,
+        new_has_upper,
+        new_lower_inclusive,
+        new_upper_inclusive,
+    )
 end
 
 """
@@ -207,17 +213,17 @@ function get_atoms(conjunctive_form)
     if isa(conjunctive_form, Atom)
         return [conjunctive_form]
     end
-    
+
     # If it has children field (more common in SoleLogics)
     if hasfield(typeof(conjunctive_form), :children)
         return conjunctive_form.children
     end
-    
+
     # If it has grandchildren field  
     if hasfield(typeof(conjunctive_form), :grandchildren)
         return conjunctive_form.grandchildren
     end
-    
+
     # Try to iterate directly if it's iterable
     try
         return collect(conjunctive_form)
@@ -236,20 +242,22 @@ Fixed to handle both single Atoms and complex conjunctive forms.
 function extract_term_bounds(conjunctive_form; silent::Bool=true)::Dict{Int,VariableBounds}
     # Get atoms using our safe function
     atoms = get_atoms(conjunctive_form)
-    
-    !silent && @info "Processing conjunctive form" n_atoms=length(atoms) type=typeof(conjunctive_form)
-    
+
+    !silent && @info "Processing conjunctive form" n_atoms=length(atoms) type=typeof(
+        conjunctive_form
+    )
+
     constraints = [extract_constraint(atom; silent) for atom in atoms]
-    
+
     # Group constraints by variable ID and merge bounds
     bounds_dict = Dict{Int,VariableBounds}()
-    
+
     for constraint in constraints
         var_id = constraint.variable_id
         old_bounds = get(bounds_dict, var_id, VariableBounds())
         bounds_dict[var_id] = add_constraint(old_bounds, constraint)
     end
-    
+
     return bounds_dict
 end
 
@@ -266,7 +274,7 @@ vb1 strictly dominates vb2 if vb1 represents a WEAKER constraint that COVERS MOR
 function strictly_dominates(vb1::VariableBounds, vb2::VariableBounds)::Bool
     # If vb2 has no constraints, vb1 cannot dominate it
     (!vb2.has_lower && !vb2.has_upper) && return false
-    
+
     # Check lower bound domination (vb1 is weaker/covers more)
     lower_dominates_or_equal = if !vb1.has_lower && vb2.has_lower
         true  # vb1 has no lower bound, vb2 has one -> vb1 covers more
@@ -282,7 +290,7 @@ function strictly_dominates(vb1::VariableBounds, vb2::VariableBounds)::Bool
     else
         false # vb1.lower_bound > vb2.lower_bound -> vb1 is more restrictive
     end
-    
+
     # Check upper bound domination (vb1 is weaker/covers more)
     upper_dominates_or_equal = if !vb1.has_upper && vb2.has_upper
         true  # vb1 has no upper bound, vb2 has one -> vb1 covers more
@@ -298,7 +306,7 @@ function strictly_dominates(vb1::VariableBounds, vb2::VariableBounds)::Bool
     else
         false # vb1.upper_bound < vb2.upper_bound -> vb1 is more restrictive
     end
-    
+
     # Check if vb1 is strictly weaker (at least one dimension strictly dominates)
     lower_strictly_dominates = if !vb1.has_lower && vb2.has_lower
         true  # vb1 unconstrained, vb2 constrained
@@ -311,7 +319,7 @@ function strictly_dominates(vb1::VariableBounds, vb2::VariableBounds)::Bool
     else
         false
     end
-    
+
     upper_strictly_dominates = if !vb1.has_upper && vb2.has_upper
         true  # vb1 unconstrained, vb2 constrained
     elseif !vb1.has_upper || !vb2.has_upper
@@ -323,10 +331,11 @@ function strictly_dominates(vb1::VariableBounds, vb2::VariableBounds)::Bool
     else
         false
     end
-    
+
     # For strict domination: both dimensions must dominate or be equal,
     # and at least one must strictly dominate
-    return lower_dominates_or_equal && upper_dominates_or_equal && 
+    return lower_dominates_or_equal &&
+           upper_dominates_or_equal &&
            (lower_strictly_dominates || upper_strictly_dominates)
 end
 
@@ -338,16 +347,18 @@ end
     A term dominates another ONLY if it covers a SUPERSET of the solution space.
 This means bounds1 must have weaker or equal constraints on ALL variables.
 """
-function strictly_dominates(bounds1::Dict{Int,VariableBounds}, bounds2::Dict{Int,VariableBounds})::Bool
+function strictly_dominates(
+    bounds1::Dict{Int,VariableBounds}, bounds2::Dict{Int,VariableBounds}
+)::Bool
     # CRITICAL: Get all variables that appear in either term
     all_variables = Set(union(keys(bounds1), keys(bounds2)))
-    
+
     has_strictly_weaker_constraint = false
-    
+
     for var_id in all_variables
         vb1 = get(bounds1, var_id, VariableBounds())  # No constraint if missing
         vb2 = get(bounds2, var_id, VariableBounds())  # No constraint if missing
-        
+
         # Check if vb1 dominates or equals vb2 for this variable
         if strictly_dominates(vb1, vb2)
             has_strictly_weaker_constraint = true
@@ -356,7 +367,7 @@ function strictly_dominates(bounds1::Dict{Int,VariableBounds}, bounds2::Dict{Int
             return false
         end
     end
-    
+
     # bounds1 dominates bounds2 only if:
     # 1. All variables: vb1 dominates or equals vb2
     # 2. At least one variable: vb1 strictly dominates vb2
@@ -371,8 +382,18 @@ Check if two VariableBounds represent exactly the same constraint.
 function bounds_equal(vb1::VariableBounds, vb2::VariableBounds)::Bool
     return (vb1.has_lower == vb2.has_lower) &&
            (vb1.has_upper == vb2.has_upper) &&
-           (!vb1.has_lower || (vb1.lower_bound == vb2.lower_bound && vb1.lower_inclusive == vb2.lower_inclusive)) &&
-           (!vb1.has_upper || (vb1.upper_bound == vb2.upper_bound && vb1.upper_inclusive == vb2.upper_inclusive))
+           (
+               !vb1.has_lower || (
+                   vb1.lower_bound == vb2.lower_bound &&
+                   vb1.lower_inclusive == vb2.lower_inclusive
+               )
+           ) &&
+           (
+               !vb1.has_upper || (
+                   vb1.upper_bound == vb2.upper_bound &&
+                   vb1.upper_inclusive == vb2.upper_inclusive
+               )
+           )
 end
 
 # ==============================================================================
@@ -398,34 +419,35 @@ ensuring that any solution satisfying B will also satisfy A.
 - **DNF Formula**: Minimized formula of the same type as input, guaranteed to have
   identical solution space but potentially fewer terms
 """
-function refine_dnf(dnf_formula; silent::Bool=true) 
-    
+function refine_dnf(dnf_formula; silent::Bool=true)
     !silent && println("refine_dnf are running")
-    
+
     terms = get_atoms(dnf_formula)
     n_terms = length(terms)
-    
-    !silent && @info "Starting DNF minimization" original_terms=n_terms formula_type=typeof(dnf_formula)
-    
+
+    !silent && @info "Starting DNF minimization" original_terms=n_terms formula_type=typeof(
+        dnf_formula
+    )
+
     # Handle edge case of single term
     if n_terms <= 1
         !silent && @info "Formula has ≤1 terms, no minimization needed"
         return dnf_formula
     end
-    
+
     # Extract bounds for all terms
     all_bounds = map(term -> extract_term_bounds(term; silent), terms)
-    
+
     # DEBUG: Print all terms and their bounds if not silent
     if !silent
         println("\n=== TERMS ANALYSIS ===")
         for (i, bounds) in enumerate(all_bounds)
             println("Term $i:")
-            println("dump(bounds)",dump(bounds)) # TODO notice is only for debug... maybe we can remove this?
+            println("dump(bounds)", dump(bounds)) # TODO notice is only for debug... maybe we can remove this?
         end
         println()
     end
-    
+
     # Find terms that are NOT strictly dominated by any other term
     keep_mask = map(enumerate(all_bounds)) do (i, bounds_i)
         is_dominated = any(enumerate(all_bounds)) do (j, bounds_j)
@@ -440,19 +462,19 @@ function refine_dnf(dnf_formula; silent::Bool=true)
         end
         return !is_dominated
     end
-    
+
     kept_indices = findall(keep_mask)
     minimized_terms = terms[kept_indices]
-    
+
     # Safety check: never return empty formula
     if isempty(minimized_terms)
         @warn "All terms were dominated (this indicates a BUG!), keeping all terms for safety"
         return dnf_formula
     end
-    
+
     reduction = n_terms - length(kept_indices)
-    reduction_percent = round((reduction / n_terms) * 100, digits=1)
-    
+    reduction_percent = round((reduction / n_terms) * 100; digits=1)
+
     # Return same type as input with minimized terms
     return typeof(dnf_formula)(minimized_terms)
 end

@@ -4,29 +4,31 @@ struct LibrasLoader <: AbstractLoaderDataset
 
     classes::Vector{String}
 
-    LibrasLoader() = new(
-        "libras",
-        "",
+    function LibrasLoader()
+        new(
+            "libras",
+            "",
 
-        # class names
-        [
-            "curved_swing",
-            "horizontal_swing",
-            "vertical_swing",
-            "anti_clockwise_arc",
-            "clokcwise_arc",
-            "circle",
-            "horizontal_straight_line",
-            "vertical_straight_line",
-            "horizontal_zigzag",
-            "vertical_zigzag",
-            "horizontal_wavy",
-            "vertical_wavy",
-            "face_up_curve",
-            "face_down_curve",
-            "tremble"
-        ]
-    )
+            # class names
+            [
+                "curved_swing",
+                "horizontal_swing",
+                "vertical_swing",
+                "anti_clockwise_arc",
+                "clokcwise_arc",
+                "circle",
+                "horizontal_straight_line",
+                "vertical_straight_line",
+                "horizontal_zigzag",
+                "vertical_zigzag",
+                "horizontal_wavy",
+                "vertical_wavy",
+                "face_up_curve",
+                "face_down_curve",
+                "tremble",
+            ],
+        )
+    end
 end
 
 """
@@ -35,7 +37,6 @@ end
 Retrieve the classes of Libras dataset.
 """
 classes(l::LibrasLoader) = l.classes
-
 
 """
     function load(l::LibrasLoader)
@@ -57,11 +58,10 @@ function load(l::LibrasLoader)
         end
     end
 
-    (X_train, y_train), (X_test, y_test) =
-        (
-            read("$(dirpath)/libras_TEST.arff", String) |> parseARFF,
-            read("$(dirpath)/libras_TRAIN.arff", String) |> parseARFF,
-        )
+    (X_train, y_train), (X_test, y_test) = (
+        parseARFF(read("$(dirpath)/libras_TEST.arff", String)),
+        parseARFF(read("$(dirpath)/libras_TRAIN.arff", String)),
+    )
 
     # convert from .arff class codes to string
     fix_class_names(y) = classes(l)[round(Int, parse(Float64, y))]

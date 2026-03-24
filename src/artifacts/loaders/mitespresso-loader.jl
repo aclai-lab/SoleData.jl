@@ -6,10 +6,9 @@ struct MITESPRESSOLoader <: AbstractLoaderBinary
     url::String     # Fallback download URL
 
     # Internal constructor with default values
-    MITESPRESSOLoader() = new(
-        "mitespresso",
-        "https://jackhack96.github.io/logic-synthesis/espresso.html"
-    )
+    function MITESPRESSOLoader()
+        new("mitespresso", "https://jackhack96.github.io/logic-synthesis/espresso.html")
+    end
 end
 
 function load(al::MITESPRESSOLoader)

@@ -5,8 +5,14 @@ using MultiData: AbstractDimensionalDataset
 import MultiData: ninstances, nvariables
 
 import SoleData:
-    islogiseed, initlogiset, frame,
-    featchannel, readfeature, featvalue, vareltype, featvaltype
+    islogiseed,
+    initlogiset,
+    frame,
+    featchannel,
+    readfeature,
+    featvalue,
+    vareltype,
+    featvaltype
 
 using SoleLogics: nparameters
 
@@ -41,10 +47,10 @@ MultiData.dimensionality,
 function initlogiset(
     dataset::AbstractDimensionalDataset,
     features::AbstractVector;
-    worldtype_by_dim::Union{Nothing,<:AbstractDict{<:Integer,<:Type}}=nothing
+    worldtype_by_dim::Union{Nothing,<:AbstractDict{<:Integer,<:Type}}=nothing,
 )::UniformFullDimensionalLogiset
-    worldtype_by_dim = isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM :
-        worldtype_by_dim
+    worldtype_by_dim =
+        isnothing(worldtype_by_dim) ? DEFAULT_WORLDTYPE_BY_DIM : worldtype_by_dim
 
     _ninstances = ninstances(dataset)
 
@@ -54,10 +60,11 @@ function initlogiset(
     _worldtype(instancetype::Type{<:AbstractArray{T,3}}) where {T} = worldtype_by_dim[2]
 
     function _worldtype(instancetype::Type{<:AbstractArray})
-        error("Cannot initialize logiset with dimensional instances of type " *
+        error(
+            "Cannot initialize logiset with dimensional instances of type " *
             "`$(instancetype)`. Please, provide " *
             "instances of size X × Y × ... × nvariables." *
-            "Note that, currently, only ndims ≤ 4 (dimensionality ≤ 2) is supported."
+            "Note that, currently, only ndims ≤ 4 (dimensionality ≤ 2) is supported.",
         )
     end
 
@@ -80,11 +87,11 @@ function initlogiset(
         _maxchannelsize = maxchannelsize(dataset)
 
         featstruct = Array{U,nparameters(W)+2}(
-                undef,
-                repeat(collect(_maxchannelsize), inner=repeatdim)...,
-                _ninstances,
-                length(features)
-            )
+            undef,
+            repeat(collect(_maxchannelsize); inner=repeatdim)...,
+            _ninstances,
+            length(features),
+        )
         if !isconcretetype(U) # TODO only in this case but this breaks code
             @warn "Abstract featvaltype detected upon initializing UniformFullDimensionalLogiset logiset: $(U)."
             fill!(featstruct, 0)
@@ -107,46 +114,40 @@ function frame(
     dataset::AbstractDimensionalDataset,
     i_instance::Integer;
     worldtype_by_dim::Union{Nothing,AbstractDict{<:Integer,<:Type}}=nothing,
-    kwargs...
+    kwargs...,
 )
-    worldtype = !isnothing(worldtype_by_dim) ? worldtype_by_dim[dimensionality(dataset)] : nothing
+    worldtype =
+        !isnothing(worldtype_by_dim) ? worldtype_by_dim[dimensionality(dataset)] : nothing
     FullDimensionalFrame(channelsize(dataset, i_instance), worldtype)
 end
 
 function featchannel(
-    dataset::AbstractDimensionalDataset,
-    i_instance::Integer,
-    f::AbstractFeature,
+    dataset::AbstractDimensionalDataset, i_instance::Integer, f::AbstractFeature
 )
     get_instance(dataset, i_instance)
 end
 
 function readfeature(
-    dataset::AbstractDimensionalDataset,
-    featchannel::Any,
-    w::W,
-    f::VarFeature,
+    dataset::AbstractDimensionalDataset, featchannel::Any, w::W, f::VarFeature
 ) where {W<:AbstractWorld}
     _interpret_world(::OneWorld, instance::AbstractArray{T,1}) where {T} = instance
-    _interpret_world(w::Interval, instance::AbstractArray{T,2}) where {T} = instance[w.x:w.y-1,:]
-    _interpret_world(w::Interval2D, instance::AbstractArray{T,3}) where {T} = instance[w.x.x:w.x.y-1,w.y.x:w.y.y-1,:]
+    _interpret_world(w::Interval, instance::AbstractArray{T,2}) where {T} = instance[
+        w.x:(w.y - 1), :,
+    ]
+    _interpret_world(w::Interval2D, instance::AbstractArray{T,3}) where {T} = instance[
+        w.x.x:(w.x.y - 1), w.y.x:(w.y.y - 1), :,
+    ]
     wchannel = _interpret_world(w, featchannel)
     computefeature(f, wchannel)
 end
 
 function featvalue(
-    feature::AbstractFeature,
-    dataset::AbstractDimensionalDataset,
-    i_instance::Integer,
-    w::W,
+    feature::AbstractFeature, dataset::AbstractDimensionalDataset, i_instance::Integer, w::W
 ) where {W<:AbstractWorld}
     readfeature(dataset, featchannel(dataset, i_instance, feature), w, feature)
 end
 
-function vareltype(
-    dataset::AbstractDimensionalDataset{T},
-    i_variable::VariableId,
-) where {T}
+function vareltype(dataset::AbstractDimensionalDataset{T}, i_variable::VariableId) where {T}
     T
 end
 

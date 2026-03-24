@@ -119,26 +119,27 @@ export ScalarMetaCondition
 
 export MixedCondition
 
-
 export ValueCondition, FunctionalCondition
-
 
 export Feature
 
-export UnivariateNamedFeature,
-        UnivariateFeature,
-        VariableValue
+export UnivariateNamedFeature, UnivariateFeature, VariableValue
 
 export VarFeature,
-        VariableMin, VariableMax, i_variable, featurename,
-        VariableSoftMin, VariableSoftMax,
-        VariableAvg,
-        VariableDistance, references, refsize, distance,
-        MultivariateFeature
-
+    VariableMin,
+    VariableMax,
+    i_variable,
+    featurename,
+    VariableSoftMin,
+    VariableSoftMax,
+    VariableAvg,
+    VariableDistance,
+    references,
+    refsize,
+    distance,
+    MultivariateFeature
 
 include("utils/features.jl")
-
 
 export MultiLogiset, eachmodality, modality, nmodalities
 export MultiFormula, modforms
@@ -146,12 +147,12 @@ export MultiFormula, modforms
 # Multi-frame version of logisets, for representing multimodal datasets
 include("utils/multilogiset.jl")
 
-
 export @scalarformula
 
 include("scalar/main.jl")
 
-export initlogiset, ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue
+export initlogiset,
+    ninstances, maxchannelsize, worldtype, dimensionality, allworlds, featvalue
 
 export nvariables
 
@@ -204,7 +205,7 @@ function default_full_memoset_type(X::AbstractModalLogiset)
     # if ...
     #     ScalarChainedMemoset TODO
     # else
-        FullMemoset
+    FullMemoset
     # end
 end
 
@@ -224,28 +225,55 @@ include("utils/autologiset-tools.jl")
 """
 Logical datasets with scalar features.
 """
-const AbstractScalarLogiset{
-    W<:AbstractWorld,
-    U<:Number,
-    FT<:AbstractFeature,
-    FR<:AbstractFrame{W}
-} = AbstractModalLogiset{W,U,FT,FR}
+const AbstractScalarLogiset{W<:AbstractWorld,U<:Number,FT<:AbstractFeature,FR<:AbstractFrame{W}} = AbstractModalLogiset{
+    W,U,FT,FR
+}
 
-nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
-nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
-relations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = relations(supports(X)[1])
-relations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = relations(supports(X)[1])
-nmetaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nmetaconditions(supports(X)[1])
-nmetaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nmetaconditions(supports(X)[1])
-metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
-metaconditions(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = metaconditions(supports(X)[1])
+function nrelations(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}
+) where {W,U,FT,FR,L,N}
+    nrelations(supports(X)[1])
+end
+function nrelations(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}
+) where {W,U,FT,FR,L,N}
+    nrelations(supports(X)[1])
+end
+function relations(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}
+) where {W,U,FT,FR,L,N}
+    relations(supports(X)[1])
+end
+function relations(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}
+) where {W,U,FT,FR,L,N}
+    relations(supports(X)[1])
+end
+function nmetaconditions(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}
+) where {W,U,FT,FR,L,N}
+    nmetaconditions(supports(X)[1])
+end
+function nmetaconditions(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}
+) where {W,U,FT,FR,L,N}
+    nmetaconditions(supports(X)[1])
+end
+function metaconditions(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}
+) where {W,U,FT,FR,L,N}
+    metaconditions(supports(X)[1])
+end
+function metaconditions(
+    X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}
+) where {W,U,FT,FR,L,N}
+    metaconditions(supports(X)[1])
+end
 
 include("scalar-pla.jl")
 
-
 export refine_dnf                             # TODO 
 include("scalar/dnf-domain-minimization.jl")  # EVALUATE THIS . 
-
 
 include("minimize.jl")
 include("deprecate.jl")
