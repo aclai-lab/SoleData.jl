@@ -123,20 +123,20 @@ end
 
 function _syntaxstring_metacondition(
     m::ScalarMetaCondition;
-    style=false,
+    style = false,
     removewhitespaces::Bool=false,
     pretty_op::Bool=true,
     kwargs...,
 )
     f, t = feature(m), test_operator(m)
 
-    unstyled_str = if removewhitespaces
-        "$(syntaxstring(f; style, kwargs...))$(_st_testop_name(t; pretty_op))"
-    else
+    unstyled_str = removewhitespaces ? 
+        "$(syntaxstring(f; style, kwargs...))$(_st_testop_name(t; pretty_op))" :
         "$(syntaxstring(f; style, kwargs...)) $(_st_testop_name(t; pretty_op))"
-    end
 
-    return style ? "\e[1m" * unstyled_str * "\e[0m" : unstyled_str
+    return style ?
+        "\e[1m" * unstyled_str * "\e[0m" :
+        unstyled_str
 end
 
 _st_testop_name(test_op::Any; kwargs...) = "$(test_op)"
