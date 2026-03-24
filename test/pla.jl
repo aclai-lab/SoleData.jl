@@ -96,10 +96,10 @@ pla = """
 """
 fnames = [VariableValue(1)]
 
-formula = PLA._pla_to_formula(pla, fnames)
+formula = PLA.pla_to_formula(pla, fnames)
 @test syntaxstring(LeftmostDisjunctiveForm(formula)) == "[V1] > 10.0"
 
-formula = PLA._pla_to_formula(pla, fnames; conjunct=true)
+formula = PLA.pla_to_formula(pla, fnames; conjunct=true)
 @test syntaxstring(formula) == "[V1] > 10.0"
 
 pla = """.i 5

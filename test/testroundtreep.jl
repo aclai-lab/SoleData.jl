@@ -5,7 +5,7 @@ using SoleLogics
 """
     roundtrip_formula(formula::ScalarFormula; featvaltype=Float64)
 
-Applica `_formula_to_pla` e poi `_pla_to_formula` sulla formula in input,
+Applica `_formula_to_pla` e poi `pla_to_formula` sulla formula in input,
 restituendo la formula ricostruita.
 """
 function debug_roundtrip_formula(formula; featvaltype=Float64)
@@ -19,7 +19,7 @@ function debug_roundtrip_formula(formula; featvaltype=Float64)
     println("args: ", args)
     println("kwargs: ", kwargs)
 
-    result = PLA._pla_to_formula(
+    result = PLA.pla_to_formula(
         pla_str, false, args...; featvaltype=featvaltype, kwargs...
     )
     println("\n=== FORMULA RICOSTRUITA ===")

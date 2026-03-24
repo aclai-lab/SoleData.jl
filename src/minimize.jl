@@ -523,7 +523,7 @@ function abc_minimize(
 
         # Convert minimized PLA back to formula
         try
-            form = PLA._pla_to_formula(
+            form = PLA.pla_to_formula(
                 minimized_pla, fnames; conditionstype, conjunct=true
             )
             silent || println("Minimized formula: $form")
@@ -617,7 +617,7 @@ function boom_minimize(
         minimized_output = replace(minimized_output, r"\.type.*\n" => "")
 
         # ===== PLA FORMAT NORMALIZATION =====
-        # Convert "000000 1" format to "0000001" for compatibility with _pla_to_formula parser
+        # Convert "000000 1" format to "0000001" for compatibility with pla_to_formula parser
         lines = split(minimized_output, '\n')
         normalized_lines = String[]
 
@@ -736,7 +736,7 @@ function boom_minimize(
         silent || println("==========================")
 
         # Pass original arguments to maintain variable labels
-        result = PLA._pla_to_formula(
+        result = PLA.pla_to_formula(
             minimized_output, silent, pla_args...; pla_kwargs..., featvaltype=Float64
         )
         silent || println("=== Resulting Formula ===")
