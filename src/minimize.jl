@@ -544,8 +544,78 @@ function abc_minimize(
 end
 
 # ---------------------------------------------------------------------------- #
-#                              abc minimize tuned                              #
+#                    minimize algos tuned for performance                      #
 # ---------------------------------------------------------------------------- #
+function espresso_minimize(
+    atoms::Vector{Vector{Atom}},
+    binary::String;
+    allow_scalar_range_conditions::Bool=false,
+    depth::Float64=1.0
+    # syntaxtree::SoleLogics.Formula,
+    # silent::Bool=true,
+
+    # args...;
+    # binary=nothing,
+    # otherflags=[],
+    # allow_scalar_range_conditions=false,
+    # kwargs...,
+)
+    # TODO kwargs...
+    Dflag = "exact"
+    Sflag = nothing
+    eflag = nothing
+    otherflags = []
+
+    # convert formula to pla string format
+    pla_string, fnames = PLA.formula_to_pla(
+        atoms;
+        allow_scalar_range_conditions,
+        removewhitespaces=true,
+        pretty_op=false
+    )
+
+    # print(join(pla_content, "\n\n"))
+    out = Pipe()
+    err = Pipe()
+
+    function escape_for_shell(input::AbstractString)
+        # Replace single quotes with properly escaped shell-safe single quotes
+        return "$(replace(input, "'" => "\\'"))"
+    end
+
+    echo_cmd = `echo $(pla_string)`
+
+    args = String[]
+    isnothing(Dflag) || push!(args, "-D$(Dflag)")
+    isnothing(Sflag) || push!(args, "-S$(Sflag)")
+    isnothing(eflag) || push!(args, "-e$(eflag)")
+    append!(otherflags, args)
+    espresso_cmd = `$binary $args`
+
+    cmd = pipeline(pipeline(echo_cmd, espresso_cmd); stdout=out, stderr=err)
+    cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
+    try
+        run(cmd)
+        close(out.in)
+        close(err.in)
+        errstr = String(read(err))
+        !isempty(errstr) && (@warn String(read(err)))
+    catch
+        close(out.in)
+        close(err.in)
+        errstr = String(read(err))
+        !isempty(errstr) && (throw(errstr))
+    end
+
+    minimized_pla = String(read(out))
+
+    conditionstype = allow_scalar_range_conditions ?
+        SoleData.RangeScalarCondition :
+        SoleData.ScalarCondition
+
+    return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
+end
+
 function abc_minimize(
     atoms::Vector{Vector{Atom}},
     binary::String;
@@ -590,7 +660,7 @@ function abc_minimize(
         minimized_pla = clean_abc_output(minimized_pla_raw)
         conditionstype = allow_scalar_range_conditions ?
             SoleData.RangeScalarCondition :
-            ScalarCondition
+            SoleData.ScalarCondition
 
         return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
     end
