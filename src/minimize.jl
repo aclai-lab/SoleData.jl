@@ -543,9 +543,12 @@ function abc_minimize(
     end
 end
 
+# ---------------------------------------------------------------------------- #
+#                              abc minimize tuned                              #
+# ---------------------------------------------------------------------------- #
 function abc_minimize(
-    abcbinary::String,
-    atoms::Vector{Vector{Atom}};
+    atoms::Vector{Vector{Atom}},
+    binary::String;
     fast::Int64=1,
     allow_scalar_range_conditions::Bool=false,
     depth::Float64=1.0
@@ -560,7 +563,7 @@ function abc_minimize(
 
     # Create temporary files for input/output
     mktempdir() do tmp
-        inputfile  = joinpath(tmp, "in.pla")
+        inputfile = joinpath(tmp, "in.pla")
         outputfile = joinpath(tmp, "out.pla")
         
         write(inputfile, pla_string)
@@ -568,12 +571,15 @@ function abc_minimize(
         abc_commands = if fast == 1
             "read $inputfile; strash; collapse; write $outputfile"
         elseif fast == 0
-            "read $inputfile; strash; balance; rewrite; refactor; balance; rewrite -z; collapse; sop; fx; strash; balance; collapse; write $outputfile"
+            "read $inputfile; strash; balance; rewrite; refactor; " *
+            "balance; rewrite -z; collapse; sop; fx; strash; " *
+            "balance; collapse; write $outputfile"
         else
-            "read $inputfile; sop; strash; dc2; collapse; strash; dc2; collapse; sop; write $outputfile"
+            "read $inputfile; sop; strash; dc2; collapse; " *
+            "strash; dc2; collapse; sop; write $outputfile"
         end
 
-        run(`$abcbinary -c $abc_commands`)
+        run(`$binary -c $abc_commands`)
 
         # isfile(outputfile) || return conjuncts
 
@@ -582,7 +588,9 @@ function abc_minimize(
         isempty(strip(minimized_pla_raw)) && return atoms
 
         minimized_pla = clean_abc_output(minimized_pla_raw)
-        conditionstype = allow_scalar_range_conditions ? SoleData.RangeScalarCondition : ScalarCondition
+        conditionstype = allow_scalar_range_conditions ?
+            SoleData.RangeScalarCondition :
+            ScalarCondition
 
         return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
     end
