@@ -649,9 +649,12 @@ function abc_minimize(
             "strash; dc2; collapse; sop; write $outputfile"
         end
 
-        run(`$binary -c $abc_commands`)
-
-        # isfile(outputfile) || return conjuncts
+        # Execute ABC with error handling
+        try
+            run(`$binary -c $abc_commands`)
+        catch e
+            return LeftmostConjunctiveForm.(atoms)
+        end
 
         minimized_pla_raw = read(outputfile, String)
         minimized_pla_raw = replace(minimized_pla_raw, ">=" => "≥")
