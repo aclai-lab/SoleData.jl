@@ -345,6 +345,8 @@ function abc_minimize(
     # Internal utility to remove whitespace from strings
     removewhitespaces(s::AbstractString) = replace(s, r"\s+" => "")
 
+
+
     # Convert formula to PLA string format
     dc_set = false
     pla_string, fnames = PLA.formula_to_pla(
@@ -539,6 +541,142 @@ function abc_minimize(
         rm(inputfile; force=true)
         rm(outputfile; force=true)
     end
+end
+
+# ---------------------------------------------------------------------------- #
+#                    minimize algos tuned for performance                      #
+# ---------------------------------------------------------------------------- #
+function espresso_minimize(
+    atoms::Vector{Vector{Atom}},
+    binary::String;
+    allow_scalar_range_conditions::Bool=false,
+    depth::Float64=1.0
+    # syntaxtree::SoleLogics.Formula,
+    # silent::Bool=true,
+
+    # args...;
+    # binary=nothing,
+    # otherflags=[],
+    # allow_scalar_range_conditions=false,
+    # kwargs...,
+)
+    # TODO kwargs...
+    Dflag = "exact"
+    Sflag = nothing
+    eflag = nothing
+    otherflags = []
+
+    # convert formula to pla string format
+    pla_string, fnames = PLA.formula_to_pla(
+        atoms;
+        allow_scalar_range_conditions,
+        removewhitespaces=true,
+        pretty_op=false
+    )
+
+    # print(join(pla_content, "\n\n"))
+    out = Pipe()
+    err = Pipe()
+
+    function escape_for_shell(input::AbstractString)
+        # Replace single quotes with properly escaped shell-safe single quotes
+        return "$(replace(input, "'" => "\\'"))"
+    end
+
+    echo_cmd = `echo $(pla_string)`
+
+    args = String[]
+    isnothing(Dflag) || push!(args, "-D$(Dflag)")
+    isnothing(Sflag) || push!(args, "-S$(Sflag)")
+    isnothing(eflag) || push!(args, "-e$(eflag)")
+    append!(otherflags, args)
+    espresso_cmd = `$binary $args`
+
+    cmd = pipeline(pipeline(echo_cmd, espresso_cmd); stdout=out, stderr=err)
+    cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
+    try
+        run(cmd)
+        close(out.in)
+        close(err.in)
+        errstr = String(read(err))
+        !isempty(errstr) && (@warn String(read(err)))
+    catch
+        close(out.in)
+        close(err.in)
+        errstr = String(read(err))
+        !isempty(errstr) && (throw(errstr))
+    end
+
+    minimized_pla = String(read(out))
+
+    conditionstype = allow_scalar_range_conditions ?
+        SoleData.RangeScalarCondition :
+        SoleData.ScalarCondition
+
+    return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
+end
+
+function abc_minimize(
+    atoms::Vector{Vector{Atom}},
+    binary::String;
+    fast::Int64=1,
+    allow_scalar_range_conditions::Bool=false,
+    depth::Float64=1.0
+)
+    # convert formula to pla string format
+    pla_string, fnames = PLA.formula_to_pla(
+        atoms;
+        allow_scalar_range_conditions,
+        removewhitespaces=true,
+        pretty_op=false
+    )
+
+    # Create temporary files for input/output
+    mktempdir() do tmp
+        inputfile = joinpath(tmp, "in.pla")
+        outputfile = joinpath(tmp, "out.pla")
+        
+        write(inputfile, pla_string)
+
+        abc_commands = if fast == 1
+            "read $inputfile; strash; collapse; write $outputfile"
+        elseif fast == 0
+            "read $inputfile; strash; balance; rewrite; refactor; " *
+            "balance; rewrite -z; collapse; sop; fx; strash; " *
+            "balance; collapse; write $outputfile"
+        else
+            "read $inputfile; sop; strash; dc2; collapse; " *
+            "strash; dc2; collapse; sop; write $outputfile"
+        end
+
+        # Execute ABC with error handling
+        try
+            run(`$binary -c $abc_commands`)
+        catch e
+            return LeftmostConjunctiveForm.(atoms)
+        end
+
+        minimized_pla_raw = read(outputfile, String)
+        minimized_pla_raw = replace(minimized_pla_raw, ">=" => "≥")
+        isempty(strip(minimized_pla_raw)) && return atoms
+
+        minimized_pla = clean_abc_output(minimized_pla_raw)
+        conditionstype = allow_scalar_range_conditions ?
+            SoleData.RangeScalarCondition :
+            SoleData.ScalarCondition
+
+        return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
+    end
+end
+
+# ---------------------------------------------------------------------------- #
+#                                  abc utils                                   #
+# ---------------------------------------------------------------------------- #
+function clean_abc_output(raw_pla::String)
+    lines = split(raw_pla, '\n')
+    pla_lines = filter(l -> !isempty(strip(l)) &&
+                        (startswith(l, '.') || occursin(r"^[01\-]+ ", l)), lines)
+    return join(pla_lines, '\n')
 end
 
 """
