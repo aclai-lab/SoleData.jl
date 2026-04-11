@@ -208,6 +208,7 @@ end
         test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable}=nothing,
         discretizedomain=false,
         y::Union{Nothing, AbstractVector}=nothing,
+        keep_unique::Bool=false,
     )::MultivariateScalarAlphabet
 
 Constructs an alphabet based on the provided `PropositionalLogiset` `X`, with optional parameters:
@@ -216,6 +217,7 @@ Constructs an alphabet based on the provided `PropositionalLogiset` `X`, with op
 - `test_operators`: test operators to use (defaulted to `[≤, ≥]` for real-valued features, and `[(==), (≠)]` for other features, e.g., categorical)
 - `discretizedomain`: whether to discretize the domain (default: false)
 - `y`: vector used for discretization (required if `discretizedomain` is true)
+- `keep_unique`: whether to only keep unique conditions once
 
 Returns a `UnionAlphabet` containing `ScalarCondition` and `UnivariateScalarAlphabet`.
 """
@@ -225,7 +227,7 @@ function alphabet(
     force_i_variables::Bool=false,
     test_operators::Union{Nothing,AbstractVector{<:TestOperator},Base.Callable}=nothing,
     discretizedomain::Bool=false,
-    unique::Bool=false,
+    keep_unique::Bool=false,
     kwargs...,
 )::MultivariateScalarAlphabet
     feats = collect(features(X; force_i_variables=force_i_variables))
@@ -235,7 +237,7 @@ function alphabet(
     domains = [
         begin
             domain = Tables.getcolumn(gettable(X), i_variable(feat))
-            if unique && !discretizedomain
+            if keep_unique && !discretizedomain
                 domain = unique(domain)
             end
             domain
