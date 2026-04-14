@@ -320,8 +320,8 @@ function abc_minimize(
     # Auto-setup ABC binary if not specified
     if isnothing(abcbinary)
         try
-            abcpath = load(ABCLoader())
-            silent || @show abcpath
+            #abcpath = load(ABCLoader())
+            #silent || @show abcpath
             #abcbinary = joinpath(abcpath, "abc")
             abcbinary = ensure_abc_binary(; force_rebuild = force_rebuild_abc) # deprecate version
             silent || @show abcbinary
