@@ -322,9 +322,9 @@ function abc_minimize(
         try
             abcpath = load(ABCLoader())
             silent || @show abcpath
-            abcbinary = joinpath(abcpath, "abc")
+            #abcbinary = joinpath(abcpath, "abc")
+            abcbinary = ensure_abc_binary(; force_rebuild = force_rebuild_abc) # deprecate version
             silent || @show abcbinary
-            #abcbinary = ensure_abc_binary(; force_rebuild = force_rebuild_abc) deprecate version
         catch e
             error("Failed to setup ABC binary: $e")
         end
