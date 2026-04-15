@@ -110,7 +110,8 @@ end
 
 function scalar_simplification(
     atomslist          :: Vector{Atom},
-    conn               :: NamedConnective;
+    conn               :: NamedConnective,
+    silent             :: Bool = false;
     allow_scalar_range_conditions :: Bool=false
 )
     scalar_conds = value.(atomslist)
