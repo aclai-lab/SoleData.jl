@@ -38,7 +38,12 @@ const LiteralBool = Dict('1' => true, '0' => false)
 #                                 print utils                                  #
 # ---------------------------------------------------------------------------- #
 function _featurename(f::SD.VariableValue)
-    isnothing(f.i_name) ? "V$(f.i_variable)" : "[$(f.i_name)]"
+    return if isnothing(f.i_name)
+        f.i_variable isa Union{Symbol,AbstractString} ?
+            "$(f.i_variable)" : "V$(f.i_variable)"
+    else
+        "$(f.i_name)"
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -51,7 +56,7 @@ end
         conditions::Vector{<:SoleData.ScalarCondition},
         includes::Vector{BitMatrix},
         excludes::Vector{BitMatrix},
-        feat_condindxss::Vector{Vector{Int64}}
+        feat_condindxss::Vector{Vector{Int}}
     ) -> Vector{String}
 
     Encode a logical disjunct into a Programmable Logic Array (PLA) row representation.
@@ -66,7 +71,7 @@ end
     - `conditions::Vector{<:SoleData.ScalarCondition}`: Vector of all possible conditions 
     - `includes::Vector{BitMatrix}`: Matrix-like structure defining inclusion relationships between conditions
     - `excludes::Vector{BitMatrix}`: Matrix-like structure defining exclusion relationships between conditions
-    - `feat_condindxss::Vector{Vector{Int64}}`: Mapping from features to their corresponding condition indices
+    - `feat_condindxss::Vector{Vector{Int}}`: Mapping from features to their corresponding condition indices
 
     # Returns
     - `Vector{String}`: PLA row representation where each element is "1", "0", or "-"
@@ -88,7 +93,7 @@ function _encode_disjunct(
     conditions::Vector{<:SD.AbstractScalarCondition},
     includes::Vector{BitMatrix},
     excludes::Vector{BitMatrix},
-    feat_condindxss::Vector{Vector{Int64}},
+    feat_condindxss::Vector{Vector{Int}},
 )
     pla_row = fill("-", length(conditions))
 
@@ -153,7 +158,8 @@ end
     _read_conditions(
         line::AbstractString,
         conditionstype::Type,
-        fnames::Vector
+        fnames::Vector;
+        float_type::Type=Float64
     ) -> Vector{SoleLogics.Atom}
 
 Parse a PLA input label line (`.ilb`) and extract scalar conditions as atoms.
@@ -190,10 +196,12 @@ The function:
 - The feature name must exist in `fnames` to determine the variable index
 """
 function _read_conditions(
-    line::AbstractString, conditionstype::Type, fnames::Vector{<:VariableValue}
+    line::AbstractString,
+    conditionstype::Type,
+    fnames::Vector{<:VariableValue};
+    float_type::Type=Float64
 )
     parts = split(line, ' ')[2:end]  # skip '.ilb' command
-    fnames = Symbol.(featurename.(fnames))
 
     return map(parts) do part
         # split with regex
@@ -202,11 +210,15 @@ function _read_conditions(
 
         # reconstruct VariableValue
         varname = Symbol(m.captures[1])
-        i_var = findfirst(==(varname), fnames)
+
+        i_fname = findfirst(f -> Symbol(featurename(f)) == varname, fnames)
+        i_fname === nothing && throw(ArgumentError("Unknown feature name: $(varname)"))
+        i_var = fnames[i_fname].i_variable
+
         value = SD.VariableValue(i_var, varname)
 
         operator = OPERATOR_MAP[m.captures[2]]
-        threshold = threshold = parse(Float64, m.captures[3])
+        threshold = threshold = parse(float_type, m.captures[3])
 
         condition = conditionstype(value, operator, threshold)
 
@@ -232,7 +244,7 @@ _onset_rows(row::Vector{String}) = "$(join(row, "")) 1" # Append "1" for the ON-
 # ---------------------------------------------------------------------------- #
 #                              multivariate utils                              #
 # ---------------------------------------------------------------------------- #
-function _header(feat_nconds::Vector{Int64}, feat_condnames::Vector{Vector{String}})
+function _header(feat_nconds::Vector{Int}, feat_condnames::Vector{Vector{String}})
     num_binary_vars = sum(feat_nconds .== 1)
     num_nonbinary_vars = sum(feat_nconds .> 1) + 1
     num_vars = num_binary_vars + num_nonbinary_vars
@@ -257,7 +269,7 @@ function _header(feat_nconds::Vector{Int64}, feat_condnames::Vector{Vector{Strin
     return pla_header
 end
 
-function _onset_rows(feat_nconds::Vector{Int64}, row::Vector{String})
+function _onset_rows(feat_nconds::Vector{Int}, row::Vector{String})
     num_binary_vars = sum(feat_nconds .== 1)
 
     # generate on-set rows for each disjunct    
@@ -421,7 +433,7 @@ function formula_to_pla(
     conditions = SD.removeduals(conditions)
 
     # for each feature, derive the conditions, and their names
-    feat_condindxss = Vector{Vector{Int64}}(undef, nfnames)
+    feat_condindxss = Vector{Vector{Int}}(undef, nfnames)
     feat_condnames = Vector{Vector{String}}(undef, nfnames)
 
     @inbounds for (i, feat) in enumerate(fnames)
@@ -489,7 +501,8 @@ end
         pla::String,
         fnames::Vector{<:VariableValue};
         conditionstype::Type=SoleData.ScalarCondition,
-        conjunct::Bool=false
+        conjunct::Bool=false,
+        float_type::Type=Float64
     ) -> Union{SoleLogics.Formula, Vector{SyntaxStructure}}
 
 Convert a Programmable Logic Array (PLA) format string back into a logical formula representation.
@@ -592,6 +605,7 @@ function pla_to_formula(
     fnames::Vector{<:VariableValue};
     conditionstype::Type=SD.ScalarCondition,
     conjunct::Bool=false,
+    float_type::Type=Float64
 )
     lines = split(pla, '\n')
     parsed_conditions = SoleLogics.Atom[]
@@ -599,7 +613,7 @@ function pla_to_formula(
 
     for line in lines
         startswith(line, ".ilb") &&
-            append!(parsed_conditions, _read_conditions(line, conditionstype, fnames))
+            append!(parsed_conditions, _read_conditions(line, conditionstype, fnames; float_type))
         startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:(end - 2)]])
     end
 
@@ -617,7 +631,7 @@ function pla_to_formula(
             allow_scalar_range_conditions=false
         )
     end
-
+    
     return conjunct ? LeftmostDisjunctiveForm(disjuncts) : disjuncts
 end
 

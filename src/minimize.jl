@@ -550,7 +550,8 @@ function espresso_minimize(
     atoms::Vector{Vector{Atom}},
     binary::String;
     allow_scalar_range_conditions::Bool=false,
-    depth::Float64=1.0
+    depth::Float64=1.0,
+    float_type::Type=Float64
     # syntaxtree::SoleLogics.Formula,
     # silent::Bool=true,
 
@@ -621,7 +622,8 @@ function abc_minimize(
     binary::String;
     fast::Int64=1,
     allow_scalar_range_conditions::Bool=false,
-    depth::Float64=1.0
+    depth::Real=1.0,
+    float_type::Type=Float64
 )
     # convert formula to pla string format
     pla_string, fnames = PLA.formula_to_pla(
@@ -665,7 +667,7 @@ function abc_minimize(
             SoleData.RangeScalarCondition :
             SoleData.ScalarCondition
 
-        return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
+        return PLA.pla_to_formula(minimized_pla, fnames; conditionstype, float_type)
     end
 end
 
