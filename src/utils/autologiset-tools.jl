@@ -288,7 +288,7 @@ function autologiset(
         if X isa AbstractDataFrame
             allowedcoltypes = Union{
                 Real,
-                AbstractArray{<:Real,0},
+                AbstractArray{<:Real},
                 AbstractVector{<:Real},
                 AbstractMatrix{<:Real},
             }
