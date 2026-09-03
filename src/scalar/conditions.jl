@@ -747,7 +747,7 @@ end
 end
 @inline function honors_maxval(c::RangeScalarCondition, featval)
     isnothing(c.maxval) ||
-        apply_test_operator(_isgreater_test_operator(c), featval, c.maxval)
+        apply_test_operator(_isless_test_operator(c), featval, c.maxval)
 end
 @inline function checkcondition(c::RangeScalarCondition, args...; kwargs...)
     featval = featvalue(feature(c), args...; kwargs...)
