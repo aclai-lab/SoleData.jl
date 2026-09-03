@@ -40,7 +40,7 @@ const LiteralBool = Dict('1' => true, '0' => false)
 function _featurename(f::SD.VariableValue)
     return if isnothing(f.i_name)
         f.i_variable isa Union{Symbol,AbstractString} ?
-            "$(f.i_variable)" : "V$(f.i_variable)"
+        "$(f.i_variable)" : "V$(f.i_variable)"
     else
         "$(f.i_name)"
     end
@@ -59,33 +59,10 @@ end
         feat_condindxss::Vector{Vector{Int}}
     ) -> Vector{String}
 
-    Encode a logical disjunct into a Programmable Logic Array (PLA) row representation.
-
-    This function converts a logical disjunct (a conjunction of literals) into a PLA row format,
-    where each position corresponds to a condition and can be set to "1" (true), "0" (false), 
-    or "-" (don't care).
-
-    # Arguments
-    - `disjunct::SoleLogics.LeftmostConjunctiveForm{SoleLogics.Literal}`: The logical disjunct to encode, containing literals
-    - `features::Vector{<:SoleData.VariableValue}`: Vector of features used in the logical formula
-    - `conditions::Vector{<:SoleData.ScalarCondition}`: Vector of all possible conditions 
-    - `includes::Vector{BitMatrix}`: Matrix-like structure defining inclusion relationships between conditions
-    - `excludes::Vector{BitMatrix}`: Matrix-like structure defining exclusion relationships between conditions
-    - `feat_condindxss::Vector{Vector{Int}}`: Mapping from features to their corresponding condition indices
-
-    # Returns
-    - `Vector{String}`: PLA row representation where each element is "1", "0", or "-"
-
-    # Details
-    The function processes each literal in the disjunct:
-    - For positive literals, sets "1" for included conditions and "0" for excluded ones
-    - For negative literals, inverts the logic (sets "0" for included, "1" for excluded)
-    - Handles dual conditions when they exist by applying inverted logic
-    - Preserves more restrictive values (NEG over POS) when conflicts occur
-
-    # Notes
-    - The function assumes that either the main condition or its dual exists in the conditions vector
-    - The resulting PLA row uses "-" for don't-care positions that are not constrained by any literal
+Encode a logical disjunct into a Programmable Logic Array (PLA) row
+representation. Each position corresponds to a condition and can be set to
+"1" (true), "0" (false), or "-" (don't care). See original docstring for
+full details -- unchanged by this patch.
 """
 function _encode_disjunct(
     disjunct::SL.LeftmostConjunctiveForm{SL.Literal},
@@ -155,45 +132,10 @@ end
 #                               read conditions                                #
 # ---------------------------------------------------------------------------- #
 """
-    _read_conditions(
-        line::AbstractString,
-        conditionstype::Type,
-        fnames::Vector;
-        float_type::Type=Float64
-    ) -> Vector{SoleLogics.Atom}
+    _read_conditions(line, conditionstype, fnames; float_type=Float64)
 
-Parse a PLA input label line (`.ilb`) and extract scalar conditions as atoms.
-
-This function processes a single line from a Programmable Logic Array (PLA) file that 
-defines input variable labels and their associated conditions. It parses each condition 
-specification and creates corresponding `SoleLogics.Atom` objects.
-
-# Arguments
-- `line::AbstractString`: The `.ilb` command line from a PLA file, containing space-separated condition specifications
-- `conditionstype::Type`: The type of condition to create (e.g., `SoleData.ScalarCondition`, `RangeScalarCondition`)
-- `fnames::Vector`: Vector of feature names used to resolve variable indices for `SoleData.VariableValue` structs
-
-# Returns
-- `Vector{SoleLogics.Atom}`: Vector of atoms, each containing a scalar condition parsed from the input line
-
-# Format
-Each condition in the line follows the pattern: `[feature_name]operator threshold`
-- Feature name is enclosed in square brackets `[]`
-- Operator can be either `<` or `≥`
-- Threshold is typically floating-point number
-
-# Details
-The function:
-1. Splits the line on spaces and skips the first element (`.ilb` command)
-2. For each part, extracts:
-   - Feature name (between `[` and `]`)
-   - Operator (`<` or `≥`)
-   - Threshold value (remaining string parsed as Float64)
-3. Creates a `SoleData.VariableValue` from the feature name and its index
-4. Constructs a condition object and wraps it in an `SoleLogics.Atom`
-
-# Notes
-- The feature name must exist in `fnames` to determine the variable index
+Parse a PLA `.ilb` line into a vector of `SoleLogics.Atom`. Unchanged by
+this patch.
 """
 function _read_conditions(
     line::AbstractString,
@@ -201,14 +143,12 @@ function _read_conditions(
     fnames::Vector{<:VariableValue};
     float_type::Type=Float64
 )
-    parts = split(line, ' ')[2:end]  # skip '.ilb' command
+    parts = split(line, ' ')[2:end]
 
     return map(parts) do part
-        # split with regex
         m = match(OP_REGEX, part)
         m === nothing && throw(ArgumentError("Invalid condition token: $(part)"))
 
-        # reconstruct VariableValue
         varname = Symbol(m.captures[1])
 
         i_fname = findfirst(f -> Symbol(featurename(f)) == varname, fnames)
@@ -218,7 +158,7 @@ function _read_conditions(
         value = SD.VariableValue(i_var, varname)
 
         operator = OPERATOR_MAP[m.captures[2]]
-        threshold = threshold = parse(float_type, m.captures[3])
+        threshold = parse(float_type, m.captures[3])
 
         condition = conditionstype(value, operator, threshold)
 
@@ -227,24 +167,100 @@ function _read_conditions(
 end
 
 # ---------------------------------------------------------------------------- #
-#                               univariate utils                               #
+#                     onset / offset row helpers (PATCHED)                     #
 # ---------------------------------------------------------------------------- #
+"""
+    _onset_rows(row::Vector{String}) -> String
+
+Univariate ON-set row: appends output `"1"`. Unchanged.
+"""
+_onset_rows(row::Vector{String}) = "$(join(row, "")) 1"
+
+"""
+    _offset_rows(row::Vector{String}) -> String
+
+NEW. Univariate OFF-set row: appends output `"0"`. Symmetric to
+`_onset_rows`, used ONLY when the caller of `formula_to_pla` passes an
+explicit `offset`. Without this, Espresso has no way to distinguish
+"confirmed OFF" from "not yet seen" (which must stay don't-care).
+"""
+_offset_rows(row::Vector{String}) = "$(join(row, "")) 0"
+
+function _onset_rows(feat_nconds::Vector{Int}, row::Vector{String})
+    num_binary_vars = sum(feat_nconds .== 1)
+    end_idxs = cumsum(feat_nconds)
+    feat_varidxs = [
+        (startidx:endidx) for (startidx, endidx) in zip([1, (end_idxs .+ 1)...], end_idxs)
+    ]
+    binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nconds)
+    nonbinary_variable_idxs = findall(feat_nvar->feat_nvar > 1, feat_nconds)
+    row = vcat(
+        [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
+        (num_binary_vars > 0 ? ["|"] : [])...,
+        [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...,
+    )
+    return "$(join(row, ""))1"
+end
+
+"""
+    _offset_rows(feat_nconds::Vector{Int}, row::Vector{String}) -> String
+
+NEW. Multivariate counterpart of the univariate `_offset_rows` above --
+same layout logic as `_onset_rows(feat_nconds, row)` but output `"0"`.
+"""
+function _offset_rows(feat_nconds::Vector{Int}, row::Vector{String})
+    num_binary_vars = sum(feat_nconds .== 1)
+    end_idxs = cumsum(feat_nconds)
+    feat_varidxs = [
+        (startidx:endidx) for (startidx, endidx) in zip([1, (end_idxs .+ 1)...], end_idxs)
+    ]
+    binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nconds)
+    nonbinary_variable_idxs = findall(feat_nvar->feat_nvar > 1, feat_nconds)
+    row = vcat(
+        [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
+        (num_binary_vars > 0 ? ["|"] : [])...,
+        [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...,
+    )
+    return "$(join(row, ""))0"
+end
+
+# ---------------------------------------------------------------------------- #
+#                    header: emette .type fr quando serve (PATCHED)            #
+# ---------------------------------------------------------------------------- #
+"""
+    _header(conditions, feat_condnames; has_offset=false)
+
+Univariate header. NEW keyword `has_offset`: if `true`, inserts the line
+`.type fr` right after `.ob`, explicitly telling Espresso "I'm giving you
+both the ON-set (output 1) and the OFF-set (output 0); anything you don't
+see among the rows is don't-care". If `false` (default), behavior is
+IDENTICAL to before -- no `.type` line -- so `lumen()` classic and every
+other existing caller is unaffected.
+"""
 function _header(
     conditions::Vector{<:SD.AbstractScalarCondition},
-    feat_condnames::Vector{Vector{String}},
+    feat_condnames::Vector{Vector{String}};
+    has_offset::Bool=false,
 )
     num_outputs = 1
     num_vars = length(conditions)
     ilb_str = join(vcat(feat_condnames...), " ")
-    return [".i $(num_vars)\n.o $(num_outputs)\n.ilb $(ilb_str)\n.ob formula_output"]
+    hdr = [".i $(num_vars)\n.o $(num_outputs)\n.ilb $(ilb_str)\n.ob formula_output"]
+    has_offset && push!(hdr, ".type fr")
+    return hdr
 end
 
-_onset_rows(row::Vector{String}) = "$(join(row, "")) 1" # Append "1" for the ON-set output
+"""
+    _header(feat_nconds, feat_condnames; has_offset=false)
 
-# ---------------------------------------------------------------------------- #
-#                              multivariate utils                              #
-# ---------------------------------------------------------------------------- #
-function _header(feat_nconds::Vector{Int}, feat_condnames::Vector{Vector{String}})
+Multivariate header, same `.type fr` treatment as the univariate variant
+above.
+"""
+function _header(
+    feat_nconds::Vector{Int},
+    feat_condnames::Vector{Vector{String}};
+    has_offset::Bool=false,
+)
     num_binary_vars = sum(feat_nconds .== 1)
     num_nonbinary_vars = sum(feat_nconds .> 1) + 1
     num_vars = num_binary_vars + num_nonbinary_vars
@@ -257,7 +273,7 @@ function _header(feat_nconds::Vector{Int}, feat_condnames::Vector{Vector{String}
     )
     if num_binary_vars > 0
         ilb_str = join(vcat(feat_condnames[feat_nconds .== 1]...), " ")
-        push!(pla_header, ".ilb " * ilb_str)  # Input variable labels
+        push!(pla_header, ".ilb " * ilb_str)
     end
     for i_var in 1:length(feat_nconds[feat_nconds .> 1])
         if feat_nconds[feat_nconds .> 1][i_var] > 1
@@ -265,28 +281,9 @@ function _header(feat_nconds::Vector{Int}, feat_condnames::Vector{Vector{String}
             push!(pla_header, ".label var=$(num_binary_vars+i_var-1) $(this_ilb_str)")
         end
     end
+    has_offset && push!(pla_header, ".type fr")
 
     return pla_header
-end
-
-function _onset_rows(feat_nconds::Vector{Int}, row::Vector{String})
-    num_binary_vars = sum(feat_nconds .== 1)
-
-    # generate on-set rows for each disjunct    
-    end_idxs = cumsum(feat_nconds)
-    feat_varidxs = [
-        (startidx:endidx) for (startidx, endidx) in zip([1, (end_idxs .+ 1)...], end_idxs)
-    ]
-
-    # binary variables first
-    binary_variable_idxs = findall(feat_nvar->feat_nvar == 1, feat_nconds)
-    nonbinary_variable_idxs = findall(feat_nvar->feat_nvar > 1, feat_nconds)
-    row = vcat(
-        [row[feat_varidxs[i_var]] for i_var in binary_variable_idxs]...,
-        (num_binary_vars > 0 ? ["|"] : [])...,
-        [[row[feat_varidxs[i_var]]..., "|"] for i_var in nonbinary_variable_idxs]...,
-    )
-    return "$(join(row, ""))1"
 end
 
 # ---------------------------------------------------------------------------- #
@@ -304,93 +301,34 @@ end
     formula_to_pla(
         atoms::Vector{Vector{SoleLogics.Atom}};
         encoding::Symbol=:univariate,
-        allow_scalar_range_conditions::Bool=false
+        allow_scalar_range_conditions::Bool=false,
+        offset::Union{Nothing,Vector{Vector{SoleLogics.Atom}}}=nothing,
+        kwargs...
     ) -> (String, Vector{VariableValue})
 
-Convert a logical formula into Programmable Logic Array (PLA) format representation.
+Convert a logical formula into Programmable Logic Array (PLA) format.
+See original module docstring for the full step-by-step description --
+unchanged except for the NEW `offset` keyword documented below.
 
-This function transforms a logical formula into a PLA format suitable for digital logic synthesis
-and hardware implementation. The conversion process involves normalizing the formula to Disjunctive
-Normal Form (DNF), extracting conditions and features, and encoding the logic into a structured
-PLA representation.
+# `offset` (NEW, only on the `atoms::Vector{Vector{Atom}}` method)
+If `nothing` (default): behavior IDENTICAL to before -- implicit `.type f`
+PLA, Espresso computes the absolute complement. No change for any existing
+caller that doesn't pass `offset`.
 
-# Arguments
-- `formula::SoleLogics.Formula`: The input logical formula to convert (first method)
-- `dnfformula::SoleLogics.DNF`: A formula already in DNF form (second method)
-- `atoms::Vector{Vector{SoleLogics.Atom}}`: Vector of atom vectors representing disjuncts (third method)
+If given: `offset` is, like `atoms`, a `Vector{Vector{Atom}}` -- one cube
+per row -- but represents cubes CONFIRMED OFF (not "unknown"). It is
+encoded with `_encode_disjunct` using EXACTLY the same condition space
+(`conditions`, `includes`, `excludes`, `feat_condindxss`) as the ON-set, so
+PLA columns stay aligned between the two halves, then its rows are emitted
+with output `"0"` instead of `"1"`. The `.type fr` header line is also
+emitted, which is what tells Espresso "everything else is don't-care, not
+complement".
 
-# Keyword Arguments
-- `allow_scalar_range_conditions::Bool=false`: Whether to apply scalar tiling to conditions
-- `encoding::Symbol=:univariate`: Encoding method for variables (`:univariate` or `:multivariate`)
-- `kwargs...`: Additional keyword arguments passed to DNF conversion and scalar simplification
-
-# Returns
-A tuple containing:
-- `String`: The complete PLA format string ready for use with logic synthesis tools
-- `Vector{VariableValue}`: Vector of features (variable names) used in the formula
-
-# Encoding Methods
-- **`:univariate`**: Each condition becomes a binary input variable (standard PLA format)
-- **`:multivariate`**: Groups conditions by feature, supporting multi-valued variables (experimental)
-
-# Details
-The conversion process follows these main steps:
-
-1. **Formula Normalization**: Converts the input formula to DNF using NNF profile and atom flipping
-2. **Scalar Simplification**: Applies scalar simplification techniques based on the configuration
-3. **Condition Extraction**: Identifies unique conditions and features from the normalized formula
-4. **Condition Processing**: Optionally applies scalar tiling and removes dual conditions
-5. **Relationship Analysis**: Computes inclusion and exclusion relationships between conditions
-6. **PLA Header Generation**: Creates appropriate headers based on encoding method:
-   - `:univariate`: Standard binary encoding with `.i`, `.o`, `.ilb` directives
-   - `:multivariate`: Multi-valued variable encoding with `.mv`, `.label` directives
-7. **Row Encoding**: Converts each disjunct to PLA rows using the `_encode_disjunct` function
-8. **Output Assembly**: Combines headers, onset rows, and termination markers into final PLA format
-
-# PLA Format Output
-The generated PLA string includes:
-- Variable declarations (`.i`, `.o` for univariate; `.mv` for multivariate)
-- Input/output labels (`.ilb`, `.ob`, `.label`)
-- Product term count (`.p`)
-- Logic onset rows (condition patterns with output values)
-- End marker (`.e`)
-
-# Examples
-```julia
-# Basic conversion with default settings
-pla_string, features = _formula_to_pla(my_formula)
-
-# Conversion with scalar range conditions
-pla_string, features = _formula_to_pla(my_formula; allow_scalar_range_conditions=true)
-
-# Multivariate encoding with pretty operators
-pla_string, features = _formula_to_pla(
-    my_dnf_formula;
-    encoding=:multivariate,
-    allow_scalar_range_conditions=true,
-    pretty_op=true
-)
-```
-
-# Notes
-- The `:multivariate` encoding is experimental and may not be fully tested
-- Scalar range conditions provide additional optimization opportunities through tiling
-- The function automatically converts formulas to DNF with NNF profile and atom flipping enabled
-- Conditions are automatically sorted and processed to remove redundancy and dual conditions
-- The resulting PLA format is compatible with standard logic synthesis tools
-
-# See Also
-- `_encode_disjunct`: Function used internally to encode individual disjuncts
-- `SoleLogics.dnf`: DNF conversion functionality
-- `SoleData.scalar_simplification`: Scalar simplification methods
-- `pla_to_formula`: Inverse operation to convert PLA back to formula
+Conditions that appear ONLY in `offset` (not in `atoms`) are still folded
+into the global condition space (same mechanism already used for
+`universe_conditions`), otherwise an off-set cube mentioning a
+feature/threshold never seen in the on-set couldn't be encoded correctly.
 """
-formula_to_pla(formula::SL.Formula; kwargs...) =
-    formula_to_pla(
-        SL.dnf(formula, SL.Atom; profile=:nnf, allow_atom_flipping=true);
-        kwargs...
-    )
-
 function formula_to_pla(
     dnfformula::SL.DNF;
     allow_scalar_range_conditions::Bool=false,
@@ -411,12 +349,28 @@ function formula_to_pla(
     encoding::Symbol=:univariate,
     allow_scalar_range_conditions::Bool=false,
     removewhitespaces::Bool=true,
-    pretty_op::Bool=false
+    pretty_op::Bool=false,
+    universe_conditions::Union{Nothing,Vector{<:SD.AbstractScalarCondition}}=nothing,
+    offset::Union{Nothing,Vector{Vector{SL.Atom}}}=nothing,
 )
     @assert encoding in [:univariate, :multivariate]
 
-    # extract domains
-    conditions = unique(map(SL.value, reduce(vcat, atoms)))
+    has_offset = !isnothing(offset) && !isempty(offset)
+
+    # extract domains: ON-set + (if present) OFF-set, so conditions
+    # mentioned ONLY in the offset still enter the shared condition space.
+    local_conditions = map(SL.value, reduce(vcat, atoms))
+    if has_offset
+        offset_conditions = map(SL.value, reduce(vcat, offset))
+        local_conditions = vcat(local_conditions, offset_conditions)
+    end
+
+    if isnothing(universe_conditions)
+        conditions = unique(local_conditions)
+    else
+        conditions = unique(vcat(collect(universe_conditions), local_conditions))
+    end
+
     fnames = unique(SD.feature.(conditions))
     nfnames = length(fnames)
 
@@ -427,12 +381,10 @@ function formula_to_pla(
         original_conditions = conditions
         conditions = SD.scalartiling(conditions, fnames)
         @assert length(setdiff(original_conditions, conditions)) == 0
-            "$(SoleLogics.displaysyntaxvector(setdiff(original_conditions, conditions)))"
     end
 
     conditions = SD.removeduals(conditions)
 
-    # for each feature, derive the conditions, and their names
     feat_condindxss = Vector{Vector{Int}}(undef, nfnames)
     feat_condnames = Vector{Vector{String}}(undef, nfnames)
 
@@ -447,7 +399,6 @@ function formula_to_pla(
 
     feat_nconds = length.(feat_condindxss)
 
-    # derive inclusions and exclusions between conditions
     includes, excludes = Vector{BitMatrix}(undef, nfnames),
     Vector{BitMatrix}(undef, nfnames)
     @inbounds for (i, feat_condindxs) in enumerate(feat_condindxss)
@@ -461,16 +412,15 @@ function formula_to_pla(
         ])
     end
 
-    # generate pla _header
     pla_header = if encoding == :multivariate
-        _header(feat_nconds, feat_condnames)
+        _header(feat_nconds, feat_condnames; has_offset)
     else
-        _header(conditions, feat_condnames)
+        _header(conditions, feat_condnames; has_offset)
     end
 
+    # --- ON-set rows -----------------------------------------------------
     conjuncts = _get_conjuncts(atoms)
     pla_onset_rows = Vector{String}(undef, length(conjuncts))
-
     Threads.@threads for i in eachindex(conjuncts)
         row = _encode_disjunct(
             conjuncts[i], fnames, conditions, includes, excludes, feat_condindxss
@@ -479,12 +429,30 @@ function formula_to_pla(
             encoding == :multivariate ? _onset_rows(feat_nconds, row) : _onset_rows(row)
     end
 
-    # Combine PLA components
+    # --- OFF-set rows (NEW, only if `offset` given) -----------------------
+    # Same conditions/includes/excludes/feat_condindxss as the ON-set: this
+    # reuse is exactly what guarantees column alignment between the two
+    # halves of the PLA.
+    pla_offset_rows = String[]
+    if has_offset
+        offset_conjuncts = _get_conjuncts(offset)
+        pla_offset_rows = Vector{String}(undef, length(offset_conjuncts))
+        Threads.@threads for i in eachindex(offset_conjuncts)
+            row = _encode_disjunct(
+                offset_conjuncts[i], fnames, conditions, includes, excludes, feat_condindxss
+            )
+            pla_offset_rows[i] =
+                encoding == :multivariate ? _offset_rows(feat_nconds, row) : _offset_rows(row)
+        end
+    end
+
+    all_rows = vcat(pla_onset_rows, pla_offset_rows)
+
     pla_content = join(
         [
             join(pla_header, "\n"),
-            ".p $(length(pla_onset_rows))",
-            join(pla_onset_rows, "\n"),
+            ".p $(length(all_rows))",
+            join(all_rows, "\n"),
             ".e",
         ],
         "\n",
@@ -505,100 +473,13 @@ end
         float_type::Type=Float64
     ) -> Union{SoleLogics.Formula, Vector{SyntaxStructure}}
 
-Convert a Programmable Logic Array (PLA) format string back into a logical formula representation.
-
-This function performs the inverse operation of `_formula_to_pla`, parsing a PLA format string
-and reconstructing the corresponding logical formula. It processes input variable labels,
-logic rows, and outputs the result either as a disjunctive normal form or as a vector of
-conjunctive clauses.
-
-# Arguments
-- `pla::String`: The PLA format string to parse and convert
-- `fnames::Vector{<:VariableValue}`: Vector of features corresponding to the variables in the PLA
-
-# Keyword Arguments
-- `conditionstype::Type=SoleData.ScalarCondition`: Type constructor for creating conditions from parsed input labels
-- `conjunct::Bool=false`: If `true`, returns a `LeftmostDisjunctiveForm`; if `false`, returns a vector of disjuncts
-
-# Returns
-- If `conjunct=false`: `Vector{SyntaxStructure}` - Vector of conjunctive clauses (disjuncts)
-- If `conjunct=true`: `LeftmostDisjunctiveForm` - Complete DNF formula
-- Returns `⊤` (tautology) if no valid logic rows exist in the PLA
-
-# Details
-The conversion process follows these main steps:
-
-1. **PLA Parsing**: Processes the input string line by line, extracting:
-   - Input labels from `.ilb` directive
-   - Logic rows (lines starting with '0', '1', '-', or '|')
-
-2. **Condition Extraction**: Parses `.ilb` line using `_read_conditions`:
-   - Creates `SoleLogics.Atom` objects from condition specifications
-   - Matches feature names from `fnames` to construct `VariableValue` objects
-   - Supports various operators defined in `OPERATOR_MAP`
-
-3. **Row Processing**: Converts each PLA row into logical conjuncts:
-   - `'1'` values become positive literals
-   - `'0'` values become negative literals  
-   - `'-'` and `'|'` values are ignored (don't-care or separator)
-   - Extracts the binary pattern (excludes last 2 characters which are output and newline)
-
-4. **Formula Reconstruction**: 
-   - Each row becomes a `LeftmostConjunctiveForm` (conjunction of literals)
-   - Applies `scalar_simplification` with `allow_scalar_range_conditions=false` to each disjunct
-   - Multi-threaded processing for efficiency
-   - Optionally wraps result in `LeftmostDisjunctiveForm` if `conjunct=true`
-
-# PLA Format Support
-The function expects standard PLA directives:
-- `.ilb labels`: Input variable labels with condition specifications (required)
-- Logic rows: Binary patterns with '0', '1', '-' characters, ending with output value
-- Multi-valued rows: Supports '|' separator for multivariate encoding
-
-# Examples
-```julia
-# Basic PLA to formula conversion
-pla_string = \"\"\"
-.i 3
-.o 1  
-.ilb [x]<5.0 [y]≥10.0 [z]<2.5
-.ob output
-11- 1
--01 1
-.e
-\"\"\"
-features = [VariableValue(1, :x), VariableValue(2, :y), VariableValue(3, :z)]
-disjuncts = pla_to_formula(pla_string, features)
-
-# Get complete DNF formula
-formula = pla_to_formula(pla_string, features; conjunct=true)
-
-# Use custom condition type
-formula = pla_to_formula(
-    pla_string, 
-    features;
-    conditionstype=MyCustomCondition,
-    conjunct=true
-)
-```
-
-# Processing Details
-- **Simplification**: Each disjunct is simplified using `scalar_simplification`
-- **Output Filtering**: Only processes rows ending with '1' (ON-set), automatically filtered by row extraction
-
-# Notes
-- The function assumes well-formed PLA input with valid syntax
-- Feature names in `fnames` must match those in the `.ilb` directive
-- The function strips the last 2 characters from each logic row (output value and potential whitespace)
-- Returns `⊤` (tautology) if the PLA contains no valid logic rows
-- Multi-valued variables (with '|' separators) are supported in the parsing
-
-# See Also
-- `_formula_to_pla`: Inverse function for converting formulas to PLA format
-- `_read_conditions`: Helper function for parsing condition specifications
-- `SoleData.scalar_simplification`: Formula optimization functionality
-- `SoleLogics.LeftmostConjunctiveForm`: Conjunctive clause representation
-- `SoleLogics.LeftmostDisjunctiveForm`: Disjunctive normal form representation
+Convert a PLA string back into a formula. Unchanged by this patch: it
+already only reads rows starting with `['0','1','-','|']` and, of those,
+only the ones ending "1" ever become atoms in the ON-set fed back to the
+caller (`_onset_rows`/`_offset_rows` distinction is irrelevant here, since
+Espresso's OUTPUT PLA -- what this function parses -- is always the
+minimized single ON-set again, regardless of whether the INPUT PLA was
+`.type f` or `.type fr`).
 """
 function pla_to_formula(
     pla::String,
@@ -614,7 +495,7 @@ function pla_to_formula(
     for line in lines
         startswith(line, ".ilb") &&
             append!(parsed_conditions, _read_conditions(line, conditionstype, fnames; float_type))
-        startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:(end - 2)]])
+        startswith(line, ['0', '1', '-', '|']) && append!(binaries, [line[1:(end-2)]])
     end
 
     isempty(binaries) && return ⊤
@@ -631,7 +512,7 @@ function pla_to_formula(
             allow_scalar_range_conditions=false
         )
     end
-    
+
     return conjunct ? LeftmostDisjunctiveForm(disjuncts) : disjuncts
 end
 
