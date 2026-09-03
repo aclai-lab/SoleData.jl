@@ -5,19 +5,21 @@ using Tar                  #    OLD
 
 using SoleData.Artifacts: load, MITESPRESSOLoader, ABCLoader
 
+const SD = SoleData
+
 """
-espresso_minimize(
-    syntaxtree::SoleLogics.Formula,
-    silent::Bool = true,
-    Dflag = "exact",
-    Sflag = nothing,
-    eflag = nothing,
-    args...;
-    espressobinary = nothing,
-    otherflags = [],
-    allow_scalar_range_conditions = false,
-    kwargs...
-)
+    espresso_minimize(
+        syntaxtree::SoleLogics.Formula,
+        silent::Bool = true,
+        Dflag = "exact",
+        Sflag = nothing,
+        eflag = nothing,
+        args...;
+        espressobinary = nothing,
+        otherflags = [],
+        allow_scalar_range_conditions = false,
+        kwargs...
+    )
 
 by https://jackhack96.github.io/logic-synthesis/espresso.html.
 """
@@ -37,12 +39,12 @@ function espresso_minimize(
     # Consider downloading espresso from https://jackhack96.github.io/logic-synthesis/espresso.html.
     println("============================================")
     if isnothing(espressobinary)
-        println("Looking for espresso at $espressobinary")
+        #println("Looking for espresso at $espressobinary")
         espressoPath = load(MITESPRESSOLoader())
         silent || @show espressoPath
         espressobinary = joinpath(espressoPath, "espresso")
         silent || @show espressobinary
-        #espressobinary = joinpath(@__DIR__, "espresso") deprecate version
+        espressobinary = joinpath(@__DIR__, "espresso") #deprecate version
         if !isfile(espressobinary)
             error(
                 "The 'espresso' binary was not found in the module directory. Please provide espresso path via the espressobinary argument",
@@ -546,21 +548,47 @@ end
 # ---------------------------------------------------------------------------- #
 #                    minimize algos tuned for performance                      #
 # ---------------------------------------------------------------------------- #
+"""
+    espresso_minimize(
+        atoms::Vector{Vector{Atom}},
+        binary::String;
+        allow_scalar_range_conditions::Bool=false,
+        depth::Float64=1.0,
+        float_type::Type=Float64,
+        universe_conditions::Union{Nothing,Vector{<:SD.AbstractScalarCondition}}=nothing,
+        offset::Union{Nothing,Vector{Vector{Atom}}}=nothing
+    )
+
+Performance-tuned atoms-level minimizer. THIS is the method actually
+called by `SolePostHoc.Lumen.run_minimization(::Val{:mitespresso}, ...)`
+(both the batch `lumen()` path and `super_lumen`'s `_fold_in!`), since it's
+called with `binary` as a POSITIONAL `::String` argument -- the more
+specific match, so Julia always picks this one over the `Formula`-level
+overload above whenever both are technically applicable.
+
+# `offset` (NEW)
+`Union{Nothing, Vector{Vector{Atom}}}`, default `nothing`.
+- `nothing` (default): behavior IDENTICAL to before this patch -- no
+  offset forwarded to `PLA.formula_to_pla`, implicit `.type f` PLA,
+  Espresso computes OFF as the absolute complement of `atoms`.
+- given: forwarded to `PLA.formula_to_pla(atoms; ..., offset)`, which
+  emits an explicit `.type fr` PLA (ON from `atoms`, OFF from `offset`,
+  don't-care everything else). This is what `super_lumen`'s `_fold_in!`
+  now passes -- the confirmed-off cubes from every other class' buffer at
+  fold time -- so a partial, mid-enumeration fold no longer treats
+  not-yet-visited rows (of ANY class, including the one being folded) as
+  false negatives for the purposes of minimization.
+"""
 function espresso_minimize(
     atoms::Vector{Vector{Atom}},
     binary::String;
     allow_scalar_range_conditions::Bool=false,
     depth::Float64=1.0,
-    float_type::Type=Float64
-    # syntaxtree::SoleLogics.Formula,
-    # silent::Bool=true,
-
-    # args...;
-    # binary=nothing,
-    # otherflags=[],
-    # allow_scalar_range_conditions=false,
-    # kwargs...,
+    float_type::Type=Float64,
+    universe_conditions::Union{Nothing,Vector{<:SD.AbstractScalarCondition}}=nothing,
+    offset::Union{Nothing,Vector{Vector{Atom}}}=nothing
 )
+
     # TODO kwargs...
     Dflag = "exact"
     Sflag = nothing
@@ -572,17 +600,13 @@ function espresso_minimize(
         atoms;
         allow_scalar_range_conditions,
         removewhitespaces=true,
-        pretty_op=false
+        pretty_op=false,
+        universe_conditions=universe_conditions,
+        offset=offset
     )
 
-    # print(join(pla_content, "\n\n"))
     out = Pipe()
     err = Pipe()
-
-    function escape_for_shell(input::AbstractString)
-        # Replace single quotes with properly escaped shell-safe single quotes
-        return "$(replace(input, "'" => "\\'"))"
-    end
 
     echo_cmd = `echo $(pla_string)`
 
@@ -594,25 +618,30 @@ function espresso_minimize(
     espresso_cmd = `$binary $args`
 
     cmd = pipeline(pipeline(echo_cmd, espresso_cmd); stdout=out, stderr=err)
-    cmd = pipeline(pipeline(`echo $(escape_for_shell(pla_string))`), stdout=out, stderr=err)
+
     try
         run(cmd)
         close(out.in)
         close(err.in)
         errstr = String(read(err))
-        !isempty(errstr) && (@warn String(read(err)))
-    catch
+        !isempty(errstr) && (@warn errstr)
+    catch e
+        println("Error running espresso command:")
+        println(espresso_cmd)
         close(out.in)
         close(err.in)
         errstr = String(read(err))
         !isempty(errstr) && (throw(errstr))
+        rethrow(e)
     end
 
     minimized_pla = String(read(out))
 
+    @assert !isempty(minimized_pla) "espresso no output"
+
     conditionstype = allow_scalar_range_conditions ?
-        SoleData.RangeScalarCondition :
-        SoleData.ScalarCondition
+                     SoleData.RangeScalarCondition :
+                     SoleData.ScalarCondition
 
     return PLA.pla_to_formula(minimized_pla, fnames; conditionstype)
 end
@@ -623,21 +652,23 @@ function abc_minimize(
     fast::Int64=1,
     allow_scalar_range_conditions::Bool=false,
     depth::Real=1.0,
-    float_type::Type=Float64
+    float_type::Type=Float64,
+    universe_conditions::Union{Nothing,Vector{<:SD.AbstractScalarCondition}}=nothing
 )
     # convert formula to pla string format
     pla_string, fnames = PLA.formula_to_pla(
         atoms;
         allow_scalar_range_conditions,
         removewhitespaces=true,
-        pretty_op=false
+        pretty_op=false,
+        universe_conditions=universe_conditions
     )
 
     # Create temporary files for input/output
     mktempdir() do tmp
         inputfile = joinpath(tmp, "in.pla")
         outputfile = joinpath(tmp, "out.pla")
-        
+
         write(inputfile, pla_string)
 
         abc_commands = if fast == 1
@@ -664,8 +695,8 @@ function abc_minimize(
 
         minimized_pla = clean_abc_output(minimized_pla_raw)
         conditionstype = allow_scalar_range_conditions ?
-            SoleData.RangeScalarCondition :
-            SoleData.ScalarCondition
+                         SoleData.RangeScalarCondition :
+                         SoleData.ScalarCondition
 
         return PLA.pla_to_formula(minimized_pla, fnames; conditionstype, float_type)
     end
@@ -677,7 +708,7 @@ end
 function clean_abc_output(raw_pla::String)
     lines = split(raw_pla, '\n')
     pla_lines = filter(l -> !isempty(strip(l)) &&
-                        (startswith(l, '.') || occursin(r"^[01\-]+ ", l)), lines)
+                            (startswith(l, '.') || occursin(r"^[01\-]+ ", l)), lines)
     return join(pla_lines, '\n')
 end
 
